@@ -2,4 +2,4 @@
 
 Android customer app for Dexter's Loyalty.
 
-Built automatically with GitHub Actions.
+Built automatically with GitHub Actions and Vercel.
