@@ -1,1 +1,0 @@
-const fs=require('fs');const p='dist/index.html';if(fs.existsSync(p)){let s=fs.readFileSync(p,'utf8');s=s.replace('DEXTER\'S</div><div class="customer-open-pill"','DEXTER’S</div><div class="customer-open-pill"');fs.writeFileSync(p,s);console.log('Customer design header postprocessed');}
