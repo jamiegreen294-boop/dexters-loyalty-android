@@ -1,1 +1,1 @@
-{"scripts":{"build":"node build-web.js"}}
+{"scripts":{"build":"node build-web.js && node -e \"const fs=require('fs');fs.copyFileSync('web/collection-order-test.html','dist/collection-order-test.html');fs.copyFileSync('web/kds-order-test.html','dist/kds-order-test.html')\""}}
