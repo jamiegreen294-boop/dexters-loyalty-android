@@ -7,6 +7,7 @@ const js=`<script id="dextersOrderReviewScript">(function(){function money(v){va
 if(!s.includes('dextersOrderReviewStyle'))s=s.replace('</head>',css+'</head>');
 if(!s.includes('id="orderReviewCard"'))s=s.replace('<label>Collection time</label>',html+'<label>Collection time</label>');
 if(!s.includes('dextersOrderReviewScript'))s=s.replace('</body>',js+'</body>');
-if(!s.includes('dextersOrderReviewScript')||!s.includes('orderReviewCard'))throw new Error('Collection review injection failed');
+if(!s.includes('collection-modifiers-live.js'))s=s.replace('</body>','<script src="/collection-modifiers-live.js"></script></body>');
+if(!s.includes('dextersOrderReviewScript')||!s.includes('orderReviewCard')||!s.includes('collection-modifiers-live.js'))throw new Error('Collection review/modifier injection failed');
 fs.writeFileSync(p,s);
-console.log('Added collection order review, remove controls and total');
+console.log('Added collection order review, live modifiers and total');
