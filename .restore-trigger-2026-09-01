@@ -1,1 +1,1 @@
-Trigger Vercel production redeploy of the saved working Dexter's Loyalty App build. No application settings, data, menu, collection, staff/admin, KDS, or Supabase configuration are changed by this file.
+Trigger Vercel preview redeploy for Sunday Epson direct-print test. Test branch only. No live app, normal KDS automatic printing, menu, staff/admin, collection, or Supabase settings are changed by this file.
