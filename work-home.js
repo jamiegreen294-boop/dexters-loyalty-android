@@ -10,7 +10,7 @@ function start(){
  const nav=page=>{const b=document.querySelector('#bottomNav [data-page="'+page+'"]');if(b&&!b.classList.contains('hidden'))b.click()};
  const top=node('div','work-top','<div class="work-brand">DEXTER’S</div><div class="work-pill" id="workCollectionState" role="status">Checking collection…</div>');
  const hero=node('div','work-hero');hero.id='workCoffeeHero';
- const hello=node('div','work-hello','Welcome back, ');hello.append($('greeting'));$('greeting').className='';hello.append($('roleBadge'));
+ const hello=node('div','work-hello','Welcome back, ');const greeting=$('greeting');greeting.className='';hello.append(greeting);hello.append($('roleBadge'));
  const title=node('h1','');title.id='workCoffeeHeadline';
  const count=node('div','work-count');count.append($('stampText'));count.append(' coffees collected');
  const originalMessage=$('stampMessage');originalMessage.hidden=true;
