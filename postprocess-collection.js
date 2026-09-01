@@ -24,3 +24,5 @@ s=s.replace('<script src="/reorder-core.js"></script>','');
 s=s.replace('<script src="/collection-modifiers-live.js"></script>','<script src="/reorder-core.js"></script><script src="/collection-modifiers-live.js"></script>');
 fs.writeFileSync(p,s);
 console.log('Added live collection review/modifiers, kept menu sections open, and hid legacy stock control');
+
+require("./postprocess-collection-theme.js");
