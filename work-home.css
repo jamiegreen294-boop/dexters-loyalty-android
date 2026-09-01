@@ -1,0 +1,42 @@
+/* Geometry from test-work-layout-exact; colours from the existing app themes. */
+body:has(#appView:not(.hidden) #homePage:not(.hidden)){--work-card:var(--card);--work-ink:var(--white);--work-muted:var(--muted)}
+body:has(#appView:not(.hidden) #homePage:not(.hidden)) .wrap{max-width:430px!important;padding:18px 16px 96px!important}
+body:has(#appView:not(.hidden) #homePage:not(.hidden)) .wrap>.logo{display:none}
+#homePage.work-home{color:var(--white)}
+#homePage .work-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+#homePage .work-brand{font-weight:900;font-size:28px;letter-spacing:-1px}
+#homePage .work-pill{font-size:11px;font-weight:800;border-radius:999px;background:var(--navy2);padding:7px 10px;max-width:145px}
+#homePage .work-hero{background:var(--card);border-radius:22px;padding:20px;box-shadow:0 8px 24px #0002;margin-bottom:14px}
+#homePage .work-hello{font-size:15px;color:var(--muted)}
+#homePage .work-hero h1{font-size:28px;line-height:1.05;margin:6px 0 12px;color:var(--white)}
+#homePage .work-hero .progress{height:12px;margin:0;border-radius:999px;background:var(--navy2)}
+#homePage .work-hero .bar{background:var(--yellow)}
+#homePage .work-hero .work-count{font-size:13px;color:var(--muted);margin-top:8px}
+#homePage #stamps{display:none} /* The same live count is presented by the progress bar. */
+#homePage #rewardCard{margin:12px 0 0;padding:10px 0 0;border:0;background:transparent;box-shadow:none}
+#homePage #rewardCard h2{font-size:16px;margin:0 0 4px}#homePage #rewardCard p{font-size:13px;margin:0}
+#homePage #collectionOrderLiveCard{padding:0;margin:16px 0 0;border:0;background:transparent;box-shadow:none}
+#homePage #collectionOrderLiveCard>h2,#homePage #collectionOrderLiveCard>p,#homePage #collectionLiveState{display:none}
+#homePage #collectionLiveBtn{margin:0}
+#homePage .btn,#homePage .work-cta{display:block;width:100%;box-sizing:border-box;border:0;border-radius:16px;padding:15px 16px;font:inherit;font-weight:900;font-size:16px;background:var(--yellow);color:#111;text-align:center;text-decoration:none;cursor:pointer}
+#homePage button:disabled{opacity:.55;cursor:not-allowed}
+#workQuickActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
+#homePage .work-action{display:block;background:var(--card);color:var(--white);border:0;border-radius:18px;padding:16px;box-shadow:0 6px 18px #0002;text-align:left;text-decoration:none;font:inherit;min-width:0;cursor:pointer}
+.work-action .wi{font-size:24px}.work-action .wt{font-weight:900;margin-top:7px}.work-action .wd{font-size:12px;color:var(--muted);margin-top:4px}
+#homePage .work-heading{margin:18px 2px 10px;font-weight:900;font-size:18px;color:var(--white)}
+#homePage .work-deals{margin:0;padding:0;background:transparent;box-shadow:none;border:0}
+#homePage .work-deals .offer,#homePage .work-row{background:var(--card);border-radius:18px;padding:14px;margin:0 0 10px;box-shadow:0 6px 18px #0001}
+#homePage .work-row{display:flex;gap:12px;align-items:center}#homePage .work-grow{flex:1;min-width:0}
+#homePage .work-desc{font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+#homePage .work-small{display:inline-block;border:0;background:var(--navy2);color:var(--white);border-radius:12px;padding:9px 11px;font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
+#homePage .work-order{background:var(--card);border:1px solid #ffffff20;border-radius:20px;padding:17px}
+#homePage .work-steps{display:flex;gap:6px;margin-top:12px}#homePage .work-step{height:6px;flex:1;background:var(--navy2);border-radius:99px}#homePage .work-step.on{background:var(--yellow)}
+#homePage #myIndividualOffersCard{border-radius:18px;background:var(--card);margin:14px 0;padding:14px}
+#workHomeNav{display:none}
+body:has(#appView:not(.hidden) #homePage:not(.hidden)) #bottomNav{visibility:hidden}
+body:has(#appView:not(.hidden) #homePage:not(.hidden)) #workHomeNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100%);box-sizing:border-box;background:var(--card);border-top:1px solid #ffffff20;display:grid;grid-template-columns:repeat(5,1fr);padding:9px 6px max(10px,env(safe-area-inset-bottom));z-index:100}
+#workHomeNav button,#workHomeNav a{background:none;border:0;color:var(--muted);text-align:center;text-decoration:none;font:inherit;font-size:11px;cursor:pointer;padding:0;min-height:43px}#workHomeNav b{display:block;font-size:19px;margin-bottom:2px}#workHomeNav .active{color:var(--yellow);font-weight:900}
+body:has(#appView:not(.hidden) #homePage:not(.hidden)) #seasonBanner{width:calc(100% - 32px)!important;max-width:430px!important;margin:0 auto 14px!important}
+#homePage button:focus-visible,#homePage a:focus-visible,#workHomeNav :focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+#homePage dialog{width:min(390px,calc(100% - 32px));box-sizing:border-box;max-height:85vh;overflow:auto;background:var(--card);color:var(--white);border:1px solid #ffffff30;border-radius:22px;padding:20px}
+#homePage dialog::backdrop{background:#0009}#workCloseHistory{background:var(--yellow);color:#111;border:0;border-radius:12px;padding:12px;width:100%;font-weight:800}

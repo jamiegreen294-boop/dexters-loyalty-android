@@ -3,8 +3,10 @@ const fs=require('fs');let s=fs.readFileSync('dist/index.html','utf8');
 const actions=s.match(/<script id="dextersWorkLayoutActions">([\s\S]*?)<\/script>/)[1];
 s=s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'').replace(/<link\b[^>]*>/g,'');
 s=s.replace(/src="https:[^"]*"/g,'src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'260\' height=\'70\'%3E%3Ctext x=\'15\' y=\'45\' fill=\'%23ffcc33\' font-size=\'32\' font-family=\'sans-serif\'%3EDEXTERS%3C/text%3E%3C/svg%3E"');
+s=s.replace('<html', '<html data-layout-fixture="true"');
 s=s.replace('<head>','<head><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; connect-src \'none\'; img-src \'self\' data:; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; form-action \'none\'">');
 s=s.replace('</body>',`<script>${actions}</script><script>
+const fixtureCollection=document.createElement('div');fixtureCollection.id='collectionOrderLiveCard';fixtureCollection.className='card';fixtureCollection.innerHTML='<div id="collectionLiveState">Collection ordering is OPEN</div><button id="collectionLiveBtn" class="btn">Order for Collection</button>';document.getElementById('homePage').append(fixtureCollection);
 const q=new URLSearchParams(location.search),mode=q.get('mode')||'customer',theme=q.get('theme')||'normal';
 if(theme!=='normal')document.body.classList.add('season-'+theme);
 document.getElementById('seasonBanner').textContent=theme==='normal'?'':theme+' layout fixture';
