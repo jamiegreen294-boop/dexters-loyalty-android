@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; script-src 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'">
+<meta name="robots" content="noindex,nofollow">
+<title>Dexter’s New Layout — Isolated Preview</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#151515;--muted:#6f6f6f;--accent:#111;--soft:#efefec;--ok:#18864b}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);padding:18px 16px 96px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.brand{font-weight:900;font-size:28px;letter-spacing:-1px}.pill{background:#e8f4ec;color:#146b3a;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.hero{background:var(--card);border-radius:22px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.06);margin-bottom:14px}.hello{font-size:15px;color:var(--muted)}h1{font-size:28px;line-height:1.05;margin:4px 0 12px}.progress{height:12px;background:#ecece8;border-radius:999px;overflow:hidden}.progress>div{width:88.888%;height:100%;background:var(--accent)}.small{font-size:13px;color:var(--muted);margin-top:8px}
+.cta{display:block;width:100%;border:0;border-radius:16px;padding:15px 16px;font-weight:900;font-size:16px;background:var(--accent);color:white;margin-top:16px}.secondary{background:var(--soft);color:var(--ink)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.05)}.icon{font-size:24px}.title{font-weight:900;margin-top:7px}.desc{font-size:12px;color:var(--muted);margin-top:4px}
+.section{margin:18px 2px 10px;font-weight:900;font-size:18px}.offer{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(0,0,0,.04)}.offer .emoji{font-size:28px}.offer .grow{flex:1}.offer button{border:0;background:var(--soft);border-radius:12px;padding:9px 11px;font-weight:800}
+.order{background:#111;color:#fff;border-radius:20px;padding:17px}.steps{display:flex;gap:6px;margin-top:12px}.step{height:6px;flex:1;background:#3a3a3a;border-radius:99px}.step.on{background:#fff}.ready{font-size:13px;color:#d6d6d6;margin-top:8px}
+nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100%);background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid #e8e8e5;display:grid;grid-template-columns:repeat(5,1fr);padding:9px 6px 10px}.navitem{text-align:center;font-size:11px;color:#666}.navitem b{display:block;font-size:19px;margin-bottom:2px}.active{color:#111;font-weight:900}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center}.sheet{width:min(430px,100%);background:#fff;border-radius:24px 24px 0 0;padding:22px}.modal.show{display:flex}.close{float:right;border:0;background:#eee;border-radius:999px;width:32px;height:32px}
+.badge{display:inline-block;background:#fff3cd;color:#8b6500;font-size:11px;font-weight:800;padding:5px 8px;border-radius:999px;margin-top:7px}
+
+.preview-note{padding:12px 14px;border:1px solid #deded9;border-radius:14px;font-size:12px;line-height:1.6;margin-bottom:12px;background:var(--card);color:var(--muted)}.preview-note strong{color:var(--ink);letter-spacing:1px}
+.theme-controls{padding:12px 14px;background:var(--card);border-radius:14px;margin-bottom:18px;font-size:13px}.theme-controls summary{cursor:pointer;font-weight:800}.theme-controls label{display:block;margin-top:12px}.theme-controls select{width:100%;padding:12px;margin-top:6px;background:var(--soft);color:var(--ink);border:1px solid var(--muted);border-radius:10px;font:inherit}.theme-actions{display:flex;gap:10px;margin-top:10px}.theme-actions button{flex:1;padding:12px;border-radius:10px;background:var(--accent);color:var(--button-ink,#fff);border:0;font-weight:800}#themeStatus{margin-bottom:0;color:var(--muted)}
+button,.card[onclick],.navitem{cursor:pointer}button:focus-visible,[role=button]:focus-visible,summary:focus-visible{outline:3px solid #e5a519;outline-offset:3px}.navitem{border:0;background:transparent;font-family:inherit}nav{background:var(--card);z-index:10}.navitem{color:var(--muted)}.navitem.active{color:var(--ink)}.modal{z-index:30}.sheet{background:var(--card);color:var(--ink);max-height:85dvh;overflow:auto;padding-bottom:calc(22px + env(safe-area-inset-bottom))}.cta{color:var(--button-ink,#fff)}.cta.secondary{color:var(--ink)}.offer button{color:var(--ink)}.season-art{display:none}
+body[data-theme=halloween]{--bg:#0e0b13;--card:#201726;--ink:#fff0df;--muted:#cebad4;--accent:#ff9634;--soft:#382339;--button-ink:#20100b}
+body[data-theme=christmas]{--bg:#071d17;--card:#10382d;--ink:#fff5da;--muted:#c5d9c9;--accent:#f1c968;--soft:#245044;--button-ink:#241b0b}
+body[data-theme=valentines]{--bg:#fff1f4;--card:#fffafa;--ink:#62172e;--muted:#985469;--accent:#b51d50;--soft:#f9dce5}
+body[data-theme=halloween] .season-art,body[data-theme=christmas] .season-art,body[data-theme=valentines] .season-art{display:block;height:230px;background-size:cover;background-position:center;border-radius:20px;margin-bottom:16px}
+body[data-theme=halloween] .season-art{background-image:url('haunted-v4.webp')}body[data-theme=christmas] .season-art{background-image:url('christmas-v5.webp')}body[data-theme=valentines] .season-art{background-image:url('valentines-v5.webp')}
+nav{padding-bottom:calc(10px + env(safe-area-inset-bottom))}.app{padding-bottom:calc(100px + env(safe-area-inset-bottom))}@media(max-width:360px){.app{padding-left:12px;padding-right:12px}.brand{font-size:24px}.pill{font-size:10px}h1{font-size:25px}.offer{gap:8px}.offer button{padding:9px 8px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="preview-note"><strong>LAYOUT TEST ONLY</strong><br>Sample account, offers and orders. No sign-in needed.</aside>
+  <details class="theme-controls"><summary>Test seasonal themes</summary><label for="testTheme">Choose theme</label><select id="testTheme"><option value="standard">Standard</option><option value="halloween">Halloween</option><option value="christmas">Christmas</option><option value="valentines">Valentine’s</option></select><div class="theme-actions"><button id="themeOn" type="button">Theme on</button><button id="themeOff" type="button">Theme off</button></div><p id="themeStatus" role="status">Standard theme · Preview only</p></details>
+  <div class="season-art" aria-hidden="true"></div>
+  <div class="top"><div class="brand">DEXTER'S</div><div class="pill">Demo · OPEN</div></div>
+  <div class="hero">
+    <div class="hello">Welcome back 👋</div>
+    <h1>1 more coffee = FREE COFFEE</h1>
+    <div class="progress"><div></div></div>
+    <div class="small">8 of 9 coffees collected</div>
+    <button class="cta" onclick="demo('order')">ORDER FOR COLLECTION</button>
+  </div>
+
+  <div class="grid">
+    <div class="card" role="button" tabindex="0" onclick="demo('rewards')"><div class="icon">🎁</div><div class="title">Your Rewards</div><div class="desc">Coffee, offers & treats</div></div>
+    <div class="card" role="button" tabindex="0" onclick="demo('again')"><div class="icon">⭐</div><div class="title">Order Again</div><div class="desc">Your usual in a tap</div></div>
+    <div class="card" role="button" tabindex="0" onclick="demo('spin')"><div class="icon">🎡</div><div class="title">Spin to Win</div><div class="desc">Play when activated</div><span class="badge">DEMO</span></div>
+    <div class="card" role="button" tabindex="0" onclick="demo('dexter')"><div class="icon">💬</div><div class="title">Ask Dexter</div><div class="desc">Jokes, help & games</div></div>
+  </div>
+
+  <div class="section">Dexter's Deals</div>
+  <div class="offer"><div class="emoji">🔥</div><div class="grow"><div class="title">App Exclusive</div><div class="desc">10% off selected lunch items</div></div><button onclick="demo('offer')">View</button></div>
+  <div class="offer"><div class="emoji">⭐</div><div class="grow"><div class="title">Double Points Today</div><div class="desc">Earn twice as fast on eligible orders</div></div><button onclick="demo('offer')">View</button></div>
+
+  <div class="section">Your Usual</div>
+  <div class="offer"><div class="emoji">🍚</div><div class="grow"><div class="title">Chicken Tikka Rice Bowl</div><div class="desc">Demo favourite • £9.50</div></div><button onclick="demo('again')">Order Again</button></div>
+
+  <div class="section">Current Order</div>
+  <div class="order"><div class="title">Sample order #D104</div><div class="ready">Accepted ✅ · Cooking 🔥 · Ready next</div><div class="steps"><div class="step on"></div><div class="step on"></div><div class="step"></div></div></div>
+</div>
+
+<nav>
+  <button class="navitem active" onclick="closeDemo()"><b>🏠</b>Home</button><button class="navitem" onclick="demo('order')"><b>🍔</b>Order</button><button class="navitem" onclick="demo('rewards')"><b>🎁</b>Rewards</button><button class="navitem" onclick="demo('dexter')"><b>💬</b>Dexter</button><button class="navitem" onclick="demo('account')"><b>👤</b>Account</button>
+</nav>
+
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" id="modal" onclick="if(event.target===this)closeDemo()"><div class="sheet"><button class="close" aria-label="Close preview panel" onclick="closeDemo()">×</button><h2 id="mt">Demo</h2><p id="mb">This is a test interaction only.</p><button class="cta secondary" onclick="closeDemo()">Back to test home</button></div></div>
+<script>
+const copy={order:['Collection Order','This would open the full Dexter\'s menu with categories, +/− quantities, checkout and KDS order tracking. No real order is being sent in this test.'],rewards:['Rewards','This test area would show your coffee card, free rewards, birthday treats, bonus-points campaigns and app-only offers.'],again:['Order Again','Your previous or favourite order could be rebuilt instantly, then reviewed before sending to the kitchen.'],spin:['Spin to Win','This would open the existing Dexter\'s Spin to Win promotion when admin has activated it. This test does not award a real prize.'],dexter:['Ask Dexter','A dedicated Dexter assistant area for menu help, loyalty questions, jokes, stories and games.'],offer:['Dexter\'s Deal','This is only a sample promotional offer. Nothing has been applied to a real account.'],account:['Account','This would contain profile, order history, preferences, notifications and account controls.']};
+function demo(k){document.getElementById('mt').textContent=copy[k][0];document.getElementById('mb').textContent=copy[k][1];document.getElementById('modal').classList.add('show')}function closeDemo(){document.getElementById('modal').classList.remove('show')}
+
+const testTheme=document.getElementById('testTheme');
+function applyTestTheme(on){const theme=on?testTheme.value:'standard';document.body.dataset.theme=theme;document.getElementById('themeStatus').textContent=(theme==='standard'?'Standard theme':testTheme.options[testTheme.selectedIndex].text+' theme on')+' · Preview only'}
+testTheme.onchange=()=>applyTestTheme(true);document.getElementById('themeOn').onclick=()=>applyTestTheme(true);document.getElementById('themeOff').onclick=()=>applyTestTheme(false);
+document.querySelectorAll('.card[role=button]').forEach(card=>card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDemo()});
+</script>
+</body>
+</html>

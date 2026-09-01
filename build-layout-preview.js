@@ -1,0 +1,1 @@
+const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true});fs.mkdirSync('dist');fs.copyFileSync('preview/index.html','dist/index.html');for(const file of ['haunted-v4.webp','christmas-v5.webp','valentines-v5.webp'])fs.copyFileSync('web/'+file,'dist/'+file);console.log('Built isolated layout preview: no live app scripts or connections');
