@@ -9,7 +9,7 @@ fs.writeFileSync('dist/sunday/theme.css',theme[1]);fs.copyFileSync('collection-t
 for(const [source,target]of [['customer.html','sunday-roast-test.html'],['admin.html','sunday-admin-test.html']])fs.copyFileSync('sunday/'+source,'dist/'+target);
 // The Sunday KDS test uses the real isolated Sunday test API and the same authenticated KDS session.
 fs.copyFileSync('web/kds-order-test.html','dist/sunday-kds-test.html');
-// In test only, replace the browser print handler with the existing Epson printer queue.
+// Test only: load the same direct Epson ePOS printing route already proven in the working KDS.
 for(const target of ['dist/kds-order-test.html','dist/sunday-kds-test.html']){
   let kds=fs.readFileSync(target,'utf8');
   kds=kds.replace('</body>','<script src="/sunday/epson-kds-test.js"></script></body>');
