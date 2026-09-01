@@ -31,10 +31,10 @@ body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) .wrap>.logo{dis
 #homePage .work-small{display:inline-block;border:0;background:var(--navy2);color:var(--white);border-radius:12px;padding:9px 11px;font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
 #homePage .work-order{background:var(--card);border:1px solid #ffffff20;border-radius:20px;padding:17px}
 #homePage .work-steps{display:flex;gap:6px;margin-top:12px}#homePage .work-step{height:6px;flex:1;background:var(--navy2);border-radius:99px}#homePage .work-step.on{background:var(--yellow)}
-#homePage #myIndividualOffersCard{border-radius:18px;background:var(--card);margin:14px 0;padding:14px}
+#qrPage #myIndividualOffersCard{border-radius:18px;background:var(--card);margin:14px 0;padding:14px}
 #workHomeNav{display:none}
-body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #bottomNav{visibility:hidden}
-body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #workHomeNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100%);box-sizing:border-box;background:var(--card);border-top:1px solid #ffffff20;display:grid;grid-template-columns:repeat(5,1fr);padding:9px 6px max(10px,env(safe-area-inset-bottom));z-index:100}
+body:has(#appView:not(.hidden) :is(#homePage.work-home:not(.hidden),#qrPage.work-rewards:not(.hidden))) #bottomNav{visibility:hidden}
+body:has(#appView:not(.hidden) :is(#homePage.work-home:not(.hidden),#qrPage.work-rewards:not(.hidden))) #workHomeNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100%);box-sizing:border-box;background:var(--card);border-top:1px solid #ffffff20;display:grid;grid-template-columns:repeat(5,1fr);padding:9px 6px max(10px,env(safe-area-inset-bottom));z-index:100}
 #workHomeNav button,#workHomeNav a{background:none;border:0;color:var(--muted);text-align:center;text-decoration:none;font:inherit;font-size:11px;cursor:pointer;padding:0;min-height:43px}#workHomeNav b{display:block;font-size:19px;margin-bottom:2px}#workHomeNav .active{color:var(--yellow);font-weight:900}
 body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #seasonBanner{width:calc(100% - 32px)!important;max-width:430px!important;margin:0 auto 14px!important}
 #homePage button:focus-visible,#homePage a:focus-visible,#workHomeNav :focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
@@ -44,3 +44,5 @@ body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #seasonBanner{w
 #homePage .work-hello #greeting{display:inline}
 
 #homePage.work-home:not(.hidden){display:block!important}
+
+body:has(#appView:not(.hidden) #qrPage.work-rewards:not(.hidden)) .wrap{padding-bottom:100px}

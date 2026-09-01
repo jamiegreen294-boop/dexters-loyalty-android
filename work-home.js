@@ -20,11 +20,16 @@ function start(){
  offers.classList.add('work-deals');offers.querySelector('h2').textContent='Dexter’s Deals';offers.querySelector('h2').className='work-heading';
  const usual=node('section','work-usual','<h2 class="work-heading">Your Usual</h2><div class="work-row"><div class="work-grow" id="workUsualBody">Loading your orders…</div><a class="work-small" id="workUsualOrder" href="/collection-order-test.html">View menu</a></div>');
  const current=node('section','work-current','<h2 class="work-heading">Current Order</h2><div class="work-order" id="workCurrentBody">Loading your orders…</div>');
- // Keep personal offers and all other existing cards after the reference's primary sections.
+ // Keep reward rendering and redemption attached to the existing elements.
+ const rewardsPage=$('qrPage'),personalRewards=$('myIndividualOffersCard');
+ if(rewardsPage&&personalRewards){rewardsPage.append(personalRewards);rewardsPage.classList.add('work-rewards');personalRewards.querySelector('h2').textContent='Your Personal Rewards'}
  home.prepend(top,hero,grid,offers,usual,current);home.classList.add('work-home');
  const menuLink=node('button','work-small','Browse the full menu');menuLink.type='button';menuLink.onclick=()=>nav('menuPage');home.append(menuLink);
  const staffLink=node('button','work-small','Staff / Admin');staffLink.type='button';staffLink.onclick=()=>nav('staffPage');top.append(staffLink);const staffNav=$('staffNav');function syncStaff(){staffLink.hidden=!staffNav||staffNav.classList.contains('hidden')}syncStaff();if(staffNav)new MutationObserver(syncStaff).observe(staffNav,{attributes:true,attributeFilter:['class']});
- const homeNav=node('nav','');homeNav.id='workHomeNav';homeNav.setAttribute('aria-label','Customer home navigation');homeNav.innerHTML='<button type="button" class="active" aria-current="page"><b>🏠</b>Home</button><a href="/collection-order-test.html"><b>🍔</b>Order</a><button type="button" id="workNavRewards"><b>🎁</b>Rewards</button><a href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><b>💬</b>Dexter</a><button type="button" id="workNavAccount"><b>👤</b>Account</button>';document.body.append(homeNav);
+ const homeNav=node('nav','');homeNav.id='workHomeNav';homeNav.setAttribute('aria-label','Customer home navigation');homeNav.innerHTML='<button type="button" id="workNavHome" class="active" aria-current="page"><b>🏠</b>Home</button><a href="/collection-order-test.html"><b>🍔</b>Order</a><button type="button" id="workNavRewards"><b>🎁</b>Rewards</button><a href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><b>💬</b>Dexter</a><button type="button" id="workNavAccount"><b>👤</b>Account</button>';document.body.append(homeNav);
+ $('workNavHome').onclick=()=>nav('homePage');
+ function syncRewardsNav(){const on=rewardsPage&&!rewardsPage.classList.contains('hidden');for(const [id,selected]of [['workNavHome',!on],['workNavRewards',on]]){const button=$(id);button.classList.toggle('active',selected);if(selected)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')}}
+ syncRewardsNav();if(rewardsPage)new MutationObserver(syncRewardsNav).observe(rewardsPage,{attributes:true,attributeFilter:['class']});
  $('workRewards').onclick=()=>nav('qrPage');$('workNavRewards').onclick=()=>nav('qrPage');$('workNavAccount').onclick=()=>nav('accountPage');$('workSpin').onclick=()=>nav('spinPage');
  const spinNav=document.querySelector('#bottomNav [data-page="spinPage"]');
  function syncSpin(){const on=!!spinNav&&!spinNav.classList.contains('hidden');$('workSpin').disabled=!on;$('workSpinNote').textContent=on?'Play your daily spin':'Promotion currently off'}
