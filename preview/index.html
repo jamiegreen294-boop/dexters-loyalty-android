@@ -29,16 +29,16 @@ body[data-theme=valentines]{--bg:#fff1f4;--card:#fffafa;--ink:#62172e;--muted:#9
 body[data-theme=halloween] .season-art,body[data-theme=christmas] .season-art,body[data-theme=valentines] .season-art{display:block;height:230px;background-size:cover;background-position:center;border-radius:20px;margin-bottom:16px}
 body[data-theme=halloween] .season-art{background-image:url('haunted-v4.webp')}body[data-theme=christmas] .season-art{background-image:url('christmas-v5.webp')}body[data-theme=valentines] .season-art{background-image:url('valentines-v5.webp')}
 nav{padding-bottom:calc(10px + env(safe-area-inset-bottom))}.app{padding-bottom:calc(100px + env(safe-area-inset-bottom))}@media(max-width:360px){.app{padding-left:12px;padding-right:12px}.brand{font-size:24px}.pill{font-size:10px}h1{font-size:25px}.offer{gap:8px}.offer button{padding:9px 8px}}
-</style>
+.history-entry{padding:14px 0;border-bottom:1px solid var(--muted)}.review-label{display:block;margin-top:12px;font-weight:700}.review-label select,.review-label input{display:block;width:100%;padding:12px;background:var(--soft);color:var(--ink);border:1px solid var(--muted);border-radius:10px;margin-top:6px;font:inherit}.notice{padding:10px;background:var(--soft);border-left:3px solid var(--accent);font-size:13px}.small-button{padding:10px;margin-top:12px;border:1px solid var(--muted);border-radius:10px;background:var(--card);color:var(--ink)}button:disabled{opacity:.45;cursor:not-allowed}#demoMenuChanged{width:auto}.sheet{overscroll-behavior:contain}</style>
 </head>
 <body>
 <div class="app">
   <aside class="preview-note"><strong>LAYOUT TEST ONLY</strong><br>Sample account, offers and orders. No sign-in needed.</aside>
   <details class="theme-controls"><summary>Test seasonal themes</summary><label for="testTheme">Choose theme</label><select id="testTheme"><option value="standard">Standard</option><option value="halloween">Halloween</option><option value="christmas">Christmas</option><option value="valentines">Valentine’s</option></select><div class="theme-actions"><button id="themeOn" type="button">Theme on</button><button id="themeOff" type="button">Theme off</button></div><p id="themeStatus" role="status">Standard theme · Preview only</p></details>
-  <div class="season-art" aria-hidden="true"></div>
+  <details class="theme-controls" open><summary>Test order memory</summary><label for="demoProfile">Demo customer</label><select id="demoProfile" onchange="switchProfile()"><option value="jamie">Jamie — returning customer</option><option value="alex">Alex — different usual</option><option value="new">New customer — no history</option></select><p id="demoHistoryCount" class="desc"></p><label><input id="demoMenuChanged" type="checkbox" onchange="changeMenuScenario()"> Test unavailable items and changed choices</label><p class="desc">Sample profiles only. Try switching customer or refreshing after a demo order.</p></details><div class="season-art" aria-hidden="true"></div>
   <div class="top"><div class="brand">DEXTER'S</div><div class="pill">Demo · OPEN</div></div>
   <div class="hero">
-    <div class="hello">Welcome back 👋</div>
+    <div class="hello" id="demoGreeting">Welcome back 👋</div>
     <h1>1 more coffee = FREE COFFEE</h1>
     <div class="progress"><div></div></div>
     <div class="small">8 of 9 coffees collected</div>
@@ -56,8 +56,7 @@ nav{padding-bottom:calc(10px + env(safe-area-inset-bottom))}.app{padding-bottom:
   <div class="offer"><div class="emoji">🔥</div><div class="grow"><div class="title">App Exclusive</div><div class="desc">10% off selected lunch items</div></div><button onclick="demo('offer')">View</button></div>
   <div class="offer"><div class="emoji">⭐</div><div class="grow"><div class="title">Double Points Today</div><div class="desc">Earn twice as fast on eligible orders</div></div><button onclick="demo('offer')">View</button></div>
 
-  <div class="section">Your Usual</div>
-  <div class="offer"><div class="emoji">🍚</div><div class="grow"><div class="title">Chicken Tikka Rice Bowl</div><div class="desc">Demo favourite • £9.50</div></div><button onclick="demo('again')">Order Again</button></div>
+  <div class="section">Your Usual</div><div id="usualContent"></div>
 
   <div class="section">Current Order</div>
   <div class="order"><div class="title">Sample order #D104</div><div class="ready">Accepted ✅ · Cooking 🔥 · Ready next</div><div class="steps"><div class="step on"></div><div class="step on"></div><div class="step"></div></div></div>
@@ -67,7 +66,7 @@ nav{padding-bottom:calc(10px + env(safe-area-inset-bottom))}.app{padding-bottom:
   <button class="navitem active" onclick="closeDemo()"><b>🏠</b>Home</button><button class="navitem" onclick="demo('order')"><b>🍔</b>Order</button><button class="navitem" onclick="demo('rewards')"><b>🎁</b>Rewards</button><button class="navitem" onclick="demo('dexter')"><b>💬</b>Dexter</button><button class="navitem" onclick="demo('account')"><b>👤</b>Account</button>
 </nav>
 
-<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" id="modal" onclick="if(event.target===this)closeDemo()"><div class="sheet"><button class="close" aria-label="Close preview panel" onclick="closeDemo()">×</button><h2 id="mt">Demo</h2><p id="mb">This is a test interaction only.</p><button class="cta secondary" onclick="closeDemo()">Back to test home</button></div></div>
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" id="modal" onclick="if(event.target===this)closeDemo()"><div class="sheet"><button class="close" aria-label="Close preview panel" onclick="closeDemo()">×</button><h2 id="mt">Demo</h2><div id="mb">This is a test interaction only.</div><button class="cta secondary" onclick="closeDemo()">Back to test home</button></div></div>
 <script>
 const copy={order:['Collection Order','This would open the full Dexter\'s menu with categories, +/− quantities, checkout and KDS order tracking. No real order is being sent in this test.'],rewards:['Rewards','This test area would show your coffee card, free rewards, birthday treats, bonus-points campaigns and app-only offers.'],again:['Order Again','Your previous or favourite order could be rebuilt instantly, then reviewed before sending to the kitchen.'],spin:['Spin to Win','This would open the existing Dexter\'s Spin to Win promotion when admin has activated it. This test does not award a real prize.'],dexter:['Ask Dexter','A dedicated Dexter assistant area for menu help, loyalty questions, jokes, stories and games.'],offer:['Dexter\'s Deal','This is only a sample promotional offer. Nothing has been applied to a real account.'],account:['Account','This would contain profile, order history, preferences, notifications and account controls.']};
 function demo(k){document.getElementById('mt').textContent=copy[k][0];document.getElementById('mb').textContent=copy[k][1];document.getElementById('modal').classList.add('show')}function closeDemo(){document.getElementById('modal').classList.remove('show')}
@@ -77,6 +76,46 @@ function applyTestTheme(on){const theme=on?testTheme.value:'standard';document.b
 testTheme.onchange=()=>applyTestTheme(true);document.getElementById('themeOn').onclick=()=>applyTestTheme(true);document.getElementById('themeOff').onclick=()=>applyTestTheme(false);
 document.querySelectorAll('.card[role=button]').forEach(card=>card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDemo()});
+// This demo uses fictional profiles and browser storage only. No network calls.
+const demoKey='dexters-reorder-preview-v1';
+const clone=x=>JSON.parse(JSON.stringify(x));
+const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cash=p=>'£'+(p/100).toFixed(2);
+const menu={
+ soup:{name:'Cream Of Chicken',category:'Soups',price:320,groups:[{id:'roll',name:'Choose your roll',options:['Soft roll','Crispy roll']},{id:'butter',name:'Butter',options:['Butter','No butter']}]},
+ sub:{name:'Cheese',category:'Street Subs',price:650,groups:[{id:'sauce',name:'Choose your sauce',options:['Garlic mayo','Dexter’s sauce','No sauce']}]},
+ chicken:{name:'Salt & Chilli Chicken',category:'Chinese Style',price:895,groups:[{id:'side',name:'Choose your side',options:['Chips','Boiled rice']}]}
+};
+const soupLine={id:'soup',qty:1,paid:320,choices:{roll:'Crispy roll',butter:'No butter'}};
+const subLine={id:'sub',qty:1,paid:600,choices:{sauce:'Garlic mayo'}};
+const chickenLine={id:'chicken',qty:1,paid:895,choices:{side:'Boiled rice'}};
+const initialHistory={jamie:[{id:'J103',at:'2026-08-31T12:30:00Z',lines:[soupLine,subLine]},{id:'J102',at:'2026-08-30T12:30:00Z',lines:[soupLine]},{id:'J101',at:'2026-08-29T12:30:00Z',lines:[chickenLine]}],alex:[{id:'A202',at:'2026-08-31T13:00:00Z',lines:[{...chickenLine,qty:2}]},{id:'A201',at:'2026-08-30T13:00:00Z',lines:[chickenLine]}],new:[]};
+let histories=clone(initialHistory),profile='jamie',basket=[],menuChanged=false;
+try{const saved=JSON.parse(localStorage.getItem(demoKey)||'null');if(saved&&Object.keys(initialHistory).every(k=>Array.isArray(saved[k])))histories=saved}catch(e){}
+function currentItem(id){const original=menu[id];if(!original)return null;const item=clone(original);item.available=!(menuChanged&&id==='sub');if(menuChanged&&id==='soup')item.groups[0].options=['Soft roll'];return item}
+function usualFor(history){const counts=new Map();for(const order of history)for(const line of order.lines){const key=JSON.stringify([line.id,Object.entries(line.choices||{}).sort(([a],[b])=>a.localeCompare(b))]);const found=counts.get(key);if(found)found.count+=line.qty;else counts.set(key,{line:clone(line),count:line.qty})}return [...counts.values()].sort((a,b)=>b.count-a.count)[0]||null}
+function label(line){const item=menu[line.id];return item?item.category+' — '+item.name:'Item no longer on menu'}
+function choicesLabel(line){return Object.values(line.choices||{}).map(safe).join(' · ')}
+function panel(title,html){document.getElementById('mt').textContent=title;document.getElementById('mb').innerHTML=html;document.getElementById('modal').classList.add('show')}
+function renderRemembered(){const history=histories[profile];const best=usualFor(history);document.getElementById('usualContent').innerHTML=best?'<div class="offer"><div class="grow"><div class="title">'+safe(label(best.line))+'</div><div class="desc">'+choicesLabel(best.line)+'<br>Ordered '+best.count+' times in this demo · '+cash(menu[best.line.id]?.price||0)+'</div></div><button onclick="reorderUsual()">Review usual</button></div>':'<div class="card"><strong>No usual yet</strong><p class="desc">Complete a demo order to start building your order history.</p><button class="cta secondary" onclick="sampleMenu()">Try a first demo order</button></div>';document.getElementById('demoHistoryCount').textContent=history.length+' saved demo orders';document.getElementById('demoGreeting').textContent='Welcome back, '+({jamie:'Jamie (demo)',alex:'Alex (demo)',new:'new customer (demo)'})[profile]}
+function historyPanel(){panel('Order Again',histories[profile].length?'<p>Choose a saved order. We will check today’s menu before you confirm.</p>'+histories[profile].map((o,i)=>'<div class="history-entry"><strong>Demo order '+safe(o.id)+'</strong><p class="desc">'+o.lines.map(l=>l.qty+' × '+safe(label(l))+'<br>'+choicesLabel(l)).join('<br>')+'</p><button class="cta secondary" onclick="repeatOrder('+i+')">Review this order</button></div>').join(''):'<p>No previous orders for this demo customer yet.</p><button class="cta" onclick="sampleMenu()">Browse sample menu</button>')}
+function restoreLines(lines){return lines.map(line=>{const item=currentItem(line.id);const choices={};for(const group of item?.groups||[])choices[group.id]=group.options.includes(line.choices?.[group.id])?line.choices[group.id]:'';return {...clone(line),choices,issue:!item||!item.available}})}
+function repeatOrder(index){basket=restoreLines(histories[profile][index].lines);reviewBasket()}
+function reorderUsual(){const best=usualFor(histories[profile]);if(best){basket=restoreLines([{...best.line,qty:1}]);reviewBasket()}else sampleMenu()}
+function sampleMenu(){panel('Sample menu','<p>Three sample dishes for testing order memory. Prices here are demo values.</p>'+Object.keys(menu).map(id=>'<button class="cta secondary" onclick="addSample(\''+id+'\')">'+safe(menu[id].category+' — '+menu[id].name)+' · '+cash(menu[id].price)+'</button>').join(''))}
+function addSample(id){basket=restoreLines([{id,qty:1,paid:menu[id].price,choices:{}}]);reviewBasket()}
+function basketProblem(lines){if(!lines.length)return 'Add an item first.';for(const line of lines){const item=currentItem(line.id);if(!item||!item.available)return 'Remove the unavailable item before continuing.';if(!Number.isInteger(line.qty)||line.qty<1||line.qty>10)return 'Choose a quantity between 1 and 10.';for(const group of item.groups)if(!group.options.includes(line.choices[group.id]))return 'Please choose '+group.name+' for '+item.name+'.'}return ''}
+function basketTotal(lines){return lines.reduce((total,line)=>total+(currentItem(line.id)?.available?currentItem(line.id).price*line.qty:0),0)}
+function reviewBasket(){panel('Review your demo order','<p>Your saved choices are restored where available. Check every item before confirming.</p>'+basket.map((line,i)=>{const item=currentItem(line.id);return '<div class="history-entry"><strong>'+safe(label(line))+'</strong>'+(!item||!item.available?'<p class="notice">Currently unavailable. Remove this item to continue.</p>':(line.paid!==item.price?'<p class="notice">Price changed: '+cash(line.paid)+' → '+cash(item.price)+' each.</p>':'')+'<label class="review-label">Quantity <input aria-label="Quantity for '+safe(label(line))+'" type="number" min="1" max="10" value="'+line.qty+'" onchange="changeQty('+i+',this.value)"></label>'+item.groups.map(group=>'<label class="review-label">'+safe(group.name)+' <span class="desc">Required</span><select aria-label="'+safe(group.name+' for '+item.name)+'" onchange="changeChoice('+i+',\''+group.id+'\',this.value)"><option value="">Choose an option</option>'+group.options.map(value=>'<option '+(line.choices[group.id]===value?'selected':'')+' value="'+safe(value)+'">'+safe(value)+'</option>').join('')+'</select></label>').join('')+(item.groups.some(g=>!g.options.includes(line.choices[g.id]))?'<p class="notice">A required choice is missing or no longer available. Please select it again.</p>':''))+'<button class="small-button" onclick="removeLine('+i+')">Remove item</button></div>'}).join('')+'<p><strong>Current total: '+cash(basketTotal(basket))+'</strong></p><p id="demoOrderError" role="alert"></p><button class="cta" onclick="confirmDemoOrder()" '+(basketProblem(basket)?'disabled':'')+'>Confirm demo order</button><p class="desc">Saved only in this browser’s demo history. Nothing is sent to the kitchen.</p>')}
+function changeQty(i,value){basket[i].qty=Number(value);reviewBasket()}
+function changeChoice(i,group,value){basket[i].choices[group]=value;reviewBasket()}
+function removeLine(i){basket.splice(i,1);reviewBasket()}
+function confirmDemoOrder(){const error=basketProblem(basket);if(error){document.getElementById('demoOrderError').textContent=error;return}const lines=basket.map(l=>({...clone(l),paid:currentItem(l.id).price}));histories[profile].unshift({id:'TEST-'+Date.now().toString(36),at:new Date().toISOString(),lines});let saved=true;try{localStorage.setItem(demoKey,JSON.stringify(histories))}catch(e){saved=false}basket=[];renderRemembered();panel('Demo order remembered','<p>Your order is now in this demo customer’s Order Again history. Your Usual has been recalculated.</p><p>'+ (saved?'Refresh this page and select the same demo customer to see it remembered.':'Browser storage is unavailable, so this test history lasts only until you leave this page.')+'</p><strong>No kitchen order was sent.</strong><button class="cta secondary" onclick="historyPanel()">View saved demo orders</button>')}
+function switchProfile(){profile=document.getElementById('demoProfile').value;basket=[];closeDemo();renderRemembered()}
+function changeMenuScenario(){menuChanged=document.getElementById('demoMenuChanged').checked;basket=[];closeDemo();renderRemembered()}
+const originalDemo=demo;demo=function(k){if(k==='again'){historyPanel();return}if(k==='order'){sampleMenu();return}originalDemo(k)};
+renderRemembered();
+
 </script>
 </body>
 </html>
