@@ -1,0 +1,17 @@
+--- dexters-order-api-printer-test/index.ts
++++ dexters-order-api-printer-test/index.ts
+@@ -42,11 +42,13 @@
+     items:(o.items||[]).map((i:any)=>{
+       const qty=Number(i.qty)||1;
+       const base=String(i.base_name||i.name||'').split(/\s+[—-]\s+(?=(?:Choose your side|Add sauce|Remove ingredients):)/i)[0];
++      const category=String(i.category_name||'').trim();
++      const label=category&&!base.startsWith(category+' — ')?`${category} — ${base}`:base;
+       const mods=Array.isArray(i.modifiers)?i.modifiers.map(cleanModifier):[];
+       if(Array.isArray(i.removed)&&i.removed.length){
+         for(const v of i.removed)mods.push(`REMOVE: ${String(v)}`);
+       }
+-      return {name:`${qty} × ${base}`,modifier:mods.join('\n  ')};
++      return {name:`${qty} × ${label}`,modifier:mods.join('\n  ')};
+     })
+   }));
+   return [...core,...extra].sort((a:any,b:any)=>b.createdAt-a.createdAt);
