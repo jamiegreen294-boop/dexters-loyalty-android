@@ -1,0 +1,1 @@
+Trigger Vercel production redeploy of the saved working Dexter's Loyalty App build. No application settings, data, menu, collection, staff/admin, KDS, or Supabase configuration are changed by this file.
