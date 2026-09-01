@@ -40,3 +40,5 @@ body:has(#appView:not(.hidden) #homePage:not(.hidden)) #seasonBanner{width:calc(
 #homePage button:focus-visible,#homePage a:focus-visible,#workHomeNav :focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
 #homePage dialog{width:min(390px,calc(100% - 32px));box-sizing:border-box;max-height:85vh;overflow:auto;background:var(--card);color:var(--white);border:1px solid #ffffff30;border-radius:22px;padding:20px}
 #homePage dialog::backdrop{background:#0009}#workCloseHistory{background:var(--yellow);color:#111;border:0;border-radius:12px;padding:12px;width:100%;font-weight:800}
+#homePage [hidden]{display:none!important}
+#homePage .work-hello #greeting{display:inline}
