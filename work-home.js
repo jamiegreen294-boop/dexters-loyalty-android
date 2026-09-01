@@ -18,7 +18,7 @@ function start(){
  greet.remove();coffee.remove();
  const grid=node('div','');grid.id='workQuickActions';grid.innerHTML='<button type="button" class="work-action" id="workRewards"><div class="wi">🎁</div><div class="wt">Your Rewards</div><div class="wd">Coffee, offers & treats</div></button><button type="button" class="work-action" id="workAgain"><div class="wi">⭐</div><div class="wt">Order Again</div><div class="wd">View your previous orders</div></button><button type="button" class="work-action" id="workSpin"><div class="wi">🎡</div><div class="wt">Spin to Win</div><div class="wd" id="workSpinNote">Play when activated</div></button><a class="work-action" href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><div class="wi">💬</div><div class="wt">Ask Dexter</div><div class="wd">Chat with us on WhatsApp</div></a>';
  offers.classList.add('work-deals');offers.querySelector('h2').textContent='Dexter’s Deals';offers.querySelector('h2').className='work-heading';
- const usual=node('section','work-usual','<h2 class="work-heading">Your Usual</h2><div class="work-row"><div class="work-grow" id="workUsualBody">Loading your orders…</div><a class="work-small" href="/collection-order-test.html">View menu</a></div>');
+ const usual=node('section','work-usual','<h2 class="work-heading">Your Usual</h2><div class="work-row"><div class="work-grow" id="workUsualBody">Loading your orders…</div><a class="work-small" id="workUsualOrder" href="/collection-order-test.html">View menu</a></div>');
  const current=node('section','work-current','<h2 class="work-heading">Current Order</h2><div class="work-order" id="workCurrentBody">Loading your orders…</div>');
  // Keep personal offers and all other existing cards after the reference's primary sections.
  home.prepend(top,hero,grid,offers,usual,current);home.classList.add('work-home');
@@ -41,12 +41,13 @@ function start(){
  function statusLabel(s){return ({pending:'Waiting for acceptance',accepted:'Accepted',preparing:'Cooking',ready:'Ready for collection',collected:'Collected',rejected:'Rejected'})[s]||s}
  function render(data){
   orders=data;
-  const counts=new Map();for(const o of data.filter(o=>o.status!=='rejected'))for(const i of o.items||[]){const key=JSON.stringify([i.id,i.name,i.modifiers,i.removed]);const v=counts.get(key)||{item:i,count:0};v.count+=Number(i.qty)||1;counts.set(key,v)}
+  const counts=new Map();for(const o of data.filter(o=>o.status!=='rejected'))for(const i of o.items||[]){const key=JSON.stringify([i.id,i.name,i.modifiers,i.removed]);const v=counts.get(key)||{item:i,count:0,orderId:o.id,itemIndex:o.items.indexOf(i)};v.count+=Number(i.qty)||1;counts.set(key,v)}
   const usual=[...counts.values()].sort((a,b)=>b.count-a.count)[0];
   $('workUsualBody').innerHTML=usual?'<strong>'+esc(usual.item.name)+'</strong><div class="work-desc">Your most ordered item in recent orders · Check current options in the menu.</div>':'<strong>No usual yet</strong><div class="work-desc">Your favourites will appear as you place orders.</div>';
+  $('workUsualOrder').href=usual?'/collection-order-test.html?reorder='+encodeURIComponent(usual.orderId)+'&usual='+usual.itemIndex:'/collection-order-test.html';$('workUsualOrder').textContent=usual?'Review usual':'View menu';
   const o=data.find(o=>['pending','accepted','preparing','ready'].includes(o.status));
   $('workCurrentBody').innerHTML=o?'<strong>Order #'+esc(o.order_number)+'</strong><div class="work-desc">'+esc(statusLabel(o.status))+' · '+esc(o.collection_time)+'</div><div class="work-steps" aria-label="'+esc(statusLabel(o.status))+'">'+[1,2,3].map(i=>'<span class="work-step '+(i<=({pending:0,accepted:1,preparing:2,ready:3}[o.status])?'on':'')+'"></span>').join('')+'</div><a class="work-small" style="margin-top:12px" href="/collection-order-test.html#orders">View order</a>':'<strong>No current order</strong><div class="work-desc">Your next collection order will appear here.</div>';
-  $('workHistoryBody').innerHTML=data.length?data.map(o=>'<div class="work-row"><div><strong>Order #'+esc(o.order_number)+'</strong><div class="work-desc">'+esc(statusLabel(o.status))+'</div><p>'+ (o.items||[]).map(i=>esc(i.qty)+' × '+esc(i.name)).join('<br>')+'</p><a class="work-small" href="/collection-order-test.html">Choose again from current menu</a></div></div>').join(''):'No previous orders yet.';
+  $('workHistoryBody').innerHTML=data.length?data.map(o=>'<div class="work-row"><div><strong>Order #'+esc(o.order_number)+'</strong><div class="work-desc">'+esc(statusLabel(o.status))+'</div><p>'+ (o.items||[]).map(i=>esc(i.qty)+' × '+esc(i.name)).join('<br>')+'</p><a class="work-small" href="/collection-order-test.html?reorder='+encodeURIComponent(o.id)+'">Review this order again</a></div></div>').join(''):'No previous orders yet.';
  }
  function clear(){request++;owner='';busy=false;orders=[];lastRefresh=0;render([]);if(dialog.open)dialog.close()}
  async function refresh(){

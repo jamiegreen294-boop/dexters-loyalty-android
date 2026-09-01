@@ -9,8 +9,12 @@ if(!s.includes('id="orderReviewCard"'))s=s.replace('<label>Collection time</labe
 // The live modifier script owns the basket/review. Do not inject the legacy cart review timer,
 // because it overwrites customised items every two seconds.
 s=s.replace(/<script id="dextersOrderReviewScript">[\s\S]*?<\/script>/,'');
+fs.copyFileSync('web/reorder-core.js','dist/reorder-core.js');
+if(!s.includes('reorder-core.js'))s=s.replace('</body>','<script src="/reorder-core.js"></script></body>');
 if(!s.includes('collection-modifiers-live.js'))s=s.replace('</body>','<script src="/collection-modifiers-live.js"></script></body>');
 if(!s.includes('dextersKeepCollectionMenuOpen'))s=s.replace('</body>',keepOpen+'</body>');
 if(!s.includes('orderReviewCard')||!s.includes('collection-modifiers-live.js')||!s.includes('dextersKeepCollectionMenuOpen'))throw new Error('Collection review/modifier/menu-state injection failed');
+s=s.replace('<script src="/reorder-core.js"></script>','');
+s=s.replace('<script src="/collection-modifiers-live.js"></script>','<script src="/reorder-core.js"></script><script src="/collection-modifiers-live.js"></script>');
 fs.writeFileSync(p,s);
 console.log('Added live collection review/modifiers, kept menu sections open, and hid legacy stock control');
