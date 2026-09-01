@@ -1,23 +1,51 @@
-.integration-note{position:relative;z-index:5;margin:12px auto;padding:14px;max-width:500px;background:#fff3cd;color:#4a3700;border-radius:12px;font:13px/1.5 system-ui}.integration-note select{padding:8px;margin-top:8px;max-width:100%}
-/* Preserve original account/staff visibility and all existing element IDs. */
-body:not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines){--navy:#f7f7f5;--navy2:#f7f7f5;--white:#151515;--muted:#686868;--card:#fff;--yellow:#222;--orange:#222;background:#f7f7f5;color:#151515}
-body:not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) :is(#homePage,#qrPage,#menuPage,#accountPage,#spinPage,#authView) .card{background:#fff;border:0;box-shadow:0 6px 18px #0000000d;color:#151515}
-body:not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .btn.primary{background:#111;color:#fff}
-body:not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) :is(.input,.offer,.secondary){background:#efefec;color:#151515}
-body:not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .nav{background:#fff;color:#151515}
-body:not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .nav button{color:#555}
-body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))) .wrap{max-width:460px;padding-bottom:105px}
-#homePage:not(.hidden){display:flex!important;flex-direction:column;gap:14px}
-#homePage>.card{margin:0!important;border-radius:22px!important;min-width:0}
-#homePage>.card:first-child{background:transparent!important;border:0!important;box-shadow:none!important;order:0}
-#homePage>.card:nth-child(2){order:1}
-#integrationActions{order:2;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-#integrationActions .btn{min-height:90px;display:grid;place-content:center;text-align:center;text-decoration:none;white-space:normal;border-radius:18px}
-#homePage>#collectionOrderLiveCard{order:3}#homePage>#integrationHistory{order:4}#homePage>.card{order:5}
-#bottomNav .nav-inner{max-width:500px}#bottomNav a{flex:1;text-align:center;padding:10px 4px;color:inherit;text-decoration:none;font-size:12px}
+.integration-note{position:relative;z-index:5;margin:12px auto;padding:14px;max-width:430px;background:#fff3cd;color:#4a3700;border-radius:12px;font:13px/1.5 system-ui}.integration-note select{padding:8px;margin-top:8px;max-width:100%}.integration-note button{padding:8px;border:1px solid #b09b50;background:#fff;border-radius:8px}
+/* Approved customer-only visual base. Staff/admin remains untouched. */
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines){--white:#151515;--muted:#6f6f6f;--card:#fff;--yellow:#111;--orange:#111;--navy:#f7f7f5;--navy2:#f7f7f5;background:#f7f7f5;color:#151515}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))) .wrap{max-width:430px;padding:18px 16px 105px;background:#f7f7f5;min-height:100vh}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .logo{display:none}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage)>.card{background:#fff;border:0;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.05);color:#151515;margin:12px 0;padding:17px}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #homePage>.card:first-child{padding:16px 18px;margin-top:4px}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #homePage>.card:nth-child(2){border-radius:22px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #homePage>.card:nth-child(2) h2{font-size:23px;letter-spacing:-.4px;margin-bottom:8px}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .big{font-size:28px;letter-spacing:-.7px}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .muted{color:#6f6f6f}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .stamps{gap:8px;margin:14px 0}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .stamp{background:#efefec;border-color:#d3d3cf;color:#151515}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .stamp.on{background:#111;border-color:#111;color:#fff}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .progress{height:12px;background:#ecece8}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .bar{background:#111}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .reward{border:0;background:#fff}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) :is(.offer,.co-box){background:#f5f5f2;border:0;border-radius:16px;color:#151515}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .btn{border-radius:16px;min-height:48px;font-weight:900}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .primary{background:#111;color:#fff}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .secondary{background:#efefec;color:#151515}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .danger{background:#f3dede;color:#8b2222}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .input{background:#f4f4f1;border:1px solid #deded9;color:#151515}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .tabs{background:#efefec}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .tab{color:#666}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .tab.active{background:#fff;color:#111}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #collectionOrderLiveCard{background:#111!important;color:#fff!important;border-radius:20px!important}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #collectionOrderLiveCard p{color:#d6d6d6}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #collectionOrderLiveCard .btn{background:#fff;color:#111}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #bottomNav{background:rgba(255,255,255,.95);border-top:1px solid #e8e8e5;backdrop-filter:blur(10px)}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #bottomNav button,body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #bottomNav a{color:#777;padding:9px 3px}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #bottomNav button.active{color:#111;font-weight:900}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) #qr{border:1px solid #ecece8}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) :is(.code,.menu-price){color:#111}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .menu-chip{background:#fff;border:1px solid #deded9;color:#333}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .menu-chip.active{background:#111;color:#fff;border-color:#111}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .menu-note{background:#f4f4f1;color:#666}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .menu-item{border-bottom:1px solid #ecece8}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .spin-wheel{border-color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.10);background:conic-gradient(#111 0 45deg,#efefec 45deg 90deg,#777 90deg 135deg,#efefec 135deg 180deg,#111 180deg 225deg,#efefec 225deg 270deg,#777 270deg 315deg,#efefec 315deg)}
+body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))):not(.season-halloween):not(.season-christmas):not(.season-valentines) .spin-wheel-center{background:#fff;color:#111}
+#homePage:not(.hidden){display:flex!important;flex-direction:column;gap:12px}
+#homePage>.card{min-width:0}
+#homePage>.card:has(#greeting){order:0}#homePage>.card:has(#stamps){order:1}#integrationActions{order:2}#homePage>#collectionOrderLiveCard{order:3}#homePage>#integrationHistory{order:4}#homePage>.card{order:5}
+#integrationActions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#integrationActions .btn{min-height:86px;display:grid;place-content:center;text-align:center;text-decoration:none;white-space:normal;border-radius:18px}
+#integrationHistory .history-row{border-top:1px solid #ecece8;padding:14px 0;font-size:14px}
+#integrationHistory .usual-row{background:#f7f7f5;border:0;border-radius:16px;padding:14px;margin:8px 0 14px}
+#bottomNav .nav-inner{max-width:430px}#bottomNav a{flex:1;text-align:center;text-decoration:none;font-size:12px}
 #integrationSpin[hidden]{display:none!important}
-#integrationHistory .history-row{border-top:1px solid #8885;padding:12px 0;font-size:14px}
-.integration-note button{padding:8px;border:1px solid #b09b50;background:#fff;border-radius:8px}
+@media(max-width:360px){body:has(#appView:not(.hidden)):not(:has(#staffPage:not(.hidden))) .wrap{padding-left:12px;padding-right:12px}.stamp{font-size:22px}}
 @media(prefers-reduced-motion:reduce){.season-fx{display:none!important}}
-
-#homePage>.card:has(#greeting){order:0;background:transparent!important;border:0!important;box-shadow:none!important}#homePage>.card:has(#stamps){order:1}#homePage>#integrationActions{order:2}#homePage>#integrationHistory{order:4}
