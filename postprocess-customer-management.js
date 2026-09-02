@@ -1,13 +1,9 @@
 const fs=require('fs');
 const p='dist/index.html';
 let s=fs.readFileSync(p,'utf8');
-const loader='<script id="dextersCustomerManagementLoader" src="/customer-management-live.js?v=az3"></script><script id="dextersCustomerManagementVisibilityFix" src="/customer-management-visibility-fix.js?v=az3"></script>';
+// Safety restore: remove the experimental customer-management loaders so the
+// original, proven Customer Offers UI remains fully available in production.
 s=s.replace(/<script id="dextersCustomerManagementLoader"[^>]*><\/script>/g,'');
 s=s.replace(/<script id="dextersCustomerManagementVisibilityFix"[^>]*><\/script>/g,'');
-s=s.replace('</body></html>',loader+'</body></html>');
-fs.copyFileSync('web/customer-management-live.js','dist/customer-management-live.js');
-fs.copyFileSync('web/customer-management-visibility-fix.js','dist/customer-management-visibility-fix.js');
-if(!s.includes('dextersCustomerManagementLoader')||!s.includes('dextersCustomerManagementVisibilityFix'))throw new Error('Customer management scripts were not injected');
 fs.writeFileSync(p,s);
-console.log('Customer A-Z and inactive cleanup integration injected with admin visibility fix');
-// deployment trigger: az3 visibility fix
+console.log('Restored original Customer Offers controls; A-Z enhancement disabled pending retest');
