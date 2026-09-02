@@ -9,3 +9,5 @@ Checks:
 - guaranteed meal at spin 1000
 - compatibility with the existing Universal QR scanner routing
 - no live deployment
+
+Current test head: dbb80495d48a2d8b43b1bc27736159e8f7b93f28
