@@ -10,3 +10,4 @@ fs.copyFileSync('web/customer-management-visibility-fix.js','dist/customer-manag
 if(!s.includes('dextersCustomerManagementLoader')||!s.includes('dextersCustomerManagementVisibilityFix'))throw new Error('Customer management scripts were not injected');
 fs.writeFileSync(p,s);
 console.log('Customer A-Z and inactive cleanup integration injected with admin visibility fix');
+// deployment trigger: az3 visibility fix
