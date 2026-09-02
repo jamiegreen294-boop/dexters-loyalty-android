@@ -1,0 +1,27 @@
+const fs=require('fs');
+const p='dist/index.html';
+let s=fs.readFileSync(p,'utf8');
+if(s.includes('dextersPointsScannerScript')){console.log('points scanner already present');process.exit(0)}
+const addon=String.raw`<style id="dextersPointsScannerStyle">
+#dxStaffPointsCard .dx-points-scanbox{margin:10px 0;padding:12px;border-radius:14px;background:var(--navy2);border:1px solid #ffffff18}#dxStaffPointsCard .dx-points-scan-title{font-weight:900;margin-bottom:6px}#dxStaffPointsCard #dxPointsVideoWrap{display:none;margin-top:10px;border-radius:14px;overflow:hidden;background:#000;position:relative}#dxStaffPointsCard #dxPointsVideo{display:block;width:100%;max-height:320px;object-fit:cover}#dxStaffPointsCard .dx-scan-help{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4}#dxStaffPointsCard .dx-code-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}#dxStaffPointsCard .dx-code-row .btn{width:auto}
+</style><script id="dextersPointsScannerScript">(function(){
+'use strict';
+var stream=null,raf=0,detector=null;
+function $(id){return document.getElementById(id)}
+function digits(v){var m=String(v||'').match(/(?:^|\D)(\d{6})(?:\D|$)/);return m?m[1]:String(v||'').replace(/\D/g,'').slice(-6)}
+function enhance(){var card=$('dxStaffPointsCard');if(!card||card.dataset.pointsScannerReady==='1')return;card.dataset.pointsScannerReady='1';var old=card.querySelector('p.muted');if(old)old.textContent='Use this dedicated Points QR Scanner for points only. It is separate from the Add Stamp scanner.';var lookup=$('dxPointsLookup');if(!lookup)return;var scan=document.createElement('div');scan.className='dx-points-scanbox';scan.innerHTML='<div class="dx-points-scan-title">📷 Points QR Scanner</div><div class="dx-scan-help">Scan the customer’s existing Dexter’s loyalty QR here. This scanner is only for Customer Points and does not add coffee stamps.</div><div class="dx-code-row"><input id="dxPointsCode" class="input" inputmode="numeric" maxlength="6" placeholder="6-digit loyalty code"><button id="dxStartPointsScan" class="btn secondary" type="button">Scan QR</button></div><div id="dxPointsVideoWrap"><video id="dxPointsVideo" playsinline muted></video></div><div id="dxScanStatus" class="dx-points-status"></div>';
+lookup.parentNode.insertBefore(scan,lookup);lookup.textContent='Check points customer';
+var code=$('dxPointsCode'),start=$('dxStartPointsScan');code.addEventListener('input',function(){code.value=code.value.replace(/\D/g,'').slice(0,6);syncCode();if(code.value.length===6)lookup.click()});start.addEventListener('click',startScan);lookup.addEventListener('click',syncCode,true)
+}
+function syncCode(){var src=$('dxPointsCode'),target=$('staffCode');if(src&&target)target.value=src.value}
+async function startScan(){var st=$('dxScanStatus'),wrap=$('dxPointsVideoWrap'),video=$('dxPointsVideo'),btn=$('dxStartPointsScan');if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){st.textContent='Camera scanning is not supported on this device. Enter the 6-digit code instead.';st.className='dx-points-status dx-points-err';return}if(!('BarcodeDetector' in window)){st.textContent='QR camera scanning is not supported in this browser. Enter the 6-digit code instead.';st.className='dx-points-status dx-points-err';return}try{stopScan();detector=new BarcodeDetector({formats:['qr_code']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});video.srcObject=stream;await video.play();wrap.style.display='block';btn.textContent='Stop Scanner';btn.onclick=function(){stopScan();btn.textContent='Scan QR';btn.onclick=startScan};st.textContent='Point the camera at the customer’s Dexter’s QR code.';st.className='dx-points-status';scanFrame()}catch(e){stopScan();st.textContent='Could not open the camera. Check camera permission or enter the 6-digit code.';st.className='dx-points-status dx-points-err'}}
+async function scanFrame(){var video=$('dxPointsVideo');if(!stream||!detector||!video)return;try{var codes=await detector.detect(video);if(codes&&codes.length){var c=digits(codes[0].rawValue||'');if(c.length===6){var input=$('dxPointsCode');input.value=c;syncCode();var st=$('dxScanStatus');st.textContent='✓ Points QR scanned: '+c;st.className='dx-points-status dx-points-ok';stopScan();var btn=$('dxStartPointsScan');if(btn){btn.textContent='Scan QR';btn.onclick=startScan}setTimeout(function(){var b=$('dxPointsLookup');if(b)b.click()},100);return}}}catch(e){}raf=requestAnimationFrame(scanFrame)}
+function stopScan(){if(raf){cancelAnimationFrame(raf);raf=0}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}var v=$('dxPointsVideo');if(v)v.srcObject=null;var w=$('dxPointsVideoWrap');if(w)w.style.display='none'}
+function boot(){enhance();setTimeout(enhance,500);setTimeout(enhance,1200);new MutationObserver(function(){enhance()}).observe(document.body,{childList:true,subtree:true});window.addEventListener('pagehide',stopScan)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();</script>`;
+if(!s.includes('</body>'))throw new Error('No closing body tag');
+s=s.replace('</body>',addon+'</body>');
+if(!s.includes('dextersPointsScannerScript')||!s.includes('dxPointsCode')||!s.includes('Points QR Scanner'))throw new Error('Dedicated points scanner injection failed');
+fs.writeFileSync(p,s);
+console.log('Dedicated points QR scanner injected');
