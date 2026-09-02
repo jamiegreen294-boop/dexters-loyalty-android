@@ -1,0 +1,1 @@
+Trigger production deployment for Rewards-only Deals layout after hiding the duplicate home Deals section.
