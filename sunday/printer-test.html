@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sunday customer printer test · Dexter’s</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101b19;color:#f6f4eb;font:16px system-ui,sans-serif}main{max-width:850px;margin:auto;padding:24px}h1{font-size:28px}section{background:#1b2b27;padding:20px;border:1px solid #506359;border-radius:14px;margin:20px 0}label{display:block;margin:14px 0 6px}input,select,button{font:inherit;padding:12px;border-radius:8px;max-width:100%}input,select{width:100%;background:#fff;color:#14231b}button{background:#d9eea4;color:#172219;border:0;cursor:pointer;margin:12px 8px 0 0;min-height:46px}button:disabled{opacity:.5;cursor:default}a{color:#d9eea4}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;color:#111;padding:20px;font:15px monospace;line-height:1.5}#message{min-height:3em;line-height:1.5}.muted{color:#c7d4cb}
+</style></head><body><main>
+<a href="/">Back to loyalty app</a><h1>Sunday customer printer test</h1>
+<p>Print one customer’s Sunday order to the Epson. Your phone or tablet must be on the same Wi-Fi as the printer, including when testing at home. Nothing on this page accepts an order or changes its status.</p>
+<section><h2>1. Choose the ticket</h2><button id="sample" type="button">Use sample ticket</button>
+<label for="date">Sunday collection date</label><input id="date" type="date"><button id="load" type="button">Load customer orders</button>
+<p class="muted">For real orders, sign in to the loyalty app as staff or admin on this same website first. The sample needs no sign-in.</p>
+<label for="orders">Customer order</label><select id="orders"><option value="">Sample ticket — not a real order</option></select>
+</section><section><h2>2. Check and print</h2>
+<label for="ip">Epson printer IP address</label><input id="ip" value="192.168.0.10" inputmode="decimal" autocomplete="off">
+<p class="muted">Enter the printer’s current address. It can change when moving from shop Wi-Fi to home Wi-Fi. This test uses HTTPS and does not change the KDS printer settings.</p>
+<pre id="ticket" aria-label="Ticket preview"></pre>
+<button id="print" type="button">Print sample ticket</button><p id="message" role="status" aria-live="polite"></p>
+<p class="muted">After sending, check the paper at the printer. If confirmation is missing, check for a ticket before retrying to avoid duplicates.</p>
+</section></main><script src="api.js"></script><script src="epson-printer.js"></script><script src="printer-test.js"></script></body></html>
