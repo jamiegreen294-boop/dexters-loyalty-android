@@ -1,0 +1,17 @@
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.SundayRoast=factory()})(this,function(){
+'use strict';
+const meals={chicken:{name:'Roast Chicken Dinner',price:1499,group:'adult'},beef:{name:'Roast Beef Dinner',price:1499,group:'adult'},kids_chicken:{name:"Kids' Roast Chicken Dinner",price:999,group:'kids'},kids_beef:{name:"Kids' Roast Beef Dinner",price:999,group:'kids'}};
+const extras={yorkshire:{name:'Extra Yorkshire Pudding',price:75},gravy:{name:'Extra Gravy',price:100},stuffing:{name:'Extra Stuffing',price:100},potatoes:{name:'Extra Roast Potatoes',price:150},chicken:{name:'Extra Chicken',price:250},beef:{name:'Extra Beef',price:350}};
+const included=['Crispy roast potatoes','Creamy mashed potatoes','Mashed turnip','Carrots','Garden peas','Broccoli','Yorkshire pudding','Sage & onion stuffing','Rich gravy'];
+const money=p=>'£'+(p/100).toFixed(2);
+function london(now=new Date()){const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now);const x=Object.fromEntries(p.map(v=>[v.type,v.value]));return `${x.year}-${x.month}-${x.day}T${x.hour}:${x.minute}`}
+function validSunday(date){const d=new Date(date+'T12:00:00Z');return /^\d{4}-\d{2}-\d{2}$/.test(date)&&!isNaN(d)&&d.toISOString().slice(0,10)===date&&d.getUTCDay()===0}
+function cutoff(date){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-2);return d.toISOString().slice(0,10)+'T20:00'}
+function validateConfig(c){if(!validSunday(c.date))throw Error('Choose a Sunday collection date.');if(!['auto','open','closed'].includes(c.override))throw Error('Invalid ordering mode.');for(const k of Object.keys(meals))if(!Number.isInteger(c.stock[k])||c.stock[k]<0||c.stock[k]>10000)throw Error('Availability must be a whole number from 0 to 10,000.');return c}
+function open(c,now=new Date()){if(!c.enabled||c.override==='closed'||!validSunday(c.date)||london(now).slice(0,10)>c.date)return false;return c.override==='open'||london(now)<cutoff(c.date)}
+function empty(){return{meals:Object.fromEntries(Object.keys(meals).map(k=>[k,0])),extras:Object.fromEntries(Object.keys(extras).map(k=>[k,0])),slot:'',name:'',phone:''}}
+function lines(d){const out=[];for(const [kind,catalog]of Object.entries({meals,extras}))for(const [key,item]of Object.entries(catalog)){const qty=d[kind]?.[key]||0;if(!Number.isInteger(qty)||qty<0||qty>50)throw Error('Quantities must be whole numbers between 0 and 50.');if(qty)out.push({id:`sunday-${kind}-${key}`,name:item.name,qty,price:item.price,kind,key})}return out}
+function total(d){return lines(d).reduce((n,i)=>n+i.qty*i.price,0)}
+function validate(c,d,now=new Date()){validateConfig(c);if(!open(c,now))throw Error('Pre-orders closed for this Sunday');const items=lines(d);if(!items.some(i=>i.kind==='meals'))throw Error('Choose at least one dinner.');for(const k of Object.keys(meals))if((d.meals[k]||0)>c.stock[k])throw Error(meals[k].name+' is sold out or has insufficient availability.');if(!c.slots.includes(d.slot)||`${c.date}T${d.slot}`<=london(now))throw Error('Choose an available Sunday collection time.');if(!d.name?.trim()||d.name.length>120)throw Error('Enter your name.');if(!/^[+()\d\s-]{7,40}$/.test(d.phone||'')||(d.phone.match(/\d/g)||[]).length<7)throw Error('Enter a valid phone number.');return items}
+return{meals,extras,included,money,london,validSunday,cutoff,validateConfig,open,empty,lines,total,validate};
+});
