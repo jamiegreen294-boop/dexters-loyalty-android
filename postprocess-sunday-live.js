@@ -1,0 +1,11 @@
+const fs=require('fs');const path=require('path');
+const dist=path.join(__dirname,'dist'),src=path.join(__dirname,'sunday'),out=path.join(dist,'sunday');
+fs.mkdirSync(out,{recursive:true});
+for(const f of ['customer.html','core.js','api.js','customer.js','style.css'])fs.copyFileSync(path.join(src,f),path.join(out,f));
+const index=path.join(dist,'index.html');let html=fs.readFileSync(index,'utf8');
+const addon=`<script id="dextersSundayRoastLiveScript">(function(){function add(){var page=document.getElementById('homePage');if(!page||document.getElementById('sundayRoastLiveCard'))return;var card=document.createElement('div');card.className='card';card.id='sundayRoastLiveCard';card.innerHTML='<h2>🍽️ Sunday Roast Pre-Order</h2><p>Pre-order your Dexter’s Sunday Roast for collection.</p><a class="btn primary" style="display:block;text-decoration:none;text-align:center" href="/sunday/customer.html">Pre-order Sunday Roast</a>';page.appendChild(card)}add();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add,{once:true});setTimeout(add,300)})();</script>`;
+if(!html.includes('dextersSundayRoastLiveScript'))html=html.replace('</body></html>',addon+'</body></html>');
+if(!html.includes('sundayRoastLiveCard')||!html.includes('/sunday/customer.html'))throw new Error('Sunday Roast live card injection failed');
+fs.writeFileSync(index,html);
+for(const f of ['customer.html','core.js','api.js','customer.js','style.css'])if(!fs.existsSync(path.join(out,f)))throw new Error('Missing Sunday Roast build file: '+f);
+console.log('Sunday Roast live page and home card added.');
