@@ -1,0 +1,14 @@
+const fs=require('fs');
+const path=require('path');
+const dist=path.join(__dirname,'dist');
+const index=path.join(dist,'index.html');
+const src=path.join(__dirname,'web','deals-live.js');
+const dst=path.join(dist,'deals-live.js');
+if(!fs.existsSync(index)) throw new Error('dist/index.html missing before deals postprocess');
+if(!fs.existsSync(src)) throw new Error('web/deals-live.js missing');
+fs.copyFileSync(src,dst);
+let html=fs.readFileSync(index,'utf8');
+if(!html.includes('id="dextersDealsLiveLoader"')) html=html.replace('</body>','<script id="dextersDealsLiveLoader" src="/deals-live.js"></script></body>');
+if(!html.includes('id="dextersDealsLiveLoader"')) throw new Error('Deals live loader injection failed');
+fs.writeFileSync(index,html);
+console.log('Deals live integration injected');
