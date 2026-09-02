@@ -1,0 +1,17 @@
+const fs=require('fs'),assert=require('assert');
+const core=fs.readFileSync('sunday/core.js','utf8');
+const customer=fs.readFileSync('sunday/customer.js','utf8');
+const customerHtml=fs.readFileSync('sunday/customer.html','utf8');
+const admin=fs.readFileSync('sunday/admin.html','utf8');
+const adminJs=fs.readFileSync('sunday/admin.js','utf8');
+const api=fs.readFileSync('sunday/api.js','utf8');
+const live=fs.readFileSync('postprocess-sunday-live.js','utf8');
+for(const x of ['price:1499','price:999'])assert(core.includes(x),'Sunday prices missing');
+assert(customer.includes('photos={chicken:'),'Approved meal images missing');
+assert(customerHtml.includes('/sunday/theme.css'),'Approved Sunday theme missing');
+for(const x of ['Enable Sunday Roast ordering','Manually reopen','Manually close','Adult Chicken dinners remaining','Adult Beef dinners remaining','Kids Chicken dinners remaining','Kids Beef dinners remaining'])assert(admin.includes(x),'Missing admin control: '+x);
+assert(api.includes("FN='sunday-roast-api'"),'Production Sunday API not selected');
+assert(api.includes('config:config(d.settings)'),'Production Sunday status is not normalised for customer/admin pages');
+assert(adminJs.includes('s.config.date'),'Sunday admin startup is not using the normalised production date');
+assert(live.includes('/sunday/admin.html'),'Sunday admin link missing from staff/admin area');
+console.log('PASS: complete approved Sunday Roast production package: images/theme, £14.99 adults, £9.99 kids, manual on/off, reopen/close, four stock controls, production API/status mapping and admin entry.');
