@@ -1,9 +1,13 @@
 const fs=require('fs');
 const p='dist/index.html';
 let s=fs.readFileSync(p,'utf8');
-// Safety restore: remove the experimental customer-management loaders so the
-// original, proven Customer Offers UI remains fully available in production.
+const loader='<script id="dextersCustomerManagementLoader" src="/customer-management-live.js?v=combined1"></script><script id="dextersNewsBannerLoader" src="/news-banner-live.js?v=combined1"></script>';
 s=s.replace(/<script id="dextersCustomerManagementLoader"[^>]*><\/script>/g,'');
 s=s.replace(/<script id="dextersCustomerManagementVisibilityFix"[^>]*><\/script>/g,'');
+s=s.replace(/<script id="dextersNewsBannerLoader"[^>]*><\/script>/g,'');
+s=s.replace('</body></html>',loader+'</body></html>');
+fs.copyFileSync('web/customer-management-live.js','dist/customer-management-live.js');
+fs.copyFileSync('web/news-banner-live.js','dist/news-banner-live.js');
+if(!s.includes('dextersCustomerManagementLoader')||!s.includes('dextersNewsBannerLoader'))throw new Error('Combined customer/news scripts were not injected');
 fs.writeFileSync(p,s);
-console.log('Restored original Customer Offers controls; A-Z enhancement disabled pending retest');
+console.log('Combined A-Z customer offers, inactive cleanup and news banner injected');
