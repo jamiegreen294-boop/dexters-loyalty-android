@@ -1,0 +1,2 @@
+Dexter's loyalty points production release trigger.
+Includes: 1 point per full £1, staff QR/order-value flow, automatic collection points on Collected, duplicate protection, customer balance/value, free-item categories and next reward.
