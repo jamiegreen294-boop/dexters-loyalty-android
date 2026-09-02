@@ -8,7 +8,7 @@ async function run(){
  const fields={fullName:{value:'Test Customer'},phone:{value:''},signupEmail:{value:'qa@example.invalid'},signupPassword:{value:'test-only-password'}};
  const context=vm.createContext({$:id=>fields[id],db:{auth:{signUp:async data=>{requests.push(data);return response;}}},status:m=>messages.push(m),loadSession:async()=>{loads++;},location:{origin:'http://localhost:4173'}});
  vm.runInContext(signup,context);await vm.runInContext('signup()',context);
- assert.equal(requests[0].options.emailRedirectTo,productionUrl);
+ assert.equal(requests[0].options.emailRedirectTo,'https://app.dextersspot.co.uk/');
  assert.equal(requests[0].options.data.full_name,'Test Customer');
  assert(!requests[0].options.emailRedirectTo.includes('localhost'));
  assert(messages[0].includes('verification link'));assert.equal(loads,0);

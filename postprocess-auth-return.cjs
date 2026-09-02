@@ -1,5 +1,5 @@
 const fs=require('node:fs'),zlib=require('node:zlib'),assert=require('node:assert/strict');
-const productionUrl='https://dexters-loyalty-v15.vercel.app/';
+const productionUrl='https://app.dextersspot.co.uk/';
 function patch(source){
  const before="db.auth.signUp({email,password,options:{data:{full_name:name,phone}}})";
  assert.equal(source.split(before).length-1,1,'Expected one signup call');
