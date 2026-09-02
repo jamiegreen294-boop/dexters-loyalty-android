@@ -1,0 +1,1 @@
+Trigger production deployment for Dexter's Rewards-only Deals layout. The duplicate home Deals box should remain hidden; the monthly deal stays in Your Rewards.
