@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: mkdir -p "$DEXTERS_QA_ROOT" && npm install --prefix "$DEXTERS_QA_ROOT" --no-save jsdom@26 jsqr@1.4.0
+      - run: mkdir -p "$DEXTERS_QA_ROOT" && npm install --prefix "$DEXTERS_QA_ROOT" --no-save jsdom@26 jsqr@1.4.0 @electric-sql/pglite@0.3.10
       - run: npm run build
       - run: npm run test:shared-spin
       - run: npm run test:combined
