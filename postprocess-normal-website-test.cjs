@@ -7,10 +7,18 @@ let s=fs.readFileSync(p,'utf8');
 s=s.replace(/<style id="extremeHorrorSlasher">[\s\S]*?<\/style>/g,'');
 s=s.replace(/<style id="blood-drip-curtain-css">[\s\S]*?<\/style>/g,'');
 s=s.replace(/<div class="blood-drip-curtain"[\s\S]*?<\/div>/g,'');
-s=s.replace(/<div class="horror-stage"[\s\S]*?<\/div>/g,'');
 s=s.replace(/<div class="vignette"[^>]*><\/div>/g,'');
 s=s.replace(/<div class="noise"[^>]*><\/div>/g,'');
 s=s.replace(/<script id="blood-drip-curtain-js">[\s\S]*?<\/script>/g,'');
+for(const cls of ['red-haze','horror-stalker','second-stalker','creepy-face','grin','eye-pair eye1','eye-pair eye2','eye-pair eye3','eye-pair eye4','slash slash1','slash slash2','slash slash3']){
+  const esc=cls.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  s=s.replace(new RegExp(`<div class="${esc}"[^>]*><\\/div>`,'g'),'');
+}
+s=s.replace(/<div class="horror-stage"[^>]*>/g,'');
+
+// Restore normal Dexter's hero copy.
+s=s.replace(/<h1>DON’T TURN AROUND\.<br>JUST ORDER\.<\/h1>/g,'<h1>Big food.<br>Proper flavour.</h1>');
+s=s.replace(/<p class="lead">Dexter’s after dark:[\s\S]*?<\/p>/g,'<p class="lead">Collection ordering, delivery via Just Eat, Sunday Roast pre-orders, catering, rewards and customer information in one Dexter’s website.</p>');
 
 // Force the website preview to stay on the normal Dexter's theme while this redesign is tested.
 const normalCss=`<style id="normalWebsiteThemeTest">
@@ -30,4 +38,4 @@ body.season-halloween,body.season-christmas,body.season-valentines{--bg:#0b0f14!
 s=s.replace('</head>',normalCss+'</head>');
 s=s.replace('</body>',`<script id="force-normal-website-theme">document.body.classList.remove('season-halloween','season-christmas','season-valentines');</script></body>`);
 fs.writeFileSync(p,s);
-console.log('Forced normal non-horror theme for website test');
+console.log('Forced clean normal non-horror theme for website test');
