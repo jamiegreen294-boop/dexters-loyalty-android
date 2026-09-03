@@ -3,39 +3,40 @@ const p='dist/website-test.html';
 if(!fs.existsSync(p)) process.exit(0);
 let s=fs.readFileSync(p,'utf8');
 
-// Remove experimental horror-only layers injected by earlier test postprocessors.
+// Strip all experimental seasonal/horror layers and previous test-only body content.
 s=s.replace(/<style id="extremeHorrorSlasher">[\s\S]*?<\/style>/g,'');
 s=s.replace(/<style id="blood-drip-curtain-css">[\s\S]*?<\/style>/g,'');
-s=s.replace(/<div class="blood-drip-curtain"[\s\S]*?<\/div>/g,'');
-s=s.replace(/<div class="vignette"[^>]*><\/div>/g,'');
-s=s.replace(/<div class="noise"[^>]*><\/div>/g,'');
-s=s.replace(/<script id="blood-drip-curtain-js">[\s\S]*?<\/script>/g,'');
-for(const cls of ['red-haze','horror-stalker','second-stalker','creepy-face','grin','eye-pair eye1','eye-pair eye2','eye-pair eye3','eye-pair eye4','slash slash1','slash slash2','slash slash3']){
-  const esc=cls.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  s=s.replace(new RegExp(`<div class="${esc}"[^>]*><\\/div>`,'g'),'');
-}
-s=s.replace(/<div class="horror-stage"[^>]*>/g,'');
+s=s.replace(/<style id="normalWebsiteThemeTest">[\s\S]*?<\/style>/g,'');
 
-// Restore normal Dexter's hero copy.
-s=s.replace(/<h1>DON’T TURN AROUND\.<br>JUST ORDER\.<\/h1>/g,'<h1>Big food.<br>Proper flavour.</h1>');
-s=s.replace(/<p class="lead">Dexter’s after dark:[\s\S]*?<\/p>/g,'<p class="lead">Collection ordering, delivery via Just Eat, Sunday Roast pre-orders, catering, rewards and customer information in one Dexter’s website.</p>');
-
-// Force the website preview to stay on the normal Dexter's theme while this redesign is tested.
-const normalCss=`<style id="normalWebsiteThemeTest">
-body{background:linear-gradient(#151e2b,#080c12)!important;color:#fff!important;font-family:system-ui,-apple-system,Segoe UI,sans-serif!important}
-body.season-halloween,body.season-christmas,body.season-valentines{--bg:#0b0f14!important;--panel:#151e2b!important;--ink:#fff!important;--muted:#b9c4d0!important;--gold:#ffd36d!important;--accent:#ff8a00!important;background:linear-gradient(#151e2b,#080c12)!important;font-family:system-ui,-apple-system,Segoe UI,sans-serif!important}
-.season-halloween .top,.season-christmas .top,.season-valentines .top{background:#080c12eb!important;border-bottom:1px solid #ffffff20!important;box-shadow:none!important}
-.season-halloween .hero,.season-christmas .hero,.season-valentines .hero{min-height:auto!important;background:none!important;padding:74px 0 46px!important}
-.season-halloween h1,.season-christmas h1,.season-valentines h1{text-shadow:none!important;filter:none!important;font-family:system-ui,-apple-system,Segoe UI,sans-serif!important;text-transform:none!important;letter-spacing:-.055em!important}
-.season-halloween h1:after,.season-christmas h1:after,.season-valentines h1:after{display:none!important;content:none!important}
-.season-halloween .card,.season-christmas .card,.season-valentines .card{background:linear-gradient(145deg,#ffffff08,#ffffff01),#151e2b!important;border:1px solid #ffffff20!important;border-radius:22px!important;box-shadow:none!important}
-.season-halloween .btn,.season-christmas .btn,.season-valentines .btn{background:linear-gradient(90deg,#ffd36d,#ff8a00)!important;color:#111!important;border:0!important;border-radius:14px!important;box-shadow:none!important;text-transform:none!important;letter-spacing:normal!important}
-.season-halloween .btn.alt,.season-christmas .btn.alt,.season-valentines .btn.alt{background:#223148!important;color:#fff!important;border:1px solid #ffffff20!important}
-.season-halloween .legal a,.season-christmas .legal a,.season-valentines .legal a{background:#101824!important;border:1px solid #ffffff20!important;border-radius:14px!important}
-.season-halloween .blood,.season-halloween .ghost,.season-halloween .fog{display:none!important}
-@media(max-width:820px){.season-halloween .hero,.season-christmas .hero,.season-valentines .hero{min-height:auto!important;padding-top:44px!important}}
+const css=`<style id="dexters-clean-website-v2">
+:root{--bg:#f7f7f5;--ink:#151515;--muted:#646464;--panel:#fff;--line:#e6e6e2;--brand:#f5b800;--brand2:#ff8a00;--dark:#202020;--soft:#fff7dc}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5}.wrap{width:min(1180px,calc(100% - 32px));margin:auto}
+.site-top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}.top-row{min-height:76px;display:flex;align-items:center;gap:26px}.logo{width:142px;height:auto}.nav{display:flex;gap:22px;align-items:center;margin-left:auto}.nav a{color:var(--ink);text-decoration:none;font-weight:750;font-size:15px}.order-now{background:var(--brand);padding:12px 18px;border-radius:999px!important}
+.hero{background:linear-gradient(135deg,#fff5cf,#ffe09a);padding:58px 0}.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}.hero h1{font-size:clamp(44px,7vw,76px);line-height:.96;letter-spacing:-.055em;margin:0 0 18px}.hero p{font-size:20px;color:#4b4b4b;max-width:650px}.hero-card{background:#fff;border-radius:24px;padding:26px;box-shadow:0 16px 40px #00000012}.hero-card h2{margin-top:0}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:13px 19px;border-radius:12px;text-decoration:none;font-weight:850;background:var(--brand);color:#161616;border:1px solid transparent}.btn.dark{background:var(--dark);color:#fff}.btn.light{background:#fff;color:#171717;border-color:#d9d9d5}
+.section{padding:56px 0}.section.white{background:#fff}.section h2{font-size:clamp(32px,4vw,50px);line-height:1.05;letter-spacing:-.035em;margin:0 0 10px}.section-intro{color:var(--muted);font-size:18px;margin:0 0 26px}.order-grid,.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.tile{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px}.tile strong{font-size:22px;display:block;margin-bottom:7px}.tile p{color:var(--muted);margin:0 0 18px}.tile.primary{background:var(--soft);border-color:#f0cf65}.tile .btn{width:100%}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:22px}.promo{border-radius:24px;padding:30px;min-height:260px;display:flex;flex-direction:column;justify-content:flex-end}.promo.roast{background:linear-gradient(145deg,#efe6da,#d6b48a)}.promo.rewards{background:linear-gradient(145deg,#ffe78f,#f5b800)}.promo h3{font-size:34px;line-height:1;margin:0 0 10px}.promo p{max-width:520px;margin:0 0 18px}
+.info-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden}.info-strip div{background:#fff;padding:22px}.info-strip b{display:block;margin-bottom:4px}.info-strip span{color:var(--muted);font-size:14px}
+.footer{background:#1d1d1d;color:#eee;padding:38px 0}.footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:28px}.footer a{color:#eee;text-decoration:none}.footer small,.footer p{color:#bdbdbd}.footer-links{display:grid;gap:8px}.preview-note{margin-top:22px;padding-top:18px;border-top:1px solid #ffffff1f;font-size:12px;color:#9f9f9f}
+@media(max-width:850px){.nav{display:none}.hero-grid,.order-grid,.feature-grid,.split,.footer-grid,.info-strip{grid-template-columns:1fr}.hero{padding:42px 0}.hero h1{font-size:50px}.top-row{min-height:68px}.logo{width:126px}.section{padding:42px 0}.promo{min-height:220px}.actions .btn{width:100%}}
 </style>`;
-s=s.replace('</head>',normalCss+'</head>');
-s=s.replace('</body>',`<script id="force-normal-website-theme">document.body.classList.remove('season-halloween','season-christmas','season-valentines');</script></body>`);
+
+const body=`<body>
+<header class="site-top"><div class="wrap top-row"><img class="logo" src="https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo" alt="Dexter’s Sit-in and Take Away"><nav class="nav"><a href="#order">Order</a><a href="#sunday">Sunday Roast</a><a href="#rewards">Rewards</a><a href="#catering">Catering</a><a href="#help">Help</a><a class="order-now" href="#order">Order now</a></nav></div></header>
+<main>
+<section class="hero"><div class="wrap hero-grid"><div><h1>Big food.<br>Proper flavour.</h1><p>Order Dexter’s for collection, get it delivered with Just Eat, or explore Sunday Roast, rewards and catering.</p><div class="actions"><a class="btn" href="/collection-order-test.html">Order for collection</a><a class="btn dark" href="https://www.just-eat.co.uk/area/g4-glasgow_1/cafe" target="_blank" rel="noopener">Delivery via Just Eat</a></div></div><aside class="hero-card"><h2>Dexter’s Glasgow</h2><p>10a Dundasvale Court, Glasgow, G4 0JS</p><p><strong>0141 473 5249</strong></p><a class="btn light" href="https://wa.me/441414735249">Contact Dexter’s</a></aside></div></section>
+
+<section class="section white" id="order"><div class="wrap"><h2>How would you like your Dexter’s?</h2><p class="section-intro">Choose collection or delivery and get straight to ordering.</p><div class="order-grid"><article class="tile primary"><strong>Collection</strong><p>Order direct from Dexter’s and choose an available collection time.</p><a class="btn" href="/collection-order-test.html">Start collection order</a></article><article class="tile"><strong>Delivery</strong><p>Get Dexter’s delivered through Just Eat.</p><a class="btn dark" href="https://www.just-eat.co.uk/area/g4-glasgow_1/cafe" target="_blank" rel="noopener">Order on Just Eat</a></article><article class="tile"><strong>View rewards</strong><p>Open the Dexter’s Loyalty App for stamps, points and available rewards.</p><a class="btn light" href="/">Open Loyalty App</a></article></div></div></section>
+
+<section class="section" id="sunday"><div class="wrap"><div class="split"><article class="promo roast"><h3>Sunday Roast</h3><p>Pre-order your Dexter’s Sunday Roast for collection. Adults £14.99 and kids £9.99.</p><div><a class="btn dark" href="/sunday/customer.html">Pre-order Sunday Roast</a></div></article><article class="promo rewards" id="rewards"><h3>Dexter’s Rewards</h3><p>Keep your coffee stamps, points and promotional rewards together in the Loyalty App.</p><div><a class="btn dark" href="/">Open rewards</a></div></article></div></div></section>
+
+<section class="section white" id="catering"><div class="wrap"><h2>Catering from Dexter’s</h2><p class="section-intro">Planning a meeting, party, workplace lunch or event? Send us your requirements and we’ll confirm availability.</p><div class="feature-grid"><article class="tile"><strong>Tell us what you need</strong><p>Guest numbers, date, collection time and the kind of food you’re looking for.</p></article><article class="tile"><strong>Dietary information</strong><p>Tell us about dietary requirements or allergens so the team can discuss suitable options.</p></article><article class="tile primary"><strong>Send an enquiry</strong><p>Please allow at least 48 hours for catering requests.</p><a class="btn" href="/catering.html#cateringFormCard">Catering enquiry</a></article></div></div></section>
+
+<section class="section" id="help"><div class="wrap"><h2>Need help?</h2><div class="info-strip"><div><b>Allergens</b><span>Check allergen information before ordering.</span><br><a href="/allergens.html">View allergen information</a></div><div><b>Customer information</b><span>Terms, privacy and promotion information.</span><br><a href="/terms.html">View terms</a></div><div><b>Contact Dexter’s</b><span>Questions about an order or our services?</span><br><a href="https://wa.me/441414735249">Message us</a></div></div></div></section>
+</main>
+<footer class="footer"><div class="wrap"><div class="footer-grid"><div><img class="logo" src="https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo" alt="Dexter’s"><p>10a Dundasvale Court, Glasgow, G4 0JS<br>0141 473 5249</p></div><div><strong>Order</strong><div class="footer-links"><a href="/collection-order-test.html">Collection</a><a href="https://www.just-eat.co.uk/area/g4-glasgow_1/cafe" target="_blank" rel="noopener">Just Eat delivery</a><a href="/sunday/customer.html">Sunday Roast</a><a href="/catering.html">Catering</a></div></div><div><strong>Customer information</strong><div class="footer-links"><a href="/allergens.html">Allergens</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/rewards-promo-terms.html">Promotion terms</a></div></div></div><div class="preview-note">Website redesign preview only — not live.</div></div></footer>
+</body>`;
+
+s=s.replace('</head>',css+'</head>');
+s=s.replace(/<body[\s\S]*?<\/body>/,body);
 fs.writeFileSync(p,s);
-console.log('Forced clean normal non-horror theme for website test');
+console.log('Rebuilt Dexter website preview with clean customer-first flow');
