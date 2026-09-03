@@ -8,11 +8,14 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      DEXTERS_QA_MODULES: ${{ github.workspace }}/.qa-node
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: mkdir -p "$DEXTERS_QA_MODULES" && npm install --prefix "$DEXTERS_QA_MODULES" --no-save jsdom@26
       - run: npm run build
       - run: npm run test:shared-spin
       - run: npm run test:combined
