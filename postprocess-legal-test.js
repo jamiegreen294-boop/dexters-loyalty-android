@@ -1,0 +1,7 @@
+const fs=require('fs');
+for(const f of ['legal.css','privacy.html','terms.html','allergens.html']) fs.copyFileSync('web/'+f,'dist/'+f);
+const footer=`<section id="dextersCustomerInfo" style="max-width:700px;margin:18px auto 110px;padding:0 18px"><div class="card" style="text-align:center"><h2>Customer information</h2><p class="muted">Food safety, privacy and ordering information.</p><p style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center"><a href="/allergens.html">Allergen information</a><a href="/privacy.html">Privacy & data protection</a><a href="/terms.html">Terms & conditions</a><a href="/sunday-roast-policy.html">Sunday Roast policy</a></p></div></section>`;
+let p='dist/index.html',s=fs.readFileSync(p,'utf8');if(!s.includes('id="dextersCustomerInfo"'))s=s.replace('</body>',footer+'</body>');fs.writeFileSync(p,s);
+function addNotice(file){if(!fs.existsSync(file))return;let h=fs.readFileSync(file,'utf8');if(h.includes('dextersAllergenNotice'))return;const n=`<section id="dextersAllergenNotice" class="card" style="border-left:4px solid #ffd43b"><h2>Allergy or intolerance?</h2><p>Check <a href="/allergens.html">Dexter’s allergen information</a> before ordering. If you need information for a specific item, ask Dexter’s before completing your order. Staff must never guess.</p></section>`;h=h.replace('</main>',n+'</main>');fs.writeFileSync(file,h)}
+addNotice('dist/collection-order-test.html');addNotice('dist/sunday/customer.html');
+console.log('Added test legal and allergen customer information');
