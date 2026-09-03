@@ -1,0 +1,10 @@
+const fs=require('fs');
+const p='dist/website-test.html';
+if(!fs.existsSync(p)) process.exit(0);
+let s=fs.readFileSync(p,'utf8');
+if(s.includes('Delivery via Just Eat')) process.exit(0);
+const justEat='https://www.just-eat.co.uk/area/g4-glasgow_1/cafe';
+s=s.replace('<a class="btn alt" href="/">Open Loyalty App</a>','<a class="btn alt" href="'+justEat+'" target="_blank" rel="noopener">Delivery via Just Eat</a><a class="btn alt" href="/">Open Loyalty App</a>');
+s=s.replace('<article class="card"><h3>🎁 Rewards</h3>','<article class="card"><h3>🛵 Delivery</h3><p>Prefer delivery? Order Dexter’s through Just Eat.</p><a class="btn" href="'+justEat+'" target="_blank" rel="noopener">Order delivery on Just Eat</a></article><article class="card"><h3>🎁 Rewards</h3>');
+fs.writeFileSync(p,s);
+console.log('Added Just Eat delivery links to website test');
