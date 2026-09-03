@@ -1,0 +1,22 @@
+name: Shared Spin Test Check
+on:
+  push:
+    branches: [test/shared-spin-universal-qr]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run build
+      - run: npm run test:shared-spin
+      - run: npm run test:combined
+      - run: npm run test:auth-return
+      - run: grep -q 'sharedSpinIntegrationTest' dist/index.html
+      - run: grep -q 'shared_spin_test_spin' dist/index.html
+      - run: grep -q 'shared_spin_test_qr_action' dist/index.html
