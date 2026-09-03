@@ -1,0 +1,1 @@
+const fs=require('fs');const p='dist/index.html';let s=fs.readFileSync(p,'utf8');s=s.split('receipt-points-claim-test').join('receipt-points-claim');fs.writeFileSync(p,s);
