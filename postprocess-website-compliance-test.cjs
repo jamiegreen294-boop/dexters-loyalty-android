@@ -11,7 +11,7 @@ if(!s.includes('id="dexterAi"')){
 }
 
 if(!s.includes('Copyright & site use')){
- s=s.replace('</div></footer>',`<p><strong>Dundasvale Cafe Ltd</strong> · Company No. SC686266 · Registered office: 10a Dundasvale Court, Glasgow, Scotland, G4 0JS.</p><p>© ${new Date().getFullYear()} Dundasvale Cafe Ltd trading as Dexter’s. Dexter’s branding, original text, graphics and site code are used by or for Dexter’s. Third-party trade marks remain the property of their respective owners. No third-party photos or creative content should be copied or reused without permission or an applicable licence.</p><p><a style="color:inherit" href="/privacy.html">Privacy</a> · <a style="color:inherit" href="/terms.html">Terms</a> · <a style="color:inherit" href="/allergens.html">Allergens</a> · <a style="color:inherit" href="/rewards-promo-terms.html">Promotion terms</a> · <strong>Copyright & site use</strong></p></div></footer>`);
+ s=s.replace('</div></footer>',`<p><strong>Dexter’s</strong> · 10a Dundasvale Court, Glasgow, G4 0JS · 0141 473 5249.</p><p>© ${new Date().getFullYear()} Dexter’s. Dexter’s branding, original text, graphics and site code are used by or for Dexter’s. Third-party trade marks remain the property of their respective owners. No third-party photos or creative content should be copied or reused without permission or an applicable licence.</p><p><a style="color:inherit" href="/privacy.html">Privacy</a> · <a style="color:inherit" href="/terms.html">Terms</a> · <a style="color:inherit" href="/allergens.html">Allergens</a> · <a style="color:inherit" href="/rewards-promo-terms.html">Promotion terms</a> · <strong>Copyright & site use</strong></p></div></footer>`);
 }
 
 if(!s.includes('id="cookieLawNote"')){
@@ -19,4 +19,4 @@ if(!s.includes('id="cookieLawNote"')){
 }
 
 fs.writeFileSync(p,s);
-console.log('Added website interaction, business disclosure, copyright and cookie-law test content');
+console.log('Added website interaction, Dexter’s disclosure, copyright and cookie-law test content');
