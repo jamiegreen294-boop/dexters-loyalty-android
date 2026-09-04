@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dexter's Epson Loyalty Receipt Test</title>
+<style>
+:root{color-scheme:dark;--bg:#08101d;--card:#132038;--muted:#aab4c3;--yellow:#ffd43b;--orange:#ff8a00;--red:#ff6b6b;--green:#7ee2a8}*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0c1526,#08101d);color:#fff;font-family:system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:680px;margin:auto;padding:20px}.card{background:var(--card);border:1px solid #ffffff18;border-radius:18px;padding:18px;margin:14px 0}.brand{font-weight:950;color:var(--yellow);letter-spacing:.13em}.muted{color:var(--muted);line-height:1.45}label{display:block;font-size:13px;font-weight:900;margin:12px 0 6px}input,select,button{width:100%;border:0;border-radius:12px;padding:13px;font-size:16px}input,select{background:#0d1829;color:#fff;border:1px solid #324866}button{font-weight:950;margin-top:10px;background:#223454;color:#fff}.primary{background:linear-gradient(90deg,var(--yellow),var(--orange));color:#111}.status{margin-top:12px;padding:12px;border-radius:12px;background:#0d1829;white-space:pre-wrap}.ok{color:var(--green)}.bad{color:#ffc1cb}.warn{color:#ffe59b}.receipt{background:#fff;color:#111;border-radius:10px;padding:18px;max-width:380px;margin:14px auto;font-family:monospace;text-align:center}.receipt img{max-width:180px;max-height:90px;object-fit:contain}.receipt .left{text-align:left}.qrbox{width:170px;height:170px;margin:12px auto;border:10px solid #000;display:grid;place-items:center;font-weight:900;font-family:system-ui}.test{color:#b00020;font-weight:950}.small{font-size:12px}
+</style>
+</head>
+<body><div class="wrap">
+<div class="card">
+<div class="brand">DEXTER'S · TEST ONLY</div>
+<h1>Epson Loyalty Receipt Test</h1>
+<p class="muted">Printer-only test of the agreed Dexter's Loyalty receipt design. It does not create an order or award a real prize.</p>
+</div>
+
+<div class="card">
+<h2>Printer</h2>
+<label for="ip">Epson IP address</label>
+<input id="ip" value="192.168.0.10" inputmode="decimal" autocomplete="off">
+<label for="protocol">Connection</label>
+<select id="protocol"><option value="https">HTTPS</option><option value="http">HTTP</option></select>
+<button id="open">Open Epson setup</button>
+<div id="status" class="status">Ready.</div>
+</div>
+
+<div class="card">
+<h2>Receipt preview</h2>
+<div class="receipt">
+<img src="/sunday/dexters-thermal-logo.png" alt="Dexter's thermal logo">
+<div class="small"><b>Dexters</b><br>10A Dundasvale Court<br>Glasgow, G4 0JS<br>0141 473 5249<br>hello@dextersspot.co.uk</div>
+<hr>
+<div class="left"><b>Order: TEST-1001</b><br><br>1 x Chicken Wrap&nbsp;&nbsp;&nbsp;£6.50<br>1 x Coffee&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£3.00<br>1 x Cake&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£3.00<br>------------------------------<br><b>TOTAL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£12.50</b></div>
+<hr>
+<div><b>SCAN YOUR RECEIPT</b></div>
+<div class="small">Scan the QR code to see if you’ve won a <b>FREE COFFEE</b> or <b>FREE CAKE</b>.</div>
+<div id="previewQr" style="background:#fff;padding:10px;width:max-content;margin:12px auto"></div>
+<div class="small">Not every scan is a winner.</div>
+<div class="test">TEST ONLY — NO REAL PRIZE</div>
+</div>
+<button id="print" class="primary">PRINT LOYALTY TEST RECEIPT</button>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const LOGO='/sunday/dexters-thermal-logo.png';
+const QR='DXP-00000000000000000000000000000000';
+function status(t,c=''){const el=$('status');el.textContent=t;el.className='status '+c}
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]))}
+function endpoint(){
+ const ip=$('ip').value.trim(),p=$('protocol').value;
+ if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip))throw Error('Enter a valid Epson IPv4 address.');
+ return p+'://'+ip+'/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000';
+}
+function bytesToB64(bytes){let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(s)}
+async function logoRaster(){
+ return await new Promise(resolve=>{
+  const img=new Image();img.crossOrigin='anonymous';
+  img.onload=()=>{
+   try{
+    const maxW=320,scale=Math.min(1,maxW/img.naturalWidth),w=Math.max(8,Math.floor(img.naturalWidth*scale/8)*8),h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+    const d=ctx.getImageData(0,0,w,h).data,row=w>>3,out=new Uint8Array(row*h);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      const i=(y*w+x)*4,lum=.299*d[i]+.587*d[i+1]+.114*d[i+2],black=d[i+3]>40&&lum<180;
+      if(black)out[y*row+(x>>3)]|=(0x80>>(x&7));
+    }
+    resolve({w,h,data:bytesToB64(out)});
+   }catch(e){resolve(null)}
+  };
+  img.onerror=()=>resolve(null);img.src=LOGO+(LOGO.includes('?')?'&':'?')+'t='+Date.now();
+ });
+}
+async function xml(){
+ const logo=await logoRaster();
+ const logoPart=logo?'<image width="'+logo.w+'" height="'+logo.h+'" color="color_1" mode="mono">'+logo.data+'</image><feed line="1"/>':'<text width="2" height="2">DEXTER&apos;S\n</text>';
+ const body='<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">'+
+ '<text align="center"/>'+logoPart+
+ '<text width="1" height="1">Dexters\n10A Dundasvale Court\nGlasgow, G4 0JS\n0141 473 5249\nhello@dextersspot.co.uk\n\n</text>'+
+ '<text align="left" width="1" height="1">Order: TEST-1001\n\n1 x Chicken Wrap           GBP 6.50\n1 x Coffee                 GBP 3.00\n1 x Cake                   GBP 3.00\n--------------------------------\nTOTAL                      GBP 12.50\n</text>'+
+ '<feed line="1"/><text align="center" width="2" height="2">SCAN YOUR RECEIPT\n</text>'+
+ '<text width="1" height="1">Scan the QR code to see if you&apos;ve won a\nFREE COFFEE or FREE CAKE.\n</text>'+
+ '<symbol type="qrcode_model_2" level="level_m" width="6" height="6">'+esc(QR)+'</symbol><feed line="1"/>'+
+ '<text width="1" height="1">Not every scan is a winner.\nTEST ONLY - NO REAL PRIZE\n</text>'+
+ '<feed line="3"/><cut type="feed"/></epos-print>';
+ return '<?xml version="1.0" encoding="utf-8"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>'+body+'</s:Body></s:Envelope>';
+}
+try{new QRCode(document.getElementById('previewQr'),{text:QR,width:170,height:170,correctLevel:QRCode.CorrectLevel.M});}catch(e){}
+$('open').onclick=()=>{try{window.open($('protocol').value+'://'+$('ip').value.trim()+'/','_blank')}catch(e){}};
+$('print').onclick=async()=>{
+ let url;try{url=endpoint()}catch(e){status(e.message,'bad');return}
+ $('print').disabled=true;status('Preparing Dexter\'s logo and sending test receipt to Epson…','warn');
+ try{
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/xml; charset=utf-8','SOAPAction':'""','If-Modified-Since':'Thu, 01 Jan 1970 00:00:00 GMT'},body:await xml(),cache:'no-store',credentials:'omit'});
+  const t=await r.text();
+  if(!r.ok)throw Error('Printer returned HTTP '+r.status);
+  if(/success=["']false/i.test(t))throw Error('Epson received the request but reported a print error.');
+  status('Test receipt sent. Check that the Dexter\'s logo printed clearly and scan the TEST QR with a phone camera to confirm it is readable.','ok');
+ }catch(e){
+  let extra=$('protocol').value==='https'?'\nIf this is a certificate error, tap Open Epson setup first and continue past the local certificate warning.':'';
+  status('Print failed: '+e.message+extra,'bad');
+ }finally{$('print').disabled=false}
+};
+</script></body></html>
