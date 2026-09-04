@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>Dexter's Hub Admin — Test</title><link rel="stylesheet" href="/hub-admin-test.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <a class="back" href="/hub-test.html">← Back to Dexter's Hub</a>
+      <p class="eyebrow">PRIVATE TEST ADMIN</p>
+      <h1>Admin & Settings</h1>
+      <p class="sub">Hub controls and test diagnostics. Real owner/staff permissions are not enforced on this test page yet.</p>
+    </div>
+    <span class="badge">TEST</span>
+  </header>
+
+  <section class="warning"><b>Safety:</b> these controls affect only Hub test data stored on this tablet. They do not modify the live Loyalty app, KDS, Food Safety, Recipe & Costing, or production databases.</section>
+
+  <section class="grid">
+    <article class="card">
+      <h2>Hub status</h2>
+      <div class="row"><span>Installed app mode</span><b id="installedMode">Checking…</b></div>
+      <div class="row"><span>Online</span><b id="onlineState">Checking…</b></div>
+      <div class="row"><span>Accounts test entries</span><b id="accountsCount">0</b></div>
+      <div class="row"><span>Recent activity items</span><b id="historyCount">0</b></div>
+    </article>
+
+    <article class="card">
+      <h2>Hub controls</h2>
+      <button id="refreshHub">Refresh Hub</button>
+      <button id="clearHistory">Clear Hub recent activity</button>
+      <button id="clearAccounts" class="danger">Clear Accounts test ledger</button>
+      <p id="actionMsg" class="muted"></p>
+    </article>
+
+    <article class="card">
+      <h2>App access</h2>
+      <div class="app-row"><span>Dexter's Loyalty</span><em class="live">LIVE</em></div>
+      <div class="app-row"><span>Kitchen KDS</span><em class="live">LIVE</em></div>
+      <div class="app-row"><span>Food Safety</span><em class="live">LIVE</em></div>
+      <div class="app-row"><span>Recipe & Costing</span><em class="live">LIVE</em></div>
+      <div class="app-row"><span>Sunday Roast</span><em class="test">TEST</em></div>
+      <div class="app-row"><span>Accounts & Receipts</span><em class="test">TEST</em></div>
+    </article>
+
+    <article class="card">
+      <h2>Permissions roadmap</h2>
+      <p class="muted">Next stage: sign-in and roles so owner/admin staff can see management tools while normal staff see only the apps they need.</p>
+      <div class="role"><b>Owner/Admin</b><span>All Hub tools</span></div>
+      <div class="role"><b>Kitchen</b><span>KDS + Sunday Roast</span></div>
+      <div class="role"><b>General Staff</b><span>Food Safety + approved shortcuts</span></div>
+      <div class="role"><b>Accounts</b><span>Accounts & Receipts + reports</span></div>
+    </article>
+  </section>
+</main>
+<script src="/hub-admin-test.js"></script>
+</body></html>
