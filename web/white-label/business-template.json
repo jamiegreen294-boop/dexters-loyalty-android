@@ -1,0 +1,31 @@
+{
+  "id": "new-business",
+  "name": "New Business",
+  "shortName": "New Business",
+  "tagline": "Loyalty, collection and rewards",
+  "logoUrl": "",
+  "primaryColor": "#111111",
+  "accentColor": "#ffffff",
+  "backgroundColor": "#ffffff",
+  "domain": "",
+  "currency": "GBP",
+  "locale": "en-GB",
+  "features": {
+    "loyalty": true,
+    "points": true,
+    "collectionOrders": true,
+    "orderAgain": true,
+    "spinToWin": true,
+    "newsBanner": true,
+    "staffPortal": true,
+    "kds": true,
+    "stockControl": true,
+    "sundayRoast": false
+  },
+  "integrations": {
+    "stripeEnabled": false,
+    "kdsEnabled": true,
+    "printerEnabled": false,
+    "eposEnabled": false
+  }
+}
