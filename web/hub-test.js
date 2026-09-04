@@ -29,14 +29,61 @@
   function renderAccountsCount(){
     try{
       const entries=JSON.parse(localStorage.getItem('dextersAccountsTestLedgerV1')||'[]');
-      document.getElementById('accountsCount').textContent=Array.isArray(entries)?entries.length:0;
-    }catch{document.getElementById('accountsCount').textContent='0'}
+      const arr=Array.isArray(entries)?entries:[];
+      document.getElementById('accountsCount').textContent=arr.length;
+      const expenses=arr.filter(x=>x.type==='expense');
+      const spend=expenses.reduce((a,x)=>a+(Number(x.total)||0),0);
+      const vat=expenses.reduce((a,x)=>a+(Number(x.vat)||0),0);
+      const spendEl=document.getElementById('accountsSpend');
+      const textEl=document.getElementById('accountsText');
+      if(spendEl)spendEl.textContent='£'+spend.toFixed(2);
+      if(textEl)textEl.textContent=expenses.length+' saved expense'+(expenses.length===1?'':'s')+' · VAT £'+vat.toFixed(2);
+    }catch{
+      document.getElementById('accountsCount').textContent='0';
+    }
+  }
+
+  async function renderSundaySummary(){
+    const totalEl=document.getElementById('sundayTotal');
+    const textEl=document.getElementById('sundayText');
+    if(!totalEl||!textEl)return;
+    if(!window.supabase){totalEl.textContent='—';textEl.textContent='Open Sunday admin to view test totals.';return}
+    try{
+      const U='https://bpnkouymdvcogeaqjmxl.supabase.co';
+      const K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
+      const sb=window.supabase.createClient(U,K);
+      const {data}=await sb.auth.getSession();
+      const token=data.session?.access_token;
+      if(!token)throw new Error('Sign-in required');
+      async function call(body){
+        const r=await fetch(U+'/functions/v1/sunday-roast-test-api',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const d=await r.json().catch(()=>({}));
+        if(!r.ok)throw new Error(d.error||'Request failed');
+        return d;
+      }
+      const status=await call({action:'status'});
+      const date=status.settings?.collection_date;
+      if(!date)throw new Error('No Sunday set');
+      const prep=await call({action:'prep_summary',collection_date:date});
+      const dinners=Number(prep.totals?.dinners)||0;
+      totalEl.textContent=String(dinners);
+      textEl.textContent=(status.settings?.enabled?'Ordering enabled':'Ordering closed')+' · '+date+' · '+dinners+' dinner'+(dinners===1?'':'s');
+    }catch(e){
+      totalEl.textContent='—';
+      textEl.textContent='Open Sunday admin to view test totals.';
+    }
+  }
+
+  async function refreshOwnerSummary(){
+    renderAccountsCount();
+    await renderSundaySummary();
   }
 
   document.querySelectorAll('a[data-app]').forEach(link=>link.addEventListener('click',()=>saveHistory(link.dataset.app||"Dexter's app")));
   document.getElementById('clearHistory')?.addEventListener('click',()=>{localStorage.removeItem(HISTORY_KEY);localStorage.removeItem('dextersHubLastApp');localStorage.removeItem('dextersHubLastOpen');last.textContent='No app opened yet';dashLast.textContent='None yet';dashLastTime.textContent='—';renderHistory()});
 
   document.getElementById('refreshBtn')?.addEventListener('click',()=>location.reload());
+  document.getElementById('summaryRefresh')?.addEventListener('click',refreshOwnerSummary);
   document.getElementById('fullscreenBtn')?.addEventListener('click',async()=>{
     try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}
     catch{if(status)status.textContent='Full screen is controlled by this tablet/browser.'}
@@ -53,6 +100,6 @@
   if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/hub-sw.js',{scope:'/'}).catch(()=>{if(status)status.textContent='Hub works online; offline shell could not be enabled on this browser.'}));
 
   renderHistory();
-  renderAccountsCount();
-  window.addEventListener('pageshow',()=>{renderHistory();renderAccountsCount()});
+  refreshOwnerSummary();
+  window.addEventListener('pageshow',()=>{renderHistory();refreshOwnerSummary()});
 })();
