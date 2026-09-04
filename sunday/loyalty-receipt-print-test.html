@@ -12,7 +12,7 @@
 <div class="card">
 <div class="brand">DEXTER'S · TEST ONLY</div>
 <h1>Epson Loyalty Receipt Test</h1>
-<p class="muted">Printer-only test for the Dexter's thermal logo and Scan to Win QR layout. It does not create an order, add points or award a prize.</p>
+<p class="muted">Printer-only test of the agreed Dexter's Loyalty receipt design. It does not create an order or award a real prize.</p>
 </div>
 
 <div class="card">
@@ -28,18 +28,16 @@
 <div class="card">
 <h2>Receipt preview</h2>
 <div class="receipt">
-<img src="/sunday/dexters-thermal-logo.png" alt="Dexter's logo">
-<div>DEXTER'S LOYALTY APP</div>
-<div class="small">TEST RECEIPT — NOT A REAL ORDER</div>
-<hr>
+<img src="/sunday/dexters-thermal-logo.png" alt="Dexter's thermal logo">
 <div class="small"><b>Dexters</b><br>10A Dundasvale Court<br>Glasgow, G4 0JS<br>Scotland<br>0141 473 5249<br>hello@dextersspot.co.uk<br>app.dextersspot.co.uk</div>
 <hr>
-<div class="left">Order: TEST-1001<br>Customer: Test Customer<br>Total: £12.50<br>Points earned: 12</div>
+<div class="left"><b>Order: TEST-1001</b><br><br>1 x Chicken Wrap&nbsp;&nbsp;&nbsp;£6.50<br>1 x Coffee&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£3.00<br>1 x Cake&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£3.00<br>------------------------------<br><b>TOTAL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£12.50</b></div>
 <hr>
-<div><b>SCAN TO WIN</b></div>
+<div><b>SCAN YOUR RECEIPT</b></div>
+<div class="small">Scan the QR code to see if you’ve won a <b>FREE COFFEE</b> or <b>FREE CAKE</b>.</div>
 <div id="previewQr" style="background:#fff;padding:10px;width:max-content;margin:12px auto"></div>
-<div class="small">Scan your receipt QR in the Dexter's Loyalty App for your points and a chance to win a free coffee or cake.</div>
-<div class="test">TEST ONLY — NO POINTS OR PRIZE</div>
+<div class="small">Not every scan is a winner.</div>
+<div class="test">TEST ONLY — NO REAL PRIZE</div>
 </div>
 <button id="print" class="primary">PRINT LOYALTY TEST RECEIPT</button>
 </div>
@@ -81,12 +79,12 @@ async function xml(){
  const logoPart=logo?'<image width="'+logo.w+'" height="'+logo.h+'" color="color_1" mode="mono">'+logo.data+'</image><feed line="1"/>':'<text width="2" height="2">DEXTER&apos;S\n</text>';
  const body='<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">'+
  '<text align="center"/>'+logoPart+
- '<text width="2" height="2">LOYALTY APP\n</text><text width="1" height="1">TEST RECEIPT - NOT A REAL ORDER\n\n</text>'+
- '<text align="center" width="1" height="1">Dexters\n10A Dundasvale Court\nGlasgow, G4 0JS\nScotland\n0141 473 5249\nhello@dextersspot.co.uk\napp.dextersspot.co.uk\n\n</text>'+
- '<text align="left">Order: TEST-1001\nCustomer: Test Customer\nTotal: GBP 12.50\nPoints earned: 12\n--------------------------------\n</text>'+
- '<text align="center" width="2" height="2">SCAN TO WIN\n</text>'+
+ '<text width="1" height="1">Dexters\n10A Dundasvale Court\nGlasgow, G4 0JS\nScotland\n0141 473 5249\nhello@dextersspot.co.uk\napp.dextersspot.co.uk\n\n</text>'+
+ '<text align="left" width="1" height="1">Order: TEST-1001\n\n1 x Chicken Wrap           GBP 6.50\n1 x Coffee                 GBP 3.00\n1 x Cake                   GBP 3.00\n--------------------------------\nTOTAL                      GBP 12.50\n</text>'+
+ '<feed line="1"/><text align="center" width="2" height="2">SCAN YOUR RECEIPT\n</text>'+
+ '<text width="1" height="1">Scan the QR code to see if you&apos;ve won a\nFREE COFFEE or FREE CAKE.\n</text>'+
  '<symbol type="qrcode_model_2" level="level_m" width="6" height="6">'+esc(QR)+'</symbol><feed line="1"/>'+
- '<text width="1" height="1">Scan this receipt QR in the Dexter&apos;s Loyalty App\nfor your points and a chance to win a free coffee or cake.\n\nTEST ONLY - NO POINTS OR PRIZE\n</text>'+
+ '<text width="1" height="1">Not every scan is a winner.\nTEST ONLY - NO REAL PRIZE\n</text>'+
  '<feed line="3"/><cut type="feed"/></epos-print>';
  return '<?xml version="1.0" encoding="utf-8"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>'+body+'</s:Body></s:Envelope>';
 }
