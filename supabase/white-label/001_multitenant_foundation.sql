@@ -273,15 +273,15 @@ begin
       execute format('grant select,insert,update,delete on public.%I to authenticated',t);
 
       execute format(
-        'create policy %I on public.%I for select to authenticated using (private.is_business_member(business_id))',
+        'create policy %I on public.%I for select to authenticated using (private.has_business_role(business_id,array[''owner'',''admin'',''staff'']))',
         'tenant_select_'||t,t
       );
       execute format(
-        'create policy %I on public.%I for insert to authenticated with check (private.is_business_member(business_id))',
+        'create policy %I on public.%I for insert to authenticated with check (private.has_business_role(business_id,array[''owner'',''admin'',''staff'']))',
         'tenant_insert_'||t,t
       );
       execute format(
-        'create policy %I on public.%I for update to authenticated using (private.is_business_member(business_id)) with check (private.is_business_member(business_id))',
+        'create policy %I on public.%I for update to authenticated using (private.has_business_role(business_id,array[''owner'',''admin'',''staff''])) with check (private.has_business_role(business_id,array[''owner'',''admin'',''staff'']))',
         'tenant_update_'||t,t
       );
       execute format(
@@ -291,6 +291,50 @@ begin
     end if;
   end loop;
 end $$;
+
+-- Customers are limited to their own personal records. These policies are additive to the staff/admin policies above.
+create policy customer_collection_orders_select on public.collection_orders
+for select to authenticated
+using (customer_id=(select auth.uid()) and private.is_business_member(business_id));
+create policy customer_collection_orders_insert on public.collection_orders
+for insert to authenticated
+with check (customer_id=(select auth.uid()) and private.is_business_member(business_id));
+
+create policy customer_loyalty_accounts_select on public.loyalty_accounts
+for select to authenticated
+using (user_id=(select auth.uid()) and private.is_business_member(business_id));
+
+create policy customer_points_accounts_select on public.loyalty_points_accounts
+for select to authenticated
+using (user_id=(select auth.uid()) and private.is_business_member(business_id));
+create policy customer_points_events_select on public.loyalty_points_events
+for select to authenticated
+using (user_id=(select auth.uid()) and private.is_business_member(business_id));
+create policy customer_points_redemptions_select on public.loyalty_points_redemptions
+for select to authenticated
+using (user_id=(select auth.uid()) and private.is_business_member(business_id));
+create policy customer_points_redemptions_insert on public.loyalty_points_redemptions
+for insert to authenticated
+with check (user_id=(select auth.uid()) and private.is_business_member(business_id));
+
+create policy customer_individual_offers_select on public.customer_individual_offers
+for select to authenticated
+using (customer_id=(select auth.uid()) and private.is_business_member(business_id));
+
+create policy customer_spin_spins_select on public.spin_wheel_spins
+for select to authenticated
+using (user_id=(select auth.uid()) and private.is_business_member(business_id));
+
+create policy customer_receipt_rewards_select on public.receipt_bonus_rewards
+for select to authenticated
+using (user_id=(select auth.uid()) and private.is_business_member(business_id));
+
+create policy customer_sunday_orders_select on public.sunday_roast_orders
+for select to authenticated
+using (customer_id=(select auth.uid()) and private.is_business_member(business_id));
+create policy customer_sunday_orders_insert on public.sunday_roast_orders
+for insert to authenticated
+with check (customer_id=(select auth.uid()) and private.is_business_member(business_id));
 
 -- Public catalogue data may be read anonymously, but only for an explicitly supplied business.
 -- Anonymous writes remain blocked.
