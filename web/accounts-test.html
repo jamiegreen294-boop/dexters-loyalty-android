@@ -51,7 +51,7 @@
     <h2>Review expense</h2>
     <div class="grid">
       <label>Supplier<input id="supplier" autocomplete="off"></label>
-      <label>Date<input id="date" type="date"></label>
+      <label>Date (DD/MM/YYYY)<input id="date" type="text" inputmode="numeric" placeholder="DD/MM/YYYY"></label>
       <label>Total (£)<input id="total" inputmode="decimal"></label>
       <label>VAT (£)<input id="vat" inputmode="decimal"></label>
       <label>Category<select id="category">
@@ -68,7 +68,7 @@
   <section class="card" id="eodForm" hidden>
     <h2>Review XEPOS End-of-Day</h2>
     <div class="grid">
-      <label>Trading date<input id="eodDate" type="date"></label>
+      <label>Trading date (DD/MM/YYYY)<input id="eodDate" type="text" inputmode="numeric" placeholder="DD/MM/YYYY"></label>
       <label>Gross sales (£)<input id="grossSales" inputmode="decimal"></label>
       <label>Card sales (£)<input id="cardSales" inputmode="decimal"></label>
       <label>Cash sales (£)<input id="cashSales" inputmode="decimal"></label>
