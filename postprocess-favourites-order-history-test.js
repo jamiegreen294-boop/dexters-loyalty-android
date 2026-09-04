@@ -1,0 +1,1 @@
+const fs=require('fs');const p='dist/index.html';let h=fs.readFileSync(p,'utf8');if(!h.includes('favourites-order-history-test.js'))h=h.replace('</body>','<script src="/favourites-order-history-test.js"></script></body>');fs.writeFileSync(p,h);
