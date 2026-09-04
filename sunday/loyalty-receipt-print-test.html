@@ -32,20 +32,23 @@
 <div>DEXTER'S LOYALTY APP</div>
 <div class="small">TEST RECEIPT — NOT A REAL ORDER</div>
 <hr>
-<div class="left">Order: TEST-1001<br>Customer: Test Customer<br>Total: £12.50<br>Points: 12</div>
+<div class="small"><b>Dexters</b><br>10A Dundasvale Court<br>Glasgow, G4 0JS<br>Scotland<br>0141 473 5249<br>hello@dextersspot.co.uk<br>app.dextersspot.co.uk</div>
+<hr>
+<div class="left">Order: TEST-1001<br>Customer: Test Customer<br>Total: £12.50<br>Points earned: 12</div>
 <hr>
 <div><b>SCAN TO WIN</b></div>
-<div class="qrbox">TEST QR</div>
+<div id="previewQr" style="background:#fff;padding:10px;width:max-content;margin:12px auto"></div>
 <div class="small">Scan your receipt QR in the Dexter's Loyalty App for your points and a chance to win a free coffee or cake.</div>
 <div class="test">TEST ONLY — NO POINTS OR PRIZE</div>
 </div>
 <button id="print" class="primary">PRINT LOYALTY TEST RECEIPT</button>
 </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const LOGO='/sunday/dexters-thermal-logo.png';
-const QR='DEXTERS-LOYALTY-SCAN-TO-WIN-PRINT-TEST';
+const QR='DXP-00000000000000000000000000000000';
 function status(t,c=''){const el=$('status');el.textContent=t;el.className='status '+c}
 function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]))}
 function endpoint(){
@@ -79,13 +82,15 @@ async function xml(){
  const body='<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">'+
  '<text align="center"/>'+logoPart+
  '<text width="2" height="2">LOYALTY APP\n</text><text width="1" height="1">TEST RECEIPT - NOT A REAL ORDER\n\n</text>'+
- '<text align="left">Order: TEST-1001\nCustomer: Test Customer\nTotal: GBP 12.50\nPoints: 12\n--------------------------------\n</text>'+
+ '<text align="center" width="1" height="1">Dexters\n10A Dundasvale Court\nGlasgow, G4 0JS\nScotland\n0141 473 5249\nhello@dextersspot.co.uk\napp.dextersspot.co.uk\n\n</text>'+
+ '<text align="left">Order: TEST-1001\nCustomer: Test Customer\nTotal: GBP 12.50\nPoints earned: 12\n--------------------------------\n</text>'+
  '<text align="center" width="2" height="2">SCAN TO WIN\n</text>'+
  '<symbol type="qrcode_model_2" level="level_m" width="6" height="6">'+esc(QR)+'</symbol><feed line="1"/>'+
  '<text width="1" height="1">Scan this receipt QR in the Dexter&apos;s Loyalty App\nfor your points and a chance to win a free coffee or cake.\n\nTEST ONLY - NO POINTS OR PRIZE\n</text>'+
  '<feed line="3"/><cut type="feed"/></epos-print>';
  return '<?xml version="1.0" encoding="utf-8"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>'+body+'</s:Body></s:Envelope>';
 }
+try{new QRCode(document.getElementById('previewQr'),{text:QR,width:170,height:170,correctLevel:QRCode.CorrectLevel.M});}catch(e){}
 $('open').onclick=()=>{try{window.open($('protocol').value+'://'+$('ip').value.trim()+'/','_blank')}catch(e){}};
 $('print').onclick=async()=>{
  let url;try{url=endpoint()}catch(e){status(e.message,'bad');return}
