@@ -31,6 +31,36 @@
     </section>
 
     <section class="section-block">
+      <div class="section-title"><div><p class="eyebrow">OWNER SUMMARY</p><h2>Today at Dexter's</h2></div><button id="summaryRefresh" class="text-btn" type="button">Refresh</button></div>
+      <div class="owner-summary">
+        <article class="owner-card">
+          <div class="owner-head"><span>🍽</span><div><b>Sunday Roast</b><small>PRIVATE TEST DATA</small></div></div>
+          <strong id="sundayTotal">—</strong>
+          <p id="sundayText">Checking Sunday pre-orders…</p>
+          <a href="/sunday-admin-test.html" data-app="Sunday Roast">Open Sunday admin</a>
+        </article>
+        <article class="owner-card">
+          <div class="owner-head"><span>🧾</span><div><b>Accounts & Receipts</b><small>THIS TABLET</small></div></div>
+          <strong id="accountsSpend">£0.00</strong>
+          <p id="accountsText">0 saved expenses · VAT £0.00</p>
+          <a href="/accounts-test.html" data-app="Accounts & Receipts">Open Accounts</a>
+        </article>
+        <article class="owner-card">
+          <div class="owner-head"><span>▤</span><div><b>Kitchen KDS</b><small>LIVE APP</small></div></div>
+          <strong>LIVE</strong>
+          <p>Open the KDS for current orders and collection status.</p>
+          <a href="https://dexters-kds.vercel.app" data-app="Kitchen KDS">Open live KDS</a>
+        </article>
+        <article class="owner-card">
+          <div class="owner-head"><span>✓</span><div><b>Food Safety</b><small>LIVE APP</small></div></div>
+          <strong>LIVE</strong>
+          <p>Open Food Safety for today's checks and CookSafe status.</p>
+          <a href="https://dexters-food-safety.vercel.app" data-app="Food Safety">Open live Food Safety</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block">
       <div class="section-title"><div><p class="eyebrow">QUICK ACTIONS</p><h2>Staff shortcuts</h2></div></div>
       <div class="quick-grid">
         <a class="quick" href="https://dexters-kds.vercel.app" data-app="Kitchen KDS"><span>▤</span><b>Open KDS</b><em class="live-label">LIVE</em></a>
@@ -90,6 +120,7 @@
 
     <footer><span id="lastOpened">No app opened yet</span><span>Private test branch · Live apps clearly labelled</span></footer>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/hub-test.js" defer></script>
 </body>
 </html>
