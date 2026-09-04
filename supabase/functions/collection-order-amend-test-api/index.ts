@@ -26,9 +26,27 @@ Deno.serve(async(req)=>{
   const action=String(b.action||''),today=londonDate();
 
   if(action==='daily_outages'){
-    const {data,error}=await db.from('collection_daily_outages').select('menu_item_id').eq('outage_date',today).is('restored_at',null);
+    const {data,error}=await db.from('collection_daily_outages').select('menu_item_id,created_at').eq('outage_date',today).is('restored_at',null);
     if(error)return J({error:error.message},500);
-    return J({item_ids:(data||[]).map((x:any)=>x.menu_item_id),date:today});
+    const rows=data||[],itemIds=rows.map((x:any)=>String(x.menu_item_id));
+    if(!staff)return J({item_ids:itemIds,date:today});
+    let menu:any[]=[];
+    if(itemIds.length){
+      const {data:m,error:me}=await db.from('loyalty_menu_items').select('id,name,category_id').in('id',itemIds);
+      if(me)return J({error:me.message},500);
+      menu=m||[];
+    }
+    const categoryIds=[...new Set(menu.map((x:any)=>x.category_id).filter(Boolean))];
+    let categories:any[]=[];
+    if(categoryIds.length){
+      const {data:cc,error:ce}=await db.from('loyalty_menu_categories').select('id,name').in('id',categoryIds);
+      if(ce)return J({error:ce.message},500);
+      categories=cc||[];
+    }
+    const categoryById=new Map(categories.map((x:any)=>[String(x.id),String(x.name)]));
+    const createdById=new Map(rows.map((x:any)=>[String(x.menu_item_id),x.created_at]));
+    const items=menu.map((x:any)=>({id:String(x.id),name:String(x.name),category_name:categoryById.get(String(x.category_id))||'',created_at:createdById.get(String(x.id))||null}));
+    return J({item_ids:itemIds,items,date:today});
   }
 
   if(action==='staff_order_items'){
