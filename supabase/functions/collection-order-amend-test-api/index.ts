@@ -31,6 +31,21 @@ Deno.serve(async(req)=>{
     return J({item_ids:(data||[]).map((x:any)=>x.menu_item_id),date:today});
   }
 
+  if(action==='staff_order_items'){
+    if(!staff)return J({error:'Staff access required'},403);
+    const id=String(b.id||'');
+    if(!id)return J({error:'Order required'},400);
+    const {data:o,error}=await db.from('collection_orders').select('id,order_number,status,items').eq('id',id).single();
+    if(error||!o)return J({error:'Order not found'},404);
+    const items=(Array.isArray(o.items)?o.items:[]).map((x:any)=>({
+      id:String(x.id||''),
+      name:String(x.base_name||x.name||'Item'),
+      category_name:String(x.category_name||''),
+      qty:cleanQty(x.qty)
+    })).filter((x:any)=>x.id);
+    return J({order:{id:o.id,order_number:o.order_number,status:o.status},items});
+  }
+
   if(action==='request_amendment'){
     if(!staff)return J({error:'Staff access required'},403);
     const id=String(b.id||''),ids=[...new Set((Array.isArray(b.item_ids)?b.item_ids:[]).map(String).filter(Boolean))];
