@@ -50,9 +50,9 @@
   <section class="card" id="expenseForm">
     <h2>Review expense</h2>
     <div class="grid">
-      <label>Supplier<input id="supplier" autocomplete="off"></label>
-      <label>Date (DD/MM/YYYY)<input id="date" type="text" inputmode="numeric" placeholder="DD/MM/YYYY"></label>
-      <label>Total (£)<input id="total" inputmode="decimal"></label>
+      <label>Supplier<input id="supplier" autocomplete="off" required></label>
+      <label>Date (DD/MM/YYYY)<input id="date" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" required></label>
+      <label>Total (£)<input id="total" inputmode="decimal" required></label>
       <label>VAT (£)<input id="vat" inputmode="decimal"></label>
       <label>Category<select id="category">
         <option>Food & Ingredients</option><option>Packaging</option><option>Cleaning</option>
@@ -62,20 +62,20 @@
       <label>Reference<input id="reference"></label>
     </div>
     <label>Notes<textarea id="notes" rows="3"></textarea></label>
-    <button id="saveExpense" class="primary">Save expense to test ledger</button>
+    <button id="saveExpense" class="primary" disabled>Save expense to test ledger</button><p id="expenseSaveStatus" class="muted">Enter supplier, date and a total greater than £0 to enable saving.</p>
   </section>
 
   <section class="card" id="eodForm" hidden>
     <h2>Review XEPOS End-of-Day</h2>
     <div class="grid">
-      <label>Trading date (DD/MM/YYYY)<input id="eodDate" type="text" inputmode="numeric" placeholder="DD/MM/YYYY"></label>
-      <label>Gross sales (£)<input id="grossSales" inputmode="decimal"></label>
+      <label>Trading date (DD/MM/YYYY)<input id="eodDate" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" required></label>
+      <label>Gross sales (£)<input id="grossSales" inputmode="decimal" required></label>
       <label>Card sales (£)<input id="cardSales" inputmode="decimal"></label>
       <label>Cash sales (£)<input id="cashSales" inputmode="decimal"></label>
       <label>Refunds (£)<input id="refunds" inputmode="decimal"></label>
       <label>VAT (£)<input id="eodVat" inputmode="decimal"></label>
     </div>
-    <button id="saveEod" class="primary">Save EOD report to test ledger</button>
+    <button id="saveEod" class="primary" disabled>Save EOD report to test ledger</button><p id="eodSaveStatus" class="muted">Enter a trading date and gross sales greater than £0 to enable saving.</p>
   </section>
 
   <section class="card">
