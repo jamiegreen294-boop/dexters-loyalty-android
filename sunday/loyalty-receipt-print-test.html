@@ -29,7 +29,7 @@
 <h2>Receipt preview</h2>
 <div class="receipt">
 <img src="/sunday/dexters-thermal-logo.png" alt="Dexter's thermal logo">
-<div class="small"><b>Dexters</b><br>10A Dundasvale Court<br>Glasgow, G4 0JS<br>Scotland<br>0141 473 5249<br>hello@dextersspot.co.uk<br>app.dextersspot.co.uk</div>
+<div class="small"><b>Dexters</b><br>10A Dundasvale Court<br>Glasgow, G4 0JS<br>0141 473 5249<br>hello@dextersspot.co.uk</div>
 <hr>
 <div class="left"><b>Order: TEST-1001</b><br><br>1 x Chicken Wrap&nbsp;&nbsp;&nbsp;£6.50<br>1 x Coffee&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£3.00<br>1 x Cake&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£3.00<br>------------------------------<br><b>TOTAL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;£12.50</b></div>
 <hr>
@@ -79,7 +79,7 @@ async function xml(){
  const logoPart=logo?'<image width="'+logo.w+'" height="'+logo.h+'" color="color_1" mode="mono">'+logo.data+'</image><feed line="1"/>':'<text width="2" height="2">DEXTER&apos;S\n</text>';
  const body='<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">'+
  '<text align="center"/>'+logoPart+
- '<text width="1" height="1">Dexters\n10A Dundasvale Court\nGlasgow, G4 0JS\nScotland\n0141 473 5249\nhello@dextersspot.co.uk\napp.dextersspot.co.uk\n\n</text>'+
+ '<text width="1" height="1">Dexters\n10A Dundasvale Court\nGlasgow, G4 0JS\n0141 473 5249\nhello@dextersspot.co.uk\n\n</text>'+
  '<text align="left" width="1" height="1">Order: TEST-1001\n\n1 x Chicken Wrap           GBP 6.50\n1 x Coffee                 GBP 3.00\n1 x Cake                   GBP 3.00\n--------------------------------\nTOTAL                      GBP 12.50\n</text>'+
  '<feed line="1"/><text align="center" width="2" height="2">SCAN YOUR RECEIPT\n</text>'+
  '<text width="1" height="1">Scan the QR code to see if you&apos;ve won a\nFREE COFFEE or FREE CAKE.\n</text>'+
