@@ -87,13 +87,40 @@
     localStorage.setItem(STORAGE,JSON.stringify(ledger)); render();
   }
 
+  function validUkDate(v){
+    const m=String(v||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if(!m)return false;
+    const d=Number(m[1]),mo=Number(m[2]),y=Number(m[3]);
+    const dt=new Date(y,mo-1,d);
+    return dt.getFullYear()===y && dt.getMonth()===mo-1 && dt.getDate()===d;
+  }
+  function updateSaveState(){
+    const supplier=$('supplier').value.trim();
+    const date=$('date').value.trim();
+    const total=money($('total').value);
+    const expenseOk=!!supplier && validUkDate(date) && total>0;
+    $('saveExpense').disabled=!expenseOk;
+    $('expenseSaveStatus').textContent=expenseOk?'Ready to save.':'Enter supplier, a valid DD/MM/YYYY date and a total greater than £0 to enable saving.';
+
+    const eodDate=$('eodDate').value.trim();
+    const gross=money($('grossSales').value);
+    const eodOk=validUkDate(eodDate) && gross>0;
+    $('saveEod').disabled=!eodOk;
+    $('eodSaveStatus').textContent=eodOk?'Ready to save.':'Enter a valid DD/MM/YYYY trading date and gross sales greater than £0 to enable saving.';
+  }
+  ['supplier','date','total','eodDate','grossSales'].forEach(id=>$(id)?.addEventListener('input',updateSaveState));
+
   $('saveExpense').onclick=()=>{
-    save({type:'expense',supplier:$('supplier').value||'Unknown supplier',date:$('date').value,total:money($('total').value),vat:money($('vat').value),category:$('category').value,reference:$('reference').value,notes:$('notes').value,raw:$('rawText').value});
-    ['supplier','date','total','vat','reference','notes','rawText'].forEach(id=>$(id).value=''); $('preview').hidden=true; $('ocrStatus').textContent='Expense saved to test ledger.';
+    const supplier=$('supplier').value.trim(), date=$('date').value.trim(), total=money($('total').value);
+    if(!supplier || !validUkDate(date) || total<=0){updateSaveState(); return;}
+    save({type:'expense',supplier,date,total,vat:money($('vat').value),category:$('category').value,reference:$('reference').value,notes:$('notes').value,raw:$('rawText').value});
+    ['supplier','date','total','vat','reference','notes','rawText'].forEach(id=>$(id).value=''); $('preview').hidden=true; $('ocrStatus').textContent='Expense saved to test ledger.'; updateSaveState();
   };
   $('saveEod').onclick=()=>{
-    save({type:'eod',date:$('eodDate').value,gross:money($('grossSales').value),card:money($('cardSales').value),cash:money($('cashSales').value),refunds:money($('refunds').value),vat:money($('eodVat').value),raw:$('rawText').value});
-    ['eodDate','grossSales','cardSales','cashSales','refunds','eodVat','rawText'].forEach(id=>$(id).value=''); $('preview').hidden=true; $('ocrStatus').textContent='EOD report saved to test ledger.';
+    const date=$('eodDate').value.trim(), gross=money($('grossSales').value);
+    if(!validUkDate(date) || gross<=0){updateSaveState(); return;}
+    save({type:'eod',date,gross,card:money($('cardSales').value),cash:money($('cashSales').value),refunds:money($('refunds').value),vat:money($('eodVat').value),raw:$('rawText').value});
+    ['eodDate','grossSales','cardSales','cashSales','refunds','eodVat','rawText'].forEach(id=>$(id).value=''); $('preview').hidden=true; $('ocrStatus').textContent='EOD report saved to test ledger.'; updateSaveState();
   };
 
   $('clearAll').onclick=()=>{if(confirm('Clear all Accounts & Receipts test data from this tablet?')){ledger=[];localStorage.removeItem(STORAGE);render()}};
@@ -109,4 +136,5 @@
     document.querySelectorAll('.entry button').forEach(b=>b.onclick=()=>{ledger=ledger.filter(x=>x.id!==b.dataset.id);localStorage.setItem(STORAGE,JSON.stringify(ledger));render()});
   }
   render();
+  updateSaveState();
 })();
