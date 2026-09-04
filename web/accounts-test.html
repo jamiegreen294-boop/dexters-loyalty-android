@@ -31,10 +31,16 @@
 
   <section class="card">
     <h2 id="captureTitle">Scan receipt or invoice</h2>
-    <label class="capture">
-      <input id="imageInput" type="file" accept="image/*" capture="environment">
-      <span>📷 Take photo / choose image</span>
-    </label>
+    <div class="capture-actions">
+      <label class="capture">
+        <input id="cameraInput" type="file" accept="image/*" capture="environment">
+        <span>📷 Take photo</span>
+      </label>
+      <label class="capture">
+        <input id="uploadInput" type="file" accept="image/*">
+        <span>🖼 Choose image from tablet</span>
+      </label>
+    </div>
     <div class="progress" id="progress" hidden><div id="bar"></div></div>
     <p id="ocrStatus" class="muted">Nothing scanned yet.</p>
     <img id="preview" alt="" hidden>
