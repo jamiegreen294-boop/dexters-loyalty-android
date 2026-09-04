@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dexter's Collection Amend Flow Test</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;background:#08111f;color:#fff;font-family:system-ui,Arial}.wrap{max-width:900px;margin:auto;padding:18px}.card{background:#132038;border:1px solid #2b4161;border-radius:18px;padding:16px;margin:12px 0}.tabs{display:flex;gap:8px}.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:900;background:#ffd43b;color:#08101d;cursor:pointer}.btn.blue{background:#243a5e;color:#fff}.btn.red{background:#7a2634;color:#fff}.btn.green{background:#166534;color:#dcfce7}.btn:disabled{opacity:.45}.tab{flex:1}.active{outline:3px solid #fff3}.hide{display:none!important}.muted{color:#aab4c3}.bad{color:#ffc1cb}.ok{color:#9ff3c5}.pill{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;background:#243a5e}.menu-cat{background:#0d1829;border:1px solid #2b4161;border-radius:14px;margin:10px 0;overflow:hidden}.menu-head{width:100%;background:#162641;color:#fff;border:0;padding:14px;display:flex;justify-content:space-between;font-weight:900}.menu-body{display:none;padding:0 14px}.menu-cat.open .menu-body{display:block}.item{display:flex;gap:10px;align-items:center;padding:12px 0;border-top:1px solid #ffffff16}.item-main{flex:1}.price{color:#ffd43b;font-weight:900}.sold{background:#7f1d1d;color:#fecaca;padding:5px 9px;border-radius:9px;font-weight:900}.qty{display:flex;gap:7px;align-items:center}.input{width:100%;box-sizing:border-box;padding:11px;margin:6px 0;border-radius:10px;border:1px solid #324866;background:#0d1829;color:#fff}.order-line{padding:10px 0;border-top:1px solid #ffffff16}.notice{padding:12px;border-radius:12px;background:#2a251d;color:#ffd19a}.top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Dexter's Collection Flow <small class="pill">TEST ONLY</small></h1>
+<p class="muted">No deployment. No live orders. No live stock changes. No Stripe.</p>
+<div class="tabs">
+<button id="customerTab" class="btn tab active">Customer</button>
+<button id="staffTab" class="btn blue tab">Staff / KDS</button>
+</div>
+
+<section id="customerPanel">
+<div id="customerAlert" class="card hide"></div>
+<div class="card"><h2>Full Dexter's menu</h2><input id="search" class="input" placeholder="Search menu"><div id="menu">Loading menu…</div></div>
+<div class="card"><h2>Your order</h2><div id="basket">No items added.</div><button id="sendOrder" class="btn">Send order for stock check</button></div>
+<div class="card"><h2>Order status</h2><div id="customerStatus" class="pill">Not sent</div><p id="customerMsg" class="muted">Build an order above.</p></div>
+</section>
+
+<section id="staffPanel" class="hide">
+<div class="card"><div class="top"><h2>Collection KDS</h2><button id="resetTest" class="btn blue">Reset test</button></div><div id="kds">No test order yet.</div></div>
+<div class="card"><h2>Out of stock today</h2><p class="muted">Items marked unavailable during an amendment stay unavailable in this test until the next London calendar day, or until you press Back in stock.</p><div id="stockList">None.</div></div>
+</section>
+</div>
+
+<script>
+const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
+const STORE='dexters-amend-flow-test-v1';
+let categories=[],cart={},order=null;
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function londonDay(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
+function loadState(){try{const x=JSON.parse(localStorage.getItem(STORE)||'{}');if(x.day===londonDay()){order=x.order||null;cart=x.cart||{};return x.stock||{}}}catch{}localStorage.removeItem(STORE);order=null;cart={};return{}}
+let stock=loadState();
+function save(){localStorage.setItem(STORE,JSON.stringify({day:londonDay(),order,cart,stock}))}
+function itemKey(i){return String(i.id||i.name)}
+function itemById(id){for(const c of categories)for(const i of(c.items||[]))if(itemKey(i)===String(id))return {...i,category_name:c.name};return null}
+function isOut(i){return !!stock[itemKey(i)]}
+async function loadMenu(){try{const r=await fetch(U+'/rest/v1/rpc/loyalty_menu_public',{method:'POST',headers:{apikey:K,'Content-Type':'application/json'},body:'{}'});const d=await r.json();categories=Array.isArray(d)?d:[];renderAll()}catch(e){$('menu').textContent='Could not load the Dexter\'s menu.'}}
+function renderMenu(){const q=($('search').value||'').toLowerCase().trim();let h='';for(const c of categories){const items=(c.items||[]).filter(i=>!q||(`${c.name} ${i.name} ${i.description||''}`).toLowerCase().includes(q));if(!items.length)continue;h+=`<div class="menu-cat ${q?'open':''}"><button class="menu-head"><span>${esc(c.name)}</span><span>▾</span></button><div class="menu-body">${items.map(i=>{const id=itemKey(i),sold=isOut(i),qty=Number(cart[id]||0);return `<div class="item"><div class="item-main"><b>${esc(i.name)}</b><div class="muted">${esc(i.description||'')}</div><div class="price">${esc(i.price||'')}</div></div>${sold?'<span class="sold">OUT OF STOCK TODAY</span>':qty?`<div class="qty"><button class="btn blue" data-minus="${esc(id)}">−</button><b>${qty}</b><button class="btn" data-plus="${esc(id)}">+</button></div>`:`<button class="btn" data-add="${esc(id)}">ADD</button>`}</div>`}).join('')}</div></div>`}$('menu').innerHTML=h||'No items found.';document.querySelectorAll('.menu-head').forEach(b=>b.onclick=()=>b.parentElement.classList.toggle('open'));document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{cart[b.dataset.add]=1;save();renderAll()});document.querySelectorAll('[data-plus]').forEach(b=>b.onclick=()=>{cart[b.dataset.plus]=(cart[b.dataset.plus]||0)+1;save();renderAll()});document.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>{cart[b.dataset.minus]=Math.max(0,(cart[b.dataset.minus]||0)-1);if(!cart[b.dataset.minus])delete cart[b.dataset.minus];save();renderAll()})}
+function renderBasket(){const lines=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({i:itemById(id),q})).filter(x=>x.i);$('basket').innerHTML=lines.length?lines.map(x=>`<div class="order-line"><b>${x.q} × ${esc(x.i.category_name)} — ${esc(x.i.name)}</b></div>`).join(''):'No items added.';$('sendOrder').disabled=!lines.length||!!order}
+function submitOrder(){const lines=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({id,qty:q,name:itemById(id)?.name||id,category:itemById(id)?.category_name||''}));order={id:'TEST-'+Math.floor(Date.now()/1000),status:'pending',items:lines,amend_item_id:null,amend_note:''};save();renderAll()}
+function markAmend(id){const i=itemById(id);if(!i)return;stock[id]={name:i.name,category:i.category_name,day:londonDay()};order.status='amend_required';order.amend_item_id=id;order.amend_note='Sorry, this item is unavailable today. Please amend your order before it can be accepted.';save();renderAll()}
+function customerRemoveUnavailable(){if(!order?.amend_item_id)return;delete cart[order.amend_item_id];order.items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({id,qty:q,name:itemById(id)?.name||id,category:itemById(id)?.category_name||''}));order.status='resubmitted';order.amend_item_id=null;save();renderAll()}
+function customerChooseElse(){document.getElementById('customerAlert').scrollIntoView({behavior:'smooth'});$('search').focus()}
+function resubmitAfterReplacement(){order.items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({id,qty:q,name:itemById(id)?.name||id,category:itemById(id)?.category_name||''}));order.status='resubmitted';order.amend_item_id=null;save();renderAll()}
+function acceptOrder(){order.status='accepted';save();renderAll()}
+function backInStock(id){delete stock[id];save();renderAll()}
+function renderCustomer(){let s='Not sent',m='Build an order above.';const a=$('customerAlert');a.classList.add('hide');if(order){if(order.status==='pending'){s='Waiting for stock check';m='Dexter\'s is checking your order. No payment is involved in this test.'}if(order.status==='amend_required'){s='AMENDMENT REQUIRED';m='Please change the unavailable item, then send the amended order back.';const i=stock[order.amend_item_id];a.classList.remove('hide');a.innerHTML=`<div class="notice"><b>Sorry, you need to amend your order.</b><br>Unavailable: <b>${esc(i?.name||'Item')}</b><br>${esc(order.amend_note)}</div><button class="btn" onclick="customerChooseElse()">Choose something else from full menu</button> <button class="btn red" onclick="customerRemoveUnavailable()">Remove unavailable item</button> <button class="btn blue" onclick="resubmitAfterReplacement()">Send amended order back</button>`}if(order.status==='resubmitted'){s='Amended order sent';m='Dexter\'s will check the amended order again.'}if(order.status==='accepted'){s='ACCEPTED';m='Stock confirmed. In the future, this is where Stripe payment can be added.'}}$('customerStatus').textContent=s;$('customerMsg').textContent=m}
+function renderKds(){if(!order){$('kds').innerHTML='No test order yet.';return}const lines=order.items.map(x=>`<div class="order-line"><b>${x.qty} × ${esc(x.category)} — ${esc(x.name)}</b></div>`).join('');let actions='';if(['pending','resubmitted'].includes(order.status)){actions=`<div class="notice">Check stock before accepting.</div><button class="btn green" onclick="acceptOrder()">ACCEPT ORDER</button><h3>Need amendment?</h3>${order.items.map(x=>`<button class="btn red" onclick="markAmend('${esc(x.id)}')">Mark ${esc(x.name)} unavailable + ask customer to amend</button>`).join('')}`}else if(order.status==='amend_required'){actions='<div class="notice">Waiting for customer amendment. No payment and no cooking yet.</div>'}else if(order.status==='accepted'){actions='<div class="notice">Accepted. Test flow complete — payment intentionally omitted.</div>'}$('kds').innerHTML=`<div class="top"><div><b>${esc(order.id)}</b><br>Status: <b>${esc(order.status.toUpperCase())}</b></div></div>${lines}${actions}`}
+function renderStock(){const vals=Object.entries(stock);$('stockList').innerHTML=vals.length?vals.map(([id,x])=>`<div class="order-line"><b>${esc(x.category)} — ${esc(x.name)}</b><br><span class="bad">OUT OF STOCK TODAY</span><br><button class="btn blue" onclick="backInStock('${esc(id)}')">Back in stock</button></div>`).join(''):'None.'}
+function renderAll(){renderMenu();renderBasket();renderCustomer();renderKds();renderStock()}
+$('customerTab').onclick=()=>{$('customerPanel').classList.remove('hide');$('staffPanel').classList.add('hide');$('customerTab').classList.add('active');$('staffTab').classList.remove('active')}
+$('staffTab').onclick=()=>{$('staffPanel').classList.remove('hide');$('customerPanel').classList.add('hide');$('staffTab').classList.add('active');$('customerTab').classList.remove('active')}
+$('search').oninput=renderMenu;$('sendOrder').onclick=submitOrder;$('resetTest').onclick=()=>{localStorage.removeItem(STORE);stock={};order=null;cart={};renderAll()}
+loadMenu();
+</script></body></html>

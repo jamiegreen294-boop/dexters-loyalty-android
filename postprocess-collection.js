@@ -16,10 +16,13 @@ if(!s.includes('id="orderReviewCard"'))s=s.replace('<label>Collection time</labe
 // because it overwrites customised items every two seconds.
 s=s.replace(/<script id="dextersOrderReviewScript">[\s\S]*?<\/script>/,'');
 fs.copyFileSync('web/reorder-core.js','dist/reorder-core.js');
+fs.copyFileSync('web/collection-amend-live.js','dist/collection-amend-live.js');
+fs.copyFileSync('web/kds-amend-live.js','dist/kds-amend-live.js');
 if(!s.includes('reorder-core.js'))s=s.replace('</body>','<script src="/reorder-core.js"></script></body>');
 if(!s.includes('collection-modifiers-live.js'))s=s.replace('</body>','<script src="/collection-modifiers-live.js"></script></body>');
+if(!s.includes('collection-amend-live.js'))s=s.replace('</body>','<script src="/collection-amend-live.js"></script></body>');
 if(!s.includes('dextersKeepCollectionMenuOpen'))s=s.replace('</body>',keepOpen+'</body>');
-if(!s.includes('orderReviewCard')||!s.includes('collection-modifiers-live.js')||!s.includes('dextersKeepCollectionMenuOpen'))throw new Error('Collection review/modifier/menu-state injection failed');
+if(!s.includes('orderReviewCard')||!s.includes('collection-modifiers-live.js')||!s.includes('collection-amend-live.js')||!s.includes('dextersKeepCollectionMenuOpen'))throw new Error('Collection review/modifier/amend/menu-state injection failed');
 s=s.replace('<script src="/reorder-core.js"></script>','');
 s=s.replace('<script src="/collection-modifiers-live.js"></script>','<script src="/reorder-core.js"></script><script src="/collection-modifiers-live.js"></script>');
 fs.writeFileSync(p,s);
