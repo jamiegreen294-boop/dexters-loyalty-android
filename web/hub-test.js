@@ -1,4 +1,4 @@
-(() => {
+async function startHub(){
   const last = document.getElementById('lastOpened');
   const dashLast = document.getElementById('dashLast');
   const dashLastTime = document.getElementById('dashLastTime');
@@ -125,4 +125,36 @@
   window.addEventListener('online',renderConnectivity);
   window.addEventListener('offline',renderConnectivity);
   window.addEventListener('pageshow',()=>{renderConnectivity();renderHistory();refreshOwnerSummary()});
+}
+(() => {
+  const U='https://bpnkouymdvcogeaqjmxl.supabase.co';
+  const K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
+  const ACCESS=U+'/functions/v1/hub-owner-access-test';
+  const sb=window.supabase.createClient(U,K);
+  const gate=document.getElementById('hubAuth');
+  const shell=document.getElementById('hubShell');
+  const errorEl=document.getElementById('hubAuthError');
+  let started=false;
+  async function authorised(session){
+    if(!session?.access_token)return false;
+    try{const r=await fetch(ACCESS,{headers:{apikey:K,Authorization:'Bearer '+session.access_token},cache:'no-store'});return r.ok}catch{return false}
+  }
+  async function apply(session){
+    if(await authorised(session)){
+      gate.hidden=true;shell.hidden=false;errorEl.textContent='';
+      if(!started){started=true;await startHub()}
+      return true;
+    }
+    gate.hidden=false;shell.hidden=true;return false;
+  }
+  document.getElementById('hubAuthLogin').addEventListener('click',async()=>{
+    errorEl.textContent='Signing in…';
+    const email=document.getElementById('hubAuthEmail').value.trim();
+    const password=document.getElementById('hubAuthPassword').value;
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error||!await apply(data.session)){await sb.auth.signOut();errorEl.textContent=error?.message||'Owner access required.'}
+  });
+  document.getElementById('hubAuthPassword').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('hubAuthLogin').click()});
+  sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){gate.hidden=false;shell.hidden=true}else if(session)apply(session)});
+  sb.auth.getSession().then(({data})=>apply(data.session));
 })();
