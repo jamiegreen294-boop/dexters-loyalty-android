@@ -13,7 +13,18 @@
   <link rel="stylesheet" href="/hub-test.css">
 </head>
 <body>
-  <main class="shell">
+  <section class="hub-auth" id="hubAuth" aria-label="Owner sign in">
+    <div class="hub-auth-card">
+      <p class="eyebrow">PRIVATE OWNER HUB</p>
+      <h1>Dexter's Hub</h1>
+      <p>Owner sign in is required to open this Hub.</p>
+      <label>Email</label><input id="hubAuthEmail" type="email" autocomplete="username" placeholder="Owner email">
+      <label>Password</label><input id="hubAuthPassword" type="password" autocomplete="current-password" placeholder="Password">
+      <p class="hub-auth-error" id="hubAuthError"></p>
+      <button id="hubAuthLogin" type="button">Sign in</button>
+    </div>
+  </section>
+  <main class="shell" id="hubShell" hidden>
     <header class="topbar">
       <div>
         <p class="eyebrow">PRIVATE OWNER HUB</p>
