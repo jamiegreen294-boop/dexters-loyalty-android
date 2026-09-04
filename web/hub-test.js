@@ -47,7 +47,19 @@
     const totalEl=document.getElementById('sundayTotal');
     const textEl=document.getElementById('sundayText');
     if(!totalEl||!textEl)return;
-    if(!window.supabase){totalEl.textContent='—';textEl.textContent='Open Sunday admin to view test totals.';return}
+
+    try{
+      const cached=JSON.parse(localStorage.getItem('dextersSundayHubSummaryV1')||'null');
+      if(cached && cached.date){
+        const age=Date.now()-new Date(cached.updatedAt||0).getTime();
+        const dinners=Number(cached.dinners)||0;
+        totalEl.textContent=String(dinners);
+        textEl.textContent=(cached.enabled?'Ordering enabled':'Ordering closed')+' · '+cached.date+' · '+dinners+' dinner'+(dinners===1?'':'')+(age>21600000?' · refresh Sunday admin':'');
+        if(age<=21600000)return;
+      }
+    }catch{}
+
+    if(!window.supabase){totalEl.textContent='—';textEl.textContent='Open Sunday admin once to update Hub totals.';return}
     try{
       const U='https://bpnkouymdvcogeaqjmxl.supabase.co';
       const K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
@@ -68,9 +80,10 @@
       const dinners=Number(prep.totals?.dinners)||0;
       totalEl.textContent=String(dinners);
       textEl.textContent=(status.settings?.enabled?'Ordering enabled':'Ordering closed')+' · '+date+' · '+dinners+' dinner'+(dinners===1?'':'s');
+      try{localStorage.setItem('dextersSundayHubSummaryV1',JSON.stringify({date,enabled:!!status.settings?.enabled,dinners,updatedAt:new Date().toISOString()}))}catch{}
     }catch(e){
       totalEl.textContent='—';
-      textEl.textContent='Open Sunday admin to view test totals.';
+      textEl.textContent='Open Sunday admin once to update Hub totals.';
     }
   }
 
