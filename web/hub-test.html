@@ -16,43 +16,61 @@
   <main class="shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">PRIVATE TEST</p>
+        <p class="eyebrow">PRIVATE STAFF HUB</p>
         <h1>Dexter's Hub</h1>
-        <p class="sub">One place for Dexter's staff apps. The Hub opens the existing apps without changing their live code.</p>
+        <p class="sub">One place for Dexter's staff apps, quick actions and private test tools.</p>
       </div>
-      <div class="status"><span class="dot"></span> Test Hub</div>
+      <div class="status"><span class="dot"></span> Hub ready</div>
     </header>
 
-    <section class="return-tip">
-      <b>Tablet tip:</b> when an app opens, tap the Android <span class="back-key">◀</span> Back button to return to Dexter's Hub.
+    <section class="dashboard" aria-label="Hub dashboard">
+      <div class="dash-card"><small>Live apps</small><b>4</b><span>Existing services</span></div>
+      <div class="dash-card"><small>Test tools</small><b>2</b><span>Private branch only</span></div>
+      <div class="dash-card"><small>Accounts test entries</small><b id="accountsCount">0</b><span>Saved on this tablet</span></div>
+      <div class="dash-card"><small>Last opened</small><b class="dash-last" id="dashLast">None yet</b><span id="dashLastTime">—</span></div>
     </section>
 
-    <section class="grid" aria-label="Dexter's apps">
-      <a class="card primary" href="https://app.dextersspot.co.uk" data-app="Loyalty App">
-        <span class="icon">★</span><span><b>Dexter's Loyalty</b><small>Customers, staff, rewards & collection</small></span><span class="open">Open</span>
-      </a>
-      <a class="card" href="https://dexters-kds.vercel.app" data-app="Kitchen KDS">
-        <span class="icon">▤</span><span><b>Kitchen KDS</b><small>Orders, accept/reject, cooking & ready</small></span><span class="open">Open</span>
-      </a>
-      <a class="card" href="https://dexters-food-safety.vercel.app" data-app="Food Safety">
-        <span class="icon">✓</span><span><b>Food Safety</b><small>Daily checks and compliance records</small></span><span class="open">Open</span>
-      </a>
-      <a class="card" href="https://dexters-recipe-costing.vercel.app" data-app="Recipe & Costing">
-        <span class="icon">£</span><span><b>Recipe & Costing</b><small>Recipes, ingredients and food costs</small></span><span class="open">Open</span>
-      </a>
-      <a class="card test" href="/sunday-admin-test.html" data-app="Sunday Roast">
-        <span class="icon">🍽</span><span><b>Sunday Roast</b><small>Private test preorder admin</small></span><span class="badge">TEST</span>
-      </a>
-      <a class="card test" href="/accounts-test.html" data-app="Accounts & Receipts">
-        <span class="icon">▦</span><span><b>Accounts & Receipts</b><small>Scan receipts, invoices & XEPOS EOD reports</small></span><span class="badge">TEST</span>
-      </a>
+    <section class="section-block">
+      <div class="section-title"><div><p class="eyebrow">QUICK ACTIONS</p><h2>Staff shortcuts</h2></div></div>
+      <div class="quick-grid">
+        <a class="quick" href="https://dexters-kds.vercel.app" data-app="Kitchen KDS"><span>▤</span><b>Open KDS</b><em class="live-label">LIVE</em></a>
+        <a class="quick" href="/sunday-admin-test.html" data-app="Sunday Roast"><span>🍽</span><b>Sunday Orders</b><em class="test-label">TEST</em></a>
+        <a class="quick" href="https://dexters-food-safety.vercel.app" data-app="Food Safety"><span>✓</span><b>Food Safety Today</b><em class="live-label">LIVE</em></a>
+        <a class="quick" href="/accounts-test.html" data-app="Accounts & Receipts"><span>📷</span><b>Scan Receipt</b><em class="test-label">TEST</em></a>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-title"><div><p class="eyebrow">APPS</p><h2>All Dexter's staff apps</h2></div><span class="legend"><i class="live-dot"></i> Live <i class="test-dot"></i> Test</span></div>
+      <div class="grid" aria-label="Dexter's apps">
+        <a class="card primary" href="https://app.dextersspot.co.uk" data-app="Dexter's Loyalty">
+          <span class="icon">★</span><span><b>Dexter's Loyalty</b><small>Customers, staff, rewards & collection</small></span><span class="badge live-badge">LIVE</span>
+        </a>
+        <a class="card" href="https://dexters-kds.vercel.app" data-app="Kitchen KDS">
+          <span class="icon">▤</span><span><b>Kitchen KDS</b><small>Orders, accept/reject, cooking & ready</small></span><span class="badge live-badge">LIVE</span>
+        </a>
+        <a class="card" href="https://dexters-food-safety.vercel.app" data-app="Food Safety">
+          <span class="icon">✓</span><span><b>Food Safety</b><small>Daily checks and compliance records</small></span><span class="badge live-badge">LIVE</span>
+        </a>
+        <a class="card" href="https://dexters-recipe-costing.vercel.app" data-app="Recipe & Costing">
+          <span class="icon">£</span><span><b>Recipe & Costing</b><small>Recipes, ingredients and food costs</small></span><span class="badge live-badge">LIVE</span>
+        </a>
+        <a class="card test" href="/sunday-admin-test.html" data-app="Sunday Roast">
+          <span class="icon">🍽</span><span><b>Sunday Roast</b><small>Private test preorder admin</small></span><span class="badge">TEST</span>
+        </a>
+        <a class="card test" href="/accounts-test.html" data-app="Accounts & Receipts">
+          <span class="icon">▦</span><span><b>Accounts & Receipts</b><small>Scan receipts, invoices & XEPOS EOD reports</small></span><span class="badge">TEST</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section-block activity-block">
+      <div class="section-title"><div><p class="eyebrow">RECENT ACTIVITY</p><h2>Opened from this tablet</h2></div><button id="clearHistory" class="text-btn" type="button">Clear</button></div>
+      <div id="recentActivity" class="activity-list"><p class="empty">No apps opened yet.</p></div>
     </section>
 
     <section class="install-panel" id="installPanel">
-      <div>
-        <b>Use Dexter's Hub like an app</b>
-        <small id="installStatus">Install it on this tablet to remove most browser clutter.</small>
-      </div>
+      <div><b>Dexter's Hub tablet app</b><small id="installStatus">Install it on this tablet to remove most browser clutter.</small></div>
       <button id="installBtn" type="button" hidden>Install Hub</button>
     </section>
 
@@ -61,10 +79,7 @@
       <button id="refreshBtn" type="button">↻ Refresh Hub</button>
     </section>
 
-    <footer>
-      <span id="lastOpened">No app opened yet</span>
-      <span>Private test branch</span>
-    </footer>
+    <footer><span id="lastOpened">No app opened yet</span><span>Private test branch · Live apps clearly labelled</span></footer>
   </main>
   <script src="/hub-test.js" defer></script>
 </body>
