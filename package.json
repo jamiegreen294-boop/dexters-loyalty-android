@@ -6,6 +6,7 @@
     "test:qr": "node tests/universal-qr/core.cjs && node tests/universal-qr/database.cjs && node tests/universal-qr/journey.cjs",
     "dev": "node tests/universal-qr/preview.cjs",
     "test:combined": "node tests/combined-backend.cjs && node tests/combined-ui.cjs && npm run test:qr",
-    "test:auth-return": "node tests/auth-return.cjs"
+    "test:auth-return": "node tests/auth-return.cjs",
+    "test:collection-amend": "node tests/collection-amend-flow.test.cjs"
   }
 }
