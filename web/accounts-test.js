@@ -34,8 +34,16 @@
       $('date').value=dateUk;
       $('total').value=total||'';
       $('vat').value=vat||'';
-      const ref=joined.match(/(?:invoice|receipt|ref(?:erence)?|order)\s*(?:no|number|#|:)?\s*([A-Z0-9-]{3,})/i);
-      $('reference').value=ref?ref[1]:'';
+      let refValue='';
+      const refPatterns=[
+        /(?:receipt\s*(?:no|number|#)?|invoice\s*(?:no|number|#)?|reference|ref\.?|order\s*(?:no|number|#)?)\s*[:#-]?\s*([A-Z0-9][A-Z0-9-]{2,})/i,
+        /(?:receipt|invoice|order)\s+(?:no\.?|number)\s*[:#-]?\s*([A-Z0-9][A-Z0-9-]{2,})/i
+      ];
+      for(const re of refPatterns){
+        const m=joined.match(re);
+        if(m && !/^(date|time|total|vat|tax)$/i.test(m[1])){refValue=m[1];break;}
+      }
+      $('reference').value=refValue;
     }else{
       $('eodDate').value=dateUk;
       const find=(labels)=>{const re=new RegExp('(?:'+labels+')[^0-9£]{0,18}£?\\s*(\\d+[.,]\\d{2})','i');const m=joined.match(re);return m?money(m[1]):''};
