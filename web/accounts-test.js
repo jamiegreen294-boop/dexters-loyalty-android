@@ -21,9 +21,9 @@
     const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
     const joined=lines.join(' ');
     const date=joined.match(/\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/);
-    const dateIso=date?(()=>{let y=date[3];if(y.length===2)y='20'+y;return y+'-'+date[2].padStart(2,'0')+'-'+date[1].padStart(2,'0')})():'';
+    const dateUk=date?date[1].padStart(2,'0')+'/'+date[2].padStart(2,'0')+'/'+((date[3].length===2?'20':'')+date[3]):'';
     const nums=[...joined.matchAll(/(?:£\s*)?(\d+[.,]\d{2})\b/g)].map(m=>money(m[1])).filter(n=>n>=0);
-    const vatMatch=joined.match(/(?:VAT|TAX)[^0-9£]{0,12}£?\s*(\d+[.,]\d{2})/i);
+    const vatMatch=joined.match(/(?:VAT|TAX)(?:\s*\d{1,2}\s*%?)?[^0-9£]{0,18}£?\s*(\d+[.,]\d{2})/i);
     const totalMatch=joined.match(/(?:TOTAL|AMOUNT DUE|BALANCE)[^0-9£]{0,16}£?\s*(\d+[.,]\d{2})/i);
     const total=totalMatch?money(totalMatch[1]):(nums.length?Math.max(...nums):0);
     const vat=vatMatch?money(vatMatch[1]):0;
@@ -31,13 +31,13 @@
 
     if(mode==='expense'){
       $('supplier').value=supplier;
-      $('date').value=dateIso;
+      $('date').value=dateUk;
       $('total').value=total||'';
       $('vat').value=vat||'';
       const ref=joined.match(/(?:invoice|receipt|ref(?:erence)?|order)\s*(?:no|number|#|:)?\s*([A-Z0-9-]{3,})/i);
       $('reference').value=ref?ref[1]:'';
     }else{
-      $('eodDate').value=dateIso;
+      $('eodDate').value=dateUk;
       const find=(labels)=>{const re=new RegExp('(?:'+labels+')[^0-9£]{0,18}£?\\s*(\\d+[.,]\\d{2})','i');const m=joined.match(re);return m?money(m[1]):''};
       $('grossSales').value=find('gross sales|total sales|gross total');
       $('cardSales').value=find('card sales|card total|cards');
