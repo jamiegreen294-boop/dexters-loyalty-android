@@ -22,6 +22,7 @@ function start(){
  const current=node('section','work-current','<h2 class="work-heading">Current Order</h2><div class="work-order" id="workCurrentBody">Loading your orders…</div>');
  // Keep reward rendering and redemption attached to the existing elements.
  const rewardsPage=$('qrPage'),personalRewards=$('myIndividualOffersCard');
+ const accountPage=$('accountPage');
  if(rewardsPage&&personalRewards){rewardsPage.append(personalRewards);rewardsPage.classList.add('work-rewards');personalRewards.querySelector('h2').textContent='Your Personal Rewards'}
  home.prepend(top,hero,grid,offers,usual,current);home.classList.add('work-home');
  // The quick action and bottom navigation already provide WhatsApp access.
