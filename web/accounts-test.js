@@ -47,8 +47,8 @@
     }
   }
 
-  $('imageInput').addEventListener('change',async e=>{
-    const file=e.target.files?.[0]; if(!file)return;
+  async function readImage(file){
+    if(!file)return;
     $('preview').src=URL.createObjectURL(file); $('preview').hidden=false;
     $('ocrStatus').textContent='Reading image on this tablet…'; $('progress').hidden=false; $('bar').style.width='4%';
     try{
@@ -67,7 +67,10 @@
     }catch(err){
       $('ocrStatus').textContent='Could not read this image automatically. You can type or paste the details manually.';
     }
-  });
+  }
+
+  $('cameraInput')?.addEventListener('change',e=>readImage(e.target.files?.[0]));
+  $('uploadInput')?.addEventListener('change',e=>readImage(e.target.files?.[0]));
 
   $('rawText').addEventListener('change',()=>extract($('rawText').value));
 
