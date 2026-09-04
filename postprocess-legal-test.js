@@ -10,6 +10,7 @@ const legalFiles=[
   'spin-to-win-terms.html',
   'rewards-promo-terms.html',
   'sunday-roast-policy.html',
+  'staff-compliance.html',
   'catering.html'
 ];
 for(const f of legalFiles) fs.copyFileSync('web/'+f,'dist/'+f);
@@ -18,9 +19,12 @@ const catering=`<section id="dextersCateringHome" style="max-width:700px;margin:
 
 const footer=`<section id="dextersCustomerInfo" style="max-width:700px;margin:18px auto 110px;padding:0 18px"><div class="card" style="text-align:center"><h2>Customer information</h2><p class="muted">Food safety, privacy, rewards, complaints and ordering information.</p><p style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center"><a href="/legal.html"><strong>Legal & Policies</strong></a><a href="/allergens.html">Allergen information</a><a href="/privacy.html">Privacy & data protection</a><a href="/cookie-policy.html">Cookies & local storage</a><a href="/terms.html">Terms & conditions</a><a href="/spin-to-win-terms.html">Spin to Win terms</a><a href="/rewards-promo-terms.html">Receipt reward terms</a><a href="/sunday-roast-policy.html">Sunday Roast policy</a><a href="/complaints.html">Complaints</a><a href="/catering.html">Catering & Events</a></p></div></section>`;
 
+const staffCompliance=`<script id="dextersStaffComplianceLink">(function(){function add(){var page=document.getElementById('staffPage');if(!page||document.getElementById('dextersStaffComplianceCard'))return;var card=document.createElement('div');card.className='card';card.id='dextersStaffComplianceCard';card.innerHTML='<h2>⚖️ Legal & Compliance</h2><p class="muted">Staff checklist for allergens, customer rights, UK GDPR, promotions, refunds and security.</p><a class="btn" href="/staff-compliance.html" style="display:inline-block;text-decoration:none">Open staff compliance checklist</a>';page.appendChild(card)}add();setTimeout(add,300);setTimeout(add,1200);new MutationObserver(function(){setTimeout(add,0)}).observe(document.body,{childList:true,subtree:true})})();</script>`;
+
 let p='dist/index.html',s=fs.readFileSync(p,'utf8');
 if(!s.includes('id="dextersCateringHome"'))s=s.replace('</body>',catering+'</body>');
 if(!s.includes('id="dextersCustomerInfo"'))s=s.replace('</body>',footer+'</body>');
+if(!s.includes('id="dextersStaffComplianceLink"'))s=s.replace('</body>',staffCompliance+'</body>');
 fs.writeFileSync(p,s);
 
 function addNotice(file){
@@ -37,4 +41,5 @@ addNotice('dist/sunday/customer.html');
 for(const f of legalFiles){
   if(!fs.existsSync('dist/'+f)) throw new Error('Missing legal build output: '+f);
 }
-console.log('Added customer legal, allergen, promotion and catering information');
+if(!s.includes('/staff-compliance.html')) throw new Error('Missing staff compliance link');
+console.log('Added customer legal, staff compliance, allergen, promotion and catering information');
