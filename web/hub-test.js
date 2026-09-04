@@ -5,6 +5,11 @@
   const status = document.getElementById('installStatus');
   const installBtn = document.getElementById('installBtn');
   const HISTORY_KEY='dextersHubRecentV2';
+  const hubStatusText=document.getElementById('hubStatusText');
+  const summaryUpdated=document.getElementById('summaryUpdated');
+  function renderConnectivity(){
+    if(hubStatusText)hubStatusText.textContent=navigator.onLine?'Hub ready':'Offline mode';
+  }
 
   function fmtTime(iso){
     if(!iso)return '—';
@@ -88,8 +93,10 @@
   }
 
   async function refreshOwnerSummary(){
+    if(summaryUpdated)summaryUpdated.textContent='Updating…';
     renderAccountsCount();
     await renderSundaySummary();
+    if(summaryUpdated)summaryUpdated.textContent='Updated '+new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit'}).format(new Date());
   }
 
   document.querySelectorAll('a[data-app]').forEach(link=>link.addEventListener('click',()=>saveHistory(link.dataset.app||"Dexter's app")));
@@ -112,7 +119,10 @@
 
   if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/hub-sw.js',{scope:'/'}).catch(()=>{if(status)status.textContent='Hub works online; offline shell could not be enabled on this browser.'}));
 
+  renderConnectivity();
   renderHistory();
   refreshOwnerSummary();
-  window.addEventListener('pageshow',()=>{renderHistory();refreshOwnerSummary()});
+  window.addEventListener('online',renderConnectivity);
+  window.addEventListener('offline',renderConnectivity);
+  window.addEventListener('pageshow',()=>{renderConnectivity();renderHistory();refreshOwnerSummary()});
 })();

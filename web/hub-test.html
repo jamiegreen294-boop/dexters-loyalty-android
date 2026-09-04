@@ -16,11 +16,11 @@
   <main class="shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">PRIVATE STAFF HUB</p>
+        <p class="eyebrow">PRIVATE OWNER HUB</p>
         <h1>Dexter's Hub</h1>
-        <p class="sub">One place for Dexter's staff apps, quick actions and private test tools.</p>
+        <p class="sub">Your Dexter's owner dashboard, apps, quick actions and private test tools.</p>
       </div>
-      <div class="status"><span class="dot"></span> Hub ready</div>
+      <div class="status" id="hubStatus"><span class="dot"></span> <span id="hubStatusText">Hub ready</span></div>
     </header>
 
     <section class="dashboard" aria-label="Hub dashboard">
@@ -31,7 +31,7 @@
     </section>
 
     <section class="section-block">
-      <div class="section-title"><div><p class="eyebrow">OWNER SUMMARY</p><h2>Today at Dexter's</h2></div><button id="summaryRefresh" class="text-btn" type="button">Refresh</button></div>
+      <div class="section-title"><div><p class="eyebrow">OWNER SUMMARY</p><h2>Today at Dexter's</h2><small id="summaryUpdated" class="legend">Updating…</small></div><button id="summaryRefresh" class="text-btn" type="button">Refresh</button></div>
       <div class="owner-summary">
         <article class="owner-card">
           <div class="owner-head"><span>🍽</span><div><b>Sunday Roast</b><small>PRIVATE TEST DATA</small></div></div>
@@ -61,7 +61,7 @@
     </section>
 
     <section class="section-block">
-      <div class="section-title"><div><p class="eyebrow">QUICK ACTIONS</p><h2>Staff shortcuts</h2></div></div>
+      <div class="section-title"><div><p class="eyebrow">QUICK ACTIONS</p><h2>Your shortcuts</h2></div></div>
       <div class="quick-grid">
         <a class="quick" href="https://dexters-kds.vercel.app" data-app="Kitchen KDS"><span>▤</span><b>Open KDS</b><em class="live-label">LIVE</em></a>
         <a class="quick" href="/sunday-admin-test.html" data-app="Sunday Roast"><span>🍽</span><b>Sunday Orders</b><em class="test-label">TEST</em></a>
@@ -71,7 +71,7 @@
     </section>
 
     <section class="section-block">
-      <div class="section-title"><div><p class="eyebrow">APPS</p><h2>All Dexter's staff apps</h2></div><span class="legend"><i class="live-dot"></i> Live <i class="test-dot"></i> Test</span></div>
+      <div class="section-title"><div><p class="eyebrow">APPS</p><h2>All Dexter's apps</h2></div><span class="legend"><i class="live-dot"></i> Live <i class="test-dot"></i> Test</span></div>
       <div class="grid" aria-label="Dexter's apps">
         <a class="card primary" href="https://app.dextersspot.co.uk" data-app="Dexter's Loyalty">
           <span class="icon">★</span><span><b>Dexter's Loyalty</b><small>Customers, staff, rewards & collection</small></span><span class="badge live-badge">LIVE</span>
@@ -98,7 +98,7 @@
       <div class="section-title"><div><p class="eyebrow">ADMIN</p><h2>Management tools</h2></div><span class="legend"><i class="test-dot"></i> Test admin</span></div>
       <div class="grid">
         <a class="card test" href="/hub-admin-test.html" data-app="Admin & Settings">
-          <span class="icon">⚙</span><span><b>Admin & Settings</b><small>Hub controls, diagnostics and permissions roadmap</small></span><span class="badge">TEST</span>
+          <span class="icon">⚙</span><span><b>Admin & Settings</b><small>Hub controls, diagnostics and test data tools</small></span><span class="badge">TEST</span>
         </a>
       </div>
     </section>
@@ -118,7 +118,7 @@
       <button id="refreshBtn" type="button">↻ Refresh Hub</button>
     </section>
 
-    <footer><span id="lastOpened">No app opened yet</span><span>Private test branch · Live apps clearly labelled</span></footer>
+    <footer><span id="lastOpened">No app opened yet</span><span>Private owner Hub · Live apps clearly labelled</span></footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/hub-test.js" defer></script>
