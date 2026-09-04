@@ -43,6 +43,28 @@
         g.options.push({id:String(row.option_id),name:row.option_name,price:Number(row.price_delta||0),sort:Number(row.option_sort_order||0)});
       }
       for(const arr of items.values()){arr.sort((a,b)=>a.sort-b.sort);for(const g of arr)g.options.sort((a,b)=>a.sort-b.sort)}
+      // Chip seasoning choices. Any item offering Skinny Chips or Thick Chips
+      // must separately answer Salt? and Vinegar?
+      for(const [itemId,arr] of items){
+        const chipChoice=arr.some(g=>g.options.some(o=>/^(skinny|thick) chips$/i.test(String(o.name||'').trim())));
+        if(!chipChoice)continue;
+        const nextSort=(arr.reduce((m,g)=>Math.max(m,Number(g.sort||0)),0)||0)+10;
+        arr.push({
+          id:'chip-salt-'+itemId,name:'Salt?',type:'single',required:true,min:1,max:1,sort:nextSort,
+          options:[
+            {id:'chip-salt-yes-'+itemId,name:'Yes — add salt',price:0,sort:1},
+            {id:'chip-salt-no-'+itemId,name:'No salt',price:0,sort:2}
+          ]
+        });
+        arr.push({
+          id:'chip-vinegar-'+itemId,name:'Vinegar?',type:'single',required:true,min:1,max:1,sort:nextSort+1,
+          options:[
+            {id:'chip-vinegar-yes-'+itemId,name:'Yes — add vinegar',price:0,sort:1},
+            {id:'chip-vinegar-no-'+itemId,name:'No vinegar',price:0,sort:2}
+          ]
+        });
+        arr.sort((a,b)=>a.sort-b.sort);
+      }
       state.groups=items;state.modifierReady=true;
     }catch(e){console.warn('Dexters menu choices could not be loaded',e);state.groups=new Map();state.modifierReady=false}
     finally{state.modifierLoading=false;renderMenu()}
