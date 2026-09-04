@@ -2,6 +2,13 @@
 -- Daily outages automatically stop applying after the Europe/London calendar date changes.
 
 alter table public.collection_orders
+  drop constraint if exists collection_orders_status_check;
+
+alter table public.collection_orders
+  add constraint collection_orders_status_check
+  check (status in ('pending','amendment_required','amended','accepted','preparing','ready','rejected','collected'));
+
+alter table public.collection_orders
   add column if not exists amendment_items jsonb,
   add column if not exists amendment_note text,
   add column if not exists amendment_requested_at timestamptz,
