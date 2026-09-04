@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#121212">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Dexter's Hub — Private Test</title>
+  <link rel="manifest" href="/web/hub-manifest.webmanifest">
+  <link rel="stylesheet" href="/web/hub-test.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">PRIVATE TEST</p>
+        <h1>Dexter's Hub</h1>
+        <p class="sub">One place for Dexter's staff apps. This Hub does not change the live apps it opens.</p>
+      </div>
+      <div class="status"><span class="dot"></span> Test Hub</div>
+    </header>
+
+    <section class="notice" aria-label="Safety notice">
+      <strong>Safe integration mode:</strong> live Dexter's apps are opened as separate existing services. No live code, database schema, or production settings are modified by this Hub.
+    </section>
+
+    <section class="grid" aria-label="Dexter's apps">
+      <a class="card primary" href="https://app.dextersspot.co.uk" data-app="Loyalty App">
+        <span class="icon">★</span><span><b>Dexter's Loyalty</b><small>Customers, staff, rewards & collection</small></span><span class="open">Open</span>
+      </a>
+      <a class="card" href="https://dexters-kds.vercel.app" data-app="KDS">
+        <span class="icon">▤</span><span><b>Kitchen KDS</b><small>Orders, accept/reject, cooking & ready</small></span><span class="open">Open</span>
+      </a>
+      <a class="card" href="https://dexters-food-safety.vercel.app" data-app="Food Safety">
+        <span class="icon">✓</span><span><b>Food Safety</b><small>Daily checks and compliance records</small></span><span class="open">Open</span>
+      </a>
+      <a class="card" href="https://dexters-recipe-costing.vercel.app" data-app="Recipe Costing">
+        <span class="icon">£</span><span><b>Recipe & Costing</b><small>Recipes, ingredients and food costs</small></span><span class="open">Open</span>
+      </a>
+      <a class="card test" href="/sunday/admin.html" data-app="Sunday Roast Admin">
+        <span class="icon">🍽</span><span><b>Sunday Roast</b><small>Private test preorder admin</small></span><span class="badge">TEST</span>
+      </a>
+      <button class="card disabled" type="button" disabled>
+        <span class="icon">▦</span><span><b>Accounts & Receipts</b><small>Receipt/invoice scanning integration being built</small></span><span class="badge">BUILD</span>
+      </button>
+    </section>
+
+    <section class="tools">
+      <button id="installBtn" type="button" hidden>Install Dexter's Hub</button>
+      <button id="fullscreenBtn" type="button">Full screen</button>
+      <button id="refreshBtn" type="button">Refresh Hub</button>
+    </section>
+
+    <footer>
+      <span id="lastOpened">No app opened yet</span>
+      <span>Hub branch: test-dexters-hub-private</span>
+    </footer>
+  </main>
+  <script src="/web/hub-test.js" defer></script>
+</body>
+</html>
