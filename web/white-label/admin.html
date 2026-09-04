@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>White-label Business Setup</title>
+  <style>
+    body{font-family:Arial,sans-serif;max-width:760px;margin:32px auto;padding:0 16px;background:#f5f5f5;color:#111}
+    .card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+    label{display:block;font-weight:700;margin-top:16px}
+    input,select{width:100%;padding:12px;margin-top:6px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    button{margin-top:20px;padding:12px 18px;border:0;border-radius:10px;background:#111;color:#fff;font-weight:700}
+    pre{white-space:pre-wrap;background:#111;color:#fff;padding:16px;border-radius:12px;margin-top:20px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>New Business Setup</h1>
+    <p>This safe setup screen creates the configuration for a new branded copy without editing Dexter's live settings.</p>
+
+    <label>Business name<input id="name" placeholder="Example Cafe"></label>
+    <label>Short name<input id="shortName" placeholder="Example"></label>
+    <label>Domain<input id="domain" placeholder="app.examplecafe.co.uk"></label>
+
+    <div class="row">
+      <label>Primary colour<input id="primary" type="color" value="#111111"></label>
+      <label>Accent colour<input id="accent" type="color" value="#ffffff"></label>
+    </div>
+
+    <label>Currency
+      <select id="currency"><option value="GBP">GBP £</option><option value="EUR">EUR €</option><option value="USD">USD $</option></select>
+    </label>
+
+    <button id="generate">Generate business config</button>
+    <pre id="output">Enter a business name to create a configuration.</pre>
+  </div>
+
+<script>
+document.getElementById("generate").addEventListener("click", () => {
+  const name = document.getElementById("name").value.trim();
+  if (!name) return;
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+  const config = {
+    id,
+    name,
+    shortName: document.getElementById("shortName").value.trim() || name,
+    domain: document.getElementById("domain").value.trim(),
+    primaryColor: document.getElementById("primary").value,
+    accentColor: document.getElementById("accent").value,
+    currency: document.getElementById("currency").value,
+    locale: "en-GB",
+    features: {
+      loyalty:true, points:true, collectionOrders:true, orderAgain:true,
+      spinToWin:true, newsBanner:true, staffPortal:true, kds:true, stockControl:true
+    }
+  };
+  document.getElementById("output").textContent = JSON.stringify(config,null,2);
+});
+</script>
+</body>
+</html>
