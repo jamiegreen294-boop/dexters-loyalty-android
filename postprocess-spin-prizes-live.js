@@ -62,7 +62,7 @@ function add(){
   var card=document.createElement('div');
   card.className='card';
   card.id='dxSpinPrizeGuide';
-  card.innerHTML='<h2>🎁 What you could win</h2><p class="muted">Spin each day for a chance to win one of these Dexter’s rewards:</p><div class="dx-spin-prize-list"><div class="dx-spin-prize">💷 £2 off<small>Any order over £10</small></div><div class="dx-spin-prize">☕🍰 Free coffee + cake</div><div class="dx-spin-prize">🥪 Free toastie</div><div class="dx-spin-prize">🍽️ Free meal<small>A randomly selected eligible meal under £15</small></div></div><p class="tiny muted" style="margin-top:10px">Prizes are awarded automatically by the promotion system. Staff scan your Dexter’s loyalty QR to redeem a winning reward.</p>';
+  card.innerHTML='<h2>🎁 What you could win</h2><p class="muted">Spin each day for a chance to win one of these Dexter’s rewards:</p><div class="dx-spin-prize-list"><div class="dx-spin-prize">💷 £2 off<small>Any order over £10</small></div><div class="dx-spin-prize">☕🍰 Free coffee + cake</div><div class="dx-spin-prize">🥪 Free toastie</div><div class="dx-spin-prize">🍽️ Free meal<small>A randomly selected eligible meal up to £15</small></div></div><p class="tiny muted" style="margin-top:10px">Prizes are awarded automatically by the promotion system. Staff scan your Dexter’s loyalty QR to redeem a winning reward.</p>';
   page.appendChild(card);
 }
 function boot(){add();setTimeout(add,300);setTimeout(add,900);setTimeout(add,1800);new MutationObserver(function(){setTimeout(add,0)}).observe(document.body,{childList:true,subtree:true});}
