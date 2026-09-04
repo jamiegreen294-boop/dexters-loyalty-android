@@ -12,7 +12,7 @@
 <div class="card">
 <div class="brand">DEXTER'S · TEST ONLY</div>
 <h1>Epson Loyalty Receipt Test</h1>
-<p class="muted">Printer-only test for the Dexter's logo and Scan to Win QR layout. It does not create an order, add points or award a prize.</p>
+<p class="muted">Printer-only test for the Dexter's thermal logo and Scan to Win QR layout. It does not create an order, add points or award a prize.</p>
 </div>
 
 <div class="card">
@@ -28,7 +28,7 @@
 <div class="card">
 <h2>Receipt preview</h2>
 <div class="receipt">
-<img src="https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo" alt="Dexter's logo">
+<img src="/sunday/dexters-thermal-logo.png" alt="Dexter's logo">
 <div>DEXTER'S LOYALTY APP</div>
 <div class="small">TEST RECEIPT — NOT A REAL ORDER</div>
 <hr>
@@ -44,7 +44,7 @@
 </div>
 <script>
 const $=id=>document.getElementById(id);
-const LOGO='https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo';
+const LOGO='/sunday/dexters-thermal-logo.png';
 const QR='DEXTERS-LOYALTY-SCAN-TO-WIN-PRINT-TEST';
 function status(t,c=''){const el=$('status');el.textContent=t;el.className='status '+c}
 function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]))}
