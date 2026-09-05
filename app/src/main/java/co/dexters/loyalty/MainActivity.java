@@ -60,6 +60,7 @@ public class MainActivity extends Activity {
     private static final String BRAND_LOGO = "https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo";
 
     private WebView webView;
+    private View mainRoot;
     private TextView printerState;
     private PermissionRequest pendingPermission;
     private IPrinterService printerService;
@@ -142,6 +143,7 @@ public class MainActivity extends Activity {
 
         webView = new WebView(this);
         root.addView(webView, new LinearLayout.LayoutParams(-1, 0, 1f));
+        mainRoot = root;
         setContentView(root);
     }
 
@@ -155,7 +157,8 @@ public class MainActivity extends Activity {
         content.setPadding(dp(24), dp(24), dp(24), dp(24));
 
         ImageView logo = new ImageView(this);
-        logo.setImageResource(co.dexters.terminal.R.drawable.dexters_logo);
+        int brandRes = getResources().getIdentifier("dexters_brand_logo", "drawable", getPackageName());
+        logo.setImageResource(brandRes != 0 ? brandRes : co.dexters.terminal.R.drawable.dexters_logo);
         logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         content.addView(logo, new LinearLayout.LayoutParams(dp(240), dp(170)));
 
@@ -180,7 +183,7 @@ public class MainActivity extends Activity {
         setContentView(splash);
         loadBrandLogo(logo);
         splash.postDelayed(() -> {
-            if (!isFinishing() && webView != null) setContentView((View) webView.getParent().getParent());
+            if (!isFinishing() && mainRoot != null) setContentView(mainRoot);
         }, 1400);
     }
 
