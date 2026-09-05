@@ -21,7 +21,12 @@
   }
   async function applyOutagesToCategories(list,blocked){
     blocked=blocked||await outageIds();
-    for(const c of list||[])for(const i of c.items||[])if(blocked.has(String(i.id)))i.in_stock=false;
+    for(const c of list||[])for(const i of c.items||[]){
+      // Remember the menu's own stock state so a temporary daily outage can be removed
+      // without incorrectly leaving the item unavailable until a full page reload.
+      if(typeof i.__dextersBaseInStock==='undefined')i.__dextersBaseInStock=i.in_stock!==false;
+      i.in_stock=!!i.__dextersBaseInStock&&!blocked.has(String(i.id));
+    }
     return blocked;
   }
   async function applyOutages(){
