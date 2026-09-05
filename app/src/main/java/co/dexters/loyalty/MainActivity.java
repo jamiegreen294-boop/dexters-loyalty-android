@@ -7,7 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.Settings;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -21,12 +26,22 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.content.FileProvider;
+
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -40,6 +55,9 @@ public class MainActivity extends Activity {
     private static final String HOME = "https://dexters-loyalty-v15.vercel.app";
     private static final int CAMERA_REQUEST = 1001;
     private static final int SCAN_REQUEST = 2001;
+    private static final int INSTALL_PERMISSION_REQUEST = 3001;
+    private static final String UPDATE_MANIFEST = "https://raw.githubusercontent.com/jamiegreen294-boop/dexters-loyalty-android/foodhub-terminal-native-v1/web/terminal-update.json";
+    private static final String BRAND_LOGO = "https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo";
 
     private WebView webView;
     private TextView printerState;
@@ -49,6 +67,8 @@ public class MainActivity extends Activity {
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final StringBuilder scanBuffer = new StringBuilder();
     private long lastKeyAt;
+    private Button updateButton;
+    private JSONObject pendingUpdate;
 
     private final ServiceConnection printerConnection = new ServiceConnection() {
         @Override public void onServiceConnected(ComponentName name, IBinder service) {
@@ -67,10 +87,13 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        showSplash();
         buildUi();
         configureWebView();
         bindPrinter();
+        enterImmersiveMode();
         if (savedInstanceState == null) webView.loadUrl(HOME); else webView.restoreState(savedInstanceState);
+        checkForUpdates(false);
     }
 
     private void buildUi() {
@@ -107,15 +130,195 @@ public class MainActivity extends Activity {
         print.setOnClickListener(v -> printTestReceipt());
         bar.addView(print, new LinearLayout.LayoutParams(dp(150), dp(48)));
 
+        updateButton = button("UPDATE");
+        updateButton.setOnClickListener(v -> checkForUpdates(true));
+        bar.addView(updateButton, new LinearLayout.LayoutParams(dp(105), dp(48)));
+
         Button home = button("HOME");
         home.setOnClickListener(v -> webView.loadUrl(HOME));
-        bar.addView(home, new LinearLayout.LayoutParams(dp(100), dp(48)));
+        bar.addView(home, new LinearLayout.LayoutParams(dp(90), dp(48)));
 
         root.addView(bar, new LinearLayout.LayoutParams(-1, dp(64)));
 
         webView = new WebView(this);
         root.addView(webView, new LinearLayout.LayoutParams(-1, 0, 1f));
         setContentView(root);
+    }
+
+    private void showSplash() {
+        FrameLayout splash = new FrameLayout(this);
+        splash.setBackgroundColor(Color.rgb(8, 8, 14));
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setGravity(Gravity.CENTER);
+        content.setPadding(dp(24), dp(24), dp(24), dp(24));
+
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(co.dexters.terminal.R.drawable.dexters_logo);
+        logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        content.addView(logo, new LinearLayout.LayoutParams(dp(240), dp(170)));
+
+        TextView title = new TextView(this);
+        title.setText("DEXTER'S");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(34);
+        title.setGravity(Gravity.CENTER);
+        title.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        content.addView(title, new LinearLayout.LayoutParams(-2, -2));
+
+        TextView sub = new TextView(this);
+        sub.setText("TERMINAL");
+        sub.setTextColor(Color.rgb(255, 129, 62));
+        sub.setTextSize(16);
+        sub.setLetterSpacing(.18f);
+        sub.setGravity(Gravity.CENTER);
+        content.addView(sub, new LinearLayout.LayoutParams(-2, -2));
+
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-1, -1);
+        splash.addView(content, lp);
+        setContentView(splash);
+        loadBrandLogo(logo);
+        splash.postDelayed(() -> {
+            if (!isFinishing() && webView != null) setContentView((View) webView.getParent().getParent());
+        }, 1400);
+    }
+
+    private void loadBrandLogo(ImageView target) {
+        io.execute(() -> {
+            try {
+                File cached = new File(getFilesDir(), "dexters-brand-logo");
+                Bitmap bitmap = null;
+                if (cached.exists() && cached.length() > 100) bitmap = BitmapFactory.decodeFile(cached.getAbsolutePath());
+                if (bitmap == null) {
+                    HttpURLConnection c = (HttpURLConnection) new URL(BRAND_LOGO).openConnection();
+                    c.setConnectTimeout(5000);
+                    c.setReadTimeout(5000);
+                    c.setRequestProperty("Accept", "image/*");
+                    try (BufferedInputStream in = new BufferedInputStream(c.getInputStream());
+                         ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                        byte[] buf = new byte[8192]; int n;
+                        while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                        byte[] bytes = out.toByteArray();
+                        if (bytes.length > 100) {
+                            try (FileOutputStream fos = new FileOutputStream(cached)) { fos.write(bytes); }
+                            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        }
+                    } finally { c.disconnect(); }
+                }
+                final Bitmap ready = bitmap;
+                if (ready != null) target.post(() -> target.setImageBitmap(ready));
+            } catch (Exception ignored) {}
+        });
+    }
+
+    private void enterImmersiveMode() {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+                View.SYSTEM_UI_FLAG_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    }
+
+    private int currentVersionCode() {
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            if (android.os.Build.VERSION.SDK_INT >= 28) return (int) pi.getLongVersionCode();
+            return pi.versionCode;
+        } catch (Exception e) { return 0; }
+    }
+
+    private void checkForUpdates(boolean userRequested) {
+        if (updateButton != null) {
+            updateButton.setEnabled(false);
+            updateButton.setText("CHECKING…");
+        }
+        io.execute(() -> {
+            HttpURLConnection c = null;
+            try {
+                c = (HttpURLConnection) new URL(UPDATE_MANIFEST + "?t=" + System.currentTimeMillis()).openConnection();
+                c.setConnectTimeout(8000);
+                c.setReadTimeout(8000);
+                c.setUseCaches(false);
+                try (BufferedInputStream in = new BufferedInputStream(c.getInputStream());
+                     ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                    byte[] buf = new byte[4096]; int n;
+                    while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                    JSONObject m = new JSONObject(out.toString("UTF-8"));
+                    int latest = m.optInt("versionCode", 0);
+                    runOnUiThread(() -> {
+                        if (updateButton != null) {
+                            updateButton.setEnabled(true);
+                            updateButton.setText(latest > currentVersionCode() ? "UPDATE NOW" : "UPDATE");
+                        }
+                        if (latest > currentVersionCode()) {
+                            pendingUpdate = m;
+                            if (userRequested) downloadAndInstallUpdate();
+                            else Toast.makeText(this, "Dexter's Terminal update available", Toast.LENGTH_LONG).show();
+                        } else if (userRequested) {
+                            Toast.makeText(this, "Dexter's Terminal is up to date", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    if (updateButton != null) { updateButton.setEnabled(true); updateButton.setText("UPDATE"); }
+                    if (userRequested) Toast.makeText(this, "Could not check for updates. Check Wi-Fi and try again.", Toast.LENGTH_LONG).show();
+                });
+            } finally { if (c != null) c.disconnect(); }
+        });
+    }
+
+    private void downloadAndInstallUpdate() {
+        JSONObject m = pendingUpdate;
+        if (m == null) { checkForUpdates(true); return; }
+        String apkUrl = m.optString("apk_url", "");
+        if (apkUrl.isEmpty()) {
+            Toast.makeText(this, "Update file is unavailable", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+            Intent i = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:" + getPackageName()));
+            startActivityForResult(i, INSTALL_PERMISSION_REQUEST);
+            Toast.makeText(this, "Allow Dexter's Terminal to install its own updates, then return here.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (updateButton != null) { updateButton.setEnabled(false); updateButton.setText("DOWNLOADING…"); }
+        io.execute(() -> {
+            HttpURLConnection c = null;
+            try {
+                c = (HttpURLConnection) new URL(apkUrl).openConnection();
+                c.setConnectTimeout(12000);
+                c.setReadTimeout(20000);
+                c.setInstanceFollowRedirects(true);
+                File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                if (dir == null) dir = getFilesDir();
+                File apk = new File(dir, "Dexters-Terminal-update.apk");
+                try (BufferedInputStream in = new BufferedInputStream(c.getInputStream());
+                     FileOutputStream out = new FileOutputStream(apk)) {
+                    byte[] buf = new byte[16384]; int n;
+                    while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                }
+                if (apk.length() < 10000) throw new IllegalStateException("Downloaded update is invalid");
+                Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".files", apk);
+                Intent install = new Intent(Intent.ACTION_VIEW);
+                install.setDataAndType(uri, "application/vnd.android.package-archive");
+                install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                runOnUiThread(() -> {
+                    if (updateButton != null) { updateButton.setEnabled(true); updateButton.setText("UPDATE"); }
+                    startActivity(install);
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    if (updateButton != null) { updateButton.setEnabled(true); updateButton.setText("UPDATE"); }
+                    Toast.makeText(this, "Update download failed. Check Wi-Fi and try again.", Toast.LENGTH_LONG).show();
+                });
+            } finally { if (c != null) c.disconnect(); }
+        });
     }
 
     private Button button(String text) {
@@ -217,6 +420,10 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == INSTALL_PERMISSION_REQUEST) {
+            if (android.os.Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls()) downloadAndInstallUpdate();
+            return;
+        }
         if (requestCode != SCAN_REQUEST || data == null) return;
         String raw = firstNonBlank(
                 data.getStringExtra("SCAN_RESULT"),
@@ -365,6 +572,11 @@ public class MainActivity extends Activity {
 
     @Override public void onBackPressed() {
         if (webView != null && webView.canGoBack()) webView.goBack(); else super.onBackPressed();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        enterImmersiveMode();
     }
 
     @Override protected void onSaveInstanceState(Bundle outState) {
