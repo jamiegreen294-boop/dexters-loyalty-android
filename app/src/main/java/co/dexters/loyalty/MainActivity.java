@@ -2,6 +2,7 @@ package co.dexters.terminal;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -112,7 +113,7 @@ public class MainActivity extends Activity {
         TextView brand = new TextView(this);
         brand.setText("DEXTER'S TERMINAL");
         brand.setTextColor(Color.WHITE);
-        brand.setTextSize(18);
+        brand.setTextSize(14);
         brand.setGravity(Gravity.CENTER_VERTICAL);
         brand.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
         bar.addView(brand, new LinearLayout.LayoutParams(0, dp(48), 1f));
@@ -122,23 +123,23 @@ public class MainActivity extends Activity {
         printerState.setTextColor(Color.rgb(220, 203, 210));
         printerState.setTextSize(13);
         printerState.setGravity(Gravity.CENTER);
-        bar.addView(printerState, new LinearLayout.LayoutParams(dp(135), dp(48)));
+        bar.addView(printerState, new LinearLayout.LayoutParams(dp(105), dp(48)));
 
         updateButton = button("UPDATE");
         updateButton.setOnClickListener(v -> checkForUpdates(true));
-        bar.addView(updateButton, new LinearLayout.LayoutParams(dp(105), dp(48)));
+        bar.addView(updateButton, new LinearLayout.LayoutParams(dp(92), dp(48)));
 
         Button scan = button("SCAN CUSTOMER");
         scan.setOnClickListener(v -> launchHardwareScanner());
-        bar.addView(scan, new LinearLayout.LayoutParams(dp(135), dp(48)));
+        bar.addView(scan, new LinearLayout.LayoutParams(dp(112), dp(48)));
 
         Button print = button("PRINTER TEST");
         print.setOnClickListener(v -> printTestReceipt());
-        bar.addView(print, new LinearLayout.LayoutParams(dp(120), dp(48)));
+        bar.addView(print, new LinearLayout.LayoutParams(dp(98), dp(48)));
 
         Button home = button("HOME");
         home.setOnClickListener(v -> webView.loadUrl(HOME));
-        bar.addView(home, new LinearLayout.LayoutParams(dp(75), dp(48)));
+        bar.addView(home, new LinearLayout.LayoutParams(dp(64), dp(48)));
 
         root.addView(bar, new LinearLayout.LayoutParams(-1, dp(64)));
 
@@ -260,7 +261,7 @@ public class MainActivity extends Activity {
                         if (latest > currentVersionCode()) {
                             pendingUpdate = m;
                             if (userRequested) downloadAndInstallUpdate();
-                            else Toast.makeText(this, "Dexter's Terminal update available", Toast.LENGTH_LONG).show();
+                            else showUpdatePrompt(m);
                         } else if (userRequested) {
                             Toast.makeText(this, "Dexter's Terminal is up to date", Toast.LENGTH_SHORT).show();
                         }
@@ -273,6 +274,17 @@ public class MainActivity extends Activity {
                 });
             } finally { if (c != null) c.disconnect(); }
         });
+    }
+
+    private void showUpdatePrompt(JSONObject update) {
+        if (isFinishing()) return;
+        String version = update.optString("versionName", "new version");
+        new AlertDialog.Builder(this)
+                .setTitle("Dexter's Terminal update")
+                .setMessage("Version " + version + " is available over Wi-Fi.")
+                .setPositiveButton("UPDATE NOW", (dialog, which) -> downloadAndInstallUpdate())
+                .setNegativeButton("LATER", null)
+                .show();
     }
 
     private String fileSha256(File file) throws Exception {
