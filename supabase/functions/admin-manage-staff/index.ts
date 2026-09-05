@@ -19,10 +19,10 @@ Deno.serve(async(req:Request)=>{
  }
  if(action==="create"){
    const full_name=String(body.full_name||"").trim(),phone=String(body.phone||"").trim(),email=String(body.email||"").trim().toLowerCase(),password=String(body.password||"");
-   const role=safeRole(body.role); if(role==="customer")return json({error:"New accounts here must be Staff or Admin"},400);
+   const role=safeRole(body.role); if(role==="customer")return json({error:"New accounts here must be Staff, Manager or Admin"},400);
    if(!full_name||!email||password.length<8)return json({error:"Name, email and a password of at least 8 characters are required"},400);
    const {data:created,error:createError}=await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name,phone}}); if(createError||!created.user)return json({error:createError?.message||"Could not create account"},400);
-   const {error:profileError}=await admin.from("profiles").update({full_name,phone:phone||null,role,staff_permissions:role==="staff"?safePerms(body.permissions):{}}).eq("id",created.user.id); if(profileError){await admin.auth.admin.deleteUser(created.user.id);return json({error:profileError.message},500)}
+   const {error:profileError}=await admin.from("profiles").update({full_name,phone:phone||null,role,staff_permissions:["staff","manager"].includes(role)?safePerms(body.permissions):{}}).eq("id",created.user.id); if(profileError){await admin.auth.admin.deleteUser(created.user.id);return json({error:profileError.message},500)}
    return json({ok:true,id:created.user.id});
  }
  if(action==="update"){
@@ -30,7 +30,7 @@ Deno.serve(async(req:Request)=>{
    const {data:target}=await admin.from("profiles").select("role").eq("id",id).single(); if(!target||!["staff","manager","admin"].includes(target.role))return json({error:"Admin, manager or staff account not found"},404);
    const role=safeRole(body.role); const full_name=String(body.full_name||"").trim(),phone=String(body.phone||"").trim(),email=String(body.email||"").trim().toLowerCase(); if(!full_name)return json({error:"Name is required"},400);
    if(email){const {error:emailError}=await admin.auth.admin.updateUserById(id,{email}); if(emailError)return json({error:emailError.message},400)}
-   const {error}=await admin.from("profiles").update({full_name,phone:phone||null,role,staff_permissions:role==="staff"?safePerms(body.permissions):{}}).eq("id",id); if(error)return json({error:error.message},500); return json({ok:true});
+   const {error}=await admin.from("profiles").update({full_name,phone:phone||null,role,staff_permissions:["staff","manager"].includes(role)?safePerms(body.permissions):{}}).eq("id",id); if(error)return json({error:error.message},500); return json({ok:true});
  }
  if(action==="remove"){
    const id=String(body.id||""); if(!id||id===user.id)return json({error:"You cannot remove your own admin access here"},400);
