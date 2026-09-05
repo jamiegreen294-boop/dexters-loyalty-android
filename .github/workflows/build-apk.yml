@@ -49,14 +49,12 @@ jobs:
           PY
           node --check /tmp/pos.js
 
-      - name: Restore POS signing key
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: dexters-pos-signing-v1
-
       - name: Build installable debug APK
         run: gradle --no-daemon assembleDebug
+
+      - name: Verify APK signature
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
 
       - name: Rename APK
         run: cp app/build/outputs/apk/debug/app-debug.apk Dexters-POS-Tablet.apk
