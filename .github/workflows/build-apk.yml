@@ -1,16 +1,22 @@
-name: Build Dexter's Foodhub Terminal APK
+name: Build Dexter's Terminal APK
 
 on:
   push:
     branches: [ foodhub-terminal-native-v1 ]
+    paths-ignore:
+      - 'downloads/Dexters-Terminal-latest.apk'
+      - 'web/terminal-update.json'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DEXTERS_VERSION_CODE: ${{ 100000 + github.run_number }}
+      DEXTERS_VERSION_NAME: 1.${{ github.run_number }}-dexters
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,15 +32,47 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build Dexter's terminal debug APK
+      - name: Keep one stable Dexter's signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: dexters-terminal-signing-v1
+
+      - name: Bundle current Dexter's logo
+        run: |
+          mkdir -p app/src/main/res/drawable-nodpi
+          curl -fsSL "https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo"             -o app/src/main/res/drawable-nodpi/dexters_brand_logo.png || rm -f app/src/main/res/drawable-nodpi/dexters_brand_logo.png
+
+      - name: Build Dexter's terminal APK
         run: gradle --no-daemon assembleDebug
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk Dexters-Foodhub-Terminal.apk
+      - name: Prepare update package
+        run: |
+          mkdir -p downloads web
+          cp app/build/outputs/apk/debug/app-debug.apk downloads/Dexters-Terminal-latest.apk
+          SHA="$(sha256sum downloads/Dexters-Terminal-latest.apk | awk '{print $1}')"
+          cat > web/terminal-update.json <<JSON
+          {
+            "versionCode": ${DEXTERS_VERSION_CODE},
+            "versionName": "${DEXTERS_VERSION_NAME}",
+            "apk_url": "https://raw.githubusercontent.com/jamiegreen294-boop/dexters-loyalty-android/foodhub-terminal-native-v1/downloads/Dexters-Terminal-latest.apk",
+            "sha256": "${SHA}",
+            "mandatory": false
+          }
+          JSON
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Dexters-Foodhub-Terminal-APK
-          path: Dexters-Foodhub-Terminal.apk
+          name: Dexters-Terminal-APK
+          path: downloads/Dexters-Terminal-latest.apk
           if-no-files-found: error
+
+      - name: Publish Wi-Fi update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f downloads/Dexters-Terminal-latest.apk web/terminal-update.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Publish Dexter's Terminal Wi-Fi update [skip ci]"
+          git push origin HEAD:foodhub-terminal-native-v1
