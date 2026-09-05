@@ -1,11 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
+
+    <queries>
+        <package android:name="com.incar.printerservice" />
+        <package android:name="net.nyx.printerservice" />
+        <package android:name="net.nyx.scanner" />
+        <intent><action android:name="com.incar.printerservice.IPrinterService" /></intent>
+        <intent><action android:name="net.nyx.printerservice.IPrinterService" /></intent>
+    </queries>
+
     <application
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:theme="@style/AppTheme"
-        android:label="Dexters Loyalty"
+        android:label="Dexter's Terminal"
         android:icon="@drawable/dexters_logo">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
