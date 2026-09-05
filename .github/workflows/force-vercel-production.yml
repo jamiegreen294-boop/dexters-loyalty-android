@@ -13,11 +13,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - name: Create deployment trigger commit
+      - name: Create build-relevant production trigger
         run: |
           git config user.name "jamiegreen294-boop"
           git config user.email "jamiegreen294@gmail.com"
-          printf "Vercel production trigger %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .deploy/spin-app-only-production-trigger.txt
-          git add .deploy/spin-app-only-production-trigger.txt
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.deploymentMarker='spin-app-only-live-20260905';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          git add package.json
           git commit -m "Deploy Spin to Win app-only flow to production"
           git push origin main
