@@ -30,7 +30,7 @@ Deno.serve(async(req)=>{
   const {data:{user}}=await uc.auth.getUser();
   if(!user) return J({error:'Invalid session'},401);
   const {data:p}=await db.from('profiles').select('role').eq('id',user.id).single();
-  if(!p||!['admin','staff'].includes(String(p.role||''))) return J({error:'Staff access required'},403);
+  if(!p||!['admin','manager','staff'].includes(String(p.role||''))) return J({error:'Staff access required'},403);
 
   if(action==='save'){
     const message=String(body.message||'').trim().slice(0,500);
