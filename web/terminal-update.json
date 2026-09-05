@@ -1,7 +1,7 @@
 {
-  "versionCode": 100241,
-  "versionName": "1.241-dexters",
+  "versionCode": 100242,
+  "versionName": "1.242-dexters",
   "apk_url": "https://raw.githubusercontent.com/jamiegreen294-boop/dexters-loyalty-android/foodhub-terminal-native-v1/downloads/Dexters-Terminal-latest.apk",
-  "sha256": "e1cb16318e5d3cf0ca3061134537c92b2a0e37627da7035f83ac6a25c05b0052",
+  "sha256": "f23263498d1890c9c70ac188b9f8a3a63dc22eed9187c4cec424b3b9be7e6662",
   "mandatory": false
 }
