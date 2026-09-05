@@ -1,6 +1,6 @@
 {
-  "versionCode": 1003,
-  "versionName": "1.003-pos",
+  "versionCode": 1004,
+  "versionName": "1.004-pos",
   "apkUrl": "https://github.com/jamiegreen294-boop/dexters-loyalty-android/releases/latest/download/Dexters-POS-Tablet.apk",
-  "notes": "Dexter's POS live branding update."
+  "notes": "Dexter's POS updater reliability fix."
 }
