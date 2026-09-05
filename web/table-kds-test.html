@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dexter's Table KDS Test</title>
+<style>
+:root{--bg:#090d12;--card:#151c26;--gold:#f2c94c;--text:#fff;--muted:#aab4c0;--green:#72d69a;--red:#ff7a7a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}.wrap{max-width:1000px;margin:auto;padding:18px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.brand{font-size:30px;font-weight:900}.tag{color:var(--gold);font-weight:900}.pill{background:#ffffff10;padding:8px 12px;border-radius:999px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.card{background:var(--card);border:1px solid #ffffff1f;border-radius:18px;padding:16px;box-shadow:0 10px 24px #0006}
+.card.new{outline:2px solid var(--gold)}.top{display:flex;justify-content:space-between;gap:10px;align-items:start}.table{font-size:24px;font-weight:900}.source{color:var(--gold);font-weight:900;font-size:13px}.status{text-transform:uppercase;font-weight:900;font-size:12px;background:#ffffff10;padding:6px 8px;border-radius:999px}
+.items{margin:14px 0;line-height:1.5}.notes{background:#ffffff0b;border-radius:10px;padding:9px;margin:10px 0;color:#dbe3ec}.total{font-size:18px;font-weight:900;margin:8px 0}
+.actions{display:flex;flex-wrap:wrap;gap:8px}.actions button{border:0;border-radius:10px;padding:10px 12px;font-weight:900}.primary{background:var(--gold)}.secondary{background:#dbe3ec}.done{background:var(--green)}.cancel{background:var(--red)}
+.empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed #ffffff20;border-radius:16px}.error{color:#ff9d9d}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div><div class="brand">DEXTER'S</div><div class="tag">TABLE KDS · TEST ONLY</div></div><div class="pill" id="updated">Loading…</div></header>
+<div id="orders" class="grid"></div>
+</div>
+<script>
+const API='https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/table-service-test-api';
+const TOKEN='dexters-table-test-20260905-v1';
+let knownNew=new Set();
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+async function api(method='GET',body){
+ const r=await fetch(API,{method,headers:{'Content-Type':'application/json','x-test-token':TOKEN},body:body?JSON.stringify(body):undefined});
+ const d=await r.json(); if(!r.ok) throw new Error(d.error||'Request failed'); return d;
+}
+async function setStatus(id,status){try{await api('PATCH',{id,status});await load()}catch(e){alert('Could not update test order')}}
+function speakNew(orders){
+ const fresh=orders.filter(o=>o.status==='new'&&!knownNew.has(o.id));
+ fresh.forEach(o=>{try{speechSynthesis.speak(new SpeechSynthesisUtterance('New table order. Table '+o.table_number))}catch{};knownNew.add(o.id)});
+ orders.forEach(o=>{if(o.status!=='new')knownNew.add(o.id)});
+}
+function card(o){
+ const items=(o.items||[]).map(i=>'<div><strong>'+Number(i.qty||1)+'×</strong> '+esc(i.name)+'</div>').join('');
+ const next=o.status==='new'?'<button class="primary" onclick="setStatus(\''+o.id+'\',\'accepted\')">ACCEPT</button>':
+            o.status==='accepted'?'<button class="primary" onclick="setStatus(\''+o.id+'\',\'cooking\')">COOKING</button>':
+            o.status==='cooking'?'<button class="primary" onclick="setStatus(\''+o.id+'\',\'ready\')">READY / SERVE</button>':
+            o.status==='ready'?'<button class="done" onclick="setStatus(\''+o.id+'\',\'done\')">DONE</button>':'';
+ return '<div class="card '+(o.status==='new'?'new':'')+'"><div class="top"><div><div class="table">TABLE '+o.table_number+'</div><div class="source">'+(o.source==='qr'?'QR ORDER':'STAFF ORDER')+'</div></div><div class="status">'+esc(o.status)+'</div></div><div class="items">'+items+'</div>'+(o.notes?'<div class="notes"><strong>Notes:</strong> '+esc(o.notes)+'</div>':'')+'<div class="total">£'+Number(o.total||0).toFixed(2)+'</div><div class="actions">'+next+(o.status!=='done'&&o.status!=='cancelled'?'<button class="cancel" onclick="setStatus(\''+o.id+'\',\'cancelled\')">CANCEL</button>':'')+'</div></div>';
+}
+async function load(){
+ try{
+  const d=await api(); const active=(d.orders||[]).filter(o=>!['done','cancelled'].includes(o.status));
+  speakNew(active);
+  document.getElementById('orders').innerHTML=active.length?active.map(card).join(''):'<div class="empty">No active test table orders.</div>';
+  document.getElementById('updated').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ }catch(e){document.getElementById('orders').innerHTML='<div class="empty error">Could not load test orders.</div>'}
+}
+load(); setInterval(load,3000);
+</script>
+</body></html>
