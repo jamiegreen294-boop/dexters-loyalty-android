@@ -1,6 +1,6 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.SundayRoast=factory()})(this,function(){
 'use strict';
-const meals={chicken:{name:'Roast Chicken Dinner',price:1499,group:'adult'},beef:{name:'Roast Beef Dinner',price:1499,group:'adult'},mixed:{name:'Adult Mixed Roast Dinner',price:1499,group:'adult'},kids_chicken:{name:"Kids' Roast Chicken Dinner",price:999,group:'kids'},kids_beef:{name:"Kids' Roast Beef Dinner",price:999,group:'kids'},kids_mixed:{name:'Child Mixed Roast Dinner',price:999,group:'kids'}};
+const meals={chicken:{name:'Roast Chicken Dinner',price:1499,group:'adult'},beef:{name:'Roast Beef Dinner',price:1499,group:'adult'},mixed:{name:'Adult Mixed Roast Dinner',price:1499,group:'adult'},kids_chicken:{name:"Kids' Roast Chicken Dinner",price:999,group:'kids'},kids_beef:{name:"Kids' Roast Beef Dinner",price:999,group:'kids'},kids_mixed:{name:'Kids Mixed Roast Dinner',price:999,group:'kids'}};
 const extras={yorkshire:{name:'Extra Yorkshire Pudding',price:75},gravy:{name:'Extra Gravy',price:100},stuffing:{name:'Extra Stuffing',price:100},potatoes:{name:'Extra Roast Potatoes',price:150},chicken:{name:'Extra Chicken',price:250},beef:{name:'Extra Beef',price:350}};
 const included=['Crispy roast potatoes','Creamy mashed potatoes','Mashed turnip','Carrots','Garden peas','Broccoli','Yorkshire pudding','Sage & onion stuffing','Rich gravy'];
 const money=p=>'£'+(p/100).toFixed(2);
