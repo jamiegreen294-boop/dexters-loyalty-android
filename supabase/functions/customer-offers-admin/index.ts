@@ -15,7 +15,7 @@ Deno.serve(async(req)=>{
   if(!user)return J({error:'Invalid session'},401);
   const db=createClient(url,service);
   const {data:p}=await db.from('profiles').select('role,staff_permissions').eq('id',user.id).single();
-  const admin=p?.role==='admin',staff=p?.role==='staff';
+  const admin=p?.role==='admin',staff=p?.role==='staff'||p?.role==='manager';
   let b:any={};try{b=await req.json()}catch{return J({error:'Invalid request'},400)}
   const a=String(b.action||'');
 
