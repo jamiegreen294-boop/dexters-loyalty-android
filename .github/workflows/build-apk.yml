@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -38,3 +38,13 @@ jobs:
           name: Dexters-POS-Tablet-APK
           path: Dexters-POS-Tablet.apk
           if-no-files-found: error
+      - name: Publish release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dexters-pos-latest
+          name: Dexters POS Latest
+          prerelease: false
+          make_latest: true
+          files: Dexters-POS-Tablet.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
