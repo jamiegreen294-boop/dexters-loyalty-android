@@ -1,8 +1,8 @@
-name: Build Dexters Loyalty APK
+name: Build Dexter's Foodhub Terminal APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ foodhub-terminal-native-v1 ]
   workflow_dispatch:
 
 permissions:
@@ -26,15 +26,15 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build installable debug APK
+      - name: Build Dexter's terminal debug APK
         run: gradle --no-daemon assembleDebug
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk Dexters-Loyalty.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk Dexters-Foodhub-Terminal.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Dexters-Loyalty-APK
-          path: Dexters-Loyalty.apk
+          name: Dexters-Foodhub-Terminal-APK
+          path: Dexters-Foodhub-Terminal.apk
           if-no-files-found: error
