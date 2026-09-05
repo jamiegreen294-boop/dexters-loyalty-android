@@ -110,8 +110,12 @@ public class MainActivity extends Activity {
         bar.setPadding(dp(12), dp(8), dp(12), dp(8));
         bar.setBackgroundColor(Color.rgb(33, 16, 27));
 
+        updateButton = button("UPDATE");
+        updateButton.setOnClickListener(v -> checkForUpdates(true));
+        bar.addView(updateButton, new LinearLayout.LayoutParams(dp(120), dp(48)));
+
         TextView brand = new TextView(this);
-        brand.setText("DEXTER'S TERMINAL");
+        brand.setText("DEXTER'S");
         brand.setTextColor(Color.WHITE);
         brand.setTextSize(14);
         brand.setGravity(Gravity.CENTER_VERTICAL);
@@ -119,27 +123,19 @@ public class MainActivity extends Activity {
         bar.addView(brand, new LinearLayout.LayoutParams(0, dp(48), 1f));
 
         printerState = new TextView(this);
-        printerState.setText("Printer connecting…");
-        printerState.setTextColor(Color.rgb(220, 203, 210));
-        printerState.setTextSize(13);
-        printerState.setGravity(Gravity.CENTER);
-        bar.addView(printerState, new LinearLayout.LayoutParams(dp(105), dp(48)));
-
-        updateButton = button("UPDATE");
-        updateButton.setOnClickListener(v -> checkForUpdates(true));
-        bar.addView(updateButton, new LinearLayout.LayoutParams(dp(92), dp(48)));
+        printerState.setVisibility(View.GONE);
 
         Button scan = button("SCAN CUSTOMER");
         scan.setOnClickListener(v -> launchHardwareScanner());
-        bar.addView(scan, new LinearLayout.LayoutParams(dp(112), dp(48)));
+        bar.addView(scan, new LinearLayout.LayoutParams(dp(105), dp(48)));
 
         Button print = button("PRINTER TEST");
         print.setOnClickListener(v -> printTestReceipt());
-        bar.addView(print, new LinearLayout.LayoutParams(dp(98), dp(48)));
+        bar.addView(print, new LinearLayout.LayoutParams(dp(90), dp(48)));
 
         Button home = button("HOME");
         home.setOnClickListener(v -> webView.loadUrl(HOME));
-        bar.addView(home, new LinearLayout.LayoutParams(dp(64), dp(48)));
+        bar.addView(home, new LinearLayout.LayoutParams(dp(60), dp(48)));
 
         root.addView(bar, new LinearLayout.LayoutParams(-1, dp(64)));
 
