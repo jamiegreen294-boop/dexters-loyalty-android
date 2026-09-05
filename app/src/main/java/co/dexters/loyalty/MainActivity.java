@@ -43,6 +43,7 @@ import java.io.FileOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.security.MessageDigest;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -274,6 +275,17 @@ public class MainActivity extends Activity {
         });
     }
 
+    private String fileSha256(File file) throws Exception {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        try (BufferedInputStream in = new BufferedInputStream(new java.io.FileInputStream(file))) {
+            byte[] buf = new byte[16384]; int n;
+            while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
+        }
+        StringBuilder hex = new StringBuilder();
+        for (byte b : md.digest()) hex.append(String.format(Locale.ROOT, "%02x", b & 0xff));
+        return hex.toString();
+    }
+
     private void downloadAndInstallUpdate() {
         JSONObject m = pendingUpdate;
         if (m == null) { checkForUpdates(true); return; }
@@ -307,6 +319,11 @@ public class MainActivity extends Activity {
                     while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
                 }
                 if (apk.length() < 10000) throw new IllegalStateException("Downloaded update is invalid");
+                String expectedSha = m.optString("sha256", "").trim().toLowerCase(Locale.ROOT);
+                if (!expectedSha.isEmpty() && !expectedSha.equals(fileSha256(apk))) {
+                    apk.delete();
+                    throw new SecurityException("Update checksum mismatch");
+                }
                 Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".files", apk);
                 Intent install = new Intent(Intent.ACTION_VIEW);
                 install.setDataAndType(uri, "application/vnd.android.package-archive");
