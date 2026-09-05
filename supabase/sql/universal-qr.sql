@@ -47,10 +47,7 @@ begin
    for r in select id,item_name,category_name,points_cost from public.loyalty_points_redemptions where user_id=actor and status='pending' loop
      rows:=rows||jsonb_build_array(jsonb_build_object('raw','DEXTERS_POINTS:'||r.id,'kind','points','item',r.item_name,'category',r.category_name,'points_cost',r.points_cost));
    end loop;
-   for r in select id,prize_name from public.spin_wheel_spins where user_id=actor and is_win and not redeemed loop
-     select count(*),min(c.name) into matching,category from public.loyalty_menu_items i join public.loyalty_menu_categories c on c.id=i.category_id where lower(i.name)=lower(r.prize_name);
-     rows:=rows||jsonb_build_array(jsonb_build_object('raw','DEXTERS_SPIN:'||r.id,'kind','spin','item',r.prize_name,'category',case when matching=1 then category else 'Check prize details with staff' end));
-   end loop;
+   -- Spin to Win prizes are app-only and are intentionally not exposed as staff-scannable QR rewards.
    if exists(select 1 from public.loyalty_accounts where user_id=actor and stamps>=9) then
      select id into latest_event from public.loyalty_events_v2 where customer_id=actor order by created_at desc,id desc limit 1;
      if latest_event is not null then rows:=rows||jsonb_build_array(jsonb_build_object('raw','DEXTERS_COFFEE:'||latest_event,'kind','coffee','item','Free coffee','category','Coffee')); end if;
@@ -69,6 +66,7 @@ begin
    select id,full_name into cid,customer_name from public.profiles where loyalty_code=code and role='customer';
    if cid is null then raise exception 'Customer not found'; end if;
  elsif kind='spin' then
+   raise exception 'Spin to Win prizes can only be claimed through the Dexter’s customer app';
    if not public.app_has_permission('redeem_spin_prizes') then raise exception 'Permission denied'; end if;
    select * into r from public.spin_wheel_spins where id=rid and is_win;
    if not found then raise exception 'Winning reward not found'; end if;
@@ -81,6 +79,7 @@ begin
    cid:=r.user_id; item:=r.item_name; category:=r.category_name; cost:=r.points_cost;
    state:=case when r.status='pending' then 'valid' when r.status='confirmed' then 'used' else 'unavailable' end; redeemed_time:=r.confirmed_at;
  elsif kind='deal' then
+   raise exception 'Dexter’s Deals can only be claimed through the customer app';
    select * into r from public.loyalty_deal_claims where id=rid;
    if not found then raise exception 'Deal not found'; end if;
    cid:=r.customer_id; state:=case when r.redeemed_at is not null then 'used' when r.expires_at is not null and r.expires_at<now() then 'expired' else 'valid' end; redeemed_time:=r.redeemed_at;
@@ -127,10 +126,7 @@ begin
    select * into a from public.staff_add_stamp(code);
    result:=jsonb_build_object('ok',true,'message','Coffee stamp added','stamps',a.stamps);
  elsif p_action='points' then
-   if kind<>'customer' then raise exception 'Customer QR required'; end if;
-   if p_amount is null or p_amount<1 or p_amount>10000 or p_amount<>round(p_amount,2) then raise exception 'Invalid order value'; end if;
-   select * into a from public.award_loyalty_points_service(cid,floor(p_amount)::int,'staff_purchase',p_request_id::text,p_amount,actor,'Universal staff scanner');
-   result:=jsonb_build_object('ok',true,'message','Points added','points_added',case when a.added then floor(p_amount) else 0 end,'points',a.balance);
+   raise exception 'Points are awarded automatically through the Dexter’s app';
  else
    if kind='customer' then raise exception 'Choose a reward QR to redeem'; end if;
    if state<>'valid' then return jsonb_build_object('ok',false,'message','Reward already used or unavailable','status',state); end if;
