@@ -14,6 +14,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.JavascriptInterface;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -41,6 +42,9 @@ public class MainActivity extends Activity {
         s.setDisplayZoomControls(false);
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
+        webView.addJavascriptInterface(new Object() {
+            @JavascriptInterface public void checkForUpdates() { new Thread(MainActivity.this::checkForUpdate).start(); }
+        }, "DextersUpdater");
         if (savedInstanceState == null) webView.loadUrl(HOME); else webView.restoreState(savedInstanceState);
         new Thread(this::checkForUpdate).start();
     }
@@ -129,6 +133,8 @@ public class MainActivity extends Activity {
             new AlertDialog.Builder(this).setTitle("Update failed").setMessage(e.getMessage()).setPositiveButton("OK", null).show();
         }
     }
+
+    @Override protected void onResume() { super.onResume(); new Thread(this::checkForUpdate).start(); }
 
     @Override public void onWindowFocusChanged(boolean hasFocus) { super.onWindowFocusChanged(hasFocus); if (hasFocus) enterKiosk(); }
     @Override public void onBackPressed() { if (webView != null && webView.canGoBack()) webView.goBack(); }
