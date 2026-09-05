@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dexter's Table Service Test</title>
 <style>
-:root{--bg:#0b0f14;--card:#161e2a;--gold:#f2c94c;--text:#fff;--muted:#aeb8c4;--ok:#72d69a}
+:root{--bg:#0b0f14;--card:#161e2a;--gold:#f2c94c;--text:#fff;--muted:#aeb8c4;--ok:#72d69a;--bad:#ff8b8b}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(#0b0f14,#18212d);color:var(--text);font-family:Arial,sans-serif}
 .wrap{max-width:760px;margin:auto;padding:18px}.brand{font-size:30px;font-weight:900}.tag{color:var(--gold);font-weight:800;margin:4px 0 18px}.card{background:var(--card);border:1px solid #ffffff20;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 12px 30px #0005}
 h2{margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -14,7 +14,7 @@ button,select,input,textarea{font:inherit}.table{padding:16px;border-radius:14px
 .add{background:var(--gold);border:0;border-radius:10px;padding:9px 12px;font-weight:900}.qty{font-weight:900;color:var(--gold)}
 textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid #ffffff2b;background:#0f1620;color:white;padding:10px}
 .send{width:100%;padding:16px;border:0;border-radius:14px;background:var(--gold);font-weight:900;font-size:18px}.send:disabled{opacity:.45}
-.notice{padding:12px;border-radius:12px;background:#ffffff0c;color:var(--muted)}.ok{color:var(--ok);font-weight:900}
+.notice{padding:12px;border-radius:12px;background:#ffffff0c;color:var(--muted)}.ok{color:var(--ok);font-weight:900}.bad{color:var(--bad);font-weight:900}
 small{color:var(--muted)}@media(max-width:520px){.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -22,32 +22,19 @@ small{color:var(--muted)}@media(max-width:520px){.grid{grid-template-columns:rep
 <div class="wrap">
   <div class="brand">DEXTER'S</div>
   <div class="tag">TABLE SERVICE · TEST ONLY</div>
-  <div class="notice">This is a safe preview. It does not send anything to the live KDS or XEPOS.</div>
+  <div class="notice">Orders from this page go only to the separate test KDS. The live KDS and XEPOS are not changed.</div>
 
-  <div class="card">
-    <h2>1. Choose table</h2>
-    <div class="grid" id="tables"></div>
-  </div>
+  <div class="card"><h2>1. Choose table</h2><div class="grid" id="tables"></div></div>
+  <div class="card"><h2>2. Add order</h2><div id="menu"></div></div>
+  <div class="card"><h2>3. Notes</h2><textarea id="notes" placeholder="e.g. no onions, bring drinks first"></textarea></div>
+  <div class="card"><h2>Order summary</h2><div id="summary"><small>No items added yet.</small></div></div>
 
-  <div class="card">
-    <h2>2. Add order</h2>
-    <div id="menu"></div>
-  </div>
-
-  <div class="card">
-    <h2>3. Notes</h2>
-    <textarea id="notes" placeholder="e.g. no onions, bring drinks first"></textarea>
-  </div>
-
-  <div class="card">
-    <h2>Order summary</h2>
-    <div id="summary"><small>No items added yet.</small></div>
-  </div>
-
-  <button class="send" id="send" disabled>TEST SEND TO KDS</button>
+  <button class="send" id="send" disabled>SEND TO TEST KDS</button>
   <div id="result" style="margin-top:12px"></div>
 </div>
 <script>
+const API='https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/table-service-test-api';
+const TOKEN='dexters-table-test-20260905-v1';
 const tables=[1,2,3,4,5,6,7,8,9,10,11,12];
 const items=[
 ['Full Scottish Breakfast',8.95],['Bacon Roll',3.95],['Chicken Mayo Melt Sub',6.50],
@@ -55,16 +42,33 @@ const items=[
 ['Cheese Burger',7.50],['Chicken Burger',7.50],['Toastie',5.50],['Coffee',2.80],
 ['Tea',2.20],['Can of Juice',1.50]
 ];
-let selectedTable=null, cart={};
+let selectedTable=null, cart={}, sending=false;
 const troot=document.getElementById('tables');
 tables.forEach(n=>{const b=document.createElement('button');b.className='table';b.textContent='Table '+n;b.onclick=()=>{selectedTable=n;document.querySelectorAll('.table').forEach(x=>x.classList.remove('on'));b.classList.add('on');render()};troot.appendChild(b)});
 const mroot=document.getElementById('menu');
 items.forEach(([name,price])=>{const d=document.createElement('div');d.className='menuitem';d.innerHTML='<div><strong>'+name+'</strong><br><small>£'+price.toFixed(2)+'</small></div><div><span class="qty" data-q="'+name+'"></span> <button class="add">ADD</button></div>';d.querySelector('button').onclick=()=>{cart[name]=(cart[name]||0)+1;render()};mroot.appendChild(d)});
-function render(){document.querySelectorAll('[data-q]').forEach(el=>{const q=cart[el.dataset.q]||0;el.textContent=q?'×'+q:''});
- const rows=Object.entries(cart).filter(([,q])=>q>0);const total=rows.reduce((s,[n,q])=>s+items.find(i=>i[0]===n)[1]*q,0);
- document.getElementById('summary').innerHTML=(selectedTable?'<strong>Table '+selectedTable+'</strong><br>':'<small>Select a table.</small><br>')+(rows.length?rows.map(([n,q])=>q+' × '+n).join('<br>')+'<hr><strong>Total: £'+total.toFixed(2)+'</strong>':'<small>No items added yet.</small>');
- document.getElementById('send').disabled=!(selectedTable&&rows.length)}
-document.getElementById('send').onclick=()=>{document.getElementById('result').innerHTML='<div class="card ok">✓ Test successful — this would appear on the KDS as TABLE '+selectedTable+' · STAFF ORDER.<br><small>No live order was created.</small></div>'};
+function rows(){return Object.entries(cart).filter(([,q])=>q>0)}
+function total(){return rows().reduce((s,[n,q])=>s+items.find(i=>i[0]===n)[1]*q,0)}
+function render(){
+ document.querySelectorAll('[data-q]').forEach(el=>{const q=cart[el.dataset.q]||0;el.textContent=q?'×'+q:''});
+ const rs=rows(), t=total();
+ document.getElementById('summary').innerHTML=(selectedTable?'<strong>Table '+selectedTable+'</strong><br>':'<small>Select a table.</small><br>')+(rs.length?rs.map(([n,q])=>q+' × '+n).join('<br>')+'<hr><strong>Total: £'+t.toFixed(2)+'</strong>':'<small>No items added yet.</small>');
+ document.getElementById('send').disabled=sending||!(selectedTable&&rs.length);
+}
+document.getElementById('send').onclick=async()=>{
+ if(sending)return; sending=true; render();
+ const btn=document.getElementById('send'); btn.textContent='SENDING...';
+ document.getElementById('result').innerHTML='';
+ const payload={table_number:selectedTable,source:'staff',notes:document.getElementById('notes').value,total:total(),items:rows().map(([name,qty])=>({name,qty,price:items.find(i=>i[0]===name)[1]}))};
+ try{
+   const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','x-test-token':TOKEN},body:JSON.stringify(payload)});
+   const data=await res.json();
+   if(!res.ok) throw new Error(data.error||'Send failed');
+   document.getElementById('result').innerHTML='<div class="card ok">✓ Sent to TEST KDS — TABLE '+selectedTable+' · STAFF ORDER</div>';
+   cart={}; document.getElementById('notes').value='';
+ }catch(e){document.getElementById('result').innerHTML='<div class="card bad">Could not send to test KDS. Please try again.</div>'}
+ sending=false; btn.textContent='SEND TO TEST KDS'; render();
+};
 render();
 </script>
 </body></html>
