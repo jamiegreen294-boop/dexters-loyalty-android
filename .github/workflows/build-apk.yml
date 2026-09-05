@@ -1,8 +1,8 @@
-name: Build Dexters Loyalty APK
+name: Build Dexters POS Tablet APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dexters-pos-tablet-live ]
   workflow_dispatch:
 
 permissions:
@@ -30,11 +30,11 @@ jobs:
         run: gradle --no-daemon assembleDebug
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk Dexters-Loyalty.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk Dexters-POS-Tablet.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Dexters-Loyalty-APK
-          path: Dexters-Loyalty.apk
+          name: Dexters-POS-Tablet-APK
+          path: Dexters-POS-Tablet.apk
           if-no-files-found: error
