@@ -4,7 +4,7 @@
   const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let shownOrderId='';
+  let shownOrderId='',lastOutageKey=null;
 
   async function token(){try{const {data}=await sb.auth.getSession();return data.session?.access_token||''}catch{return''}}
   async function call(url,body){
@@ -19,13 +19,21 @@
     try{const d=await amendApi({action:'daily_outages'});return new Set((d.item_ids||[]).map(String))}
     catch{return new Set()}
   }
-  async function applyOutagesToCategories(list){
-    const blocked=await outageIds();
+  async function applyOutagesToCategories(list,blocked){
+    blocked=blocked||await outageIds();
     for(const c of list||[])for(const i of c.items||[])if(blocked.has(String(i.id)))i.in_stock=false;
     return blocked;
   }
   async function applyOutages(){
-    try{await applyOutagesToCategories(categories||[]);renderMenu()}catch{}
+    try{
+      const blocked=await outageIds();
+      const key=[...blocked].sort().join('|');
+      if(key===lastOutageKey)return false;
+      lastOutageKey=key;
+      await applyOutagesToCategories(categories||[],blocked);
+      renderMenu();
+      return true;
+    }catch{return false}
   }
 
   function ensureAlert(){
@@ -65,5 +73,7 @@
 
   window.dextersCollectionAmend={applyOutages,applyOutagesToCategories,showAmend,submit:amendApi};
   setTimeout(()=>{applyOutages();poll()},1200);
-  setInterval(()=>{applyOutages();poll()},5000);
+  // Keep customer amendment status responsive, but do not rebuild the full menu every 5 seconds.
+  setInterval(poll,5000);
+  setInterval(applyOutages,60000);
 })();
