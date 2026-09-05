@@ -14,12 +14,14 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      DEXTERS_VERSION_CODE: ${{ 100000 + github.run_number }}
-      DEXTERS_VERSION_NAME: 1.${{ github.run_number }}-dexters
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set Dexter's app version
+        run: |
+          echo "DEXTERS_VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          echo "DEXTERS_VERSION_NAME=1.${GITHUB_RUN_NUMBER}-dexters" >> "$GITHUB_ENV"
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
