@@ -25,15 +25,19 @@
       const q=Number(cart[k]||0);
       if(q>0&&i.in_stock!==false){total+=priceNumber(i.price)*q;count+=q}
     }
-    value.textContent=money(total);
-    note.textContent=count?count+' item'+(count===1?'':'s')+' selected. Check the total before placing your order.':'Add items to see your total before confirming.';
+    const nextValue=money(total);
+    const nextNote=count?count+' item'+(count===1?'':'s')+' selected. Check the total before placing your order.':'Add items to see your total before confirming.';
+    if(value.textContent!==nextValue)value.textContent=nextValue;
+    if(note.textContent!==nextNote)note.textContent=nextNote;
   }
   const style=document.createElement('style');
   style.id='dextersCollectionTotalStyle';
   style.textContent='#orderTotalBox{background:#0d1829;border:1px solid #3b5275;border-radius:14px;padding:14px;margin:14px 0 8px}.order-total-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:20px;font-weight:900}.order-total-row strong{color:#ffd43b;font-size:24px}.order-total-note{font-size:12px;color:#aab4c3;margin-top:5px}';
   document.head.appendChild(style);
   ensure();
-  new MutationObserver(update).observe(document.body,{childList:true,subtree:true,characterData:true});
-  document.addEventListener('click',e=>{if(e.target.closest('[data-add],[data-plus],[data-minus]'))setTimeout(update,0)});
-  setInterval(update,1000);
+  // Update only when the customer actually changes the basket. Watching the whole DOM
+  // caused repeated self-triggered work and contributed to scrolling/jumping on mobile.
+  document.addEventListener('click',e=>{if(e.target.closest('[data-add],[data-plus],[data-minus],[data-live-standard],[data-live-custom],[data-live-remove]'))setTimeout(update,0)});
+  document.addEventListener('change',e=>{if(e.target.closest('#menu,#orderReviewList'))setTimeout(update,0)});
+  setInterval(update,15000);
 })();
