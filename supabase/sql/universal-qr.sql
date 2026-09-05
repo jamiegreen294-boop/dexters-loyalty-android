@@ -79,7 +79,6 @@ begin
    cid:=r.user_id; item:=r.item_name; category:=r.category_name; cost:=r.points_cost;
    state:=case when r.status='pending' then 'valid' when r.status='confirmed' then 'used' else 'unavailable' end; redeemed_time:=r.confirmed_at;
  elsif kind='deal' then
-   raise exception 'Dexter’s Deals can only be claimed through the customer app';
    select * into r from public.loyalty_deal_claims where id=rid;
    if not found then raise exception 'Deal not found'; end if;
    cid:=r.customer_id; state:=case when r.redeemed_at is not null then 'used' when r.expires_at is not null and r.expires_at<now() then 'expired' else 'valid' end; redeemed_time:=r.redeemed_at;
