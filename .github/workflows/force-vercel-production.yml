@@ -1,0 +1,23 @@
+name: Force Vercel production commit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/force-vercel-production.yml'
+permissions:
+  contents: write
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Create deployment trigger commit
+        run: |
+          git config user.name "jamiegreen294-boop"
+          git config user.email "jamiegreen294@gmail.com"
+          printf "Vercel production trigger %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .deploy/spin-app-only-production-trigger.txt
+          git add .deploy/spin-app-only-production-trigger.txt
+          git commit -m "Deploy Spin to Win app-only flow to production"
+          git push origin main
