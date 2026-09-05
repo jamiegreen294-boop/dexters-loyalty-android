@@ -172,7 +172,7 @@ public class MainActivity extends Activity {
 
     private void injectTerminalHook() {
         String js = "(function(){if(window.__dextersTerminalHook)return;window.__dextersTerminalHook=1;" +
-                "window.addEventListener('dexters:hardware-scan',function(e){var raw=e&&e.detail&&e.detail.raw;if(!raw)return;" +
+                "setInterval(function(){var p=document.getElementById('uqPoints');if(p)p.style.display='none';var a=document.getElementById('uqAmount');if(a){a.style.display='none';if(a.previousElementSibling)a.previousElementSibling.style.display='none';}var e=document.getElementById('uqEarn');if(e)e.style.display='none';var r=document.getElementById('uqRedeem');if(r){r.style.display='none';var c=document.getElementById('uqCancel');if(c)c.style.display='none';var h=document.getElementById('uqResult');if(h&&!document.getElementById('terminalAppOnly')){var n=document.createElement('p');n.id='terminalAppOnly';n.textContent='Claim prizes and deals in the Dexter’s customer app.';h.appendChild(n);}}},300);window.addEventListener('dexters:hardware-scan',function(e){var raw=e&&e.detail&&e.detail.raw;if(!raw)return;" +
                 "var open=document.getElementById('uqOpen');if(open)open.click();" +
                 "setTimeout(function(){var code=document.getElementById('uqCode'),form=document.getElementById('uqForm');" +
                 "if(code&&form){code.value=raw;code.dispatchEvent(new Event('input',{bubbles:true}));" +
