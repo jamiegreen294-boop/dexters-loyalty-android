@@ -106,14 +106,49 @@ Deno.serve(async(req)=>{
     if(me)return J({error:me.message},500);
     const {data:outages,error:oe}=await db.from('collection_daily_outages').select('menu_item_id').in('menu_item_id',ids).eq('outage_date',today).is('restored_at',null);
     if(oe)return J({error:oe.message},500);
+    const {data:groups,error:ge}=await db.from('loyalty_modifier_test_groups').select('id,menu_item_id,name,selection_type,required,min_select,max_select,sort_order,active').in('menu_item_id',ids).eq('active',true);
+    if(ge)return J({error:'Could not validate menu choices.'},500);
+    const groupIds=(groups||[]).map((g:any)=>g.id);
+    let opts:any[]=[];
+    if(groupIds.length){
+      const {data,error}=await db.from('loyalty_modifier_test_options').select('id,group_id,name,price_delta,sort_order,active').in('group_id',groupIds).eq('active',true);
+      if(error)return J({error:'Could not validate menu choices.'},500);
+      opts=data||[];
+    }
+    const groupsByItem=new Map<string,any[]>();
+    for(const g of(groups||[])){const arr=groupsByItem.get(String(g.menu_item_id))||[];arr.push(g);groupsByItem.set(String(g.menu_item_id),arr)}
+    const optsByGroup=new Map<string,any[]>();
+    for(const op of opts){const arr=optsByGroup.get(String(op.group_id))||[];arr.push(op);optsByGroup.set(String(op.group_id),arr)}
     const blocked=new Set((outages||[]).map((x:any)=>String(x.menu_item_id)));
     const byId=new Map((menu||[]).map((x:any)=>[String(x.id),x]));
     const unavailable:string[]=[];
-    const clean=requested.slice(0,40).map((x:any)=>{
+    const clean:any[]=[];
+    for(const x of requested.slice(0,40)){
       const m:any=byId.get(String(x.id||''));
-      if(!m||!m.active||!m.in_stock||blocked.has(String(m.id))){unavailable.push(m?.name||String(x.name||'Item'));return null}
-      return {id:m.id,base_name:m.name,category_id:m.category_id,category_name:String(x.category_name||''),name:String(x.name||m.name).slice(0,300),price:m.price_text,qty:cleanQty(x.qty),removed:Array.isArray(x.removed)?x.removed.slice(0,14):[],modifiers:Array.isArray(x.modifiers)?x.modifiers.slice(0,20):[],modifier_total:Number(x.modifier_total||0)};
-    }).filter(Boolean);
+      if(!m||!m.active||!m.in_stock||blocked.has(String(m.id))){unavailable.push(m?.name||String(x.name||'Item'));continue}
+      const selectedByGroup=new Map<string,string[]>();
+      for(const rm of (Array.isArray(x.modifiers)?x.modifiers:[])){
+        const gid=String(rm?.group_id||''), optionIds=Array.isArray(rm?.option_ids)?rm.option_ids.map((z:any)=>String(z)):[];
+        if(gid)selectedByGroup.set(gid,optionIds);
+      }
+      const modifierSummary:string[]=[];
+      let modifierTotal=0;
+      for(const g of (groupsByItem.get(String(m.id))||[]).sort((p:any,q:any)=>Number(p.sort_order)-Number(q.sort_order))){
+        const allowed=(optsByGroup.get(String(g.id))||[]).sort((p:any,q:any)=>Number(p.sort_order)-Number(q.sort_order));
+        const allowedMap=new Map(allowed.map((op:any)=>[String(op.id),op]));
+        const chosenRaw=selectedByGroup.get(String(g.id))||[];
+        const chosen=[...new Set(chosenRaw)].map((oid:any)=>allowedMap.get(String(oid))).filter(Boolean) as any[];
+        const min=Math.max(0,Number(g.min_select)||0),max=g.max_select==null?999:Math.max(0,Number(g.max_select)||0);
+        if((g.required||min>0)&&chosen.length<Math.max(1,min))return J({error:'Please choose '+g.name+' for '+m.name+'.'},400);
+        if(chosen.length>max)return J({error:'Too many choices selected for '+g.name+'.'},400);
+        if(g.selection_type==='single'&&chosen.length>1)return J({error:'Choose only one option for '+g.name+'.'},400);
+        if(chosen.length){
+          modifierSummary.push(g.name+': '+chosen.map((op:any)=>op.name).join(', '));
+          modifierTotal+=chosen.reduce((n:number,op:any)=>n+Number(op.price_delta||0),0);
+        }
+      }
+      clean.push({id:m.id,base_name:m.name,category_id:m.category_id,category_name:String(x.category_name||''),name:m.name,price:m.price_text,qty:cleanQty(x.qty),removed:Array.isArray(x.removed)?x.removed.slice(0,14):[],modifiers:modifierSummary,modifier_total:Number(modifierTotal.toFixed(2))});
+    }
     if(unavailable.length)return J({error:'Still unavailable: '+[...new Set(unavailable)].join(', '),out_of_stock:[...new Set(unavailable)]},409);
     const patch={items:clean,status:'amended',amended_at:new Date().toISOString(),amendment_items:null,amendment_note:null,updated_at:new Date().toISOString()};
     const {data,error}=await db.from('collection_orders').update(patch).eq('id',id).eq('customer_id',user.id).select('*').single();
