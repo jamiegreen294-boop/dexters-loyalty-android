@@ -122,23 +122,23 @@ public class MainActivity extends Activity {
         printerState.setTextColor(Color.rgb(220, 203, 210));
         printerState.setTextSize(13);
         printerState.setGravity(Gravity.CENTER);
-        bar.addView(printerState, new LinearLayout.LayoutParams(dp(190), dp(48)));
-
-        Button scan = button("SCAN CUSTOMER");
-        scan.setOnClickListener(v -> launchHardwareScanner());
-        bar.addView(scan, new LinearLayout.LayoutParams(dp(170), dp(48)));
-
-        Button print = button("PRINTER TEST");
-        print.setOnClickListener(v -> printTestReceipt());
-        bar.addView(print, new LinearLayout.LayoutParams(dp(150), dp(48)));
+        bar.addView(printerState, new LinearLayout.LayoutParams(dp(135), dp(48)));
 
         updateButton = button("UPDATE");
         updateButton.setOnClickListener(v -> checkForUpdates(true));
         bar.addView(updateButton, new LinearLayout.LayoutParams(dp(105), dp(48)));
 
+        Button scan = button("SCAN CUSTOMER");
+        scan.setOnClickListener(v -> launchHardwareScanner());
+        bar.addView(scan, new LinearLayout.LayoutParams(dp(135), dp(48)));
+
+        Button print = button("PRINTER TEST");
+        print.setOnClickListener(v -> printTestReceipt());
+        bar.addView(print, new LinearLayout.LayoutParams(dp(120), dp(48)));
+
         Button home = button("HOME");
         home.setOnClickListener(v -> webView.loadUrl(HOME));
-        bar.addView(home, new LinearLayout.LayoutParams(dp(90), dp(48)));
+        bar.addView(home, new LinearLayout.LayoutParams(dp(75), dp(48)));
 
         root.addView(bar, new LinearLayout.LayoutParams(-1, dp(64)));
 
