@@ -1,0 +1,30 @@
+name: Build Dexter's Web Artifact
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'web/**'
+      - 'build-web.js'
+      - 'postprocess-*.js'
+      - 'postprocess-*.cjs'
+      - 'build-*.js'
+      - 'package.json'
+permissions:
+  contents: read
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Build web
+        run: npm run build
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dexters-web-dist
+          path: dist
+          if-no-files-found: error
