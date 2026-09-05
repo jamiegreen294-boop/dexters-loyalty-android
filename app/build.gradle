@@ -8,11 +8,16 @@ android {
         applicationId 'co.dexters.terminal'
         minSdk 26
         targetSdk 35
-        versionCode 1
-        versionName '1.0-foodhub'
+        versionCode Integer.parseInt(System.getenv('DEXTERS_VERSION_CODE') ?: '2')
+        versionName System.getenv('DEXTERS_VERSION_NAME') ?: '1.1-dexters'
     }
 
     buildFeatures {
         aidl = true
     }
+}
+
+
+dependencies {
+    implementation 'androidx.core:core:1.13.1'
 }
