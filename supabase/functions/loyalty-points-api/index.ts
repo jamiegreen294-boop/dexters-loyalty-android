@@ -33,7 +33,7 @@ Deno.serve(async(req)=>{
   const {data:profile}=await db.from("profiles")
     .select("role,full_name,loyalty_code").eq("id",user.id).single();
   const role=profile?.role||"customer";
-  const isStaff=role==="staff"||role==="admin";
+  const isStaff=role==="staff"||role==="manager"||role==="admin";
 
   let body:any={};
   try{body=await req.json()}catch{return J({error:"Invalid request"},400)}
