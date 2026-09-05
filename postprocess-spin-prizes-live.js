@@ -2,7 +2,7 @@ const fs=require('fs');
 const p='dist/index.html';
 let s=fs.readFileSync(p,'utf8');
 if(s.includes('dextersSpinPrizeGuide')){console.log('Spin prize guide already present');process.exit(0)}
-const addon=String.raw`<style id="dextersSpinPrizeGuideStyle">
+const addon=String.raw`<style id="dextersSpinPrizeGuideStyle">#staffSpinPrize,#staffSpinWinnersCard{display:none!important}
 #dxSpinPrizeGuide{margin-top:14px}
 #dxSpinPrizeGuide .dx-spin-prize-list{display:grid;gap:9px;margin-top:10px}
 #dxSpinPrizeGuide .dx-spin-prize{padding:11px 12px;border:1px solid #ffffff18;border-radius:13px;background:var(--navy2);font-weight:800}
