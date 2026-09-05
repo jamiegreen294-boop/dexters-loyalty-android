@@ -81,8 +81,9 @@ public class MainActivity extends Activity {
             String p = "\"" + key + "\"";
             int i = j.indexOf(p); if (i < 0) return 0;
             i = j.indexOf(':', i) + 1;
+            while (i < j.length() && Character.isWhitespace(j.charAt(i))) i++;
             int e = i; while (e < j.length() && Character.isDigit(j.charAt(e))) e++;
-            return Integer.parseInt(j.substring(i, e).trim());
+            return Integer.parseInt(j.substring(i, e));
         } catch (Exception e) { return 0; }
     }
 
