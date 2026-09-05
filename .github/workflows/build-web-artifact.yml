@@ -10,6 +10,7 @@ on:
       - 'postprocess-*.cjs'
       - 'build-*.js'
       - 'package.json'
+      - '.github/workflows/build-web-artifact.yml'
 permissions:
   contents: read
 jobs:
