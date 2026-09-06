@@ -92,6 +92,43 @@ async function startHub(){
     }
   }
 
+
+  async function refreshOperations(){
+    const updated=document.getElementById('opsUpdated');
+    if(updated)updated.textContent='Updating…';
+    if(!window.supabase)return;
+    try{
+      const U='https://bpnkouymdvcogeaqjmxl.supabase.co';
+      const K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
+      const sb=window.supabase.createClient(U,K);
+      const activeCollection=['pending','accepted','preparing','ready','amendment_requested'];
+      const activeTables=['new','accepted','cooking','ready','bill_requested'];
+      const [c,t,set,stock]=await Promise.all([
+        sb.from('collection_orders').select('id,status',{count:'exact',head:false}).in('status',activeCollection),
+        sb.from('table_service_orders').select('id,status',{count:'exact',head:false}).in('status',activeTables),
+        sb.from('collection_ordering_settings').select('enabled').limit(1).maybeSingle(),
+        sb.from('loyalty_menu_items').select('id',{count:'exact',head:true}).eq('active',true).eq('in_stock',false)
+      ]);
+      const cCount=c.count ?? (Array.isArray(c.data)?c.data.length:0);
+      const tCount=t.count ?? (Array.isArray(t.data)?t.data.length:0);
+      const sCount=stock.count ?? 0;
+      const enabled=!!set.data?.enabled;
+      document.getElementById('opsCollection').textContent=String(cCount);
+      document.getElementById('opsCollectionText').textContent=cCount===1?'1 active collection order':cCount+' active collection orders';
+      document.getElementById('opsTables').textContent=String(tCount);
+      document.getElementById('opsTablesText').textContent=tCount===1?'1 active table order':tCount+' active table orders';
+      document.getElementById('opsCollectionOpen').textContent=enabled?'OPEN':'CLOSED';
+      document.getElementById('opsCollectionOpenText').textContent=enabled?'Customers can place collection orders':'Collection orders are currently paused';
+      document.getElementById('opsStock').textContent=String(sCount);
+      document.getElementById('opsStockText').textContent=sCount===1?'1 menu item marked out of stock':sCount+' menu items marked out of stock';
+    }catch(e){
+      ['opsCollection','opsTables','opsCollectionOpen','opsStock'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—'});
+      const el=document.getElementById('opsUpdated');if(el)el.textContent='Live data unavailable';
+      return;
+    }
+    if(updated)updated.textContent='Updated '+new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit'}).format(new Date());
+  }
+
   async function refreshOwnerSummary(){
     if(summaryUpdated)summaryUpdated.textContent='Updating…';
     renderAccountsCount();
@@ -104,6 +141,7 @@ async function startHub(){
 
   document.getElementById('refreshBtn')?.addEventListener('click',()=>location.reload());
   document.getElementById('summaryRefresh')?.addEventListener('click',refreshOwnerSummary);
+  document.getElementById('opsRefresh')?.addEventListener('click',refreshOperations);
   document.getElementById('fullscreenBtn')?.addEventListener('click',async()=>{
     try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}
     catch{if(status)status.textContent='Full screen is controlled by this tablet/browser.'}
@@ -122,9 +160,10 @@ async function startHub(){
   renderConnectivity();
   renderHistory();
   refreshOwnerSummary();
+  refreshOperations();
   window.addEventListener('online',renderConnectivity);
   window.addEventListener('offline',renderConnectivity);
-  window.addEventListener('pageshow',()=>{renderConnectivity();renderHistory();refreshOwnerSummary()});
+  window.addEventListener('pageshow',()=>{renderConnectivity();renderHistory();refreshOwnerSummary();refreshOperations()});
 }
 (() => {
   const U='https://bpnkouymdvcogeaqjmxl.supabase.co';
