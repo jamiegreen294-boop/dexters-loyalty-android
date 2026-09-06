@@ -9,5 +9,5 @@
     "test:auth-return": "node tests/auth-return.cjs",
     "test:collection-amend": "node tests/collection-amend-flow.test.cjs"
   },
-  "deploymentMarker": "sunday-full-shopping-live-20260906-final"
+  "deploymentMarker": "sunday-full-shopping-live-20260906-final2"
 }
