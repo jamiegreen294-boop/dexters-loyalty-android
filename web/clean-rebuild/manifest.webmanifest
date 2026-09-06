@@ -1,0 +1,12 @@
+{
+  "name": "Dexter's Loyalty",
+  "short_name": "Dexter's",
+  "description": "Dexter's loyalty, rewards, ordering and Sunday Roast app",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050b19",
+  "theme_color": "#07142f",
+  "orientation": "portrait-primary",
+  "categories": ["food", "shopping", "lifestyle"]
+}
