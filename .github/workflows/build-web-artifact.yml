@@ -2,7 +2,9 @@ name: Build Dexter's Web Artifact
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - fix/loyalty-login-cache-no-deploy-20260906
     paths:
       - 'web/**'
       - 'build-web.js'
