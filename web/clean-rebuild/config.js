@@ -5,10 +5,15 @@ window.DEXTERS_CONFIG = Object.freeze({
   routes: {
     collection: '/collection-order-test.html',
     kds: '/kds-order-test.html',
-    sunday: '/sunday/',
-    foodSafety: '/food-safety/',
-    staff: '/staff/',
-    menuAdmin: '/staff/',
+    sunday: '/sunday/customer.html',
+    sundayAdmin: '/sunday/admin.html',
+    ownerHub: '/hub-test.html',
+    adminSettings: '/hub-admin-test.html',
+    accounts: '/accounts-test.html',
+    foodSafety: 'https://dexters-food-safety.vercel.app',
+    recipeCosting: 'https://dexters-recipe-costing.vercel.app',
+    staff: '/hub-test.html',
+    menuAdmin: '/collection-order-test.html',
     askDexter: 'https://wa.me/'
   },
   functions: {
