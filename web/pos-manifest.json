@@ -1,0 +1,19 @@
+{
+  "name": "Dexter's POS",
+  "short_name": "Dexter POS",
+  "description": "Dexter's staff point of sale.",
+  "start_url": "/pos.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#07111f",
+  "theme_color": "#08182a",
+  "icons": [
+    {
+      "src": "https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
