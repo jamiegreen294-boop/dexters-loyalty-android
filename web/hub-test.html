@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Dexter's Hub — Private Test</title>
+  <title>Dexter's Hub</title>
   <link rel="manifest" href="/hub-manifest.webmanifest">
   <link rel="stylesheet" href="/hub-test.css">
 </head>
@@ -29,7 +29,7 @@
       <div>
         <p class="eyebrow">PRIVATE OWNER HUB</p>
         <h1>Dexter's Hub</h1>
-        <p class="sub">Your Dexter's owner dashboard, apps, quick actions and private test tools.</p>
+        <p class="sub">Dexter's staff and owner control centre for live operations, apps and management.</p>
       </div>
       <div class="status" id="hubStatus"><span class="dot"></span> <span id="hubStatusText">Hub ready</span></div>
     </header>
@@ -72,12 +72,24 @@
     </section>
 
     <section class="section-block">
+      <div class="section-title"><div><p class="eyebrow">LIVE OPERATIONS</p><h2>Staff overview</h2><small id="opsUpdated" class="legend">Updating…</small></div><button id="opsRefresh" class="text-btn" type="button">Refresh</button></div>
+      <div class="ops-grid">
+        <article class="ops-card"><small>Collection orders</small><strong id="opsCollection">—</strong><span id="opsCollectionText">Checking…</span><a href="https://dexters-kds.vercel.app" data-app="Kitchen KDS">Open KDS</a></article>
+        <article class="ops-card"><small>Table orders</small><strong id="opsTables">—</strong><span id="opsTablesText">Checking…</span><a href="https://dexters-kds.vercel.app" data-app="Kitchen KDS">Open KDS</a></article>
+        <article class="ops-card"><small>Collection ordering</small><strong id="opsCollectionOpen">—</strong><span id="opsCollectionOpenText">Checking…</span><a href="https://app.dextersspot.co.uk" data-app="Dexter's Loyalty">Open staff controls</a></article>
+        <article class="ops-card"><small>Out of stock</small><strong id="opsStock">—</strong><span id="opsStockText">Checking…</span><a href="https://app.dextersspot.co.uk" data-app="Dexter's Loyalty">Manage stock</a></article>
+      </div>
+    </section>
+
+    <section class="section-block">
       <div class="section-title"><div><p class="eyebrow">QUICK ACTIONS</p><h2>Your shortcuts</h2></div></div>
       <div class="quick-grid">
         <a class="quick" href="https://dexters-kds.vercel.app" data-app="Kitchen KDS"><span>▤</span><b>Open KDS</b><em class="live-label">LIVE</em></a>
         <a class="quick" href="/sunday-admin-test.html" data-app="Sunday Roast"><span>🍽</span><b>Sunday Orders</b><em class="test-label">TEST</em></a>
         <a class="quick" href="https://dexters-food-safety.vercel.app" data-app="Food Safety"><span>✓</span><b>Food Safety Today</b><em class="live-label">LIVE</em></a>
         <a class="quick" href="/accounts-test.html" data-app="Accounts & Receipts"><span>📷</span><b>Scan Receipt</b><em class="test-label">TEST</em></a>
+              <a class="quick" href="https://app.dextersspot.co.uk" data-app="Dexter's Loyalty"><span>◉</span><b>Stock Control</b><em class="live-label">LIVE</em></a>
+        <a class="quick" href="https://app.dextersspot.co.uk" data-app="Dexter's Loyalty"><span>★</span><b>Customers & Rewards</b><em class="live-label">LIVE</em></a>
       </div>
     </section>
 
@@ -129,7 +141,7 @@
       <button id="refreshBtn" type="button">↻ Refresh Hub</button>
     </section>
 
-    <footer><span id="lastOpened">No app opened yet</span><span>Private owner Hub · Live apps clearly labelled</span></footer>
+    <footer><span id="lastOpened">No app opened yet</span><span>Dexter's Hub · Staff & owner control centre</span></footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/hub-test.js" defer></script>
