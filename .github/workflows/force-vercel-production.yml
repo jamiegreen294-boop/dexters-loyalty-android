@@ -17,7 +17,7 @@ jobs:
         run: |
           git config user.name "jamiegreen294-boop"
           git config user.email "jamiegreen294@gmail.com"
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.deploymentMarker='sunday-full-shopping-totals-force-20260906';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.deploymentMarker='sunday-full-shopping-live-20260906-final2';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
           git add package.json
-          git commit -m "Deploy Danish voice and full Sunday shopping totals"
+          git commit -m "Deploy Danish KDS and full Sunday shopping totals live"
           git push origin main
