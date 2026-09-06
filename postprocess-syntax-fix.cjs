@@ -1,0 +1,10 @@
+const fs=require('fs');
+const p='dist/app.html';
+if(!fs.existsSync(p)) throw new Error('dist/app.html missing');
+let html=fs.readFileSync(p,'utf8');
+const bad="/only staff/admin accounts can perform these actions/i";
+const good="/only staff\\/admin accounts can perform these actions/i";
+if(!html.includes(bad)) throw new Error('Expected broken staff/admin regex not found');
+html=html.replaceAll(bad,good);
+fs.writeFileSync(p,html);
+console.log('Fixed invalid staff/admin regex in live app');
