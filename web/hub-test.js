@@ -7,6 +7,8 @@ async function startHub(){
   const HISTORY_KEY='dextersHubRecentV2';
   const hubStatusText=document.getElementById('hubStatusText');
   const summaryUpdated=document.getElementById('summaryUpdated');
+  const CURRENT_KDS='https://app.dextersspot.co.uk/kds-order-test.html';
+  document.querySelectorAll('a[href="https://dexters-kds.vercel.app"]').forEach(a=>a.href=CURRENT_KDS);
   function renderConnectivity(){
     if(hubStatusText)hubStatusText.textContent=navigator.onLine?'Hub ready':'Offline mode';
   }
