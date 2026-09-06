@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Dexter's POS</title>
+<link rel="manifest" href="/pos-manifest.json">
+<meta name="theme-color" content="#08182a">
+<meta name="dexters-pos-pwa-version" content="1.0.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dexter POS">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#07111f;--panel:#0e1d31;--panel2:#142641;--line:#28415f;--text:#f7fbff;--muted:#9eb0c5;--accent:#ffd43b;--danger:#dc3345;--ok:#22c55e}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-template-rows:auto 1fr}.top{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#08182a;border-bottom:1px solid var(--line)}
+.brand{font-weight:1000;font-size:24px}.tag{font-size:12px;color:#08101d;background:var(--accent);padding:5px 8px;border-radius:999px;font-weight:900}.spacer{flex:1}
+.top button{border:0;border-radius:12px;padding:10px 12px;font-weight:900;background:var(--panel2);color:#fff}.top .danger{background:#5a1420}
+.main{display:grid;grid-template-columns:180px 1fr 360px;min-height:0}
+.cats{background:#0b1727;border-right:1px solid var(--line);padding:10px;overflow:auto}.cat{width:100%;text-align:left;border:0;background:#13233a;color:#fff;padding:14px 12px;border-radius:12px;margin-bottom:8px;font-weight:900}.cat.on{background:var(--accent);color:#08101d}
+.center{padding:12px;overflow:auto}.search{display:flex;gap:8px;position:sticky;top:0;background:var(--bg);padding-bottom:10px;z-index:2}.search input{flex:1;background:#0d1d31;color:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.item{min-height:112px;border:1px solid var(--line);background:#12223a;color:#fff;border-radius:16px;padding:12px;text-align:left;display:flex;flex-direction:column;justify-content:space-between}.item:active{transform:scale(.98)}.iname{font-weight:1000;font-size:16px}.idesc{font-size:11px;color:var(--muted);margin-top:4px}.price{color:var(--accent);font-size:18px;font-weight:1000;margin-top:10px}.sold{opacity:.45}
+.cart{background:#0a1728;border-left:1px solid var(--line);display:grid;grid-template-rows:auto auto 1fr auto;min-height:0}.carthead{padding:12px;border-bottom:1px solid var(--line)}.mode{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.mode button{border:0;border-radius:10px;padding:10px 6px;background:#152741;color:#fff;font-weight:900}.mode button.on{background:var(--accent);color:#08101d}
+.carttools{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;border-bottom:1px solid var(--line)}.carttools button{border:0;border-radius:10px;padding:10px;background:#162a45;color:#fff;font-weight:800}
+.lines{overflow:auto;padding:8px}.line{background:#11223a;border:1px solid #223b59;border-radius:12px;padding:10px;margin-bottom:8px}.lrow{display:flex;gap:8px}.lname{font-weight:900;flex:1}.lprice{font-weight:900}.mods{font-size:12px;color:#c3cfdd;margin-top:5px;white-space:pre-line}.qty{display:flex;gap:6px;align-items:center;margin-top:8px}.qty button{border:0;border-radius:8px;padding:6px 10px;font-weight:900;background:#203a5d;color:#fff}.qty .plus{background:var(--accent);color:#08101d}.qty .remove{margin-left:auto;background:#5a1420}
+.total{padding:12px;border-top:1px solid var(--line);background:#0d1b2f}.sumrow{display:flex;justify-content:space-between;margin:4px 0}.grand{font-size:26px;font-weight:1000}.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.pay button{border:0;border-radius:13px;padding:14px;font-weight:1000}.cash{background:#22c55e;color:#04210d}.cardbtn{background:#4d7cff;color:#fff}.send{grid-column:1/-1;background:var(--accent);color:#08101d}
+.modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px;z-index:20}.hide{display:none}.box{width:min(720px,100%);max-height:90vh;overflow:auto;background:#10213a;border:1px solid #31506f;border-radius:20px;padding:16px}.box h2{margin-top:0}.group{background:#0b192b;border-radius:14px;padding:12px;margin:10px 0}.gname{font-weight:1000;margin-bottom:8px}.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}.opt{border:1px solid #31506f;background:#142945;color:#fff;border-radius:12px;padding:12px;text-align:left;font-weight:800}.opt.on{background:var(--accent);color:#08101d}.actions{display:flex;gap:8px;margin-top:12px}.actions button{flex:1;border:0;border-radius:12px;padding:13px;font-weight:1000}.cancel{background:#263c58;color:#fff}.confirm{background:var(--accent)}.field{width:100%;padding:12px;border-radius:10px;border:1px solid #31506f;background:#09182a;color:#fff;margin:6px 0}.held{padding:8px;background:#0b192b;border-radius:12px;margin:8px 0}.held button{margin-top:6px;border:0;border-radius:9px;padding:8px 10px;font-weight:800}.bad{color:#ffadb8}.ok{color:#8ff0b3}
+@media(max-width:950px){.main{grid-template-columns:140px 1fr 310px}.grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
+</style>
+<!-- preview trigger: POS isolated test -->
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">Dexter's POS</div><span class="tag">DEXTER'S TERMINAL</span>
+    <div class="spacer"></div>
+    <button id="historyBtn">Sales</button><button id="cashupBtn">Cash up</button><button id="heldBtn">Held orders</button><button id="staffBtn">Staff</button><button id="fullBtn">Full screen</button><button id="clearBtn" class="danger">Clear sale</button>
+  </header>
+  <main class="main">
+    <aside class="cats" id="cats"></aside>
+    <section class="center">
+      <div class="search"><input id="search" placeholder="Search menu"><button id="reloadBtn">Reload menu</button></div>
+      <div class="grid" id="items"></div>
+    </section>
+    <aside class="cart">
+      <div class="carthead">
+        <div class="mode">
+          <button data-mode="Takeaway" class="on">Takeaway</button>
+          <button data-mode="Eat in">Eat in</button>
+          <button data-mode="Collection">Collection</button>
+        </div>
+      </div>
+      <div class="carttools">
+        <button id="noteBtn">Order note</button><button id="discountBtn">Discount</button>
+        <button id="holdBtn">Hold sale</button><button id="customerBtn">Customer</button>
+      </div>
+      <div class="lines" id="lines"></div>
+      <div class="total">
+        <div class="sumrow"><span>Subtotal</span><b id="subtotal">£0.00</b></div>
+        <div class="sumrow"><span>Discount</span><b id="discount">£0.00</b></div>
+        <div class="sumrow grand"><span>Total</span><span id="total">£0.00</span></div>
+        <div class="pay">
+          <button id="cashBtn" class="cash">CASH</button>
+          <button id="cardBtn" class="cardbtn">CARD</button>
+          <button id="sendBtn" class="send">SEND TO KDS</button>
+        </div>
+        <div id="status" style="font-size:12px;margin-top:8px;color:#9eb0c5">POS web app · secure staff sign-in</div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div id="modifierModal" class="modal hide"><div class="box"><h2 id="modTitle">Choose options</h2><div id="modGroups"></div><div class="actions"><button class="cancel" id="modCancel">Cancel</button><button class="confirm" id="modAdd">Add to order</button></div><div id="modError" class="bad"></div></div></div>
+<div id="simpleModal" class="modal hide"><div class="box"><h2 id="simpleTitle"></h2><div id="simpleBody"></div><div class="actions"><button class="cancel" id="simpleCancel">Cancel</button><button class="confirm" id="simpleSave">Save</button></div></div></div>
+<div id="authGate" class="modal"><div class="box" style="max-width:430px"><h2>Dexter's POS Staff Sign In</h2><p style="color:#9eb0c5">Use a Dexter's staff or admin account. This POS stays locked until a valid staff or admin account signs in.</p><input id="staffEmail" class="field" type="email" autocomplete="username" placeholder="Email"><input id="staffPassword" class="field" type="password" autocomplete="current-password" placeholder="Password"><button id="loginBtn" class="confirm" style="width:100%;border:0;border-radius:12px;padding:13px;font-weight:1000">SIGN IN</button><div id="loginMsg" class="bad" style="margin-top:10px"></div></div></div>
+
+<script>
+const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',POS_API=U+'/functions/v1/dexters-pos-test-api',sb=supabase.createClient(U,K);
+const S={cats:[],groups:new Map(),cat:'',cart:[],mode:'Takeaway',discount:0,note:'',customer:'',phone:'',editing:null,selected:new Map(),session:null,staffEmail:'',staffRole:'staff'};
+const $=id=>document.getElementById(id),money=n=>'£'+Number(n||0).toFixed(2),num=v=>{const m=String(v||'').replace(',','.').match(/(\d+(?:\.\d{1,2})?)/);return m?Number(m[1]):0},esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function itemById(id){for(const c of S.cats)for(const i of(c.items||[]))if(String(i.id||i.name)===String(id))return {...i,category_name:c.name};return null}
+async function loadMenu(){
+ $('status').textContent='Loading Dexter’s menu…';
+ try{
+  const r=await fetch(U+'/rest/v1/rpc/loyalty_menu_public',{method:'POST',headers:{apikey:K,'Content-Type':'application/json'},body:'{}'});
+  const d=await r.json();S.cats=Array.isArray(d)?d:[];if(!S.cat&&S.cats[0])S.cat=S.cats[0].name;
+  await loadModifiers();renderCats();renderItems();$('status').textContent='Menu loaded · Dexter’s POS';
+ }catch(e){$('status').textContent='Menu load failed';}
+}
+async function loadModifiers(){
+ const rows=[];for(let off=0;;){const r=await fetch(U+'/rest/v1/rpc/loyalty_modifier_public?order=menu_item_id.asc,group_id.asc,option_id.asc&limit=500&offset='+off,{method:'POST',headers:{apikey:K,'Content-Type':'application/json'},body:'{}'});if(!r.ok)break;const p=await r.json();if(!Array.isArray(p)||!p.length)break;rows.push(...p);off+=p.length}
+ const map=new Map();for(const row of rows){const iid=String(row.menu_item_id),gid=String(row.group_id);let gs=map.get(iid);if(!gs){gs=[];map.set(iid,gs)}let g=gs.find(x=>x.id===gid);if(!g){g={id:gid,name:row.group_name,required:!!row.required,min:Number(row.min_select||0),max:row.max_select==null?null:Number(row.max_select),type:row.selection_type,sort:Number(row.group_sort_order||0),options:[]};gs.push(g)}g.options.push({id:String(row.option_id),name:row.option_name,price:Number(row.price_delta||0),sort:Number(row.option_sort_order||0)})}
+ for(const gs of map.values()){gs.sort((a,b)=>a.sort-b.sort);for(const g of gs)g.options.sort((a,b)=>a.sort-b.sort)}S.groups=map
+}
+function renderCats(){const q=$('search').value.trim().toLowerCase();$('cats').innerHTML=S.cats.filter(c=>!q||(c.items||[]).some(i=>(c.name+' '+i.name+' '+(i.description||'')).toLowerCase().includes(q))).map(c=>'<button class="cat '+(S.cat===c.name?'on':'')+'" data-cat="'+esc(c.name)+'">'+esc(c.name)+'</button>').join('');document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{S.cat=b.dataset.cat;renderCats();renderItems()})}
+function renderItems(){const q=$('search').value.trim().toLowerCase();let its=[];if(q){for(const c of S.cats)for(const i of(c.items||[]))if((c.name+' '+i.name+' '+(i.description||'')).toLowerCase().includes(q))its.push({...i,category_name:c.name})}else{const c=S.cats.find(x=>x.name===S.cat);its=(c?.items||[]).map(i=>({...i,category_name:c?.name||''}))}$('items').innerHTML=its.map(i=>'<button class="item '+(i.in_stock===false?'sold':'')+'" data-item="'+esc(i.id||i.name)+'" '+(i.in_stock===false?'disabled':'')+'><div><div class="iname">'+esc(i.name)+'</div><div class="idesc">'+esc(i.description||i.category_name||'')+'</div></div><div class="price">'+esc(i.price||money(0))+'</div></button>').join('');document.querySelectorAll('[data-item]').forEach(b=>b.onclick=()=>chooseItem(itemById(b.dataset.item)))}
+function chooseItem(i){if(!i)return;const gs=S.groups.get(String(i.id||''))||[];if(!gs.length){addLine(i,[]);return}S.editing=i;S.selected=new Map();$('modTitle').textContent=i.name;$('modifierModal').classList.remove('hide');renderGroups()}
+function renderGroups(){const gs=S.groups.get(String(S.editing?.id||''))||[];$('modGroups').innerHTML=gs.map(g=>'<div class="group"><div class="gname">'+esc(g.name)+(g.required?' *':'')+'</div><div class="opts">'+g.options.map(o=>'<button class="opt '+((S.selected.get(g.id)||new Set()).has(o.id)?'on':'')+'" data-g="'+g.id+'" data-o="'+o.id+'">'+esc(o.name)+(o.price?'<br><small>+'+money(o.price)+'</small>':'')+'</button>').join('')+'</div></div>').join('');document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const g=gs.find(x=>x.id===b.dataset.g),set=new Set(S.selected.get(g.id)||[]);if(g.type==='single'||g.max===1){set.clear();set.add(b.dataset.o)}else{set.has(b.dataset.o)?set.delete(b.dataset.o):set.add(b.dataset.o);if(g.max&&set.size>g.max){set.delete([...set][0])}}S.selected.set(g.id,set);renderGroups()})}
+function selectionsValid(){const gs=S.groups.get(String(S.editing?.id||''))||[];for(const g of gs){const n=(S.selected.get(g.id)||new Set()).size;if(n<Math.max(g.required?1:0,g.min||0))return g.name;if(g.max!=null&&n>g.max)return g.name}return ''}
+function addLine(i,mods){const extra=mods.reduce((a,m)=>a+m.options.reduce((x,o)=>x+o.price,0),0);S.cart.push({key:Date.now()+Math.random(),id:i.id,name:i.name,category:i.category_name,base:num(i.price),mods,qty:1,unit:num(i.price)+extra});renderCart()}
+function renderCart(){if(!S.cart.length)$('lines').innerHTML='<div style="color:#9eb0c5;padding:20px;text-align:center">No items in this sale.</div>';else $('lines').innerHTML=S.cart.map(l=>'<div class="line"><div class="lrow"><div class="lname">'+esc(l.name)+'</div><div class="lprice">'+money(l.unit*l.qty)+'</div></div>'+(l.mods.length?'<div class="mods">'+l.mods.map(m=>'↳ '+esc(m.name)+': '+m.options.map(o=>esc(o.name)).join(', ')).join('\n')+'</div>':'')+'<div class="qty"><button data-minus="'+l.key+'">−</button><b>'+l.qty+'</b><button class="plus" data-plus="'+l.key+'">+</button><button class="remove" data-remove="'+l.key+'">REMOVE</button></div></div>').join('');document.querySelectorAll('[data-plus]').forEach(b=>b.onclick=()=>changeQty(b.dataset.plus,1));document.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>changeQty(b.dataset.minus,-1));document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{S.cart=S.cart.filter(x=>String(x.key)!==b.dataset.remove);renderCart()});const sub=S.cart.reduce((a,l)=>a+l.unit*l.qty,0),disc=Math.min(sub,S.discount);$('subtotal').textContent=money(sub);$('discount').textContent='-'+money(disc);$('total').textContent=money(sub-disc)}
+function changeQty(k,d){const l=S.cart.find(x=>String(x.key)===String(k));if(!l)return;l.qty=Math.max(0,l.qty+d);if(!l.qty)S.cart=S.cart.filter(x=>x!==l);renderCart()}
+function total(){const sub=S.cart.reduce((a,l)=>a+l.unit*l.qty,0);return Math.max(0,sub-Math.min(sub,S.discount))}
+function clearSale(){S.cart=[];S.discount=0;S.note='';S.customer='';S.phone='';renderCart()}
+function nextOrderNumber(){const d=new Date(),key='dexters-pos-order-seq-'+d.toISOString().slice(0,10),n=Number(localStorage.getItem(key)||0)+1;localStorage.setItem(key,String(n));return 'P'+String(n).padStart(3,'0')}
+function sales(){try{return JSON.parse(localStorage.getItem('dexters-pos-sales-v1')||'[]')}catch{return []}}
+function saveSale(s){const a=sales();a.unshift(s);localStorage.setItem('dexters-pos-sales-v1',JSON.stringify(a.slice(0,1000)))}
+function showSales(){const a=sales();simple('Sales history',a.length?a.slice(0,100).map(x=>'<div class="held"><b>#'+esc(x.orderNumber)+'</b> · '+new Date(x.createdAt).toLocaleString('en-GB')+'<br>'+esc(x.method)+' · '+esc(x.mode)+' · <b>'+money(x.total)+'</b> · '+esc(x.staff||'')+(x.voided?'<br><span class="bad">VOIDED: '+esc(x.voidReason||'')+'</span>':'')+'<br><button data-reprint="'+esc(x.id)+'">Receipt</button> '+(!x.voided?'<button data-void="'+esc(x.id)+'">Void sale</button>':'')+'</div>').join(''):'No sales recorded on this POS yet.',()=>{});setTimeout(bindSaleActions,0)}
+function bindSaleActions(){document.querySelectorAll('[data-reprint]').forEach(b=>b.onclick=()=>receiptFor(b.dataset.reprint));document.querySelectorAll('[data-void]').forEach(b=>b.onclick=()=>voidSale(b.dataset.void))}
+function receiptFor(id){const x=sales().find(v=>String(v.id)===String(id));if(!x)return;const lines=x.items.map(l=>l.qty+' × '+l.name+'  '+money(l.unit*l.qty)).join('\n');const txt="DEXTER'S\nPOS RECEIPT\n#"+x.orderNumber+'\n'+new Date(x.createdAt).toLocaleString('en-GB')+'\n----------------\n'+lines+'\n----------------\nTOTAL '+money(x.total)+'\n'+x.method+'\nStaff: '+(x.staff||'');localStorage.setItem('dexters-pos-last-receipt',txt);$('status').textContent='Receipt prepared for #'+x.orderNumber+'.';
+ try{location.href='dexterscitaq://print-pos?payload='+encodeURIComponent(btoa(unescape(encodeURIComponent(txt))))}catch(e){} }
+function voidSale(id){const a=sales(),x=a.find(v=>String(v.id)===String(id));if(!x||x.voided)return;const reason=prompt('Reason for void/refund?');if(!reason)return;x.voided=true;x.voidReason=reason.trim().slice(0,200);x.voidedAt=new Date().toISOString();x.voidedBy=S.staffEmail;localStorage.setItem('dexters-pos-sales-v1',JSON.stringify(a));showSales()}
+function cashUp(){const day=new Date().toISOString().slice(0,10),a=sales().filter(x=>String(x.createdAt).slice(0,10)===day&&!x.voided),cash=a.filter(x=>x.method==='Cash').reduce((s,x)=>s+x.total,0),card=a.filter(x=>x.method==='Card').reduce((s,x)=>s+x.total,0),voids=sales().filter(x=>String(x.createdAt).slice(0,10)===day&&x.voided).reduce((s,x)=>s+x.total,0);simple('Cash up — '+day,'<div class="held"><div class="sumrow"><span>Completed sales</span><b>'+a.length+'</b></div><div class="sumrow"><span>Cash</span><b>'+money(cash)+'</b></div><div class="sumrow"><span>Card</span><b>'+money(card)+'</b></div><div class="sumrow"><span>Voids / refunds</span><b>'+money(voids)+'</b></div><div class="sumrow grand"><span>Net sales</span><span>'+money(cash+card)+'</span></div></div><textarea class="field" rows="7" readonly>DEXTER'S POS CASH UP\nDate: '+day+'\nSales: '+a.length+'\nCash: '+money(cash)+'\nCard: '+money(card)+'\nVoids/refunds: '+money(voids)+'\nNet: '+money(cash+card)+'</textarea>',()=>{})}
+function simple(title,html,onSave){$('simpleTitle').textContent=title;$('simpleBody').innerHTML=html;$('simpleModal').classList.remove('hide');$('simpleSave').onclick=()=>{onSave();$('simpleModal').classList.add('hide')}}
+function holdSale(){if(!S.cart.length)return;const arr=JSON.parse(localStorage.getItem('dexters-pos-held')||'[]');arr.push({id:Date.now(),time:new Date().toISOString(),cart:S.cart,mode:S.mode,discount:S.discount,note:S.note,customer:S.customer,phone:S.phone});localStorage.setItem('dexters-pos-held',JSON.stringify(arr.slice(-30)));clearSale();$('status').textContent='Sale held.'}
+function showHeld(){const arr=JSON.parse(localStorage.getItem('dexters-pos-held')||'[]');simple('Held orders',arr.length?arr.map(x=>'<div class="held"><b>'+new Date(x.time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</b> · '+x.cart.length+' lines · '+esc(x.mode)+'<br><button data-recall="'+x.id+'">Recall</button></div>').join(''):'No held orders.',()=>{});setTimeout(()=>document.querySelectorAll('[data-recall]').forEach(b=>b.onclick=()=>{const a=JSON.parse(localStorage.getItem('dexters-pos-held')||'[]'),x=a.find(v=>String(v.id)===b.dataset.recall);if(x){Object.assign(S,{cart:x.cart,mode:x.mode,discount:x.discount,note:x.note,customer:x.customer,phone:x.phone});localStorage.setItem('dexters-pos-held',JSON.stringify(a.filter(v=>v!==x)));$('simpleModal').classList.add('hide');document.querySelectorAll('[data-mode]').forEach(z=>z.classList.toggle('on',z.dataset.mode===S.mode));renderCart()}}),0)}
+function pay(kind){if(!S.cart.length)return;const t=total();if(kind==='cash'){simple('Cash payment','<p>Total: <b>'+money(t)+'</b></p><input id="cashGiven" class="field" inputmode="decimal" placeholder="Cash received"><div id="changeDue"></div>',()=>{const g=Number(($('cashGiven').value||'0').replace(',','.'));if(g<t){$('status').textContent='Cash amount is less than total.';return}completeSale('Cash',g-t)})}else completeSale('Card',0)}
+function completeSale(method,change){const sale={id:'POS-'+Date.now(),orderNumber:nextOrderNumber(),createdAt:new Date().toISOString(),method,change,total:total(),mode:S.mode,note:S.note,customer:S.customer,phone:S.phone,items:JSON.parse(JSON.stringify(S.cart)),staff:S.staffEmail||'staff'};saveSale(sale);localStorage.setItem('dexters-pos-last-sale',JSON.stringify(sale));receiptFor(sale.id);$('status').textContent='#'+sale.orderNumber+' '+method+' sale completed'+(change?'. Change '+money(change):'')+'. Sale saved locally.';clearSale()}
+async function sendToKds(){
+ if(!S.cart.length){$('status').textContent='Add items before sending to KDS.';return}
+ if(!S.session?.access_token){$('status').textContent='Please sign in again.';return}
+ const body={order_type:S.mode,customer_name:S.customer,customer_phone:S.phone,notes:S.note,discount:S.discount,payment_method:'unpaid',items:S.cart.map(l=>({name:l.name,qty:l.qty,unit:l.unit,modifiers:l.mods.map(m=>m.name+': '+m.options.map(o=>o.name).join(', '))}))};
+ $('status').textContent='Sending order to POS queue…';
+ try{
+   const r=await fetch(POS_API+'/orders',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+S.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+   const d=await r.json().catch(()=>({}));
+   if(!r.ok)throw Error(d.error||'POS test send failed');
+   localStorage.setItem('dexters-pos-kds-test-payload',JSON.stringify({...body,test_order:d.order}));
+   $('status').textContent='Order #P'+String(d.order.order_number).padStart(3,'0')+' sent to POS queue.';
+ }catch(e){$('status').textContent='Send failed: '+e.message}
+}
+$('modCancel').onclick=()=>$('modifierModal').classList.add('hide');$('modAdd').onclick=()=>{const bad=selectionsValid();if(bad){$('modError').textContent='Please complete: '+bad;return}const gs=S.groups.get(String(S.editing?.id||''))||[],mods=gs.map(g=>({id:g.id,name:g.name,options:g.options.filter(o=>(S.selected.get(g.id)||new Set()).has(o.id))})).filter(g=>g.options.length);addLine(S.editing,mods);$('modifierModal').classList.add('hide')};$('simpleCancel').onclick=()=>$('simpleModal').classList.add('hide');
+$('search').oninput=()=>{renderCats();renderItems()};$('reloadBtn').onclick=loadMenu;$('historyBtn').onclick=showSales;$('cashupBtn').onclick=cashUp;$('clearBtn').onclick=()=>{if(confirm('Clear this sale?'))clearSale()};$('holdBtn').onclick=holdSale;$('heldBtn').onclick=showHeld;$('noteBtn').onclick=()=>simple('Order note','<textarea id="noteField" class="field" rows="5">'+esc(S.note)+'</textarea>',()=>S.note=$('noteField').value);$('discountBtn').onclick=()=>simple('Discount','<input id="discountField" class="field" inputmode="decimal" value="'+S.discount+'" placeholder="Discount amount in £">',()=>{S.discount=Math.max(0,Number(($('discountField').value||'0').replace(',','.'))||0);renderCart()});$('customerBtn').onclick=()=>simple('Customer details','<input id="custField" class="field" value="'+esc(S.customer)+'" placeholder="Customer name"><input id="phoneField" class="field" value="'+esc(S.phone)+'" placeholder="Phone">',()=>{S.customer=$('custField').value.trim();S.phone=$('phoneField').value.trim()});$('cashBtn').onclick=()=>pay('cash');$('cardBtn').onclick=()=>pay('card');$('sendBtn').onclick=sendToKds;$('staffBtn').onclick=async()=>{if(confirm('Sign out '+(S.staffEmail||'staff')+'?')){await sb.auth.signOut();location.reload()}};$('fullBtn').onclick=async()=>{try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen()}catch{}};
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b))});
+async function applySession(session){if(!session){$('authGate').classList.remove('hide');return false}S.session=session;S.staffEmail=session.user?.email||'staff';$('staffBtn').textContent=S.staffEmail.split('@')[0];$('authGate').classList.add('hide');loadMenu();return true}
+$('loginBtn').onclick=async()=>{const email=$('staffEmail').value.trim(),password=$('staffPassword').value;$('loginMsg').textContent='Signing in…';const {data,error}=await sb.auth.signInWithPassword({email,password});if(error){$('loginMsg').textContent=error.message;return}await applySession(data.session);$('loginMsg').textContent=''}
+sb.auth.onAuthStateChange((_e,s)=>{if(!s&&S.session)location.reload()});sb.auth.getSession().then(({data})=>applySession(data.session));
+renderCart();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/pos-sw.js').catch(()=>{}));}
+</script>
+</body></html>

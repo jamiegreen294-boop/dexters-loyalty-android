@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Dexter's Accounts & Receipts — Test</title>
+<link rel="stylesheet" href="/accounts-test.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <a class="hub" href="/hub-test.html">← Back to Dexter's Hub</a>
+      <p class="eyebrow">PRIVATE TEST</p>
+      <h1>Accounts & Receipts</h1>
+      <p class="sub">Scan receipts, invoices and XEPOS end-of-day reports. Review everything before saving.</p>
+    </div>
+    <span class="pill">TEST ONLY</span>
+  </header>
+
+  <section class="notice">
+    This test stores saved entries only on this tablet/browser. It does not post anything to Xero, your bank, Evopayments or the live Dexter's apps.
+  </section>
+
+  <section class="mode-row">
+    <button class="mode active" data-mode="expense">Receipt / Invoice</button>
+    <button class="mode" data-mode="eod">XEPOS End-of-Day</button>
+  </section>
+
+  <section class="card">
+    <h2 id="captureTitle">Scan receipt or invoice</h2>
+    <div class="capture-actions">
+      <label class="capture">
+        <input id="cameraInput" type="file" accept="image/*" capture="environment">
+        <span>📷 Take photo</span>
+      </label>
+      <label class="capture">
+        <input id="uploadInput" type="file" accept="image/*">
+        <span>🖼 Choose image from tablet</span>
+      </label>
+    </div>
+    <div class="progress" id="progress" hidden><div id="bar"></div></div>
+    <p id="ocrStatus" class="muted">Nothing scanned yet.</p>
+    <img id="preview" alt="" hidden>
+    <textarea id="rawText" rows="8" placeholder="Recognised text will appear here. You can edit it before saving."></textarea>
+  </section>
+
+  <section class="card" id="expenseForm">
+    <h2>Review expense</h2>
+    <div class="grid">
+      <label>Supplier<input id="supplier" autocomplete="off" required></label>
+      <label>Date (DD/MM/YYYY)<input id="date" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" required></label>
+      <label>Total (£)<input id="total" inputmode="decimal" required></label>
+      <label>VAT (£)<input id="vat" inputmode="decimal"></label>
+      <label>Category<select id="category">
+        <option>Food & Ingredients</option><option>Packaging</option><option>Cleaning</option>
+        <option>Utilities</option><option>Equipment</option><option>Repairs</option>
+        <option>Staff</option><option>Other</option>
+      </select></label>
+      <label>Reference<input id="reference"></label>
+    </div>
+    <label>Notes<textarea id="notes" rows="3"></textarea></label>
+    <button id="saveExpense" class="primary" disabled>Save expense to test ledger</button><p id="expenseSaveStatus" class="muted">Enter supplier, date and a total greater than £0 to enable saving.</p>
+  </section>
+
+  <section class="card" id="eodForm" hidden>
+    <h2>Review XEPOS End-of-Day</h2>
+    <div class="grid">
+      <label>Trading date (DD/MM/YYYY)<input id="eodDate" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" required></label>
+      <label>Gross sales (£)<input id="grossSales" inputmode="decimal" required></label>
+      <label>Card sales (£)<input id="cardSales" inputmode="decimal"></label>
+      <label>Cash sales (£)<input id="cashSales" inputmode="decimal"></label>
+      <label>Refunds (£)<input id="refunds" inputmode="decimal"></label>
+      <label>VAT (£)<input id="eodVat" inputmode="decimal"></label>
+    </div>
+    <button id="saveEod" class="primary" disabled>Save EOD report to test ledger</button><p id="eodSaveStatus" class="muted">Enter a trading date and gross sales greater than £0 to enable saving.</p>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><h2>Test ledger</h2><button id="clearAll" class="danger">Clear test data</button></div>
+    <div id="summary" class="summary"></div>
+    <div id="ledger" class="ledger"></div>
+  </section>
+
+  <section class="card dim">
+    <h2>Connections</h2>
+    <div class="connection"><span>Evopayments reconciliation</span><b>NOT CONNECTED</b></div>
+    <div class="connection"><span>Business bank feed</span><b>NOT CONNECTED</b></div>
+    <div class="connection"><span>Xero export/sync</span><b>NOT CONNECTED</b></div>
+    <p class="muted">These will stay disabled until the correct secure API/authentication method is confirmed.</p>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="/accounts-test.js"></script>
+</body>
+</html>
