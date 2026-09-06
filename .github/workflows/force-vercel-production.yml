@@ -17,7 +17,7 @@ jobs:
         run: |
           git config user.name "jamiegreen294-boop"
           git config user.email "jamiegreen294@gmail.com"
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.deploymentMarker='spin-app-only-live-20260905';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.deploymentMarker='sunday-full-shopping-totals-force-20260906';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
           git add package.json
-          git commit -m "Deploy Spin to Win app-only flow to production"
+          git commit -m "Deploy Danish voice and full Sunday shopping totals"
           git push origin main
