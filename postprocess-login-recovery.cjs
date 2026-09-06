@@ -2,8 +2,25 @@ const fs=require('fs');
 const p='dist/app.html';
 if(!fs.existsSync(p)) throw new Error('dist/app.html missing');
 let html=fs.readFileSync(p,'utf8');
+
+// The login screen must remain usable even if third-party scripts are slow.
+// Keep dependency order, but stop CDN/auth loaders from blocking HTML parsing.
+html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">','<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">');
+html=html.replace('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">','<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">');
+html=html.replace('<script src="/app-auth.js">','<script defer src="/app-auth.js">');
+
 const marker='dextersEmergencyLoginRecovery';
-if(html.includes(marker)){console.log('Login recovery already injected');process.exit(0)}
+if(html.includes(marker)){
+  // Existing recovery script: make sure it wires immediately rather than
+  // waiting for DOMContentLoaded, which deferred/network scripts can delay.
+  const old="if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();\nsetTimeout(wire,100);setTimeout(wire,800);";
+  const next="wire();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});\nsetTimeout(wire,100);setTimeout(wire,800);";
+  if(html.includes(old)) html=html.replace(old,next);
+  fs.writeFileSync(p,html);
+  console.log('Login recovery stabilised for slow external scripts');
+  process.exit(0);
+}
+
 const script=`<script id="${marker}">(function(){
 'use strict';
 const U='https://bpnkouymdvcogeaqjmxl.supabase.co';
@@ -26,15 +43,15 @@ async function login(e){
    if(!d.expires_at&&d.expires_in)d.expires_at=Math.floor(Date.now()/1000)+Number(d.expires_in);
    localStorage.setItem(STORAGE,JSON.stringify(d));
    status('Signed in. Opening Dexter’s…',false);
-   location.replace('/app.html?login=ok&v=20260906-directauth2');
+   location.replace('/app.html?login=ok&v=20260906-directauth3');
  }catch(err){status(err&&err.message?err.message:'Could not sign in. Please try again.',true);if(b){b.disabled=false;b.textContent='Login'}busy=false}
  return false
 }
 function wire(){const b=$('loginBtn');if(!b||b.dataset.directAuth==='1')return;b.dataset.directAuth='1';b.addEventListener('click',login,true);const p=$('loginPassword');if(p)p.addEventListener('keydown',ev=>{if(ev.key==='Enter')login(ev)},true)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
+wire();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});
 setTimeout(wire,100);setTimeout(wire,800);
 })();</script>`;
 if(!html.includes('</body>')) throw new Error('Unexpected app.html');
 html=html.replace('</body>',script+'</body>');
 fs.writeFileSync(p,html);
-console.log('Direct loyalty login recovery injected');
+console.log('Direct loyalty login recovery injected and stabilised');
