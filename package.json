@@ -9,5 +9,5 @@
     "test:auth-return": "node tests/auth-return.cjs",
     "test:collection-amend": "node tests/collection-amend-flow.test.cjs"
   },
-  "deploymentMarker": "reward-flow-live-20260905-1815"
+  "deploymentMarker": "unified-kds-live-20260906"
 }
