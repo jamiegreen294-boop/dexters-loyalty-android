@@ -1,0 +1,11 @@
+const fs=require('fs');
+const p='dist/index.html';
+let s=fs.readFileSync(p,'utf8');
+const before=s;
+s=s.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>','<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>');
+s=s.replace('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>','<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>');
+if(s===before) throw new Error('Startup CDN script tags were not found');
+if(!s.includes('<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>')) throw new Error('Supabase CDN script was not deferred');
+if(!s.includes('<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>')) throw new Error('QR CDN script was not deferred');
+fs.writeFileSync(p,s);
+console.log('Deferred blocking startup CDN scripts');
