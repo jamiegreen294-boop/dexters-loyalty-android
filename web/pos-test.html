@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>Dexter's POS Test</title>
+<title>Dexter's POS</title>
+<link rel="manifest" href="/pos-manifest.json">
+<meta name="theme-color" content="#08182a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dexter POS">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#07111f;--panel:#0e1d31;--panel2:#142641;--line:#28415f;--text:#f7fbff;--muted:#9eb0c5;--accent:#ffd43b;--danger:#dc3345;--ok:#22c55e}
@@ -27,7 +33,7 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 <body>
 <div class="app">
   <header class="top">
-    <div class="brand">Dexter's POS</div><span class="tag">JUST EAT TERMINAL TEST</span>
+    <div class="brand">Dexter's POS</div><span class="tag">DEXTER'S TERMINAL</span>
     <div class="spacer"></div>
     <button id="historyBtn">Sales</button><button id="cashupBtn">Cash up</button><button id="heldBtn">Held orders</button><button id="staffBtn">Staff</button><button id="fullBtn">Full screen</button><button id="clearBtn" class="danger">Clear sale</button>
   </header>
@@ -59,7 +65,7 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
           <button id="cardBtn" class="cardbtn">CARD</button>
           <button id="sendBtn" class="send">SEND TO KDS</button>
         </div>
-        <div id="status" style="font-size:12px;margin-top:8px;color:#9eb0c5">Test branch only — live apps untouched.</div>
+        <div id="status" style="font-size:12px;margin-top:8px;color:#9eb0c5">POS web app · secure staff sign-in</div>
       </div>
     </aside>
   </main>
@@ -67,7 +73,7 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 
 <div id="modifierModal" class="modal hide"><div class="box"><h2 id="modTitle">Choose options</h2><div id="modGroups"></div><div class="actions"><button class="cancel" id="modCancel">Cancel</button><button class="confirm" id="modAdd">Add to order</button></div><div id="modError" class="bad"></div></div></div>
 <div id="simpleModal" class="modal hide"><div class="box"><h2 id="simpleTitle"></h2><div id="simpleBody"></div><div class="actions"><button class="cancel" id="simpleCancel">Cancel</button><button class="confirm" id="simpleSave">Save</button></div></div></div>
-<div id="authGate" class="modal"><div class="box" style="max-width:430px"><h2>Dexter's POS Staff Sign In</h2><p style="color:#9eb0c5">Use a Dexter's staff or admin account. This test POS stays locked until a valid account signs in.</p><input id="staffEmail" class="field" type="email" autocomplete="username" placeholder="Email"><input id="staffPassword" class="field" type="password" autocomplete="current-password" placeholder="Password"><button id="loginBtn" class="confirm" style="width:100%;border:0;border-radius:12px;padding:13px;font-weight:1000">SIGN IN</button><div id="loginMsg" class="bad" style="margin-top:10px"></div></div></div>
+<div id="authGate" class="modal"><div class="box" style="max-width:430px"><h2>Dexter's POS Staff Sign In</h2><p style="color:#9eb0c5">Use a Dexter's staff or admin account. This POS stays locked until a valid staff or admin account signs in.</p><input id="staffEmail" class="field" type="email" autocomplete="username" placeholder="Email"><input id="staffPassword" class="field" type="password" autocomplete="current-password" placeholder="Password"><button id="loginBtn" class="confirm" style="width:100%;border:0;border-radius:12px;padding:13px;font-weight:1000">SIGN IN</button><div id="loginMsg" class="bad" style="margin-top:10px"></div></div></div>
 
 <script>
 const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',POS_API=U+'/functions/v1/dexters-pos-test-api',sb=supabase.createClient(U,K);
@@ -79,7 +85,7 @@ async function loadMenu(){
  try{
   const r=await fetch(U+'/rest/v1/rpc/loyalty_menu_public',{method:'POST',headers:{apikey:K,'Content-Type':'application/json'},body:'{}'});
   const d=await r.json();S.cats=Array.isArray(d)?d:[];if(!S.cat&&S.cats[0])S.cat=S.cats[0].name;
-  await loadModifiers();renderCats();renderItems();$('status').textContent='Menu loaded · POS test branch';
+  await loadModifiers();renderCats();renderItems();$('status').textContent='Menu loaded · Dexter’s POS';
  }catch(e){$('status').textContent='Menu load failed';}
 }
 async function loadModifiers(){
@@ -115,14 +121,14 @@ async function sendToKds(){
  if(!S.cart.length){$('status').textContent='Add items before sending to KDS.';return}
  if(!S.session?.access_token){$('status').textContent='Please sign in again.';return}
  const body={order_type:S.mode,customer_name:S.customer,customer_phone:S.phone,notes:S.note,discount:S.discount,payment_method:'unpaid',items:S.cart.map(l=>({name:l.name,qty:l.qty,unit:l.unit,modifiers:l.mods.map(m=>m.name+': '+m.options.map(o=>o.name).join(', '))}))};
- $('status').textContent='Sending to isolated POS/KDS test queue…';
+ $('status').textContent='Sending order to POS queue…';
  try{
    const r=await fetch(POS_API+'/orders',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+S.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body)});
    const d=await r.json().catch(()=>({}));
    if(!r.ok)throw Error(d.error||'POS test send failed');
    localStorage.setItem('dexters-pos-kds-test-payload',JSON.stringify({...body,test_order:d.order}));
-   $('status').textContent='Test order #P'+String(d.order.order_number).padStart(3,'0')+' sent to isolated KDS test queue. Live KDS untouched.';
- }catch(e){$('status').textContent='Test send failed: '+e.message}
+   $('status').textContent='Order #P'+String(d.order.order_number).padStart(3,'0')+' sent to POS queue.';
+ }catch(e){$('status').textContent='Send failed: '+e.message}
 }
 $('modCancel').onclick=()=>$('modifierModal').classList.add('hide');$('modAdd').onclick=()=>{const bad=selectionsValid();if(bad){$('modError').textContent='Please complete: '+bad;return}const gs=S.groups.get(String(S.editing?.id||''))||[],mods=gs.map(g=>({id:g.id,name:g.name,options:g.options.filter(o=>(S.selected.get(g.id)||new Set()).has(o.id))})).filter(g=>g.options.length);addLine(S.editing,mods);$('modifierModal').classList.add('hide')};$('simpleCancel').onclick=()=>$('simpleModal').classList.add('hide');
 $('search').oninput=()=>{renderCats();renderItems()};$('reloadBtn').onclick=loadMenu;$('historyBtn').onclick=showSales;$('cashupBtn').onclick=cashUp;$('clearBtn').onclick=()=>{if(confirm('Clear this sale?'))clearSale()};$('holdBtn').onclick=holdSale;$('heldBtn').onclick=showHeld;$('noteBtn').onclick=()=>simple('Order note','<textarea id="noteField" class="field" rows="5">'+esc(S.note)+'</textarea>',()=>S.note=$('noteField').value);$('discountBtn').onclick=()=>simple('Discount','<input id="discountField" class="field" inputmode="decimal" value="'+S.discount+'" placeholder="Discount amount in £">',()=>{S.discount=Math.max(0,Number(($('discountField').value||'0').replace(',','.'))||0);renderCart()});$('customerBtn').onclick=()=>simple('Customer details','<input id="custField" class="field" value="'+esc(S.customer)+'" placeholder="Customer name"><input id="phoneField" class="field" value="'+esc(S.phone)+'" placeholder="Phone">',()=>{S.customer=$('custField').value.trim();S.phone=$('phoneField').value.trim()});$('cashBtn').onclick=()=>pay('cash');$('cardBtn').onclick=()=>pay('card');$('sendBtn').onclick=sendToKds;$('staffBtn').onclick=async()=>{if(confirm('Sign out '+(S.staffEmail||'staff')+'?')){await sb.auth.signOut();location.reload()}};$('fullBtn').onclick=async()=>{try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen()}catch{}};
@@ -131,5 +137,6 @@ async function applySession(session){if(!session){$('authGate').classList.remove
 $('loginBtn').onclick=async()=>{const email=$('staffEmail').value.trim(),password=$('staffPassword').value;$('loginMsg').textContent='Signing in…';const {data,error}=await sb.auth.signInWithPassword({email,password});if(error){$('loginMsg').textContent=error.message;return}await applySession(data.session);$('loginMsg').textContent=''}
 sb.auth.onAuthStateChange((_e,s)=>{if(!s&&S.session)location.reload()});sb.auth.getSession().then(({data})=>applySession(data.session));
 renderCart();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/pos-sw.js').catch(()=>{}));}
 </script>
 </body></html>
