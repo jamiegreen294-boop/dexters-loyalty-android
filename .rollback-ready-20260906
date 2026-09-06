@@ -1,0 +1,2 @@
+Rollback-ready snapshot based on last known working loyalty commit fd3777ec6f20f3a942a31756b5976445e7a9fcac.
+Do not merge automatically. Promote the existing known-good Vercel deployment if possible, otherwise deploy this snapshot only after verification.
