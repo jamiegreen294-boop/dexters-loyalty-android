@@ -2,8 +2,23 @@
 'use strict';
 const clean=value=>String(value??'').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g,'');
 const xml=value=>clean(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+const money=p=>'GBP '+(Math.max(0,Number(p)||0)/100).toFixed(2);
+function paymentLines(order){
+  if(order.sample)return [];
+  const total=Math.max(0,Number(order.total_pence)||0),deposit=Math.max(0,Number(order.deposit_pence)||0),balance=Math.max(0,Number(order.balance_pence)||0),balancePaid=order.balance_payment_status==='paid'||balance===0;
+  const out=['--------------------------------'];
+  if(balancePaid){
+    out.push('PAYMENT: PAID IN FULL','Paid: '+money(total),'Balance due: GBP 0.00');
+  }else{
+    out.push('PAYMENT: DEPOSIT PAID','Deposit paid: '+money(deposit),'*** XEPOS BALANCE TO TAKE: '+money(balance)+' ***');
+  }
+  if(order.app_customer){out.push('Loyalty customer: YES','Points after collection: '+Math.max(0,Number(order.points)||0));}
+  else out.push('Loyalty customer: NO LINKED APP ACCOUNT');
+  return out;
+}
 function ticket(order,{sample=false}={}){
   if(!order || !Array.isArray(order.items) || !order.items.length)throw Error('This order has no ticket items.');
+  const view={...order,sample};
   const lines=[sample?'TEST TICKET - NOT A REAL ORDER':'SUNDAY CUSTOMER ORDER',
     'SR-'+String(order.order_number??'').padStart(3,'0'),
     'Collection: '+clean(order.collection_date)+' at '+clean(order.collection_slot),
@@ -15,15 +30,18 @@ function ticket(order,{sample=false}={}){
   }
   if(order.notes)lines.push('Notes: '+clean(order.notes));
   if(!Number.isInteger(Number(order.total_pence)) || Number(order.total_pence)<0)throw Error('The order total is invalid.');
-  lines.push('--------------------------------','Order total: GBP '+(Number(order.total_pence)/100).toFixed(2));
+  lines.push('--------------------------------','Order total: '+money(order.total_pence),...paymentLines(view));
+  if(order.app_customer&&order.claim_token){lines.push('SCAN TO WIN','Scan this QR in the Dexter’s app.','Receipt code: '+clean(order.claim_token));}
   if(sample)lines.push('TEST ONLY - DO NOT PREPARE');
   return lines.join('\n')+'\n';
 }
-function envelope(text){return '<?xml version="1.0" encoding="utf-8"?>'+
+function envelope(text,qr=''){
+  const qrBlock=qr?'<feed line="1"/><text align="center" width="1" height="1">SCAN TO WIN\n</text><symbol type="qrcode_model_2" level="level_m" width="6" align="center">'+xml(qr)+'</symbol><feed line="1"/>':'';
+  return '<?xml version="1.0" encoding="utf-8"?>'+
   '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>'+ 
   '<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">'+
   '<text align="center" width="1" height="1">DEXTER&apos;S KITCHEN\n</text>'+
-  '<text align="left" width="1" height="1">'+xml(text)+'</text><feed line="2"/><cut type="feed"/>'+
+  '<text align="left" width="1" height="1">'+xml(text)+'</text>'+qrBlock+'<feed line="2"/><cut type="feed"/>'+
   '</epos-print></s:Body></s:Envelope>';}
 function endpoint(ip){
   const parts=String(ip).trim().split('.');
@@ -40,9 +58,9 @@ function acknowledgement(text,Parser=root.DOMParser){
 }
 function createSender(fetcher=root.fetch.bind(root),Parser=root.DOMParser){
   let busy=false;
-  return async function send(ip,text){
+  return async function send(ip,text,qr=''){
     if(busy)throw Error('A ticket is already being sent.');
-    const url=endpoint(ip),body=envelope(text),controller=new AbortController();
+    const url=endpoint(ip),body=envelope(text,qr),controller=new AbortController();
     busy=true;const timer=setTimeout(()=>controller.abort(),15000);
     try{
       let response,reply;
