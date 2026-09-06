@@ -49,7 +49,20 @@
   async function loadCollectionStatus(){const pill=$('collectionStatus');try{const d=await invoke(cfg.functions.collection,{action:'status'});const open=Boolean(d?.enabled??d?.open??d?.collection_open);pill.textContent=open?'Open':'Closed';pill.classList.toggle('open',open);}catch{pill.textContent='Status unavailable';}}
   async function loadNews(){const area=$('newsArea');try{const d=await jsonFetch(`${cfg.functionBase}/${cfg.functions.news}`,{headers:authHeaders()});const items=d?.items||d?.news||(Array.isArray(d)?d:[]);area.innerHTML='';if(!Array.isArray(items)||!items.length){area.textContent='No current announcements.';return;}items.slice(0,4).forEach(x=>{const el=document.createElement('div');el.className='news-item';el.textContent=x?.message||x?.text||x?.title||String(x);area.appendChild(el);});}catch{area.textContent='Dexter\'s news will appear here when available.';}}
   async function loadOffers(){const area=$('offersArea');area.innerHTML='<span class="muted">Your personal offers remain connected to the existing Dexter\'s offers service.</span>';}
-  async function hydrate(){renderAccount();await Promise.allSettled([loadPoints(),loadCollectionStatus(),loadNews(),loadOffers()]);}
+  async function loadRoleAndAdminTools(){
+    const card=$('adminToolsCard'); if(!card||!state.user?.id)return;
+    try{
+      const rows=await jsonFetch(`${cfg.supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(state.user.id)}&select=role`,{headers:authHeaders()});
+      const role=String(rows?.[0]?.role||'customer').toLowerCase();
+      const allowed=role==='admin'||role==='staff';
+      card.classList.toggle('hidden',!allowed);
+      document.querySelectorAll('[data-admin-route]').forEach(btn=>{
+        btn.disabled=!allowed;
+        if(!btn.dataset.bound){btn.dataset.bound='1';btn.addEventListener('click',()=>{const key=btn.dataset.adminRoute;openRoute(cfg.routes[key]);});}
+      });
+    }catch{card.classList.add('hidden');}
+  }
+  async function hydrate(){renderAccount();await Promise.allSettled([loadPoints(),loadCollectionStatus(),loadNews(),loadOffers(),loadRoleAndAdminTools()]);}
 
   async function establishSession(session){saveSession(session);const u=await getUser();state.user=u?.user||u;renderAccount();setAuthenticatedUi(true);$('bootStatus').classList.add('hidden');await hydrate();}
   async function restoreSession(){const s=storedSession();if(!s)return false;const p=decodeJwt(s.access_token);const exp=Number(p.exp||0)*1000;try{await establishSession(exp&&exp<Date.now()+60000?await refreshSession(s.refresh_token):s);return true}catch{saveSession(null);state.user=null;return false}}
