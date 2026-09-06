@@ -9,5 +9,5 @@
     "test:auth-return": "node tests/auth-return.cjs",
     "test:collection-amend": "node tests/collection-amend-flow.test.cjs"
   },
-  "deploymentMarker": "unified-kds-live-20260906"
+  "deploymentMarker": "danish-voice-sunday-prep-live-20260906"
 }
