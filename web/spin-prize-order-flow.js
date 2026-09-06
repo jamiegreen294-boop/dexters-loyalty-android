@@ -8,8 +8,10 @@ async function api(body){const t=session();if(!t)throw Error('Sign in to view yo
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function prettyDate(v){try{return new Date(v).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}catch{return''}}
 function ensureStyle(){if($('dxSpinClaimStyle'))return;const s=document.createElement('style');s.id='dxSpinClaimStyle';s.textContent='#dxSpinClaims{margin-top:14px}.dx-claim{padding:13px;border:1px solid #ffffff20;border-radius:14px;background:var(--navy2);margin-top:10px}.dx-claim-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.dx-claim-exp{font-size:12px;font-weight:900;color:var(--yellow)}.dx-claim-status{font-size:12px;font-weight:900;margin-top:6px}.dx-claim-used{opacity:.65}.dx-claim .btn{margin-top:10px}';document.head.appendChild(s)}
+function cleanupLegacy(){const card=$('mySpinPrizeCard');if(!card)return;const p=card.querySelector('p.muted');if(p)p.textContent='Claim and redeem this prize through the Dexter’s app when placing a collection order. It cannot be redeemed in store or by staff on a terminal.';card.querySelectorAll('#redeemSpinBtn,[data-redeem-spin]').forEach(b=>{b.hidden=true;b.disabled=true;b.setAttribute('aria-hidden','true')})}
 function host(){return $('spinPage')||$('rewardsPage')||$('qrPage')}
 async function load(){
+ cleanupLegacy();
  const h=host();if(!h||!session())return;
  ensureStyle();
  let card=$('dxSpinClaims');
@@ -21,7 +23,7 @@ async function load(){
    list.querySelectorAll('[data-spin-claim]').forEach(b=>b.onclick=()=>{const id=b.dataset.spinClaim;localStorage.setItem('dexters_pending_spin_prize',id);location.href='/collection-order-test.html?spin_prize='+encodeURIComponent(id)});
  }catch(e){if($('dxSpinClaimList'))$('dxSpinClaimList').innerHTML='<p class="muted">'+esc(e.message)+'</p>'}
 }
-function boot(){load();setTimeout(load,500);setTimeout(load,1600)}
+function boot(){cleanupLegacy();load();setTimeout(cleanupLegacy,300);setTimeout(load,500);setTimeout(cleanupLegacy,1200);setTimeout(load,1600);new MutationObserver(cleanupLegacy).observe(document.body,{childList:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.addEventListener('dexters:loyalty-changed',load);
 })();
