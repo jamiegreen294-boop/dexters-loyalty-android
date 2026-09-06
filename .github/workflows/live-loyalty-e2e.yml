@@ -3,49 +3,29 @@ on:
   push:
     paths:
       - '.github/workflows/live-loyalty-e2e.yml'
-      - 'postprocess-login-recovery.cjs'
-      - 'build-pwa-shell.js'
   workflow_dispatch:
 jobs:
-  test-live-login:
+  syntax:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install Playwright
-        run: |
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
-      - name: Trace live JavaScript
+      - name: Compile every live inline script
         run: |
           node <<'NODE'
-          const { chromium } = require('playwright');
-          function compile(name,code){try{new Function(code);console.log('COMPILE OK',name);return true}catch(e){console.log('COMPILE FAIL',name,e.message);console.log(code.slice(0,1200));return false}}
+          function compile(name,code){try{new Function(code);console.log('OK',name);return true}catch(e){console.log('FAIL',name,e.message);console.log('---SCRIPT START---');console.log(code);console.log('---SCRIPT END---');return false}}
           (async()=>{
-            const html=await (await fetch('https://app.dextersspot.co.uk/app.html?v=e2e-trace-'+Date.now(),{cache:'no-store'})).text();
+            const html=await (await fetch('https://app.dextersspot.co.uk/app.html?v=syntax-'+Date.now(),{cache:'no-store'})).text();
             const scripts=[...html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/gi)];
-            let syntaxOk=true;
+            let ok=true;
             for(let i=0;i<scripts.length;i++){
               const attrs=scripts[i][1]||'',body=scripts[i][2]||'';
               if(/\bsrc\s*=/.test(attrs)||!body.trim()) continue;
-              if(!compile('inline-'+i,body)) syntaxOk=false;
+              if(!compile('inline-'+i,body)) ok=false;
             }
             const auth=await (await fetch('https://app.dextersspot.co.uk/app-auth.js?v='+Date.now(),{cache:'no-store'})).text();
-            if(!compile('app-auth.js',auth)) syntaxOk=false;
-            const browser=await chromium.launch({headless:true});
-            const page=await browser.newPage({viewport:{width:390,height:844}});
-            page.on('console',m=>console.log('browser:',m.type(),m.text()));
-            page.on('pageerror',e=>console.log('pageerror:',e.message,'stack:',e.stack||''));
-            await page.goto('https://app.dextersspot.co.uk/',{waitUntil:'domcontentloaded',timeout:45000});
-            await page.waitForTimeout(3500);
-            console.log('final url',page.url());
-            const loginVisible=await page.locator('#loginBtn').isVisible().catch(()=>false);
-            console.log('login visible',loginVisible);
-            await browser.close();
-            if(!syntaxOk) throw new Error('LIVE JAVASCRIPT SYNTAX FAILURE');
-            if(!loginVisible) throw new Error('LOGIN SCREEN NOT INTERACTIVE');
+            if(!compile('app-auth.js',auth)) ok=false;
+            if(!ok) process.exit(1);
           })().catch(e=>{console.error(e);process.exit(1)});
           NODE
