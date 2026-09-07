@@ -245,13 +245,22 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="training">
-<div class="card notice"><b>Staff Training App</b><p class="muted">Staff see only the modules they need. Completion can later be tied to a staff account and manager dashboard.</p></div>
+<div class="card notice"><b>Staff Training App</b><p class="muted">Staff complete short Dexter's training modules with a knowledge check. Progress is remembered in this test and managers can review completion.</p></div>
 <div class="grid">
-<div class="card"><h2>Training modules</h2><div id="lessonList"></div></div>
+<div class="card"><h2>Staff member</h2>
+<div class="field">Staff name<input id="trainStaffName" value="Test Staff"></div>
+<div class="field">Role<select id="trainRole"><option>Staff</option><option>Supervisor</option><option>Manager</option></select></div>
+<div id="lessonList"></div>
+</div>
+
 <div class="card"><h2>Staff progress</h2>
 <div class="metric"><span class="muted">Completed</span><b id="trainDone">0 / 6</b></div>
-<div class="summarybox" id="trainStatus">Choose a module and mark it complete.</div>
-</div></div>
+<div class="summarybox" id="trainStatus">Choose a module and complete its knowledge check.</div>
+<hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
+<h2>Manager view</h2>
+<div id="trainManager" class="muted">No training progress yet.</div>
+</div>
+</div>
 </section>
 </main>
 
@@ -676,9 +685,47 @@ const initialCounts=challengeCounts();
 $('challengeSyncStatus').innerHTML='<b>'+initialCounts.orders+' qualifying collected order(s) counted.</b><br><span class="tiny">Standalone test feed. Live integration will use the signed-in customer\'s collection_orders history.</span>';
 renderChallenges();maybeEarnScratch();saveChallenges();
 
-const lessons=['Dexter\'s menu & modifiers','Allergens & customer safety','Loyalty points and rewards','KDS order handling','Opening & closing basics','Customer service & complaints'];let done=new Set();
-function renderLessons(){$('lessonList').innerHTML=lessons.map((x,i)=>'<div class="lesson '+(done.has(i)?'done':'')+'"><b>'+x+'</b><p class="muted">'+(done.has(i)?'Completed in this test':'Short lesson + quick knowledge check')+'</p><button class="btn small" onclick="toggleLesson('+i+')">'+(done.has(i)?'Completed ✓':'Mark complete')+'</button></div>').join('');$('trainDone').textContent=done.size+' / '+lessons.length;$('trainStatus').textContent=done.size===lessons.length?'All test training completed.':' '+(lessons.length-done.size)+' module(s) remaining.'}
-window.toggleLesson=i=>{done.has(i)?done.delete(i):done.add(i);renderLessons()};renderLessons();
+const TRAINKEY='dexters_growth_staff_training_test_v2';
+const lessons=[
+ {title:"Dexter's menu & modifiers",text:"Know the main menu categories, required modifiers and how to check an item before confirming an order.",q:"If an item has a required modifier, what should staff do?",answers:["Skip it if busy","Make sure the required choice is selected","Choose one for the customer"],correct:1},
+ {title:"Allergens & customer safety",text:"Never guess allergen information. Use Dexter's recorded allergen information and escalate anything uncertain before serving.",q:"What should you do if you are unsure about an allergen?",answers:["Guess from the ingredients","Tell the customer it is probably fine","Check the recorded information and ask a manager if still unsure"],correct:2},
+ {title:"Loyalty points and rewards",text:"Points and rewards must follow the app flow. Do not manually promise or issue an unapproved reward.",q:"When should a reward be given?",answers:["Whenever a customer asks","Only when the app/staff process shows it is valid","At the end of every order"],correct:1},
+ {title:"KDS order handling",text:"Read the full ticket, modifiers and notes. Keep the status accurate so the customer tracking remains correct.",q:"Why should KDS status be kept accurate?",answers:["It only changes the screen colour","It keeps staff and customer tracking correct","It is optional"],correct:1},
+ {title:"Opening & closing basics",text:"Follow Dexter's current opening/closing checklist and confirm any issue that could affect food safety, orders or equipment.",q:"What should happen if an opening check finds a problem?",answers:["Ignore it until later","Record/escalate it before it causes service or safety issues","Delete the checklist"],correct:1},
+ {title:"Customer service & complaints",text:"Stay calm, listen, record what happened and involve a manager where a refund, safety concern or escalation is required.",q:"What is the best first response to a complaint?",answers:["Argue your side","Listen and understand what happened","Promise a refund immediately"],correct:1}
+];
+let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{}};
+try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState=saved}catch(e){}
+function saveTraining(){localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderLessons();renderTrainingManager()}
+function completedCount(){return Object.values(trainState.completed||{}).filter(Boolean).length}
+function renderLessons(){
+ $('trainStaffName').value=trainState.staffName||'';
+ $('trainRole').value=trainState.role||'Staff';
+ $('lessonList').innerHTML=lessons.map((l,i)=>{
+   const done=!!trainState.completed[i],attempts=(trainState.attempts&&trainState.attempts[i])||0;
+   return '<div class="lesson '+(done?'done':'')+'"><b>'+l.title+'</b><p class="muted">'+l.text+'</p>'+(done?'<span class="ok">Completed ✓</span><p class="tiny">Knowledge check passed'+(attempts?' after '+attempts+' attempt(s)':'')+'.</p>':'<div class="field">'+l.q+'<select id="trainAnswer'+i+'"><option value="">Choose an answer</option>'+l.answers.map((a,ix)=>'<option value="'+ix+'">'+a+'</option>').join('')+'</select></div><button class="btn small" onclick="checkLesson('+i+')">Submit answer</button><div id="trainFeedback'+i+'" class="tiny"></div>')+'</div>';
+ }).join('');
+ const done=completedCount();
+ $('trainDone').textContent=done+' / '+lessons.length;
+ $('trainStatus').innerHTML=done===lessons.length?'<span class="ok"><b>All training completed.</b></span>':'<b>'+(lessons.length-done)+' module(s) remaining.</b><br><span class="muted">A module only counts as complete after the knowledge check is passed.</span>';
+}
+window.checkLesson=i=>{
+ const sel=$('trainAnswer'+i);if(!sel||sel.value===''){return}
+ trainState.attempts=trainState.attempts||{};trainState.attempts[i]=(trainState.attempts[i]||0)+1;
+ if(Number(sel.value)===lessons[i].correct){
+   trainState.completed=trainState.completed||{};trainState.completed[i]=true;saveTraining();
+ }else{
+   $('trainFeedback'+i).innerHTML='<span class="bad">Not quite — review the lesson and try again.</span>';
+   localStorage.setItem(TRAINKEY,JSON.stringify(trainState));
+ }
+};
+function renderTrainingManager(){
+ const done=completedCount(),pct=Math.round(done/lessons.length*100);
+ $('trainManager').innerHTML='<div class="summarybox"><b>'+String(trainState.staffName||'Unnamed staff')+'</b><br><span class="muted">'+trainState.role+' · '+done+'/'+lessons.length+' complete</span><div class="progress"><i style="width:'+pct+'%"></i></div><p class="tiny">'+(done===lessons.length?'Training complete':'Training still in progress')+'</p></div>';
+}
+$('trainStaffName').addEventListener('change',()=>{trainState.staffName=$('trainStaffName').value.trim()||'Unnamed staff';saveTraining()});
+$('trainRole').addEventListener('change',()=>{trainState.role=$('trainRole').value;saveTraining()});
+renderLessons();renderTrainingManager();
 </script>
 </body>
 </html>
