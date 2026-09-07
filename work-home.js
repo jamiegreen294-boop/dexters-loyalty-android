@@ -14,7 +14,8 @@ function start(){
  const title=node('h1','');title.id='workCoffeeHeadline';
  const count=node('div','work-count');count.append($('stampText'));count.append(' coffees collected');
  const originalMessage=$('stampMessage');originalMessage.hidden=true;
- hero.append(hello,title,coffee.querySelector('.progress'),count,$('stamps'),originalMessage,$('rewardCard'),collection);
+ hero.append(hello,title,coffee.querySelector('.progress'),count,$('stamps'),originalMessage,$('rewardCard'));
+ collection.classList.add('work-collection-standalone');
  greet.remove();coffee.remove();
  const grid=node('div','');grid.id='workQuickActions';grid.innerHTML='<button type="button" class="work-action" id="workRewards"><div class="wi">🎁</div><div class="wt">Your Rewards</div><div class="wd">Coffee, offers & treats</div></button><button type="button" class="work-action" id="workAgain"><div class="wi">⭐</div><div class="wt">Order Again</div><div class="wd">View your previous orders</div></button><button type="button" class="work-action" id="workSpin"><div class="wi">🎡</div><div class="wt">Spin to Win</div><div class="wd" id="workSpinNote">Play when activated</div></button><a class="work-action" href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><div class="wi">💬</div><div class="wt">Ask Dexter</div><div class="wd">Chat with us on WhatsApp</div></a>';
  offers.classList.add('work-deals');offers.querySelector('h2').textContent='Dexter’s Deals';offers.querySelector('h2').className='work-heading';
@@ -24,7 +25,7 @@ function start(){
  const rewardsPage=$('qrPage'),personalRewards=$('myIndividualOffersCard');
  const accountPage=$('accountPage');
  if(rewardsPage&&personalRewards){rewardsPage.append(personalRewards);rewardsPage.classList.add('work-rewards');personalRewards.querySelector('h2').textContent='Your Personal Rewards'}
- home.prepend(top,hero,grid,offers,usual,current);home.classList.add('work-home');
+ home.prepend(top,hero,collection,grid,offers,usual,current);home.classList.add('work-home');
  // The quick action and bottom navigation already provide WhatsApp access.
  for(const heading of home.querySelectorAll('.card > h2')){if(heading.textContent.trim()==='💬 Message Dexter’s')heading.closest('.card').remove()}
  const menuLink=node('button','work-small','Browse the full menu');menuLink.type='button';menuLink.onclick=()=>nav('menuPage');home.append(menuLink);
@@ -70,7 +71,7 @@ function start(){
  }
  const observeView=()=>{if($('appView').classList.contains('hidden'))clear();else refresh()};new MutationObserver(observeView).observe($('appView'),{attributes:true,attributeFilter:['class']});new MutationObserver(observeView).observe(home,{attributes:true,attributeFilter:['class']});
  window.addEventListener('storage',e=>{if(e.key==='sb-bpnkouymdvcogeaqjmxl-auth-token'){clear();refresh()}});document.addEventListener('visibilitychange',refresh);
- if(document.documentElement.dataset.layoutFixture==='true'){render([])}else{refresh();setInterval(refresh,15000)}
+ if(document.documentElement.dataset.layoutFixture==='true'){render([])}else{refresh();setInterval(refresh,30000)}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
