@@ -109,8 +109,49 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
       try{
         const {data,error}=await client.auth.signInWithPassword({email,password});
         if(error)throw error;
-        msg.innerHTML='<span class="ok">Signed in securely. Loading Back Office…</span>';
-        setTimeout(()=>location.reload(),250);
+        if(!data.session)throw new Error('Secure session was not created.');
+        window.__DEXTERS_SIGNED_IN_SESSION=data.session;
+
+        const {data:account,error:accountError}=await client
+          .from('backoffice_staff_accounts')
+          .select('staff_record_id,email,role,must_change_password,active')
+          .eq('auth_user_id',data.session.user.id)
+          .maybeSingle();
+
+        if(accountError)throw accountError;
+        if(!account)throw new Error('This account is not authorised for Dexter\'s Back Office.');
+        if(account.active===false)throw new Error('Back Office access is disabled for this account.');
+
+        window.__DEXTERS_SIGNED_IN_ACCOUNT=account;
+        msg.innerHTML='<span class="ok">Signed in securely as '+String(account.role||'staff')+'. Opening Back Office…</span>';
+
+        const signedOut=document.getElementById('secureSignedOut');
+        const signedIn=document.getElementById('secureSignedIn');
+        const userLabel=document.getElementById('secureUserLabel');
+        const roleLabel=document.getElementById('secureRoleLabel');
+        const shell=document.getElementById('secureBackOfficeShell');
+
+        if(signedOut)signedOut.style.display='none';
+        if(signedIn)signedIn.style.display='block';
+        if(userLabel)userLabel.textContent=data.session.user.email||email;
+        if(roleLabel)roleLabel.textContent=account.role||'Authenticated';
+
+        if(account.must_change_password){
+          sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
+          const ov=document.getElementById('firstPasswordOverlay');
+          if(ov)ov.style.display='block';
+        }else{
+          if(shell)shell.style.display='grid';
+          const rank={'Staff':1,'Team Leader':2,'Manager':3,'Super User':4};
+          document.querySelectorAll('.dex-backoffice-nav .tab[data-minrole]').forEach(function(b){
+            b.style.display=(rank[account.role]||0)>=(rank[b.dataset.minrole]||0)?'block':'none';
+          });
+        }
+
+        // If the full Back Office script has loaded, hand the session/account to it immediately.
+        if(typeof window.dextersCompleteSecureLogin==='function'){
+          await window.dextersCompleteSecureLogin(data.session,account);
+        }
       }catch(err){
         msg.innerHTML='<span class="bad">'+String(err&&err.message||err)+'</span>';
       }finally{loginBtn.disabled=false;}
@@ -1158,6 +1199,22 @@ const SUPABASE_URL='https://bpnkouymdvcogeaqjmxl.supabase.co';
 const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
 const SB=window.__DEXTERS_AUTH_CLIENT||window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
 let SECURE_SESSION=null,SECURE_ACCOUNT=null;
+window.dextersCompleteSecureLogin=async function(session,account){
+ SECURE_SESSION=session||null;
+ SECURE_ACCOUNT=account||null;
+ CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';
+ renderSecureAuth();
+ if(SECURE_ACCOUNT?.active&&!SECURE_ACCOUNT.must_change_password){
+   try{await loadSecureCoreData()}catch(e){
+     const m=document.getElementById('secureAuthMessage');
+     if(m)m.innerHTML='<span class="bad">Signed in, but secure Back Office data could not load: '+String(e.message||e)+'</span>';
+     throw e;
+   }
+   try{loadLiveReadOnly()}catch(e){}
+ }
+ if(typeof renderStaffDb==='function')renderStaffDb();
+ if(typeof renderDexManagement==='function')renderDexManagement();
+};
 
 async function secureFunction(action,payload={}){
  if(!SECURE_SESSION)throw new Error('Sign in securely first.');
@@ -1219,7 +1276,12 @@ function renderSecureAuth(){
 }
 async function initSecureAuth(){
  if(!SB)return;
- const {data}=await SB.auth.getSession();SECURE_SESSION=data.session||null;
+ if(window.__DEXTERS_SIGNED_IN_SESSION){
+   SECURE_SESSION=window.__DEXTERS_SIGNED_IN_SESSION;
+   SECURE_ACCOUNT=window.__DEXTERS_SIGNED_IN_ACCOUNT||null;
+ }else{
+   const {data}=await SB.auth.getSession();SECURE_SESSION=data.session||null;
+ }
  if(SECURE_SESSION){try{await loadSecureAccount()}catch(e){}}
  renderSecureAuth();
  const recoveryPending=sessionStorage.getItem('dexters_backoffice_recovery_pending')==='1'
@@ -3287,13 +3349,6 @@ window.submitFinalTraining=()=>{
 $('trainStaffName').addEventListener('change',()=>{trainState.staffName=$('trainStaffName').value.trim()||'Unnamed staff';saveTraining()});
 $('trainRole').addEventListener('change',()=>{trainState.role=$('trainRole').value;trainState.certifiedAt=null;trainState.finalScore=null;saveTraining()});
 
-if($('secureLoginBtn'))$('secureLoginBtn').onclick=async()=>{
- const email=$('secureLoginEmail').value.trim(),password=$('secureLoginPassword').value;
- $('secureAuthMessage').textContent='Signing in…';
- const {data,error}=await SB.auth.signInWithPassword({email,password});
- if(error){$('secureAuthMessage').innerHTML='<span class="bad">'+error.message+'</span>';return}
- SECURE_SESSION=data.session;await loadSecureAccount();renderSecureAuth();renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();if(SECURE_ACCOUNT?.active&&!SECURE_ACCOUNT.must_change_password){await loadSecureCoreData();loadLiveReadOnly();}
-};
 if($('secureForgotBtn'))$('secureForgotBtn').onclick=async()=>{
  const email=$('secureLoginEmail').value.trim();if(!email)return alert('Enter your email first.');
  const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
