@@ -9,7 +9,16 @@ let index=0;
 s=s.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi,(m,attrs,body)=>{
   if(/type\s*=\s*["']application\/ld\+json/i.test(attrs)) return m;
   const srcMatch=attrs.match(/\bsrc\s*=\s*"([^"]+)"/i) || attrs.match(/\bsrc\s*=\s*'([^']+)'/i);
-  const src=srcMatch?srcMatch[1]:'';
+  let src=srcMatch?srcMatch[1]:'';
+  // Inline same-origin JavaScript at build time so startup never depends on a
+  // service worker/network fetch for files already shipped with this build.
+  if(src.startsWith('/')){
+    const local=require('path').join('dist',src.slice(1));
+    if(fs.existsSync(local) && fs.statSync(local).isFile() && /\.js$/i.test(local)){
+      body=fs.readFileSync(local,'utf8');
+      src='';
+    }
+  }
   let kept=attrs
     .replace(/\s+src\s*=\s*"[^"]*"/ig,'')
     .replace(/\s+src\s*=\s*'[^']*'/ig,'')
