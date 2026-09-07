@@ -15,6 +15,15 @@ h1{font-size:clamp(34px,9vw,64px);line-height:.95;margin:8px 0 12px}h2{margin:0 
 .tabs{display:flex;gap:8px;overflow:auto;padding:10px 0 2px;position:sticky;top:0;z-index:5;background:linear-gradient(#130b1bf2,#130b1bdc,#130b1b00)}.tab{white-space:nowrap;border:1px solid var(--line);background:#171022;color:#fff;border-radius:999px;padding:10px 13px;font-weight:800}.tab.active{background:linear-gradient(120deg,var(--gold),var(--orange));color:#16100a;border:0}
 .panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{background:linear-gradient(180deg,#1c1227,#130d1c);border:1px solid var(--line);border-radius:20px;padding:16px;margin:14px 0;box-shadow:0 12px 40px #0005}.card.soft{background:#120d19}.notice{border-color:#ff8a0066;background:#24160d}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #5b3b70;background:#0f0a15;color:#fff;margin-top:6px}.field{margin:10px 0}.btn{border:0;border-radius:13px;padding:12px 14px;font-weight:900;background:linear-gradient(120deg,var(--gold),var(--orange));color:#16100a}.btn.alt{background:#2d1d3b;color:#fff;border:1px solid var(--line)}.btn.small{padding:8px 10px;font-size:12px}.muted{color:var(--muted);font-size:13px}.ok{color:var(--ok)}.bad{color:var(--bad)}.metric{background:#120d19;border:1px solid #3d2b4b;border-radius:15px;padding:14px}.metric b{font-size:24px;display:block}.statusline{display:flex;align-items:center;gap:8px;margin:12px 0}.dot{width:18px;height:18px;border-radius:50%;border:2px solid #7c6b84;background:#1b1321}.dot.on{background:var(--gold);border-color:var(--gold);box-shadow:0 0 15px #ffd43b88}.statusline span{font-weight:800}.challenge{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #ffffff17}.progress{height:9px;background:#2c1f35;border-radius:999px;overflow:hidden;margin-top:7px}.progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--orange))}.scratch{min-height:145px;border-radius:18px;background:repeating-linear-gradient(45deg,#8b6f2b,#8b6f2b 12px,#b89743 12px,#b89743 24px);display:flex;align-items:center;justify-content:center;text-align:center;color:#1a1103;font-weight:1000;font-size:24px;padding:18px;cursor:pointer;user-select:none}.scratch.revealed{background:#16101e;color:#fff;border:1px dashed var(--gold)}.lesson{padding:13px;border:1px solid #3b2a49;border-radius:14px;margin:10px 0}.lesson.done{border-color:#2f855a;background:#123221}.tiny{font-size:12px;color:#baaac5}.badge{display:inline-block;border:1px solid #665076;border-radius:999px;padding:4px 8px;margin:3px;font-size:11px}.list{margin:8px 0 0;padding-left:20px}.summarybox{padding:12px;border-radius:14px;background:#100b16;border:1px solid #3b2a49;margin-top:10px}.flowstep{border:1px solid #4b315d;border-radius:16px;background:#120d19;margin:10px 0;overflow:hidden}.flowstep>summary{cursor:pointer;list-style:none;padding:14px 15px;font-weight:900;display:flex;align-items:center;justify-content:space-between;gap:10px}.flowstep>summary::-webkit-details-marker{display:none}.flowstep>summary:after{content:"＋";font-size:18px;color:var(--gold)}.flowstep[open]>summary:after{content:"−"}.flowbody{padding:0 14px 14px}.stepnum{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:50%;background:linear-gradient(120deg,var(--gold),var(--orange));color:#16100a;font-size:12px;font-weight:1000;margin-right:8px}.stickytotal{position:sticky;bottom:8px;z-index:4;background:#171022;border:1px solid #6a4a7c;box-shadow:0 10px 30px #0008}
+.training-video{border:1px solid #4b315d;border-radius:16px;background:#0f0a15;overflow:hidden;margin:10px 0}
+.training-stage{min-height:180px;padding:20px;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;background:radial-gradient(circle at top,#2a1637,#0f0a15 70%)}
+.training-scene{animation:trainIn .55s ease both}
+.training-scene .emoji{font-size:44px;display:block;margin-bottom:10px;animation:floaty 2s ease-in-out infinite}
+.training-scene h3{margin:4px 0 8px;font-size:21px}.training-scene p{margin:0;color:#d8cce0}
+.training-controls{padding:12px;border-top:1px solid #ffffff17;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.video-progress{height:7px;background:#2c1f35;border-radius:999px;overflow:hidden;flex:1;min-width:120px}.video-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));transition:width .3s}
+@keyframes trainIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @media(max-width:680px){.grid{grid-template-columns:1fr}.top{display:block}.pill{display:inline-block;margin-top:8px}}
 </style>
 </head>
@@ -685,43 +694,117 @@ const initialCounts=challengeCounts();
 $('challengeSyncStatus').innerHTML='<b>'+initialCounts.orders+' qualifying collected order(s) counted.</b><br><span class="tiny">Standalone test feed. Live integration will use the signed-in customer\'s collection_orders history.</span>';
 renderChallenges();maybeEarnScratch();saveChallenges();
 
-const TRAINKEY='dexters_growth_staff_training_test_v2';
+const TRAINKEY='dexters_growth_staff_training_test_v3';
 const lessons=[
- {title:"Dexter's menu & modifiers",text:"Know the main menu categories, required modifiers and how to check an item before confirming an order.",q:"If an item has a required modifier, what should staff do?",answers:["Skip it if busy","Make sure the required choice is selected","Choose one for the customer"],correct:1},
- {title:"Allergens & customer safety",text:"Never guess allergen information. Use Dexter's recorded allergen information and escalate anything uncertain before serving.",q:"What should you do if you are unsure about an allergen?",answers:["Guess from the ingredients","Tell the customer it is probably fine","Check the recorded information and ask a manager if still unsure"],correct:2},
- {title:"Loyalty points and rewards",text:"Points and rewards must follow the app flow. Do not manually promise or issue an unapproved reward.",q:"When should a reward be given?",answers:["Whenever a customer asks","Only when the app/staff process shows it is valid","At the end of every order"],correct:1},
- {title:"KDS order handling",text:"Read the full ticket, modifiers and notes. Keep the status accurate so the customer tracking remains correct.",q:"Why should KDS status be kept accurate?",answers:["It only changes the screen colour","It keeps staff and customer tracking correct","It is optional"],correct:1},
- {title:"Opening & closing basics",text:"Follow Dexter's current opening/closing checklist and confirm any issue that could affect food safety, orders or equipment.",q:"What should happen if an opening check finds a problem?",answers:["Ignore it until later","Record/escalate it before it causes service or safety issues","Delete the checklist"],correct:1},
- {title:"Customer service & complaints",text:"Stay calm, listen, record what happened and involve a manager where a refund, safety concern or escalation is required.",q:"What is the best first response to a complaint?",answers:["Argue your side","Listen and understand what happened","Promise a refund immediately"],correct:1}
+ {title:"Dexter's menu & modifiers",icon:"🍔",scenes:[
+  ["Welcome to Dexter's menu training","Every order starts with reading the full item, category and modifiers."],
+  ["Required choices matter","If the app asks for a required modifier, make sure the customer has selected it before confirming."],
+  ["Check the whole ticket","Read size, side, sauce, removals and notes before the order moves on."],
+  ["Final check","Never choose a required option for the customer unless they have clearly told you what they want."]
+ ],questions:[
+  ["If an item has a required modifier, what should staff do?",["Skip it if busy","Make sure the required choice is selected","Choose one for the customer"],1],
+  ["What should you check before confirming an order?",["Only the item name","Item, modifiers, removals and notes","Only the price"],1],
+  ["If a required choice is missing, what is best?",["Confirm anyway","Ask the customer to choose","Pick the cheapest option"],1]
+ ]},
+ {title:"Allergens & customer safety",icon:"⚠️",scenes:[
+  ["Allergens are a safety issue","Never guess, assume or rely on memory when a customer asks about allergens."],
+  ["Use recorded information","Check Dexter's recorded allergen information for the exact product or recipe."],
+  ["If anything is uncertain","Ask a manager and explain that cross-contact can be possible in the same kitchen."],
+  ["Do not promise 'allergen free'","Only give information that Dexter's records and product labels actually support."]
+ ],questions:[
+  ["What should you do if you are unsure about an allergen?",["Guess from ingredients","Say it is probably fine","Check recorded information and ask a manager"],2],
+  ["Should staff promise food is allergen-free?",["Yes, if it looks safe","No","Only at breakfast"],1],
+  ["Why should cross-contact be mentioned?",["Because food is prepared in the same kitchen","Because it makes the menu longer","It should never be mentioned"],0]
+ ]},
+ {title:"Loyalty points and rewards",icon:"🎁",scenes:[
+  ["Follow the app","Points and rewards must use Dexter's approved app flow."],
+  ["No manual promises","Do not invent, promise or issue an unapproved reward."],
+  ["Check status first","Make sure the reward is valid and available before redemption."],
+  ["Complete the proper flow","Only approved or valid rewards should be given to the customer."]
+ ],questions:[
+  ["When should a reward be given?",["Whenever asked","Only when the app/staff flow shows it is valid","At every visit"],1],
+  ["Can staff invent a reward?",["Yes","No","Only if under £5"],1],
+  ["What should staff check before redemption?",["Reward validity/status","Weather","Customer's phone model"],0]
+ ]},
+ {title:"KDS order handling",icon:"🧾",scenes:[
+  ["Read before acting","Check the complete KDS ticket, including modifiers and notes."],
+  ["Keep statuses accurate","Accepted, preparing and ready statuses should match what is really happening."],
+  ["Tracking depends on it","Customer live tracking relies on correct KDS status."],
+  ["Do not mark ready early","Only mark an order ready when it is actually ready for collection."]
+ ],questions:[
+  ["Why should KDS status be kept accurate?",["Only for screen colour","For staff and customer tracking","It is optional"],1],
+  ["When should an order be marked ready?",["When cooking starts","When actually ready for collection","As soon as accepted"],1],
+  ["What must staff read on a KDS ticket?",["Only customer name","Full ticket, modifiers and notes","Only total"],1]
+ ]},
+ {title:"Opening & closing basics",icon:"🔐",scenes:[
+  ["Start with the checklist","Follow Dexter's current opening checklist before service."],
+  ["Spot problems early","Equipment, food-safety or order-system issues should be recorded and escalated."],
+  ["Closing matters too","Complete the current closing checks rather than assuming the next shift will do them."],
+  ["Escalate anything unsafe","If a problem could affect safety or service, tell the responsible manager."]
+ ],questions:[
+  ["What should happen if an opening check finds a problem?",["Ignore it","Record/escalate it","Delete the checklist"],1],
+  ["Why complete closing checks?",["To leave issues for next shift","To make sure the site is left correctly","They are optional"],1],
+  ["What kind of problem needs escalation?",["Anything affecting safety/service","Only cosmetic issues","Nothing"],0]
+ ]},
+ {title:"Customer service & complaints",icon:"💬",scenes:[
+  ["Listen first","Let the customer explain what happened without arguing."],
+  ["Stay calm and factual","Confirm what you understand and avoid making promises you cannot authorise."],
+  ["Escalate when needed","Refunds, food-safety concerns and serious complaints should involve a manager."],
+  ["Record the outcome","Make sure the issue and agreed resolution are captured correctly."]
+ ],questions:[
+  ["What is the best first response to a complaint?",["Argue","Listen and understand","Promise a refund"],1],
+  ["When should a manager be involved?",["Never","Refund/safety/serious escalation","Only for compliments"],1],
+  ["Should staff promise an unauthorised refund?",["Yes","No","Always"],1]
+ ]}
 ];
-let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{}};
-try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState=saved}catch(e){}
+let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{}};
+try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState={...trainState,...saved}}catch(e){}
+let videoScene={},videoTimers={};
 function saveTraining(){localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderLessons();renderTrainingManager()}
 function completedCount(){return Object.values(trainState.completed||{}).filter(Boolean).length}
+function stopVideo(i){if(videoTimers[i]){clearInterval(videoTimers[i]);delete videoTimers[i]}}
+function renderVideo(i){
+ const l=lessons[i],scene=videoScene[i]||0,watched=!!trainState.watched[i],pct=watched?100:Math.round((scene/(l.scenes.length-1))*100);
+ const stage=$('trainVideo'+i);if(!stage)return;
+ const s=l.scenes[Math.min(scene,l.scenes.length-1)];
+ stage.innerHTML='<div class="training-stage"><div class="training-scene"><span class="emoji">'+l.icon+'</span><h3>'+s[0]+'</h3><p>'+s[1]+'</p></div></div><div class="training-controls"><button class="btn small" onclick="playTrainingVideo('+i+')">'+(videoTimers[i]?'Playing…':'▶ Play')+'</button><div class="video-progress"><i style="width:'+pct+'%"></i></div><span class="tiny">'+(Math.min(scene+1,l.scenes.length))+'/'+l.scenes.length+'</span></div>';
+}
+window.playTrainingVideo=i=>{
+ stopVideo(i);videoScene[i]=0;renderVideo(i);
+ videoTimers[i]=setInterval(()=>{
+  videoScene[i]++;
+  if(videoScene[i]>=lessons[i].scenes.length){
+   stopVideo(i);videoScene[i]=lessons[i].scenes.length-1;trainState.watched[i]=true;localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderLessons();return;
+  }
+  renderVideo(i);
+ },3500);
+};
+function quizMarkup(l,i){
+ return '<div class="summarybox"><b>Knowledge test — pass mark 80%</b><p class="tiny">Watch the animated lesson first. Then answer all '+l.questions.length+' questions.</p>'+l.questions.map((q,qi)=>'<div class="field"><b>'+(qi+1)+'. '+q[0]+'</b><select id="trainAnswer'+i+'_'+qi+'"><option value="">Choose an answer</option>'+q[1].map((a,ai)=>'<option value="'+ai+'">'+a+'</option>').join('')+'</select></div>').join('')+'<button class="btn small" onclick="checkLesson('+i+')">Submit test</button><div id="trainFeedback'+i+'" class="tiny"></div></div>';
+}
 function renderLessons(){
- $('trainStaffName').value=trainState.staffName||'';
- $('trainRole').value=trainState.role||'Staff';
+ $('trainStaffName').value=trainState.staffName||'';$('trainRole').value=trainState.role||'Staff';
  $('lessonList').innerHTML=lessons.map((l,i)=>{
-   const done=!!trainState.completed[i],attempts=(trainState.attempts&&trainState.attempts[i])||0;
-   return '<div class="lesson '+(done?'done':'')+'"><b>'+l.title+'</b><p class="muted">'+l.text+'</p>'+(done?'<span class="ok">Completed ✓</span><p class="tiny">Knowledge check passed'+(attempts?' after '+attempts+' attempt(s)':'')+'.</p>':'<div class="field">'+l.q+'<select id="trainAnswer'+i+'"><option value="">Choose an answer</option>'+l.answers.map((a,ix)=>'<option value="'+ix+'">'+a+'</option>').join('')+'</select></div><button class="btn small" onclick="checkLesson('+i+')">Submit answer</button><div id="trainFeedback'+i+'" class="tiny"></div>')+'</div>';
+  const done=!!trainState.completed[i],watched=!!trainState.watched[i],attempts=trainState.attempts[i]||0,score=trainState.scores[i];
+  return '<div class="lesson '+(done?'done':'')+'"><b>'+l.icon+' '+l.title+'</b><p class="muted">'+(done?'Completed':'Animated lesson + knowledge test')+'</p><div class="training-video" id="trainVideo'+i+'"></div>'+(watched?(done?'<div class="summarybox"><span class="ok"><b>Passed ✓</b></span><br><span class="tiny">Score '+score+'% · '+attempts+' attempt(s)</span></div>':quizMarkup(l,i)):'<p class="tiny">Finish the animated lesson to unlock the test.</p>')+'</div>';
  }).join('');
- const done=completedCount();
- $('trainDone').textContent=done+' / '+lessons.length;
- $('trainStatus').innerHTML=done===lessons.length?'<span class="ok"><b>All training completed.</b></span>':'<b>'+(lessons.length-done)+' module(s) remaining.</b><br><span class="muted">A module only counts as complete after the knowledge check is passed.</span>';
+ lessons.forEach((_,i)=>renderVideo(i));
+ const done=completedCount();$('trainDone').textContent=done+' / '+lessons.length;
+ $('trainStatus').innerHTML=done===lessons.length?'<span class="ok"><b>All training completed.</b></span>':'<b>'+(lessons.length-done)+' module(s) remaining.</b><br><span class="muted">Each module requires the animated lesson and an 80% test score.</span>';
 }
 window.checkLesson=i=>{
- const sel=$('trainAnswer'+i);if(!sel||sel.value===''){return}
- trainState.attempts=trainState.attempts||{};trainState.attempts[i]=(trainState.attempts[i]||0)+1;
- if(Number(sel.value)===lessons[i].correct){
-   trainState.completed=trainState.completed||{};trainState.completed[i]=true;saveTraining();
- }else{
-   $('trainFeedback'+i).innerHTML='<span class="bad">Not quite — review the lesson and try again.</span>';
-   localStorage.setItem(TRAINKEY,JSON.stringify(trainState));
- }
+ const l=lessons[i];if(!trainState.watched[i])return;
+ let correct=0,answered=0;
+ l.questions.forEach((q,qi)=>{const el=$('trainAnswer'+i+'_'+qi);if(el&&el.value!==''){answered++;if(Number(el.value)===q[2])correct++}});
+ const feedback=$('trainFeedback'+i);if(answered<l.questions.length){feedback.innerHTML='<span class="bad">Answer every question before submitting.</span>';return}
+ trainState.attempts[i]=(trainState.attempts[i]||0)+1;
+ const score=Math.round(correct/l.questions.length*100);trainState.scores[i]=score;
+ if(score>=80){trainState.completed[i]=true;saveTraining()}
+ else{feedback.innerHTML='<span class="bad">Score '+score+'%. You need 80% to pass. Review the lesson and try again.</span>';localStorage.setItem(TRAINKEY,JSON.stringify(trainState))}
 };
 function renderTrainingManager(){
  const done=completedCount(),pct=Math.round(done/lessons.length*100);
- $('trainManager').innerHTML='<div class="summarybox"><b>'+String(trainState.staffName||'Unnamed staff')+'</b><br><span class="muted">'+trainState.role+' · '+done+'/'+lessons.length+' complete</span><div class="progress"><i style="width:'+pct+'%"></i></div><p class="tiny">'+(done===lessons.length?'Training complete':'Training still in progress')+'</p></div>';
+ $('trainManager').innerHTML='<div class="summarybox"><b>'+String(trainState.staffName||'Unnamed staff')+'</b><br><span class="muted">'+trainState.role+' · '+done+'/'+lessons.length+' complete</span><div class="progress"><i style="width:'+pct+'%"></i></div>'+lessons.map((l,i)=>'<div class="tiny">'+(trainState.completed[i]?'✓':'○')+' '+l.title+(trainState.scores[i]!=null?' — '+trainState.scores[i]+'%':'')+'</div>').join('')+'</div>';
 }
 $('trainStaffName').addEventListener('change',()=>{trainState.staffName=$('trainStaffName').value.trim()||'Unnamed staff';saveTraining()});
 $('trainRole').addEventListener('change',()=>{trainState.role=$('trainRole').value;saveTraining()});
