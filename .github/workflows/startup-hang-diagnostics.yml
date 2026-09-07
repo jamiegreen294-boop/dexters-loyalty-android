@@ -1,0 +1,53 @@
+name: Startup hang diagnostics
+on:
+  push:
+    paths:
+      - '.github/workflows/startup-hang-diagnostics.yml'
+  workflow_dispatch:
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm run build
+      - run: |
+          npm install playwright@1.55.0 >/dev/null 2>&1
+          npx playwright install chromium >/dev/null 2>&1
+      - name: Diagnose browser hang
+        run: |
+          python3 -m http.server 4173 -d dist >/tmp/http.log 2>&1 &
+          node <<'NODE'
+          const { chromium }=require('playwright');
+          async function test(label,opts={}){
+            const browser=await chromium.launch({headless:true});
+            const context=await browser.newContext({javaScriptEnabled:opts.js!==false});
+            const page=await context.newPage();
+            if(opts.abortExternal){
+              await page.route('**/*',route=>{
+                const u=new URL(route.request().url());
+                if(u.hostname!=='127.0.0.1') return route.abort();
+                return route.continue();
+              });
+            }
+            const events=[];
+            for(const ev of ['domcontentloaded','load']) page.on(ev,()=>events.push(ev));
+            const errs=[]; page.on('pageerror',e=>errs.push(String(e)));
+            let nav='ok';
+            try{await page.goto('http://127.0.0.1:4173/',{waitUntil:'commit',timeout:8000});}catch(e){nav=e.name+':'+e.message}
+            await page.waitForTimeout(5000);
+            let ready='ERR',htmlLen=-1,bodyLen=-1;
+            try{ready=await page.evaluate(()=>document.readyState)}catch(e){ready='EVAL_TIMEOUT'}
+            try{htmlLen=(await page.content()).length}catch(e){}
+            try{bodyLen=(await page.locator('body').innerText({timeout:1000})).length}catch(e){}
+            console.log(label,JSON.stringify({nav,events,ready,htmlLen,bodyLen,errs:errs.slice(0,10)}));
+            await browser.close();
+          }
+          (async()=>{
+            await test('JS_OFF',{js:false});
+            await test('JS_ON_ABORT_EXTERNAL',{abortExternal:true});
+            await test('JS_ON_NORMAL',{});
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
