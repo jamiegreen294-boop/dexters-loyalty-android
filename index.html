@@ -358,7 +358,13 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 
 <section class="panel" id="leave">
 <div class="card notice"><b>Leave, Availability & Shift Swaps</b><p class="muted">Staff self-service requests with manager approval, contract-based holiday entitlement and audit history.</p></div>
-<div class="card" style="margin-bottom:14px"><h2>Holiday entitlement & balance</h2><div class="field">Staff member<select id="holidayBalanceStaff"></select></div><div id="holidayBalanceCard"></div></div>
+<div class="card" style="margin-bottom:14px"><h2>Holiday entitlement & balance</h2><div class="field">Staff member<select id="holidayBalanceStaff"></select></div><div id="holidayBalanceCard"></div>
+<div class="summarybox"><b>Holiday adjustment</b><br><span class="muted">Manager/Super User only. Every adjustment is logged.</span></div>
+<div class="grid"><div class="field">Adjustment amount<input id="holidayAdjustAmount" type="number" step="0.01" placeholder="+ or -"></div><div class="field">Unit<select id="holidayAdjustUnit"><option>hours</option><option>days</option></select></div></div>
+<div class="field">Reason<input id="holidayAdjustReason" placeholder="Correction / carry-over / contractual adjustment"></div>
+<button class="btn alt" id="holidayAdjustAdd">Add adjustment</button>
+</div>
+<div class="card" style="margin-bottom:14px"><h2>Holiday ledger</h2><div id="holidayLedger"></div></div>
 <div class="grid">
 <div class="card"><h2>Holiday / leave request</h2>
 <div class="field">Staff<select id="leaveStaff"></select></div>
@@ -1299,7 +1305,7 @@ let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing no
 const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
 let dexManage={
  tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
- recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],paySettings:{},payrollRuns:[],payrollAudit:[]
+ recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],holidayLedger:[],paySettings:{},payrollRuns:[],payrollAudit:[]
 };
 try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
 function saveDexManage(){localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));renderDexManagement()}
@@ -1636,7 +1642,7 @@ function renderLeave(){
  if($('swapShift'))$('swapShift').innerHTML=dexManage.rota.map((r,i)=>({r,i})).filter(x=>x.r.staffId===myId).map(x=>'<option value="'+x.i+'">'+x.r.date+' · '+x.r.start+'–'+x.r.end+'</option>').join('');
  if($('swapRequests'))$('swapRequests').innerHTML=(dexManage.shiftSwaps||[]).map((r,i)=>'<div class="summarybox"><b>'+staffNameById(r.fromStaff)+' → '+staffNameById(r.toStaff)+'</b><br><span class="badge">'+r.status+'</span><span class="muted"> · '+r.shiftDate+'</span><br><span class="tiny">'+r.reason+'</span>'+((roleRank(CURRENT_STAFF_ROLE)>=3&&r.status==='Pending manager approval')?'<div class="row"><button class="btn alt small" onclick="decideSwap('+i+',true)">Approve</button><button class="btn alt small" onclick="decideSwap('+i+',false)">Reject</button></div>':'')+'</div>').join('')||'<span class="muted">No swap requests.</span>';
 }
-window.decideLeave=(i,ok)=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return;const r=dexManage.leaveRequests[i];if(!r)return;r.status=ok?'Approved':'Rejected';r.decidedAt=new Date().toISOString();if(ok&&typeof staffDb!=='undefined'){const s=staffDb.staff.find(x=>x.id===r.staffId);if(s){s.absences=s.absences||[];s.absences.unshift({type:r.type,from:r.from,to:r.to,note:r.note})}}notifyStaff(r.staffId,'Leave request '+r.status,r.from+' to '+r.to,'Leave');addTimeline('Leave',staffNameById(r.staffId)+' leave '+r.status.toLowerCase());saveDexManage();if(typeof saveStaffDb==='function')saveStaffDb()};
+window.decideLeave=(i,ok)=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return;const r=dexManage.leaveRequests[i];if(!r)return;r.status=ok?'Approved':'Rejected';r.decidedAt=new Date().toISOString();addHolidayLedger({staffId:r.staffId,kind:'Leave request',status:r.status,unit:holidayBalanceForStaff((typeof staffDb!=='undefined'?staffDb.staff.find(x=>x.id===r.staffId):null)||{}).unit,amount:0,description:r.type+' '+r.from+' → '+r.to,reason:r.note||'',by:CURRENT_STAFF_ROLE,effectiveDate:r.from});if(ok&&typeof staffDb!=='undefined'){const s=staffDb.staff.find(x=>x.id===r.staffId);if(s){s.absences=s.absences||[];s.absences.unshift({type:r.type,from:r.from,to:r.to,note:r.note})}}notifyStaff(r.staffId,'Leave request '+r.status,r.from+' to '+r.to,'Leave');addTimeline('Leave',staffNameById(r.staffId)+' leave '+r.status.toLowerCase());saveDexManage();if(typeof saveStaffDb==='function')saveStaffDb()};
 window.decideSwap=(i,ok)=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return;const r=dexManage.shiftSwaps[i];if(!r)return;r.status=ok?'Approved':'Rejected';if(ok&&dexManage.rota[r.shiftIndex]){dexManage.rota[r.shiftIndex].staffId=r.toStaff;notifyStaff(r.fromStaff,'Shift swap approved',r.shiftDate,'Rota');notifyStaff(r.toStaff,'New shift assigned',r.shiftDate,'Rota')}addTimeline('Rota','Shift swap '+r.status.toLowerCase());saveDexManage()};
 function renderInbox(){
  staffOptions('inboxStaff');
@@ -1713,11 +1719,11 @@ function approvedHolidayUsed(s){
  const avgDay=s.contractDays?Number(s.contractHours||0)/Number(s.contractDays||1):0;
  return req.reduce((n,r)=>n+daysBetweenInclusive(r.from,r.to)*avgDay,0);
 }
-function holidayBalanceForStaff(s){const h=statutoryHolidayForStaff(s),used=approvedHolidayUsed(s);return {...h,used,balance:Math.max(0,h.accrued-used)}}
+function holidayBalanceForStaff(s){const h=statutoryHolidayForStaff(s),used=approvedHolidayUsed(s),adjustment=holidayAdjustmentTotal(s.id,h.unit,h.bounds);return {...h,used,adjustment,balance:Math.max(0,h.accrued+adjustment-used)}}
 function renderStaffHolidaySummary(s){
  if(!$('sdHolidaySummary')||!s)return;
  const h=holidayBalanceForStaff(s),u=h.unit;
- $('sdHolidaySummary').innerHTML='<b>Holiday entitlement</b><br><span class="badge">'+s.contractType+'</span><br><span class="muted">Leave year '+h.bounds.start+' → '+h.bounds.end+'</span><br><b>'+h.accrued.toFixed(2)+' '+u+' accrued / entitled to date</b><br><span class="tiny">'+h.used.toFixed(2)+' '+u+' approved · '+h.balance.toFixed(2)+' '+u+' remaining · '+h.method+'</span>';
+ $('sdHolidaySummary').innerHTML='<b>Holiday entitlement</b><br><span class="badge">'+s.contractType+'</span><br><span class="muted">Leave year '+h.bounds.start+' → '+h.bounds.end+'</span><br><b>'+h.accrued.toFixed(2)+' '+u+' accrued / entitled to date</b><br><span class="tiny">'+h.used.toFixed(2)+' '+u+' approved · '+(h.adjustment>=0?'+':'')+h.adjustment.toFixed(2)+' '+u+' adjustments · '+h.balance.toFixed(2)+' '+u+' remaining · '+h.method+'</span>';
 }
 function renderHolidayBalance(){
  staffOptions('holidayBalanceStaff');
@@ -1725,7 +1731,7 @@ function renderHolidayBalance(){
  if(!$('holidayBalanceCard'))return;
  if(!s){$('holidayBalanceCard').innerHTML='<span class="muted">Choose a staff member.</span>';return}
  const h=holidayBalanceForStaff(s);
- $('holidayBalanceCard').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Accrued / entitled</span><b>'+h.accrued.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div><div class="bo-kpi"><span class="muted">Approved leave</span><b>'+h.used.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div><div class="bo-kpi"><span class="muted">Remaining</span><b>'+h.balance.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div></div><div class="summarybox"><span class="muted">'+h.bounds.start+' → '+h.bounds.end+' · '+h.method+'</span></div>';
+ $('holidayBalanceCard').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Accrued / entitled</span><b>'+h.accrued.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div><div class="bo-kpi"><span class="muted">Approved leave</span><b>'+h.used.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div><div class="bo-kpi"><span class="muted">Adjustments</span><b>'+(h.adjustment>=0?'+':'')+h.adjustment.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div><div class="bo-kpi"><span class="muted">Remaining</span><b>'+h.balance.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div></div><div class="summarybox"><span class="muted">'+h.bounds.start+' → '+h.bounds.end+' · '+h.method+'</span></div>';
 }
 function renderStock(){
  if(!$('stockList'))return;
@@ -1777,9 +1783,26 @@ function publishRotaWeek(){
  addTimeline('Rota','Rota published '+start+' → '+e);saveDexManage();
 }
 function payrollRunLocked(r){return ['Ready for HMRC Submission','Submitted to HMRC','Finalised'].includes(r.status)||!!r.lockedAt}
+
+function holidayLedgerEntries(staffId){
+ return (dexManage.holidayLedger||[]).filter(x=>x.staffId===staffId).sort((a,b)=>new Date(b.at)-new Date(a.at));
+}
+function holidayAdjustmentTotal(staffId,unit,bounds){
+ return holidayLedgerEntries(staffId).filter(x=>x.kind==='Adjustment'&&x.unit===unit&&(!bounds||((x.effectiveDate||x.at.slice(0,10))>=bounds.start&&(x.effectiveDate||x.at.slice(0,10))<=bounds.end))).reduce((n,x)=>n+Number(x.amount||0),0);
+}
+function addHolidayLedger(entry){
+ dexManage.holidayLedger=dexManage.holidayLedger||[];
+ dexManage.holidayLedger.unshift({id:'hol-'+Date.now()+'-'+Math.random(),at:new Date().toISOString(),...entry});
+ dexManage.holidayLedger=dexManage.holidayLedger.slice(0,1000);
+}
+function renderHolidayLedger(){
+ const box=$('holidayLedger');if(!box)return;
+ const id=$('holidayBalanceStaff')?.value||CURRENT_SHIFT_STAFF_ID;
+ box.innerHTML=holidayLedgerEntries(id).map(x=>'<div class="summarybox"><b>'+x.kind+'</b><br><span class="badge">'+(x.status||x.unit||'Record')+'</span><span class="muted"> '+(x.amount!=null?(Number(x.amount)>=0?'+':'')+Number(x.amount).toFixed(2)+' '+(x.unit||''):'')+'</span><br><span class="tiny">'+(x.reason||x.description||'')+' · '+new Date(x.at).toLocaleString()+' · '+(x.by||'System')+'</span></div>').join('')||'<span class="muted">No holiday ledger entries yet.</span>';
+}
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
- staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderPayroll();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderPayroll();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
@@ -1829,7 +1852,7 @@ if($('buildWeeklyPayroll'))$('buildWeeklyPayroll').onclick=()=>{
 };
 
 if($('buildTimesheets'))$('buildTimesheets').onclick=()=>{const start=$('timesheetStart').value,end=$('timesheetEnd').value;if(!start||!end)return alert('Choose a week start and end.');dexManage.timesheets.unshift({id:'ts-'+Date.now(),start,end,rows:buildTimesheetRows(start,end),createdAt:new Date().toISOString()});addTimeline('Timesheet','Weekly timesheets built '+start+' → '+end);saveDexManage()};
-if($('leaveRequest'))$('leaveRequest').onclick=()=>{const staffId=$('leaveStaff').value,from=$('leaveFrom').value,to=$('leaveTo').value;if(!staffId||!from||!to)return alert('Choose staff and dates.');dexManage.leaveRequests.unshift({id:'lv-'+Date.now(),staffId,from,to,type:$('leaveType').value,note:$('leaveNote').value.trim(),status:'Pending',at:new Date().toISOString()});notifyRole('Manager','Leave request',staffNameById(staffId)+' requested '+from+' to '+to,'Leave');addTimeline('Leave',staffNameById(staffId)+' submitted leave request');saveDexManage()};
+if($('leaveRequest'))$('leaveRequest').onclick=()=>{const staffId=$('leaveStaff').value,from=$('leaveFrom').value,to=$('leaveTo').value;if(!staffId||!from||!to)return alert('Choose staff and dates.');dexManage.leaveRequests.unshift({id:'lv-'+Date.now(),staffId,from,to,type:$('leaveType').value,note:$('leaveNote').value.trim(),status:'Pending',at:new Date().toISOString()});addHolidayLedger({staffId,kind:'Leave request',status:'Pending',unit:'',amount:0,description:$('leaveType').value+' '+from+' → '+to,reason:$('leaveNote').value.trim(),by:CURRENT_STAFF_ROLE,effectiveDate:from});notifyRole('Manager','Leave request',staffNameById(staffId)+' requested '+from+' to '+to,'Leave');addTimeline('Leave',staffNameById(staffId)+' submitted leave request');saveDexManage()};
 const AVAIL_DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 if($('availabilityDays'))$('availabilityDays').innerHTML=AVAIL_DAYS.map(d=>'<label><input type="checkbox" value="'+d+'">'+d+'</label>').join('');
 if($('availabilitySave'))$('availabilitySave').onclick=()=>{const id=$('availabilityStaff').value;if(!id)return;dexManage.availability[id]={days:[...$('availabilityDays').querySelectorAll('input:checked')].map(x=>x.value),hours:$('availabilityHours').value.trim(),note:$('availabilityNote').value.trim(),updatedAt:new Date().toISOString()};addTimeline('Availability',staffNameById(id)+' availability updated');saveDexManage()};
@@ -1845,7 +1868,7 @@ if($('formCreate'))$('formCreate').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super U
 if($('globalSearchInput'))$('globalSearchInput').oninput=renderGlobalSearch;
 if($('eqServiceAdd'))$('eqServiceAdd').onclick=()=>{const i=Number($('eqServiceEquipment').value),e=dexManage.equipment[i];if(!e)return;dexManage.equipmentService.unshift({equipmentIndex:i,equipmentName:e.name,date:$('eqServiceDate').value||new Date().toISOString().slice(0,10),engineer:$('eqServiceEngineer').value.trim(),work:$('eqServiceWork').value.trim(),cost:Number($('eqServiceCost').value||0),at:new Date().toISOString()});addTimeline('Maintenance',e.name+' service history updated');saveDexManage()};
 
-if($('holidayBalanceStaff'))$('holidayBalanceStaff').onchange=renderHolidayBalance;
+if($('holidayBalanceStaff'))$('holidayBalanceStaff').onchange=()=>{renderHolidayBalance();renderHolidayLedger()};
 if($('publishRotaWeek'))$('publishRotaWeek').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');publishRotaWeek()};
 if($('stockSave'))$('stockSave').onclick=()=>{const name=$('stockName').value.trim();if(!name)return;dexManage.stock.unshift({name,qty:Number($('stockQty').value||0),unit:$('stockUnit').value.trim(),low:Number($('stockLow').value||0),cost:Number($('stockCost').value||0),out:$('stockOut').checked,at:new Date().toISOString()});addTimeline('Stock',name+' stock record added');saveDexManage()};
 if($('wasteAdd'))$('wasteAdd').onclick=()=>{const i=Number($('wasteStock').value),item=dexManage.stock[i];if(!item)return;const q=Number($('wasteQty').value||0);item.qty=Math.max(0,Number(item.qty)-q);dexManage.waste.unshift({itemIndex:i,itemName:item.name,qty:q,reason:$('wasteReason').value,note:$('wasteNote').value.trim(),at:new Date().toISOString()});addTimeline('Waste',item.name+' · '+q+' '+item.unit);saveDexManage()};
@@ -1862,6 +1885,17 @@ if($('errorAdd'))$('errorAdd').onclick=()=>{const msg=$('errorMessage').value.tr
 if($('backupExport'))$('backupExport').onclick=()=>{const backup={version:1,createdAt:new Date().toISOString(),management:dexManage,staff:typeof staffDb!=='undefined'?staffDb:null,customers:typeof customerDb!=='undefined'?customerDb:null};$('backupOutput').value=JSON.stringify(backup,null,2)};
 if($('backupImport'))$('backupImport').onchange=e=>{const file=e.target.files?.[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const b=JSON.parse(rd.result);if(!b.management)throw new Error('Invalid backup');dexManage=b.management;localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));if(b.staff&&typeof staffDb!=='undefined'){staffDb=b.staff;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb))}if(b.customers&&typeof customerDb!=='undefined'){customerDb=b.customers;localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb))}location.reload()}catch(err){alert('Backup could not be restored: '+err.message)}};rd.readAsText(file)};
 [['purchaseDate',0],['salesDate',0],['cashDate',0]].forEach(([id,add])=>{const el=$(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
+
+if($('holidayAdjustAdd'))$('holidayAdjustAdd').onclick=()=>{
+ if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
+ const staffId=$('holidayBalanceStaff').value,amount=Number($('holidayAdjustAmount').value||0),unit=$('holidayAdjustUnit').value,reason=$('holidayAdjustReason').value.trim();
+ if(!staffId||!amount||!reason)return alert('Choose staff, enter an adjustment amount and give a reason.');
+ const s=typeof staffDb!=='undefined'?staffDb.staff.find(x=>x.id===staffId):null;if(!s)return;
+ const expected=holidayBalanceForStaff(s).unit;if(unit!==expected)return alert('This staff member’s holiday balance is currently tracked in '+expected+'.');
+ addHolidayLedger({staffId,kind:'Adjustment',status:'Applied',unit,amount,reason,description:'Manual holiday balance adjustment',by:CURRENT_STAFF_ROLE,effectiveDate:new Date().toISOString().slice(0,10)});
+ addTimeline('Holiday',staffNameById(staffId)+' holiday adjusted '+(amount>=0?'+':'')+amount+' '+unit);
+ $('holidayAdjustAmount').value='';$('holidayAdjustReason').value='';saveDexManage();
+};
 const myShiftStaffSel=$('myShiftStaff');if(myShiftStaffSel)myShiftStaffSel.onchange=()=>{CURRENT_SHIFT_STAFF_ID=myShiftStaffSel.value;localStorage.setItem('dexters_test_current_shift_staff',CURRENT_SHIFT_STAFF_ID);renderMyShifts()};
 
 if($('payStaff'))$('payStaff').onchange=loadPaySetting;
@@ -2258,7 +2292,7 @@ $('staffSaveProfile').onclick=()=>{
  s.name=$('sdName').value.trim()||'Unnamed staff';
  if(CURRENT_STAFF_ROLE==='Super User'){s.role=$('sdRole').value}else{$('sdRole').value=s.role}
  s.status=$('sdStatus').value;s.start=$('sdStart').value;s.leavingDate=s.status==='No Longer Employed'?$('sdLeavingDate').value:'';s.leavingReason=s.status==='No Longer Employed'?$('sdLeavingReason').value:'';s.contractType=$('sdContractType').value;s.contractDays=Number($('sdContractDays').value||0);s.contractHours=Number($('sdContractHours').value||0);s.leaveYearStart=$('sdLeaveYearStart').value;s.holidayWeeks=Math.max(5.6,Number($('sdHolidayWeeks').value||5.6));s.bankHolidaysIncluded=$('sdBankHolidaysIncluded').checked;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');s.payrollId=$('sdPayrollId').value.trim();s.nino=$('sdNino').value.trim().toUpperCase();s.taxCode=$('sdTaxCode').value.trim().toUpperCase();s.niCategory=$('sdNiCategory').value.trim().toUpperCase()||'A';s.hourlyRate=Number($('sdHourlyRate').value||0);s.pensionEmployeePct=Number($('sdPensionEmployeePct').value||0);s.pensionEmployerPct=Number($('sdPensionEmployerPct').value||0);s.payrollDeductionNote=$('sdPayrollDeductionNote').value.trim();
- if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else if(s.status==='No Longer Employed'){logStaff(s,'Employment status changed to No Longer Employed'+(s.leavingDate?' · leaving date '+s.leavingDate:'')+(s.leavingReason?' · '+s.leavingReason:''))}else logStaff(s,'Staff profile updated');
+ if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else if(s.status==='No Longer Employed'){logStaff(s,'Employment status changed to No Longer Employed'+(s.leavingDate?' · leaving date '+s.leavingDate:'')+(s.leavingReason?' · '+s.leavingReason:''))}else logStaff(s,'Staff profile updated');addHolidayLedger({staffId:s.id,kind:'Entitlement snapshot',status:'Calculated',unit:holidayBalanceForStaff(s).unit,amount:holidayBalanceForStaff(s).accrued,description:'Contract / entitlement recalculated',reason:s.contractType+' · '+s.contractDays+' days/week · '+s.contractHours+' hours/week · '+s.holidayWeeks+' holiday weeks',by:CURRENT_STAFF_ROLE,effectiveDate:new Date().toISOString().slice(0,10)});
  saveStaffDb();
 };
 window.saveStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated by Super User');saveStaffDb()};
