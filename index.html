@@ -159,7 +159,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 .pass-nav-trigger{border:0;background:transparent;color:#eadff0;font:inherit;font-size:12px;font-weight:750;padding:0 13px;cursor:pointer}
 .pass-nav-menu:hover .pass-nav-trigger,.pass-nav-menu:focus-within .pass-nav-trigger{background:#ffffff14;color:#fff}
 .pass-nav-drop{display:none;position:absolute;top:100%;left:0;z-index:90;min-width:235px;background:#fff;border:1px solid #d9d5dc;border-radius:0 0 5px 5px;padding:6px;box-shadow:0 8px 24px #00000026}
-.pass-nav-menu:hover .pass-nav-drop,.pass-nav-menu:focus-within .pass-nav-drop,.pass-nav-menu.open .pass-nav-drop{display:block}
+.pass-nav-menu.open .pass-nav-drop{display:block}
+@media(hover:hover) and (pointer:fine){.pass-nav-menu:hover .pass-nav-drop,.pass-nav-menu:focus-within .pass-nav-drop{display:block}}
 .dex-backoffice-nav .pass-nav-drop .tab{display:block!important;width:100%!important;text-align:left!important;color:#4c4750!important;padding:10px 11px!important;border-radius:3px!important;font-size:12px!important}
 .dex-backoffice-nav .pass-nav-drop .tab:hover,.dex-backoffice-nav .pass-nav-drop .tab.active{background:#efe8f3!important;color:#560b76!important;box-shadow:none!important}
 .pass-nav-drop-wide{min-width:270px}
@@ -208,7 +209,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-16-full-backoffice-finished">
+<main class="wrap" data-build="2026-09-08-website-pass-17-mobile-menu-close">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -1959,7 +1960,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
    if(!SECURE_SESSION||!SECURE_ACCOUNT||!SECURE_ACCOUNT.active||SECURE_ACCOUNT.must_change_password)return;
    if(secureRoleRank(SECURE_ACCOUNT.role)<secureRoleRank(b.dataset.minrole||'Staff'))return alert('Your account does not have access to this section.');
  }
- document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active');document.querySelectorAll('.pass-nav-menu').forEach(x=>x.classList.remove('open'))
+ document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active');document.querySelectorAll('.pass-nav-menu').forEach(x=>x.classList.remove('open'));if(document.activeElement&&typeof document.activeElement.blur==='function')document.activeElement.blur()
 });
 const today=new Date(), iso=d=>d.toISOString().slice(0,10);
 function cateringMinDateTime(){return new Date(Date.now()+48*60*60*1000)}
