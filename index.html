@@ -47,7 +47,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-0010-refresh-init-order-fix">
+<main class="wrap" data-build="2026-09-08-0018-refresh-racefree-fix">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -138,9 +138,22 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
     async function restoreStandaloneSession(){
       const client=getClient(); if(!client)return;
       try{
-        const {data,error}=await client.auth.getSession();
-        if(error||!data?.session)return;
-        const session=data.session;
+        let {data,error}=await client.auth.getSession();
+        let session=(!error&&data?.session)?data.session:null;
+        if(!session){
+          try{
+            const raw=localStorage.getItem('dexters-backoffice-session-fallback');
+            const saved=raw?JSON.parse(raw):null;
+            if(saved?.access_token&&saved?.refresh_token){
+              const restored=await client.auth.setSession({
+                access_token:saved.access_token,
+                refresh_token:saved.refresh_token
+              });
+              if(!restored.error&&restored.data?.session)session=restored.data.session;
+            }
+          }catch(e){}
+        }
+        if(!session)return;
         const {data:account,error:accountError}=await client
           .from('backoffice_staff_accounts')
           .select('staff_record_id,email,role,must_change_password,active')
@@ -148,21 +161,14 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
           .maybeSingle();
         if(accountError||!account||account.active===false)return;
         showStandaloneSession(session,account);
-        // Let the full Back Office enhance the restored session when it is ready,
-        // but never make the visible login state depend on that handoff.
-        let tries=0;
-        const handoff=setInterval(function(){
-          tries++;
-          if(window.__DEXTERS_MAIN_READY&&typeof window.dextersCompleteSecureLogin==='function'){
-            clearInterval(handoff);
-            window.__DEXTERS_PENDING_LOGIN=null;
-            Promise.resolve(window.dextersCompleteSecureLogin(session,account)).catch(function(e){
-              msg.innerHTML='<span class="bad">Signed in, but secure data could not load: '+String(e.message||e)+'</span>';
-            });
-          }else if(tries>=120){
-            clearInterval(handoff);
-          }
-        },100);
+        // Exactly one handoff: immediate if the full Back Office is ready,
+        // otherwise the main script consumes __DEXTERS_PENDING_LOGIN at the end.
+        if(window.__DEXTERS_MAIN_READY&&typeof window.dextersCompleteSecureLogin==='function'){
+          window.__DEXTERS_PENDING_LOGIN=null;
+          Promise.resolve(window.dextersCompleteSecureLogin(session,account)).catch(function(e){
+            msg.innerHTML='<span class="bad">Signed in, but secure data could not load: '+String(e.message||e)+'</span>';
+          });
+        }
       }catch(e){}
     }
 
@@ -200,19 +206,12 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
         if(account.active===false)throw new Error('Back Office access is disabled for this account.');
 
         showStandaloneSession(data.session,account);
-        let tries=0;
-        const handoff=setInterval(function(){
-          tries++;
-          if(window.__DEXTERS_MAIN_READY&&typeof window.dextersCompleteSecureLogin==='function'){
-            clearInterval(handoff);
-            window.__DEXTERS_PENDING_LOGIN=null;
-            Promise.resolve(window.dextersCompleteSecureLogin(data.session,account)).catch(function(e){
-              msg.innerHTML='<span class="bad">Signed in, but secure data could not load: '+String(e.message||e)+'</span>';
-            });
-          }else if(tries>=120){
-            clearInterval(handoff);
-          }
-        },100);
+        if(window.__DEXTERS_MAIN_READY&&typeof window.dextersCompleteSecureLogin==='function'){
+          window.__DEXTERS_PENDING_LOGIN=null;
+          Promise.resolve(window.dextersCompleteSecureLogin(data.session,account)).catch(function(e){
+            msg.innerHTML='<span class="bad">Signed in, but secure data could not load: '+String(e.message||e)+'</span>';
+          });
+        }
       }catch(err){
         msg.innerHTML='<span class="bad">'+String(err&&err.message||err)+'</span>';
       }finally{loginBtn.disabled=false;}
