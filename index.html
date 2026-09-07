@@ -46,7 +46,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-07-2315">
+<main class="wrap" data-build="2026-09-07-2325">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -115,6 +115,11 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
         if(error)throw error;
         if(!data.session)throw new Error('Secure session was not created.');
         window.__DEXTERS_SIGNED_IN_SESSION=data.session;
+        try{localStorage.setItem('dexters-backoffice-session-fallback',JSON.stringify({
+          access_token:data.session.access_token,
+          refresh_token:data.session.refresh_token,
+          expires_at:data.session.expires_at||null
+        }))}catch(e){}
         await new Promise(function(resolve){setTimeout(resolve,50)});
         const savedSession=localStorage.getItem('dexters-backoffice-auth-v1');
         if(!savedSession){
@@ -1326,6 +1331,26 @@ async function initSecureAuth(){
    }else{
      SECURE_SESSION=data.session||null;
    }
+   if(!SECURE_SESSION){
+     try{
+       const raw=localStorage.getItem('dexters-backoffice-session-fallback');
+       const saved=raw?JSON.parse(raw):null;
+       if(saved?.access_token&&saved?.refresh_token){
+         const {data:restored,error:restoreError}=await SB.auth.setSession({
+           access_token:saved.access_token,
+           refresh_token:saved.refresh_token
+         });
+         if(!restoreError&&restored?.session){
+           SECURE_SESSION=restored.session;
+           localStorage.setItem('dexters-backoffice-session-fallback',JSON.stringify({
+             access_token:restored.session.access_token,
+             refresh_token:restored.session.refresh_token,
+             expires_at:restored.session.expires_at||null
+           }));
+         }
+       }
+     }catch(e){}
+   }
  }
  if(SECURE_SESSION){
    try{await loadSecureAccount()}catch(e){
@@ -1342,9 +1367,18 @@ async function initSecureAuth(){
  }
  SB.auth.onAuthStateChange(async(event,session)=>{
    if(event==='SIGNED_OUT'){
-     SECURE_SESSION=null;SECURE_ACCOUNT=null;CURRENT_STAFF_ROLE='Staff';renderSecureAuth();return;
+     SECURE_SESSION=null;SECURE_ACCOUNT=null;CURRENT_STAFF_ROLE='Staff';
+     try{localStorage.removeItem('dexters-backoffice-session-fallback')}catch(e){}
+     renderSecureAuth();return;
    }
-   if(session)SECURE_SESSION=session;
+   if(session){
+     SECURE_SESSION=session;
+     try{localStorage.setItem('dexters-backoffice-session-fallback',JSON.stringify({
+       access_token:session.access_token,
+       refresh_token:session.refresh_token,
+       expires_at:session.expires_at||null
+     }))}catch(e){}
+   }
    if(event==='PASSWORD_RECOVERY')sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
    if(SECURE_SESSION){SECURE_ACCOUNT=null;try{await loadSecureAccount()}catch(e){}}
    CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';
@@ -3384,7 +3418,7 @@ if($('secureForgotBtn'))$('secureForgotBtn').onclick=async()=>{
  const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
  $('secureAuthMessage').innerHTML=error?'<span class="bad">'+error.message+'</span>':'<span class="ok">Password reset link sent if the account exists.</span>';
 };
-if($('secureLogoutBtn'))$('secureLogoutBtn').onclick=async()=>{await SB.auth.signOut();SECURE_SESSION=null;SECURE_ACCOUNT=null;CURRENT_STAFF_ROLE='Staff';renderSecureAuth()};
+if($('secureLogoutBtn'))$('secureLogoutBtn').onclick=async()=>{try{localStorage.removeItem('dexters-backoffice-session-fallback')}catch(e){}await SB.auth.signOut();SECURE_SESSION=null;SECURE_ACCOUNT=null;CURRENT_STAFF_ROLE='Staff';renderSecureAuth()};
 if($('firstPasswordSave'))$('firstPasswordSave').onclick=async()=>{
  const a=$('firstNewPassword').value,b=$('firstConfirmPassword').value,msg=$('firstPasswordMessage');
  if(a.length<10)return msg.innerHTML='<span class="bad">Use at least 10 characters.</span>';
