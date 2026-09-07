@@ -9,5 +9,5 @@
     "test:auth-return": "node tests/auth-return.cjs",
     "test:collection-amend": "node tests/collection-amend-flow.test.cjs"
   },
-  "deploymentMarker": "full-polish-test-build-1788797934667"
+  "deploymentMarker": "staff-button-visible-test-1788798153420"
 }
