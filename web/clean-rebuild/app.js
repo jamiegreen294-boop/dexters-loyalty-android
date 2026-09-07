@@ -5,6 +5,7 @@
   const $ = (id) => document.getElementById(id);
   const state = { session: null, user: null, points: 0, rewards: [], pendingRedemption: null };
   const SESSION_KEY = 'dexters.session.v3';
+  const SUPABASE_SESSION_KEY = 'sb-bpnkouymdvcogeaqjmxl-auth-token';
   const REQUEST_TIMEOUT = 9000;
 
   function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
@@ -16,8 +17,25 @@
     try{const r=await fetch(url,{...options,signal:controller.signal,cache:'no-store'});const text=await r.text();let body=null;try{body=text?JSON.parse(text):null}catch{body={raw:text}}if(!r.ok){const e=new Error(body?.msg||body?.message||body?.error_description||body?.error||`Request failed (${r.status})`);e.status=r.status;e.body=body;throw e}return body;}finally{clearTimeout(timer)}
   }
   function authHeaders(token=state.session?.access_token){const h={'Content-Type':'application/json',apikey:cfg.supabasePublishableKey};if(token)h.Authorization=`Bearer ${token}`;return h;}
-  function saveSession(s){state.session=s||null;if(s)localStorage.setItem(SESSION_KEY,JSON.stringify(s));else localStorage.removeItem(SESSION_KEY);}
-  function storedSession(){try{const s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');return s?.access_token&&s?.refresh_token?s:null}catch{return null}}
+  function saveSession(s){
+    state.session=s||null;
+    if(s){
+      localStorage.setItem(SESSION_KEY,JSON.stringify(s));
+      localStorage.setItem(SUPABASE_SESSION_KEY,JSON.stringify(s));
+    }else{
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(SUPABASE_SESSION_KEY);
+    }
+  }
+  function storedSession(){
+    try{
+      const own=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+      if(own?.access_token&&own?.refresh_token)return own;
+      const raw=JSON.parse(localStorage.getItem(SUPABASE_SESSION_KEY)||'null');
+      const s=raw?.currentSession||raw?.session||raw;
+      return s?.access_token&&s?.refresh_token?s:null;
+    }catch{return null}
+  }
   function decodeJwt(token){try{let p=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');while(p.length%4)p+='=';return JSON.parse(atob(p))}catch{return{}}}
 
   async function signIn(email,password){return jsonFetch(`${cfg.supabaseUrl}/auth/v1/token?grant_type=password`,{method:'POST',headers:authHeaders(null),body:JSON.stringify({email,password})});}
