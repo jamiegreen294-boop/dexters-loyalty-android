@@ -1,0 +1,55 @@
+name: Current full-layout startup validation
+on:
+  push:
+    branches:
+      - fix/live-startup-current-layout-20260907
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build full app
+        run: npm run build
+      - name: Check parser-safe startup queue
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('dist/index.html','utf8');
+          if(!s.includes('application/x-dexters-startup')) throw new Error('Startup queue missing');
+          if(!s.includes('id="dextersStartupBootstrap"')) throw new Error('Startup bootstrap missing');
+          console.log('Parser-safe startup queue verified');
+          NODE
+      - name: Install Playwright
+        run: |
+          npm install playwright@1.55.0 >/dev/null 2>&1
+          npx playwright install chromium >/dev/null 2>&1
+      - name: Browser startup test
+        run: |
+          python3 -m http.server 4173 -d dist >/tmp/dexters-http.log 2>&1 &
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage();
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            page.on('console',m=>console.log('CONSOLE',m.type(),m.text()));
+            const resp=await page.goto('http://127.0.0.1:4173/',{waitUntil:'domcontentloaded',timeout:15000});
+            await page.waitForTimeout(5000);
+            const ready=await page.evaluate(()=>document.readyState);
+            const email=page.locator('input[type="email"]').first();
+            const visible=await email.isVisible().catch(()=>false);
+            const body=await page.locator('body').innerText().catch(()=> '');
+            console.log('STATUS',resp.status());
+            console.log('READY',ready);
+            console.log('LOGIN_VISIBLE',visible);
+            console.log('PAGE_ERRORS',JSON.stringify(errors));
+            console.log('BODY_START',JSON.stringify(body.slice(0,500)));
+            await browser.close();
+            if(resp.status()>=400 || !visible || errors.length) process.exit(1);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
