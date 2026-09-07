@@ -532,7 +532,26 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div>
 <div class="field">Full name<input id="sdName"></div>
 <div class="field">Role<select id="sdRole"><option>Staff</option><option>Team Leader</option><option>Manager</option><option>Super User</option></select></div>
-<div class="field">Status<select id="sdStatus"><option>Active</option><option>On leave</option><option>Sick</option><option>Inactive</option></select></div>
+<div class="field">Employment status<select id="sdStatus">
+<option>Active</option>
+<option>Inactive</option>
+<option>On Leave</option>
+<option>Sick</option>
+<option>Suspended</option>
+<option>Maternity / Family Leave</option>
+<option>Long-Term Absence</option>
+<option>No Longer Employed</option>
+</select></div>
+<div class="field" id="sdLeavingDateWrap" style="display:none">Leaving date<input id="sdLeavingDate" type="date"></div>
+<div class="field" id="sdLeavingReasonWrap" style="display:none">Leaving reason<select id="sdLeavingReason">
+<option>Resigned</option>
+<option>Dismissed</option>
+<option>Redundancy</option>
+<option>End of fixed-term contract</option>
+<option>Retired</option>
+<option>Mutual agreement</option>
+<option>Other</option>
+</select></div>
 <div class="field">Start date<input id="sdStart" type="date"></div>
 </div>
 <div>
@@ -1042,7 +1061,7 @@ function saveDexManage(){localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(
 function tagPicker(id,current=[]){const el=$(id);if(!el)return;el.innerHTML=dexManage.tags.map(t=>'<label><input type="checkbox" value="'+t.name+'" '+(current.includes(t.name)?'checked':'')+'>'+t.name+'</label>').join('')}
 function pickedTags(id){const el=$(id);return el?[...el.querySelectorAll('input:checked')].map(x=>x.value):[]}
 function tagChips(tags=[]){return (tags||[]).map(t=>'<span class="tag-chip">'+t+'</span>').join('')}
-function staffOptions(id){const el=$(id);if(!el||typeof staffDb==='undefined')return;el.innerHTML=staffDb.staff.map(s=>'<option value="'+s.id+'">'+s.name+' · '+s.role+'</option>').join('')}
+function staffOptions(id){const el=$(id);if(!el||typeof staffDb==='undefined')return;el.innerHTML=staffDb.staff.filter(s=>s.status!=='No Longer Employed').map(s=>'<option value="'+s.id+'">'+s.name+' · '+s.role+'</option>').join('')}
 function staffNameById(id){const s=typeof staffDb!=='undefined'?staffDb.staff.find(x=>x.id===id):null;return s?s.name:'Unassigned'}
 
 let CURRENT_SHIFT_STAFF_ID=localStorage.getItem('dexters_test_current_shift_staff')||'';
@@ -1057,7 +1076,7 @@ function formatWorkedMinutes(m){
 }
 function renderMyShiftStaff(){
  const el=$('myShiftStaff');if(!el||typeof staffDb==='undefined')return;
- el.innerHTML=staffDb.staff.filter(s=>s.status!=='Inactive').map(s=>'<option value="'+s.id+'">'+s.name+' · '+s.role+'</option>').join('');
+ el.innerHTML=staffDb.staff.filter(s=>!['Inactive','No Longer Employed'].includes(s.status)).map(s=>'<option value="'+s.id+'">'+s.name+' · '+s.role+'</option>').join('');
  if(!CURRENT_SHIFT_STAFF_ID||!staffDb.staff.some(s=>s.id===CURRENT_SHIFT_STAFF_ID))CURRENT_SHIFT_STAFF_ID=staffDb.staff[0]?.id||'';
  el.value=CURRENT_SHIFT_STAFF_ID;
 }
@@ -1176,7 +1195,7 @@ function payAudit(action,runId=''){
 }
 function payrollRowsForWeek(start,end){
  if(typeof staffDb==='undefined')return [];
- return staffDb.staff.filter(s=>s.status!=='Inactive').map(s=>{
+ return staffDb.staff.filter(s=>!['Inactive','No Longer Employed'].includes(s.status)).map(s=>{
   const shifts=dexManage.rota.filter(r=>r.staffId===s.id&&r.date>=start&&r.date<=end&&r.clockInAt&&r.clockOutAt);
   const minutes=shifts.reduce((n,r)=>n+(shiftWorkedMinutes(r)||0),0);
   const hours=minutes/60,rate=Number(s.hourlyRate||0),gross=hours*rate;
@@ -1636,6 +1655,11 @@ function renderStaffDirectory(){
 }
 window.selectStaffRecord=id=>{staffDb.selected=id;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb()};
 function fmtDate(d){if(!d)return '—';const x=new Date(d);return Number.isNaN(x.getTime())?d:x.toLocaleDateString()}
+function toggleLeavingFields(){
+ const leave=$('sdStatus')?.value==='No Longer Employed';
+ if($('sdLeavingDateWrap'))$('sdLeavingDateWrap').style.display=leave?'block':'none';
+ if($('sdLeavingReasonWrap'))$('sdLeavingReasonWrap').style.display=leave?'block':'none';
+}
 function renderStaffDb(){
  renderStaffDirectory();renderComplianceDashboard();
  const s=selectedStaff(),show=!!s;
@@ -1645,7 +1669,7 @@ function renderStaffDb(){
  if(!s){
   $('staffPermissions').innerHTML=$('staffTrainingSummary').innerHTML=$('staffDocs').innerHTML=$('staffAbsence').innerHTML=$('staffIncidents').innerHTML=$('staffNotes').innerHTML=$('staffAudit').innerHTML='Choose a staff member first.';return;
  }
- $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdRole').disabled=CURRENT_STAFF_ROLE!=='Super User';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';
+ $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdRole').disabled=CURRENT_STAFF_ROLE!=='Super User';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';$('sdLeavingDate').value=s.leavingDate||'';$('sdLeavingReason').value=s.leavingReason||'Resigned';toggleLeavingFields();
  $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';tagPicker('sdTags',s.tags||[]);$('sdPayrollId').value=s.payrollId||'';$('sdNino').value=s.nino||'';$('sdTaxCode').value=s.taxCode||'';$('sdNiCategory').value=s.niCategory||'A';$('sdHourlyRate').value=s.hourlyRate||'';
  $('staffPermissions').innerHTML=STAFF_PERMS.map(p=>'<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input class="sd-perm" type="checkbox" value="'+p+'" '+((s.permissions||[]).includes(p)?'checked':'')+(CURRENT_STAFF_ROLE==='Super User'?'':' disabled')+' style="width:auto;margin:0">'+p+'</label>').join('')+(CURRENT_STAFF_ROLE==='Super User'?'<button class="btn alt small" onclick="saveStaffPermissions()">Save permissions</button><button class="btn alt small" onclick="resetStaffPermissions()">Use role defaults</button>':'<div class="summarybox muted">Permission editing is restricted to Super User.</div>');
  const t=s.training||{};
@@ -1657,7 +1681,7 @@ function renderStaffDb(){
  $('staffNotes').innerHTML=(s.notes||[]).map(n=>'<div class="summarybox"><span class="muted">'+n.text+'</span><br><span class="tiny">'+new Date(n.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager notes.</span>';
  $('staffAudit').innerHTML=(s.audit||[]).map(a=>'<div class="tiny" style="padding:7px 0;border-bottom:1px solid #ffffff10"><b>'+new Date(a.at).toLocaleString()+'</b> — '+a.action+'</div>').join('')||'<span class="muted">No audit history.</span>';
 }
-$('staffSearch').addEventListener('input',renderStaffDirectory);
+$('staffSearch').addEventListener('input',renderStaffDirectory);$('sdStatus').addEventListener('change',toggleLeavingFields);
 $('staffAdd').onclick=()=>{
  const name=prompt('Test staff name');if(!name||!name.trim())return;
  const id='staff-'+Date.now();
@@ -1668,8 +1692,8 @@ $('staffSaveProfile').onclick=()=>{
  const s=selectedStaff();if(!s)return;const oldRole=s.role;
  s.name=$('sdName').value.trim()||'Unnamed staff';
  if(CURRENT_STAFF_ROLE==='Super User'){s.role=$('sdRole').value}else{$('sdRole').value=s.role}
- s.status=$('sdStatus').value;s.start=$('sdStart').value;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');s.payrollId=$('sdPayrollId').value.trim();s.nino=$('sdNino').value.trim().toUpperCase();s.taxCode=$('sdTaxCode').value.trim().toUpperCase();s.niCategory=$('sdNiCategory').value.trim().toUpperCase()||'A';s.hourlyRate=Number($('sdHourlyRate').value||0);
- if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else logStaff(s,'Staff profile updated');
+ s.status=$('sdStatus').value;s.start=$('sdStart').value;s.leavingDate=s.status==='No Longer Employed'?$('sdLeavingDate').value:'';s.leavingReason=s.status==='No Longer Employed'?$('sdLeavingReason').value:'';s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');s.payrollId=$('sdPayrollId').value.trim();s.nino=$('sdNino').value.trim().toUpperCase();s.taxCode=$('sdTaxCode').value.trim().toUpperCase();s.niCategory=$('sdNiCategory').value.trim().toUpperCase()||'A';s.hourlyRate=Number($('sdHourlyRate').value||0);
+ if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else if(s.status==='No Longer Employed'){logStaff(s,'Employment status changed to No Longer Employed'+(s.leavingDate?' · leaving date '+s.leavingDate:'')+(s.leavingReason?' · '+s.leavingReason:''))}else logStaff(s,'Staff profile updated');
  saveStaffDb();
 };
 window.saveStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated by Super User');saveStaffDb()};
