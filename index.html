@@ -280,7 +280,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <button class="btn" id="staffAdd">+ Add test staff member</button>
 </div>
 
-<div class="summarybox"><b>Role access hierarchy</b><br><span class="badge">Super User — full system</span><span class="badge">Manager — management + operations</span><span class="badge">Team Leader — shift supervision</span><span class="badge">Staff — essential day-to-day access</span></div>
+<div class="summarybox"><b>Role access hierarchy</b><br><span class="badge">Super User — full system</span><span class="badge">Manager — management + operations</span><span class="badge">Team Leader — shift supervision</span><span class="badge">Staff — essential day-to-day access</span><div class="field" style="margin-top:10px">Test signed-in role<select id="currentStaffRole"><option>Super User</option><option>Manager</option><option>Team Leader</option><option>Staff</option></select></div><span class="tiny">Only Super User can change roles and permissions.</span></div>
 <div class="staff-pass-kpis">
 <div class="staff-pass-kpi"><span class="muted">Staff records</span><b id="staffKpiCount">—</b></div>
 <div class="staff-pass-kpi"><span class="muted">Training</span><b>Tracked</b></div>
@@ -827,6 +827,7 @@ renderChallenges();maybeEarnScratch();saveChallenges();
 
 const STAFFDBKEY='dexters_growth_staff_database_test_v1';
 const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
+let CURRENT_STAFF_ROLE='Super User';
 let staffDb={selected:null,staff:[]};
 try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
 if(!Array.isArray(staffDb.staff)||!staffDb.staff.length){
@@ -865,9 +866,9 @@ function renderStaffDb(){
  if(!s){
   $('staffPermissions').innerHTML=$('staffTrainingSummary').innerHTML=$('staffDocs').innerHTML=$('staffAbsence').innerHTML=$('staffIncidents').innerHTML=$('staffNotes').innerHTML=$('staffAudit').innerHTML='Choose a staff member first.';return;
  }
- $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';
+ $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdRole').disabled=CURRENT_STAFF_ROLE!=='Super User';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';
  $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';
- $('staffPermissions').innerHTML=STAFF_PERMS.map(p=>'<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input class="sd-perm" type="checkbox" value="'+p+'" '+((s.permissions||[]).includes(p)?'checked':'')+' style="width:auto;margin:0">'+p+'</label>').join('')+'<button class="btn alt small" onclick="saveStaffPermissions()">Save permissions</button><button class="btn alt small" onclick="resetStaffPermissions()">Use role defaults</button>';
+ $('staffPermissions').innerHTML=STAFF_PERMS.map(p=>'<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input class="sd-perm" type="checkbox" value="'+p+'" '+((s.permissions||[]).includes(p)?'checked':'')+(CURRENT_STAFF_ROLE==='Super User'?'':' disabled')+' style="width:auto;margin:0">'+p+'</label>').join('')+(CURRENT_STAFF_ROLE==='Super User'?'<button class="btn alt small" onclick="saveStaffPermissions()">Save permissions</button><button class="btn alt small" onclick="resetStaffPermissions()">Use role defaults</button>':'<div class="summarybox muted">Permission editing is restricted to Super User.</div>');
  const t=s.training||{};
  const cert=t.certifiedAt?'<span class="ok"><b>Certified</b></span> · '+fmtDate(t.certifiedAt):'<span class="muted">Not certified yet</span>';
  $('staffTrainingSummary').innerHTML='<div class="summarybox"><b>'+Number(t.completed||0)+' / '+Number(t.total||0)+' modules complete</b><br>'+cert+(t.finalScore!=null?'<br>Final score: '+t.finalScore+'%':'')+(t.refresherDue?'<br>Refresher due: '+fmtDate(t.refresherDue):'')+'<br><span class="tiny">Training results can be synced from Dexter\'s Staff Training profile when integrated.</span></div><button class="btn alt small" onclick="syncSelectedTraining()">Sync current test training</button>';
@@ -886,12 +887,14 @@ $('staffAdd').onclick=()=>{
 };
 $('staffSaveProfile').onclick=()=>{
  const s=selectedStaff();if(!s)return;const oldRole=s.role;
- s.name=$('sdName').value.trim()||'Unnamed staff';s.role=$('sdRole').value;s.status=$('sdStatus').value;s.start=$('sdStart').value;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();
- if(oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' and role-default permissions applied')}else logStaff(s,'Staff profile updated');
+ s.name=$('sdName').value.trim()||'Unnamed staff';
+ if(CURRENT_STAFF_ROLE==='Super User'){s.role=$('sdRole').value}else{$('sdRole').value=s.role}
+ s.status=$('sdStatus').value;s.start=$('sdStart').value;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();
+ if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else logStaff(s,'Staff profile updated');
  saveStaffDb();
 };
-window.saveStaffPermissions=()=>{const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated');saveStaffDb()};
-window.resetStaffPermissions=()=>{const s=selectedStaff();if(!s)return;s.permissions=roleDefaultPerms(s.role);logStaff(s,'Permissions reset to '+s.role+' defaults');saveStaffDb()};
+window.saveStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated by Super User');saveStaffDb()};
+window.resetStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=roleDefaultPerms(s.role);logStaff(s,'Permissions reset to '+s.role+' defaults by Super User');saveStaffDb()};
 $('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;s.docs=s.docs||[];s.docs.unshift({type:$('sdDocType').value,expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),at:new Date().toISOString()});logStaff(s,'Document record added: '+$('sdDocType').value);$('sdDocExpiry').value='';$('sdDocNote').value='';saveStaffDb()};
 window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb()};
 $('staffAddAbsence').onclick=()=>{const s=selectedStaff();if(!s)return;const from=$('sdAbsFrom').value,to=$('sdAbsTo').value;if(!from||!to){alert('Add both dates.');return}s.absences=s.absences||[];s.absences.unshift({type:$('sdAbsType').value,from,to,note:$('sdAbsNote').value.trim(),at:new Date().toISOString()});logStaff(s,'Absence added: '+$('sdAbsType').value+' '+from+' to '+to);$('sdAbsNote').value='';saveStaffDb()};
@@ -910,6 +913,7 @@ window.syncSelectedTraining=()=>{
   logStaff(s,'Training summary synced from Staff Training test');saveStaffDb();
  }catch(e){alert('Could not read training progress.')}
 };
+const currentRoleSel=$('currentStaffRole');if(currentRoleSel){currentRoleSel.value=CURRENT_STAFF_ROLE;currentRoleSel.onchange=()=>{CURRENT_STAFF_ROLE=currentRoleSel.value;renderStaffDb()}}
 renderStaffDb();
 
 document.querySelectorAll('[data-sdtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-sdtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.staff-profile-section').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=document.getElementById('sdsec-'+b.dataset.sdtab);if(p)p.classList.add('active')});
