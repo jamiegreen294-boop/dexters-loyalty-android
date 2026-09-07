@@ -51,6 +51,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="field">People<input id="catPeople" type="number" min="10" value="12"></div>
 <div class="field">Date<input id="catDate" type="date"></div>
 <div class="field">Collection time<input id="catTime" type="time" value="12:30"></div>
+<div class="summarybox notice"><b>48 hours' notice required</b><br><span class="tiny">Catering collection times must be booked at least 48 hours in advance.</span></div>
 </div>
 </details>
 
@@ -263,7 +264,21 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script>
 const $=id=>document.getElementById(id);
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
-const today=new Date(), iso=d=>d.toISOString().slice(0,10);$('catDate').value=iso(new Date(Date.now()+3*86400000));$('laterDate').value=iso(new Date(Date.now()+86400000));
+const today=new Date(), iso=d=>d.toISOString().slice(0,10);
+function cateringMinDateTime(){return new Date(Date.now()+48*60*60*1000)}
+function applyCateringMin(){
+ const min=cateringMinDateTime(),dateEl=$('catDate'),timeEl=$('catTime');
+ dateEl.min=iso(min);
+ if(!dateEl.value || new Date(dateEl.value+'T'+(timeEl.value||'00:00')+':00')<min){
+   dateEl.value=iso(min);
+   timeEl.value=min.toTimeString().slice(0,5);
+ }
+}
+$('catDate').value=iso(new Date(Date.now()+3*86400000));
+$('laterDate').value=iso(new Date(Date.now()+86400000));
+applyCateringMin();
+$('catDate').addEventListener('input',applyCateringMin);
+$('catTime').addEventListener('input',applyCateringMin);
 
 const CATKEY='dexters_growth_catering_test_v2';
 let cat=[];try{cat=JSON.parse(localStorage.getItem(CATKEY)||'[]')}catch(e){cat=[]}
@@ -461,6 +476,9 @@ $('catSubmit').onclick=()=>{
  const name=$('catName').value.trim(),contact=$('catContact').value.trim(),phone=$('catPhone').value.trim(),people=Math.max(1,Number($('catPeople').value||1)),date=$('catDate').value,time=$('catTime').value,pack=$('catPack').value,notes=$('catNotes').value.trim(),key=catKey(),rule=buffetRules[key];
  const allergies=[...document.querySelectorAll('.cat-allergy')].filter(x=>x.checked).map(x=>x.value),noAllergy=$('catNoAllergy').checked;
  if(!name||!contact||!phone||!date||!time){$('catCustomerStatus').innerHTML='<span class="bad">Please complete the event, contact, phone, date and time.</span>';return}
+ const requestedCatering=new Date(date+'T'+time+':00');
+ const minCatering=cateringMinDateTime();
+ if(requestedCatering<minCatering){$('catCustomerStatus').innerHTML='<span class="bad">Catering requires at least 48 hours\' notice. Please choose a later collection date and time.</span>';return}
  if(people<10){$('catCustomerStatus').innerHTML='<span class="bad">Dexter\'s catering packages are for a minimum of 10 people.</span>';return}
  if(!noAllergy && allergies.length===0){$('catCustomerStatus').innerHTML='<span class="bad">Please select any allergy/dietary requirements, or confirm there are none.</span>';return}
  if(noAllergy && allergies.length){$('catCustomerStatus').innerHTML='<span class="bad">Please choose either allergy/dietary requirements or No known allergies — not both.</span>';return}
