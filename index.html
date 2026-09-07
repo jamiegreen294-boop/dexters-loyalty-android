@@ -47,7 +47,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-0018-refresh-racefree-fix">
+<main class="wrap" data-build="2026-09-08-website-pass-1">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -732,7 +732,12 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
       <div class="staff-tabpane" id="custPane-complaints">
         <div id="custComplaints"></div>
         <div class="field">New complaint / incident<textarea id="cuComplaint" rows="3"></textarea></div>
-        <button class="btn alt" id="custAddComplaint">Add record</button>
+        <div class="grid">
+          <div class="field">Owner<select id="cuComplaintOwner"></select></div>
+          <div class="field">Follow-up due<input id="cuComplaintDue" type="date"></div>
+        </div>
+        <div class="field">Resolution / action required<textarea id="cuComplaintResolution" rows="3"></textarea></div>
+        <button class="btn alt" id="custAddComplaint">Add record & create follow-up task</button>
       </div>
 
       <div class="staff-tabpane" id="custPane-consent">
@@ -1063,7 +1068,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </div>
 </section>
 
-<section class="panel" id="payroll">
+<section class="panel" id="payrolllegacy" style="display:none">
 <div class="card notice"><b>Dexter's Weekly Payroll</b><p class="muted">Workflow: weekly payroll is prepared from recorded shift times → Manager checks and approves → Super User verifies → payroll becomes Ready to Send. Test only; no HMRC or payroll-provider submission is made.</p></div>
 
 <div class="grid">
@@ -1926,9 +1931,13 @@ $('catNoAllergy').onchange=()=>{if($('catNoAllergy').checked)document.querySelec
 document.querySelectorAll('.cat-allergy').forEach(x=>x.onchange=()=>{if(x.checked)$('catNoAllergy').checked=false});
 
 
-$('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number($('bizLimit').value||0);$('bizDash').innerHTML='<div class="metric"><span class="muted">'+n+'</span><b>£0 / £'+l.toFixed(0)+'</b></div><p><span class="badge">Active</span><span class="badge">'+$('bizCycle').value+' billing</span><span class="badge">0 open invoices</span></p><p class="muted">Approved employee list, statement downloads and per-user spending rules would sit here.</p>'};
-
-let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing now','Almost ready','Ready for collection'];$('trackNext').onclick=()=>{track=Math.min(track+1,4);document.querySelectorAll('#trackSteps .dot').forEach((d,i)=>d.classList.toggle('on',i<=track));$('trackMsg').textContent='Order #TEST-1042 — '+labels[track]+(track===4?' ✅':'')};
+if($('bizCreate')&&$('bizName')&&$('bizLimit')&&$('bizDash')&&$('bizCycle')){
+  $('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number($('bizLimit').value||0);$('bizDash').innerHTML='<div class="metric"><span class="muted">'+n+'</span><b>£0 / £'+l.toFixed(0)+'</b></div><p><span class="badge">Active</span><span class="badge">'+$('bizCycle').value+' billing</span><span class="badge">0 open invoices</span></p><p class="muted">Approved employee list, statement downloads and per-user spending rules would sit here.</p>'};
+}
+let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing now','Almost ready','Ready for collection'];
+if($('trackNext')&&$('trackMsg')){
+  $('trackNext').onclick=()=>{track=Math.min(track+1,4);document.querySelectorAll('#trackSteps .dot').forEach((d,i)=>d.classList.toggle('on',i<=track));$('trackMsg').textContent='Order #TEST-1042 — '+labels[track]+(track===4?' ✅':'')};
+}
 
 
 
