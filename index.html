@@ -81,7 +81,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </div>
 </div>
 
-<div class="dex-backoffice-shell">
+<div class="dex-backoffice-shell" id="secureBackOfficeShell" style="display:none">
 <aside class="dex-backoffice-nav">
 <div class="dex-backoffice-logo">DEXTER'S</div><div class="navsub">Back Office · Test</div>
 <div class="navgroup">Overview</div>
@@ -669,7 +669,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <button class="btn" id="staffAdd">+ Add staff member</button>
 </div>
 
-<div class="summarybox"><b>Role access hierarchy</b><br><span class="badge">Super User — full system</span><span class="badge">Manager — management + operations</span><span class="badge">Team Leader — shift supervision</span><span class="badge">Staff — essential day-to-day access</span><div class="field" style="margin-top:10px">Test signed-in role<select id="currentStaffRole"><option>Super User</option><option>Manager</option><option>Team Leader</option><option>Staff</option></select></div><span class="tiny">Only Super User can change roles and permissions.</span></div>
+<div class="summarybox"><b>Role access hierarchy</b><br><span class="badge">Super User — full system</span><span class="badge">Manager — management + operations</span><span class="badge">Team Leader — shift supervision</span><span class="badge">Staff — essential day-to-day access</span><div style="margin-top:10px"><span class="tiny">Signed-in access:</span> <span class="badge" id="currentSecureRole">Not signed in</span></div><span class="tiny">Roles now come from the authenticated Supabase staff account. There is no test-role bypass.</span></div>
 <div class="staff-pass-kpis">
 <div class="staff-pass-kpi"><span class="muted">Staff records</span><b id="staffKpiCount">—</b></div>
 <div class="staff-pass-kpi"><span class="muted">Training</span><b>Tracked</b></div>
@@ -1079,31 +1079,59 @@ async function secureFunction(action,payload={}){
  if(!res.ok)throw new Error(data.error||'Secure account action failed');
  return data;
 }
+function secureRoleRank(r){return {'Staff':1,'Team Leader':2,'Manager':3,'Super User':4}[r]||0}
+function applySecureAccess(){
+ const shell=document.getElementById('secureBackOfficeShell');
+ const valid=!!(SECURE_SESSION&&SECURE_ACCOUNT&&SECURE_ACCOUNT.active&&SECURE_ACCOUNT.role&&!SECURE_ACCOUNT.must_change_password);
+ if(shell)shell.style.display=valid?'grid':'none';
+ const roleEl=document.getElementById('currentSecureRole');if(roleEl)roleEl.textContent=SECURE_ACCOUNT?.role||'Not signed in';
+ document.querySelectorAll('.dex-backoffice-nav .tab[data-minrole]').forEach(b=>{
+   const allowed=valid&&secureRoleRank(SECURE_ACCOUNT.role)>=secureRoleRank(b.dataset.minrole);
+   b.style.display=allowed?'block':'none';
+ });
+ if(valid){
+   const active=document.querySelector('.dex-backoffice-nav .tab.active');
+   if(!active||active.style.display==='none'){
+     document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));
+     const first=[...document.querySelectorAll('.dex-backoffice-nav .tab[data-minrole]')].find(x=>x.style.display!=='none');
+     if(first){first.classList.add('active');const p=document.getElementById(first.dataset.tab);if(p)p.classList.add('active')}
+   }
+   const mc=document.getElementById('rotaManagerCard');if(mc)mc.style.display=secureRoleRank(SECURE_ACCOUNT.role)>=2?'block':'none';
+ }
+}
 async function loadSecureAccount(){
  if(!SB||!SECURE_SESSION)return null;
  const {data,error}=await SB.from('backoffice_staff_accounts').select('staff_record_id,email,role,must_change_password,active').eq('auth_user_id',SECURE_SESSION.user.id).maybeSingle();
  if(error)throw error;
  SECURE_ACCOUNT=data||null;
  if(SECURE_ACCOUNT?.role)CURRENT_STAFF_ROLE=SECURE_ACCOUNT.role;
+ applySecureAccess();
  return SECURE_ACCOUNT;
 }
 function renderSecureAuth(){
  const out=$('secureSignedOut'),inside=$('secureSignedIn'),msg=$('secureAuthMessage');
  if(!out||!inside)return;
+ const mapped=!!SECURE_ACCOUNT;
  out.style.display=SECURE_SESSION?'none':'block';inside.style.display=SECURE_SESSION?'block':'none';
  if(SECURE_SESSION){
   $('secureUserLabel').textContent=SECURE_SESSION.user.email||'Signed in';
-  $('secureRoleLabel').textContent=SECURE_ACCOUNT?.role||'Authenticated';
-  if(msg)msg.innerHTML=SECURE_ACCOUNT?.active===false?'<span class="bad">Back Office access disabled.</span>':'Secure account active.';
+  $('secureRoleLabel').textContent=SECURE_ACCOUNT?.role||'No Back Office role';
+  if(msg){
+    if(!mapped)msg.innerHTML='<span class="bad">This account is not authorised for Dexter\'s Back Office.</span>';
+    else if(SECURE_ACCOUNT.active===false)msg.innerHTML='<span class="bad">Back Office access is disabled for this account.</span>';
+    else if(SECURE_ACCOUNT.must_change_password)msg.innerHTML='<span class="muted">Password change required before access.</span>';
+    else msg.innerHTML='<span class="ok">Secure account active.</span>';
+  }
  }
- if(SECURE_ACCOUNT?.must_change_password)$('firstPasswordOverlay').style.display='block';
+ $('firstPasswordOverlay').style.display=(SECURE_ACCOUNT?.must_change_password?'block':'none');
+ applySecureAccess();
 }
 async function initSecureAuth(){
  if(!SB)return;
  const {data}=await SB.auth.getSession();SECURE_SESSION=data.session||null;
  if(SECURE_SESSION){try{await loadSecureAccount()}catch(e){}}
  renderSecureAuth();
- SB.auth.onAuthStateChange(async(_event,session)=>{SECURE_SESSION=session||null;SECURE_ACCOUNT=null;if(session){try{await loadSecureAccount()}catch(e){}}renderSecureAuth()});
+ SB.auth.onAuthStateChange(async(_event,session)=>{SECURE_SESSION=session||null;SECURE_ACCOUNT=null;if(session){try{await loadSecureAccount()}catch(e){}}CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';renderSecureAuth();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement()});
 }
 async function refreshStaffLoginStatus(){
  const box=$('staffLoginStatus'),s=typeof selectedStaff==='function'?selectedStaff():null;
@@ -1114,7 +1142,13 @@ async function refreshStaffLoginStatus(){
 }
 
 const $=id=>document.getElementById(id);
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+ if(b.closest('.dex-backoffice-nav')){
+   if(!SECURE_SESSION||!SECURE_ACCOUNT||!SECURE_ACCOUNT.active||SECURE_ACCOUNT.must_change_password)return;
+   if(secureRoleRank(SECURE_ACCOUNT.role)<secureRoleRank(b.dataset.minrole||'Staff'))return alert('Your account does not have access to this section.');
+ }
+ document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')
+});
 const today=new Date(), iso=d=>d.toISOString().slice(0,10);
 function cateringMinDateTime(){return new Date(Date.now()+48*60*60*1000)}
 function applyCateringMin(){
@@ -2310,7 +2344,7 @@ function renderComplianceDashboard(){
 }
 const STAFFDBKEY='dexters_growth_staff_database_test_v1';
 const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
-let CURRENT_STAFF_ROLE='Super User';
+let CURRENT_STAFF_ROLE='Staff';
 let staffDb={selected:null,staff:[]};
 try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
 if(!Array.isArray(staffDb.staff)||!staffDb.staff.length){
@@ -2369,7 +2403,7 @@ function renderStaffDb(){
 }
 $('staffSearch').addEventListener('input',renderStaffDirectory);$('sdStatus').addEventListener('change',toggleLeavingFields);['sdContractType','sdContractDays','sdContractHours','sdLeaveYearStart','sdHolidayWeeks'].forEach(id=>$(id).addEventListener('change',()=>{const s=selectedStaff();if(s){s.contractType=$('sdContractType').value;s.contractDays=Number($('sdContractDays').value||0);s.contractHours=Number($('sdContractHours').value||0);s.leaveYearStart=$('sdLeaveYearStart').value;s.holidayWeeks=Math.max(5.6,Number($('sdHolidayWeeks').value||5.6));renderStaffHolidaySummary(s)}}));
 $('staffAdd').onclick=async()=>{
- if(SECURE_SESSION&&!['Manager','Super User'].includes(SECURE_ACCOUNT?.role||''))return alert('Manager or Super User access required to add staff.');
+ if(!SECURE_SESSION||!['Manager','Super User'].includes(SECURE_ACCOUNT?.role||''))return alert('Secure Manager or Super User sign-in required to add staff.');
  const name=prompt('Staff full name');if(!name||!name.trim())return;
  const email=prompt('Staff email address');if(!email||!email.trim())return alert('An email address is required for staff login.');
  let role=prompt('Role: Staff, Team Leader, Manager or Super User','Staff')||'Staff';
@@ -2415,7 +2449,7 @@ $('staffResetPassword').onclick=async()=>{
 $('staffSaveProfile').onclick=()=>{
  const s=selectedStaff();if(!s)return;const oldRole=s.role;
  s.name=$('sdName').value.trim()||'Unnamed staff';
- if(CURRENT_STAFF_ROLE==='Super User'){s.role=$('sdRole').value}else{$('sdRole').value=s.role}
+ if(SECURE_ACCOUNT?.role==='Super User'){s.role=$('sdRole').value}else{$('sdRole').value=s.role}
  s.status=$('sdStatus').value;s.start=$('sdStart').value;s.leavingDate=s.status==='No Longer Employed'?$('sdLeavingDate').value:'';s.leavingReason=s.status==='No Longer Employed'?$('sdLeavingReason').value:'';s.contractType=$('sdContractType').value;s.contractDays=Number($('sdContractDays').value||0);s.contractHours=Number($('sdContractHours').value||0);s.leaveYearStart=$('sdLeaveYearStart').value;s.holidayWeeks=Math.max(5.6,Number($('sdHolidayWeeks').value||5.6));s.bankHolidaysIncluded=$('sdBankHolidaysIncluded').checked;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');s.payrollId=$('sdPayrollId').value.trim();s.nino=$('sdNino').value.trim().toUpperCase();s.taxCode=$('sdTaxCode').value.trim().toUpperCase();s.niCategory=$('sdNiCategory').value.trim().toUpperCase()||'A';s.hourlyRate=Number($('sdHourlyRate').value||0);s.pensionEmployeePct=Number($('sdPensionEmployeePct').value||0);s.pensionEmployerPct=Number($('sdPensionEmployerPct').value||0);s.payrollDeductionNote=$('sdPayrollDeductionNote').value.trim();
  if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else if(s.status==='No Longer Employed'){logStaff(s,'Employment status changed to No Longer Employed'+(s.leavingDate?' · leaving date '+s.leavingDate:'')+(s.leavingReason?' · '+s.leavingReason:''))}else logStaff(s,'Staff profile updated');addHolidayLedger({staffId:s.id,kind:'Entitlement snapshot',status:'Calculated',unit:holidayBalanceForStaff(s).unit,amount:holidayBalanceForStaff(s).accrued,description:'Contract / entitlement recalculated',reason:s.contractType+' · '+s.contractDays+' days/week · '+s.contractHours+' hours/week · '+s.holidayWeeks+' holiday weeks',by:CURRENT_STAFF_ROLE,effectiveDate:new Date().toISOString().slice(0,10)});
  saveStaffDb();
@@ -2446,7 +2480,6 @@ window.syncSelectedTraining=()=>{
  }catch(e){alert('Could not read training progress.')}
 };
 populateStaffDocLibrary();clearStaffDocForm();renderComplianceDashboard();
-const currentRoleSel=$('currentStaffRole');if(currentRoleSel){currentRoleSel.value=CURRENT_STAFF_ROLE;currentRoleSel.onchange=()=>{CURRENT_STAFF_ROLE=currentRoleSel.value;renderStaffDb();const mc=$('rotaManagerCard');if(mc)mc.style.display=(CURRENT_STAFF_ROLE==='Staff'?'none':'block')}}
 renderStaffDb();const rotaManagerCard=$('rotaManagerCard');if(rotaManagerCard)rotaManagerCard.style.display=(CURRENT_STAFF_ROLE==='Staff'?'none':'block');
 
 document.querySelectorAll('[data-sdtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-sdtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.staff-profile-section').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=document.getElementById('sdsec-'+b.dataset.sdtab);if(p)p.classList.add('active')});
@@ -2919,21 +2952,21 @@ if($('secureLoginBtn'))$('secureLoginBtn').onclick=async()=>{
  $('secureAuthMessage').textContent='Signing in…';
  const {data,error}=await SB.auth.signInWithPassword({email,password});
  if(error){$('secureAuthMessage').innerHTML='<span class="bad">'+error.message+'</span>';return}
- SECURE_SESSION=data.session;await loadSecureAccount();renderSecureAuth();renderStaffDb();
+ SECURE_SESSION=data.session;await loadSecureAccount();renderSecureAuth();renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();
 };
 if($('secureForgotBtn'))$('secureForgotBtn').onclick=async()=>{
  const email=$('secureLoginEmail').value.trim();if(!email)return alert('Enter your email first.');
  const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
  $('secureAuthMessage').innerHTML=error?'<span class="bad">'+error.message+'</span>':'<span class="ok">Password reset link sent if the account exists.</span>';
 };
-if($('secureLogoutBtn'))$('secureLogoutBtn').onclick=async()=>{await SB.auth.signOut();SECURE_SESSION=null;SECURE_ACCOUNT=null;renderSecureAuth()};
+if($('secureLogoutBtn'))$('secureLogoutBtn').onclick=async()=>{await SB.auth.signOut();SECURE_SESSION=null;SECURE_ACCOUNT=null;CURRENT_STAFF_ROLE='Staff';renderSecureAuth()};
 if($('firstPasswordSave'))$('firstPasswordSave').onclick=async()=>{
  const a=$('firstNewPassword').value,b=$('firstConfirmPassword').value,msg=$('firstPasswordMessage');
  if(a.length<10)return msg.innerHTML='<span class="bad">Use at least 10 characters.</span>';
  if(a!==b)return msg.innerHTML='<span class="bad">Passwords do not match.</span>';
  const {error}=await SB.auth.updateUser({password:a});
  if(error)return msg.innerHTML='<span class="bad">'+error.message+'</span>';
- try{await secureFunction('password_changed');SECURE_ACCOUNT.must_change_password=false;$('firstPasswordOverlay').style.display='none';msg.textContent=''}catch(e){msg.innerHTML='<span class="bad">'+e.message+'</span>'}
+ try{await secureFunction('password_changed');SECURE_ACCOUNT.must_change_password=false;$('firstPasswordOverlay').style.display='none';msg.textContent='';renderSecureAuth();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement()}catch(e){msg.innerHTML='<span class="bad">'+e.message+'</span>'}
 };
 if($('tempPasswordClose'))$('tempPasswordClose').onclick=()=>{$('tempPasswordValue').textContent='';$('tempPasswordOverlay').style.display='none'};
 initSecureAuth();
