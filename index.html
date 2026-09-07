@@ -161,15 +161,51 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="later">
-<div class="card notice"><b>Order for Later</b><p class="muted">Customers choose a future collection slot. The kitchen should receive/release the order at the correct preparation time rather than treating it as ASAP.</p></div>
+<div class="card notice"><b>Order for Later</b><p class="muted">Customers can request a future collection time. The order stays scheduled and is only released to the kitchen near the requested collection time after staff approval.</p></div>
 <div class="grid">
-<div class="card"><h2>Schedule a test order</h2>
+<div class="card"><h2>Schedule an order</h2>
+<p class="muted">This is a test flow only. It does not send anything to the live KDS.</p>
+
+<details class="flowstep" open>
+<summary><span><span class="stepnum">1</span>Customer details</span></summary>
+<div class="flowbody">
+<div class="field">Customer name<input id="laterName" placeholder="e.g. Jamie"></div>
+<div class="field">Contact number<input id="laterPhone" inputmode="tel" placeholder="07..."></div>
+</div>
+</details>
+
+<details class="flowstep" open>
+<summary><span><span class="stepnum">2</span>Collection date & time</span></summary>
+<div class="flowbody">
 <div class="field">Collection date<input id="laterDate" type="date"></div>
-<div class="field">Collection time<select id="laterTime"><option>08:00</option><option>08:30</option><option>09:00</option><option>12:00</option><option>12:30</option><option>13:00</option><option>13:30</option><option>14:00</option></select></div>
-<div class="field">Order summary<textarea id="laterItems" rows="4">2 × Breakfast Roll
-1 × Coffee</textarea></div>
-<button class="btn" id="laterBook">Book test order</button></div>
-<div class="card"><h2>Scheduled orders</h2><div id="laterList" class="muted">No scheduled test orders.</div></div>
+<div class="field">Collection time<input id="laterTime" type="time" value="12:30"></div>
+<div class="field">Kitchen preparation time<select id="laterPrep">
+<option value="15">15 minutes</option>
+<option value="30" selected>30 minutes</option>
+<option value="45">45 minutes</option>
+<option value="60">60 minutes</option>
+<option value="90">90 minutes</option>
+</select></div>
+<div id="laterReleasePreview" class="summarybox muted">Choose a future collection date and time.</div>
+</div>
+</details>
+
+<details class="flowstep" open>
+<summary><span><span class="stepnum">3</span>Order details</span></summary>
+<div class="flowbody">
+<div class="field">Order summary<textarea id="laterItems" rows="5" placeholder="e.g. 2 × Breakfast Roll&#10;1 × Coffee"></textarea></div>
+<div class="field">Order notes<textarea id="laterNotes" rows="3" placeholder="Any collection or food notes"></textarea></div>
+<label class="field"><input id="laterConfirm" type="checkbox" style="width:auto;margin-right:8px"> I understand the requested collection time is not confirmed until Dexter's staff approve it.</label>
+<button class="btn" id="laterBook">Request this collection time</button>
+<div id="laterCustomerStatus" class="summarybox muted">No future order requested yet.</div>
+</div>
+</details>
+</div>
+
+<div class="card"><h2>Scheduled order queue</h2>
+<p class="tiny">Staff can approve, reject or change the requested collection time. Approved orders show when they should be released to the kitchen.</p>
+<div id="laterList" class="muted">No scheduled test orders.</div>
+</div>
 </div>
 </section>
 
@@ -480,8 +516,58 @@ renderCat();
 
 $('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number($('bizLimit').value||0);$('bizDash').innerHTML='<div class="metric"><span class="muted">'+n+'</span><b>£0 / £'+l.toFixed(0)+'</b></div><p><span class="badge">Active</span><span class="badge">'+$('bizCycle').value+' billing</span><span class="badge">0 open invoices</span></p><p class="muted">Approved employee list, statement downloads and per-user spending rules would sit here.</p>'};
 
-let later=[];
-$('laterBook').onclick=()=>{later.unshift({date:$('laterDate').value,time:$('laterTime').value,items:$('laterItems').value});$('laterList').innerHTML=later.map(x=>'<div class="summarybox"><b>'+x.date+' at '+x.time+'</b><br><span class="muted">'+x.items.replace(/\n/g,' · ')+'</span><br><span class="ok">Scheduled</span></div>').join('')};
+const LATERKEY='dexters_growth_order_later_test_v2';
+let later=[];try{later=JSON.parse(localStorage.getItem(LATERKEY)||'[]')}catch(e){later=[]}
+function laterDT(date,time){return new Date(date+'T'+time+':00')}
+function fmtLater(d){return d.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})}
+function laterRelease(date,time,prep){const d=laterDT(date,time);return new Date(d.getTime()-Number(prep||30)*60000)}
+function updateLaterPreview(){
+ const date=$('laterDate').value,time=$('laterTime').value,prep=Number($('laterPrep').value||30),box=$('laterReleasePreview');
+ if(!date||!time){box.textContent='Choose a future collection date and time.';return}
+ const collection=laterDT(date,time),release=laterRelease(date,time,prep);
+ if(collection<=new Date()){box.innerHTML='<span class="bad">Collection time must be in the future.</span>';return}
+ box.innerHTML='<b>Requested collection:</b> '+fmtLater(collection)+'<br><span class="muted">If staff approve it, kitchen release would be about '+fmtLater(release)+' ('+prep+' min prep).</span>';
+}
+function saveLater(){localStorage.setItem(LATERKEY,JSON.stringify(later));renderLater()}
+function renderLater(){
+ $('laterList').innerHTML=later.map((x,i)=>{
+   const release=laterRelease(x.date,x.time,x.prep);
+   const badge=x.status==='Approved'?'ok':x.status==='Rejected'?'bad':'';
+   const controls=x.status==='Awaiting staff approval'
+    ?'<div class="row" style="margin-top:9px"><button class="btn small" onclick="approveLater('+i+')">Approve</button><button class="btn alt small" onclick="amendLater('+i+')">Change time</button><button class="btn alt small" onclick="rejectLater('+i+')">Reject</button></div>'
+    :x.status==='Amended — awaiting customer confirmation'
+    ?'<div class="summarybox notice"><b>Customer confirmation required</b><br><span class="muted">New collection time: '+x.date+' '+x.time+'</span><div class="row" style="margin-top:8px"><button class="btn small" onclick="confirmLater('+i+')">Customer accepts</button><button class="btn alt small" onclick="declineLaterAmend('+i+')">Customer declines</button></div></div>'
+    :'';
+   return '<div class="summarybox"><b>'+x.id+' · '+x.name+'</b><br>'+x.phone+'<br><b>Collection:</b> '+x.date+' '+x.time+'<br><span class="muted"><b>Order:</b> '+x.items.replace(/\n/g,' · ')+'</span><br>'+(x.notes?'<span class="muted"><b>Notes:</b> '+x.notes+'</span><br>':'')+'<span class="muted"><b>Kitchen release:</b> '+fmtLater(release)+' ('+x.prep+' min before)</span><br><span class="'+badge+'">'+x.status+'</span>'+controls+'</div>';
+ }).join('')||'No scheduled test orders.';
+}
+$('laterDate').min=new Date().toISOString().slice(0,10);
+$('laterDate').value=new Date(Date.now()+86400000).toISOString().slice(0,10);
+['laterDate','laterTime','laterPrep'].forEach(id=>$(id).addEventListener('input',updateLaterPreview));
+updateLaterPreview();
+$('laterBook').onclick=()=>{
+ const name=$('laterName').value.trim(),phone=$('laterPhone').value.trim(),date=$('laterDate').value,time=$('laterTime').value,prep=Number($('laterPrep').value||30),items=$('laterItems').value.trim(),notes=$('laterNotes').value.trim();
+ if(!name||!phone||!date||!time||!items){$('laterCustomerStatus').innerHTML='<span class="bad">Complete the customer, contact, collection time and order details.</span>';return}
+ const collection=laterDT(date,time);
+ if(collection<=new Date()){ $('laterCustomerStatus').innerHTML='<span class="bad">Choose a collection time in the future.</span>';return }
+ if(!$('laterConfirm').checked){$('laterCustomerStatus').innerHTML='<span class="bad">Please confirm that the requested time needs staff approval.</span>';return}
+ const id='LATER-'+String(Date.now()).slice(-6);
+ later.unshift({id,name,phone,date,time,prep,items,notes,status:'Awaiting staff approval',created:new Date().toISOString()});
+ saveLater();
+ $('laterCustomerStatus').innerHTML='<b>'+id+'</b><br><span class="ok">Future collection request sent for staff approval.</span>';
+};
+window.approveLater=i=>{later[i].status='Approved';saveLater()};
+window.rejectLater=i=>{later[i].status='Rejected';saveLater()};
+window.amendLater=i=>{
+ const current=later[i],newDate=prompt('New collection date (YYYY-MM-DD)',current.date);if(newDate===null)return;
+ const newTime=prompt('New collection time (HH:MM)',current.time);if(newTime===null)return;
+ const dt=laterDT(newDate,newTime);
+ if(Number.isNaN(dt.getTime())||dt<=new Date()){alert('Choose a valid future date and time.');return}
+ current.date=newDate;current.time=newTime;current.status='Amended — awaiting customer confirmation';saveLater();
+};
+window.confirmLater=i=>{later[i].status='Approved';saveLater()};
+window.declineLaterAmend=i=>{later[i].status='Customer declined amended time';saveLater()};
+renderLater();
 
 let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing now','Almost ready','Ready for collection'];$('trackNext').onclick=()=>{track=Math.min(track+1,4);document.querySelectorAll('#trackSteps .dot').forEach((d,i)=>d.classList.toggle('on',i<=track));$('trackMsg').textContent='Order #TEST-1042 — '+labels[track]+(track===4?' ✅':'')};
 
