@@ -943,6 +943,79 @@ lessons.push(
   ["What if food storage temperature is outside the safe limit?",["Ignore it","Follow procedure and escalate","Serve it quickly"],1]
  ]}
 );
+
+lessons.push(
+ {group:"Operational",title:"Pest awareness & waste handling",icon:"🗑️",scenes:[
+  ["Keep food and waste controlled","Food waste, open bins and spills can attract pests and contaminate food areas."],
+  ["Look for warning signs","Report droppings, gnaw marks, insects, damaged packaging or unusual pest activity immediately."],
+  ["Use bins correctly","Keep waste containers suitable, closed where required, emptied regularly and away from food preparation."],
+  ["Do not treat infestations yourself","Follow Dexter's pest-control procedure and escalate suspected activity to management."]
+ ],questions:[
+  ["What should happen if pest signs are found?",["Ignore them","Report them immediately","Move them to another room"],1],
+  ["How should food waste be managed?",["Controlled and removed regularly","Left open","Stored beside ready-to-eat food"],0],
+  ["Should staff improvise pest treatment?",["Yes","No, follow procedure and escalate","Always"],1]
+ ]},
+ {group:"Operational",title:"Security, cash handling & safe closing",icon:"💷",scenes:[
+  ["Keep cash exposure low","Follow Dexter's current till and cash-handling procedure and avoid unnecessary cash being left visible."],
+  ["Protect keys and access","Do not share keys, codes or staff-only access with unauthorised people."],
+  ["Closing safely","Follow the agreed closing sequence and do not create unsafe lone-working shortcuts."],
+  ["Suspicious or threatening situations","Prioritise personal safety, follow the business procedure and involve police/emergency services where necessary."]
+ ],questions:[
+  ["Should till codes or keys be shared with unauthorised people?",["Yes","No","Only if busy"],1],
+  ["What matters most in a threatening situation?",["Protecting stock","Personal safety and following procedure","Finishing the order"],1],
+  ["Should closing steps be skipped to save time?",["Yes","No","Always"],1]
+ ]},
+ {group:"Operational",title:"Customer data & privacy",icon:"🔒",scenes:[
+  ["Customer information is private","Names, phone numbers, loyalty details, orders and account information should only be used for authorised Dexter's work."],
+  ["Use only the access you need","Do not browse customer or staff records out of curiosity."],
+  ["Do not share data casually","Never send screenshots, customer details or account information to unauthorised people."],
+  ["Report mistakes quickly","If information is sent to the wrong person, exposed or accessed incorrectly, tell the responsible manager immediately."]
+ ],questions:[
+  ["Can staff browse customer records out of curiosity?",["Yes","No","Only after closing"],1],
+  ["Should customer screenshots be shared outside authorised work?",["Yes","No","If funny"],1],
+  ["What if customer data is sent to the wrong person?",["Delete it and say nothing","Report it immediately","Post it again"],1]
+ ]},
+ {group:"Operational",title:"Emergency shutdowns & service outages",icon:"🚨",scenes:[
+  ["Power or water loss","Stop any activity that cannot be carried out safely and protect food, staff and customers."],
+  ["Fridge or freezer failure","Check affected food and temperatures using Dexter's food-safety procedure rather than assuming it is safe."],
+  ["Internet, KDS or ordering outage","Use the approved fallback process and keep one clear record of orders to avoid duplicates."],
+  ["Reopening safely","Do not resume affected operations until the responsible person confirms it is safe and systems are ready."]
+ ],questions:[
+  ["What should happen during a fridge failure?",["Assume food is fine","Follow temperature/food-safety procedure","Turn the lights off"],1],
+  ["During a KDS outage, why keep one clear order record?",["To avoid missed or duplicate orders","For decoration","No reason"],0],
+  ["When should affected service resume?",["Immediately","When confirmed safe and ready","Whenever a customer asks"],1]
+ ]},
+ {group:"Health & Safety",title:"Delivery & stock receiving",icon:"📦",scenes:[
+  ["Check every delivery","Inspect packaging, condition, dates and any signs of contamination before accepting stock."],
+  ["Check temperatures where required","Use Dexter's Temperature Control House Rules for chilled and frozen deliveries."],
+  ["Reject unsafe stock","Do not accept food beyond its use-by date or food that is seriously damaged or contaminated."],
+  ["Record the delivery","Complete the required delivery checks so problems can be traced and suppliers reviewed if necessary."]
+ ],questions:[
+  ["Can food beyond its use-by date be accepted?",["Yes","No","If discounted"],1],
+  ["What should be checked on incoming food?",["Condition, dates and required temperatures","Only price","Only brand"],0],
+  ["What should happen to seriously damaged/contaminated stock?",["Accept it","Reject it","Hide it"],1]
+ ]},
+ {group:"Health & Safety",title:"Food labelling, dates & stock rotation",icon:"🏷️",scenes:[
+  ["Use-by is about safety","Food with an expired use-by date must not be used."],
+  ["Best-before is mainly quality","Follow Dexter's stock rules and product instructions when handling best-before dates."],
+  ["Re-label opened or prepared high-risk food correctly","Use the suitable date specified by manufacturer instructions and Dexter's House Rules."],
+  ["Rotate stock","Use first-in, first-out and remove damaged or unsuitable stock from normal storage."]
+ ],questions:[
+  ["Can food be used after its use-by date?",["Yes","No","If it smells fine"],1],
+  ["What does first-in, first-out mean?",["Use older suitable stock before newer stock","Use newest first","Mix everything"],0],
+  ["Should high-risk prepared food be labelled with a suitable date?",["Yes","No","Only on Sundays"],0]
+ ]},
+ {group:"Health & Safety",title:"Cleaning schedules & records",icon:"🧽",scenes:[
+  ["Cleaning must be planned","Follow Dexter's cleaning schedule for what is cleaned, how, when and by whom."],
+  ["Use the correct product and method","Follow product instructions and the cleaning procedure for food-contact and non-food-contact areas."],
+  ["Do not clean around exposed food","Protect food from chemicals, dirt and splash contamination."],
+  ["Record completion and problems","Complete required cleaning records and report anything that cannot be properly cleaned or maintained."]
+ ],questions:[
+  ["Should cleaning follow a schedule?",["Yes","No","Only when visibly dirty"],0],
+  ["Can chemicals be used beside exposed food?",["Yes","No, protect/remove food first","Always"],1],
+  ["What if equipment cannot be properly cleaned?",["Ignore it","Report it","Use more perfume"],1]
+ ]}
+);
 const TRAIN_GROUPS={"Core":0,"Operational":1,"Health & Safety":2};
 lessons.forEach((l,i)=>{if(!l.group)l.group="Core"});
 let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{}};
