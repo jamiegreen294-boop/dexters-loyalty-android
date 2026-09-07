@@ -47,11 +47,11 @@ const bootstrap=`
           real.onerror=()=>end('failed');
           const timer=setTimeout(()=>end('timeout'), src.startsWith('/')?4000:6000);
         });
-        document.body.appendChild(real);
+        document.head.appendChild(real);
         await done;
       }else{
         real.textContent=old.textContent||'';
-        document.body.appendChild(real);
+        document.head.appendChild(real);
         await new Promise(r=>setTimeout(r,0));
       }
     }
