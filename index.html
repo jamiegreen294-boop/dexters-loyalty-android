@@ -1199,6 +1199,7 @@ const SUPABASE_URL='https://bpnkouymdvcogeaqjmxl.supabase.co';
 const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
 const SB=window.__DEXTERS_AUTH_CLIENT||window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
 let SECURE_SESSION=null,SECURE_ACCOUNT=null;
+let CURRENT_STAFF_ROLE='Staff';
 window.dextersCompleteSecureLogin=async function(session,account){
  SECURE_SESSION=session||null;
  SECURE_ACCOUNT=account||null;
@@ -2740,7 +2741,7 @@ function renderComplianceDashboard(){
 }
 const STAFFDBKEY='dexters_growth_staff_database_test_v1';
 const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
-let CURRENT_STAFF_ROLE='Staff';
+
 let staffDb={selected:null,staff:[]};
 try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
 if(!Array.isArray(staffDb.staff)||!staffDb.staff.length){
