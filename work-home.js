@@ -29,7 +29,11 @@ function start(){
  // The quick action and bottom navigation already provide WhatsApp access.
  for(const heading of home.querySelectorAll('.card > h2')){if(heading.textContent.trim()==='💬 Message Dexter’s')heading.closest('.card').remove()}
  const pageHomeIds=['qrPage','accountPage','spinPage','staffPage','menuPage'];
- for(const id of pageHomeIds){const page=$(id);if(page&&!page.querySelector('.work-page-home')){const b=node('button','work-page-home','← Home');b.type='button';b.onclick=()=>nav('homePage');page.prepend(b)}}
+ for(const id of pageHomeIds){
+  const page=$(id);if(!page)continue;
+  const existing=[...page.querySelectorAll('a,button')].find(el=>/^(?:←\s*)?home$/i.test((el.textContent||'').trim()));
+  if(!existing){const b=node('button','work-page-home','← Home');b.type='button';b.onclick=()=>nav('homePage');page.prepend(b)}
+ }
  const menuLink=node('button','work-small','Browse the full menu');menuLink.type='button';menuLink.onclick=()=>nav('menuPage');home.append(menuLink);
  const staffLink=node('button','work-small','Staff / Admin');staffLink.type='button';staffLink.onclick=()=>nav('staffPage');top.append(staffLink);const staffNav=$('staffNav');function syncStaff(){staffLink.hidden=!staffNav||staffNav.classList.contains('hidden')}syncStaff();if(staffNav)new MutationObserver(syncStaff).observe(staffNav,{attributes:true,attributeFilter:['class']});
  const homeNav=node('nav','');homeNav.id='workHomeNav';homeNav.setAttribute('aria-label','Customer home navigation');homeNav.innerHTML='<button type="button" id="workNavHome" class="active" aria-current="page"><b>🏠</b>Home</button><a href="/collection-order-test.html"><b>🍔</b>Order</a><button type="button" id="workNavRewards"><b>🎁</b>Rewards</button><a href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><b>💬</b>Dexter</a><button type="button" id="workNavAccount"><b>👤</b>Account</button>';document.body.append(homeNav);
@@ -76,4 +80,61 @@ function start(){
  if(document.documentElement.dataset.layoutFixture==='true'){render([])}else{refresh();setInterval(refresh,30000)}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+
+;(function dextersRewardsDealsTest(){
+'use strict';
+const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
+const DEALS=[
+ ['Chicken Tenders','Winter Tenders','4 Chicken Tenders + Chips + Can','£13.50','£12.50','❄️'],
+ ['Dexter’s Smash Burgers','Valentine Burger Deal','2 Dexter Smash Burgers + 2 Cans','£20.40','£18.99','❤️'],
+ ['Dexter’s Street Subs','Street Sub Meal','Chicken Mayo Melt + Chips + Can','£11.50','£10.75','🍀'],
+ ['Chicken Burgers','Easter Chicken Deal','Classic Chicken Smash + Can + Garlic Bread','£14.20','£13.25','🐣'],
+ ['Dexter’s Smash Burgers','Smash & Rings','Dexter Smash + Can + Onion Rings','£14.70','£13.49','☀️'],
+ ['Dexter’s Street Subs','Summer Sub','Southern Fried Chicken Sub + Chips + Can','£12.00','£10.99','🌤️'],
+ ['Chicken Tenders','Summer Tenders','6 Chicken Tenders + Chips + Can','£15.50','£14.25','☀️'],
+ ['Chicken Tenders','BBQ Summer','BBQ Tenders + Chips + Can','£13.50','£12.50','🍔'],
+ ['Dexter’s Street Subs','Back to Routine','Chicken Mayo Melt + Chips + Can','£11.50','£10.75','🔥'],
+ ['Inferno Chicken Tenders','Halloween Inferno','Inferno Chicken + Chips + Can','£14.00','£12.99','🎃'],
+ ['Dexter’s Rice Bowls','Winter Warmer','Chicken Curry Rice Bowl + Can','£11.00','£10.25','🍟'],
+ ['Dexter’s Smash Burgers','Christmas Burger Feast','2 Dexter Smash Burgers + 2 Cans + Onion Rings','£24.90','£22.99','🎄']
+];
+let busy=false,lastKey='';
+function ses(){try{const j=JSON.parse(localStorage.getItem('sb-bpnkouymdvcogeaqjmxl-auth-token')||'null');return j?.currentSession||j?.session||j}catch{return null}}
+async function call(url,opt={}){const s=ses();if(!s?.access_token)throw Error('Sign in required');const r=await fetch(url,{...opt,headers:{apikey:K,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json',...(opt.headers||{})}});const text=await r.text();let d=null;try{d=text?JSON.parse(text):null}catch{}if(!r.ok)throw Error((d&&(d.error||d.message))||('HTTP '+r.status));return d}
+function esc(v){return String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function keyFor(d){const n=new Date(),m=n.getMonth()+1;return 'yearly-'+n.getFullYear()+'-'+String(m).padStart(2,'0')+'-'+d[1].toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+function expiry(){const n=new Date();return new Date(n.getFullYear(),n.getMonth()+1,1,0,0,0,0).toISOString()}
+async function render(){
+ const page=document.getElementById('qrPage');if(!page||page.classList.contains('hidden')||busy)return;
+ const s=ses();if(!s?.access_token)return;
+ busy=true;
+ try{
+  const d=DEALS[new Date().getMonth()];
+  const [setting,claimRaw,personalRaw]=await Promise.all([
+   call(U+'/rest/v1/loyalty_deal_settings?id=eq.1&select=auto_enabled',{method:'GET'}),
+   call(U+'/rest/v1/rpc/loyalty_claim_deal',{method:'POST',body:JSON.stringify({p_deal_key:keyFor(d),p_expires_at:expiry()})}),
+   call(U+'/functions/v1/customer-offers-admin',{method:'POST',body:JSON.stringify({action:'customer_offers'})}).catch(()=>({offers:[]}))
+  ]);
+  const claim=Array.isArray(claimRaw)?claimRaw[0]:claimRaw;
+  const now=Date.now();
+  const personal=(personalRaw?.offers||[]).filter(o=>o.status==='active'&&(!o.expires_at||new Date(o.expires_at).getTime()>now));
+  const monthly=!!(Array.isArray(setting)&&setting[0]?.auto_enabled&&claim&&!claim.redeemed_at);
+  const renderKey=JSON.stringify([monthly?claim.claim_id:null,personal.map(o=>[o.id,o.status,o.expires_at])]);
+  if(renderKey===lastKey&&document.getElementById('workRewardsDeals'))return;lastKey=renderKey;
+  let card=document.getElementById('workRewardsDeals');
+  if(!card){card=document.createElement('section');card.id='workRewardsDeals';card.className='card work-rewards-deals';const first=page.firstElementChild;first?page.insertBefore(card,first.nextSibling):page.appendChild(card)}
+  let html='<h2>Deals & Personal Rewards</h2>';
+  if(monthly)html+='<article class="work-deal-item"><span class="work-deal-tag">MONTHLY DEAL</span><h3>'+esc(d[5]+' '+d[1])+'</h3><p>'+esc(d[2])+'</p><div><span class="work-deal-old">'+esc(d[3])+'</span><strong class="work-deal-price">'+esc(d[4])+'</strong></div><button type="button" class="btn primary" id="workMonthlyDealClaim">Use with collection order</button></article>';
+  for(const o of personal)html+='<article class="work-deal-item"><span class="work-deal-tag">PERSONAL DEAL</span><h3>'+esc(o.title)+'</h3>'+(o.reward_value?'<p><strong>'+esc(o.reward_value)+'</strong></p>':'')+(o.expires_at?'<p class="work-desc">Expires '+esc(new Date(o.expires_at).toLocaleDateString('en-GB'))+'</p>':'')+'</article>';
+  if(!monthly&&!personal.length)html+='<p class="work-desc">No active deals are waiting on this account.</p>';
+  card.innerHTML=html;
+  const b=document.getElementById('workMonthlyDealClaim');if(b)b.onclick=()=>{localStorage.setItem('dexters_pending_deal_claim',claim.claim_id);location.href='/collection-order-test.html?deal_claim='+encodeURIComponent(claim.claim_id)};
+ }catch(e){
+  let card=document.getElementById('workRewardsDeals');if(!card){card=document.createElement('section');card.id='workRewardsDeals';card.className='card work-rewards-deals';page.appendChild(card)}
+  card.innerHTML='<h2>Deals & Personal Rewards</h2><p class="work-desc">Deals could not load. Close Rewards and open it again.</p>';
+ }finally{busy=false}
+}
+function boot(){const page=document.getElementById('qrPage');if(!page)return;new MutationObserver(()=>{if(!page.classList.contains('hidden'))render()}).observe(page,{attributes:true,attributeFilter:['class']});if(!page.classList.contains('hidden'))render()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
