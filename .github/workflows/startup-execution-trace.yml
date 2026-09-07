@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'postprocess-startup-unblock.cjs'
+      - 'web/spin-prize-order-flow.js'
+      - '.github/workflows/startup-execution-trace.yml'
 jobs:
   trace:
     runs-on: ubuntu-latest
@@ -25,7 +27,7 @@ jobs:
             const b=await chromium.launch({headless:true});
             const p=await b.newPage();
             p.on('console',m=>console.log('BROWSER',m.type(),m.text()));
-            p.on('pageerror',e=>console.log('PAGEERROR',String(e)));
+            p.on('pageerror',e=>console.log('PAGEERROR',e.stack||String(e)));
             try{
               const r=await p.goto('http://127.0.0.1:4173/',{waitUntil:'domcontentloaded',timeout:8000});
               console.log('DCL_STATUS',r.status());
