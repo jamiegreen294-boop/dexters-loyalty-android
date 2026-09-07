@@ -35,6 +35,7 @@ const bootstrap=`
         real.setAttribute(a.name,a.value);
       }
       const src=old.dataset.dexSrc||'';
+      console.log('[dex-startup] begin',old.dataset.dexOrder,old.id||'',src||'inline');
       old.remove();
       if(src){
         real.src=src;
