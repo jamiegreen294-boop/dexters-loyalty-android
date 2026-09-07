@@ -43,45 +43,11 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 @media(max-width:980px){.dex-backoffice-shell{grid-template-columns:1fr}.dex-backoffice-nav{border-right:0;border-bottom:1px solid #342640;display:flex;gap:5px;overflow:auto;align-items:center}.dex-backoffice-logo,.dex-backoffice-nav .navsub,.dex-backoffice-nav .navgroup{display:none}.dex-backoffice-nav .tab{width:auto;white-space:nowrap}.bo-module-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.bo-kpis{grid-template-columns:repeat(2,1fr)}.bo-module-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.top{display:block}.pill{display:inline-block;margin-top:8px}}
 
-/* 2026-09-07 private Back Office mobile layout refresh.
-   gh-pages / dexters-hub test only — does not alter the live customer app. */
-@media(max-width:680px){
-  body{background:linear-gradient(180deg,#21102f 0,#100817 36%,#08050c 100%)}
-  .wrap{padding:14px 12px 88px;max-width:none}
-  .home{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border:1px solid #6b4283;border-radius:13px;background:#171022;margin:0 0 10px;font-size:15px}
-  .top{margin-top:0;padding:4px 2px 8px}
-  .top h1{font-size:38px;line-height:1;margin:5px 0 8px}
-  .top .sub{font-size:14px;line-height:1.35;margin:0}
-  .top .pill{margin-top:10px}
-  #secureAuthCard{border-radius:16px;padding:14px;margin:10px 0!important}
-  #secureAuthCard h2{font-size:22px}
-  #secureSignedIn{display:flex!important;align-items:center;gap:8px;flex-wrap:wrap}
-  #secureSignedIn[style*="display:none"]{display:none!important}
-  #secureAuthMessage{font-size:12px}
-  .dex-backoffice-shell{border:0;border-radius:0;background:transparent;min-height:0;overflow:visible}
-  .dex-backoffice-nav{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:10px 0 12px;border:0;border-bottom:1px solid #432d52;background:linear-gradient(180deg,#100817 78%,#100817ee);overflow:visible}
-  .dex-backoffice-logo{display:block!important;grid-column:1/-1;font-size:13px;letter-spacing:.13em;color:var(--gold);margin:0 2px 2px}
-  .dex-backoffice-nav .navsub,.dex-backoffice-nav .navgroup{display:none!important}
-  .dex-backoffice-nav .tab{width:100%;min-width:0;white-space:normal;text-align:center;margin:0;padding:10px 8px;border:1px solid #4b315d;border-radius:12px;background:#171022;font-size:13px;line-height:1.15}
-  .dex-backoffice-nav .tab.active{background:linear-gradient(120deg,#ffd43b,#7c3aed);color:#160f1b;border-color:transparent}
-  .dex-backoffice-main{padding:10px 0 0}
-  .dex-backoffice-main>.panel>.card.notice:first-child{margin-top:0}
-  .card{border-radius:15px;padding:13px;margin:10px 0;box-shadow:0 8px 24px #0004}
-  .bo-rolebar{display:none}
-  .bo-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:9px 0}
-  .bo-kpi{padding:11px;border-radius:12px}.bo-kpi b{font-size:20px}
-  .bo-module-grid{grid-template-columns:1fr;gap:8px}
-  .bo-module{padding:12px;border-radius:12px}.bo-module p{margin-bottom:0}
-  .grid{grid-template-columns:1fr;gap:8px}
-  .row{align-items:stretch}.row .btn{flex:1}
-  input,select,textarea{font-size:16px}
-}
-
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-07-2358-mobile-refresh">
+<main class="wrap" data-build="2026-09-08-0003-refresh-session-fix">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -138,6 +104,68 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
       return window.__DEXTERS_AUTH_CLIENT;
     }
 
+    function showStandaloneSession(session,account){
+      if(!session||!account||account.active===false)return false;
+      window.__DEXTERS_SIGNED_IN_SESSION=session;
+      window.__DEXTERS_SIGNED_IN_ACCOUNT=account;
+      const signedOut=document.getElementById('secureSignedOut');
+      const signedIn=document.getElementById('secureSignedIn');
+      const userLabel=document.getElementById('secureUserLabel');
+      const roleLabel=document.getElementById('secureRoleLabel');
+      const shell=document.getElementById('secureBackOfficeShell');
+      if(signedOut)signedOut.style.display='none';
+      if(signedIn)signedIn.style.display='block';
+      if(userLabel)userLabel.textContent=session.user?.email||account.email||'Signed in';
+      if(roleLabel)roleLabel.textContent=account.role||'Authenticated';
+      if(account.must_change_password){
+        sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
+        const ov=document.getElementById('firstPasswordOverlay');
+        if(ov)ov.style.display='block';
+      }else if(shell){
+        shell.style.display='grid';
+      }
+      const rank={'Staff':1,'Team Leader':2,'Manager':3,'Super User':4};
+      document.querySelectorAll('.dex-backoffice-nav .tab[data-minrole]').forEach(function(b){
+        b.style.display=(rank[account.role]||0)>=(rank[b.dataset.minrole]||0)?'block':'none';
+      });
+      msg.innerHTML=account.must_change_password
+        ? '<span class="muted">Password change required before access.</span>'
+        : '<span class="ok">Secure account active.</span>';
+      window.__DEXTERS_PENDING_LOGIN={session:session,account:account};
+      return true;
+    }
+
+    async function restoreStandaloneSession(){
+      const client=getClient(); if(!client)return;
+      try{
+        const {data,error}=await client.auth.getSession();
+        if(error||!data?.session)return;
+        const session=data.session;
+        const {data:account,error:accountError}=await client
+          .from('backoffice_staff_accounts')
+          .select('staff_record_id,email,role,must_change_password,active')
+          .eq('auth_user_id',session.user.id)
+          .maybeSingle();
+        if(accountError||!account||account.active===false)return;
+        showStandaloneSession(session,account);
+        // Let the full Back Office enhance the restored session when it is ready,
+        // but never make the visible login state depend on that handoff.
+        let tries=0;
+        const handoff=setInterval(function(){
+          tries++;
+          if(typeof window.dextersCompleteSecureLogin==='function'){
+            clearInterval(handoff);
+            window.__DEXTERS_PENDING_LOGIN=null;
+            Promise.resolve(window.dextersCompleteSecureLogin(session,account)).catch(function(e){
+              msg.innerHTML='<span class="bad">Signed in, but secure data could not load: '+String(e.message||e)+'</span>';
+            });
+          }else if(tries>=40){
+            clearInterval(handoff);
+          }
+        },100);
+      }catch(e){}
+    }
+
     loginBtn.onclick=async function(e){
       e.preventDefault();
       const email=emailEl.value.trim();
@@ -171,40 +199,20 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
         if(!account)throw new Error('This account is not authorised for Dexter\'s Back Office.');
         if(account.active===false)throw new Error('Back Office access is disabled for this account.');
 
-        window.__DEXTERS_SIGNED_IN_ACCOUNT=account;
-        msg.innerHTML='<span class="ok">Signed in securely as '+String(account.role||'staff')+'. Opening Back Office…</span>';
-
-        const signedOut=document.getElementById('secureSignedOut');
-        const signedIn=document.getElementById('secureSignedIn');
-        const userLabel=document.getElementById('secureUserLabel');
-        const roleLabel=document.getElementById('secureRoleLabel');
-        const shell=document.getElementById('secureBackOfficeShell');
-
-        if(signedOut)signedOut.style.display='none';
-        if(signedIn)signedIn.style.display='block';
-        if(userLabel)userLabel.textContent=data.session.user.email||email;
-        if(roleLabel)roleLabel.textContent=account.role||'Authenticated';
-
-        if(account.must_change_password){
-          sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
-          const ov=document.getElementById('firstPasswordOverlay');
-          if(ov)ov.style.display='block';
-        }else{
-          if(shell)shell.style.display='grid';
-          const rank={'Staff':1,'Team Leader':2,'Manager':3,'Super User':4};
-          document.querySelectorAll('.dex-backoffice-nav .tab[data-minrole]').forEach(function(b){
-            b.style.display=(rank[account.role]||0)>=(rank[b.dataset.minrole]||0)?'block':'none';
-          });
-        }
-
-        // Hand off only after the whole Back Office script has finished initialising.
-        // Until then, keep the authenticated session/account queued safely.
-        if(window.__DEXTERS_MAIN_READY&&typeof window.dextersCompleteSecureLogin==='function'){
-          await window.dextersCompleteSecureLogin(data.session,account);
-        }else{
-          window.__DEXTERS_PENDING_LOGIN={session:data.session,account:account};
-          msg.innerHTML='<span class="ok">Signed in securely. Finishing Back Office startup…</span>';
-        }
+        showStandaloneSession(data.session,account);
+        let tries=0;
+        const handoff=setInterval(function(){
+          tries++;
+          if(typeof window.dextersCompleteSecureLogin==='function'){
+            clearInterval(handoff);
+            window.__DEXTERS_PENDING_LOGIN=null;
+            Promise.resolve(window.dextersCompleteSecureLogin(data.session,account)).catch(function(e){
+              msg.innerHTML='<span class="bad">Signed in, but secure data could not load: '+String(e.message||e)+'</span>';
+            });
+          }else if(tries>=40){
+            clearInterval(handoff);
+          }
+        },100);
       }catch(err){
         msg.innerHTML='<span class="bad">'+String(err&&err.message||err)+'</span>';
       }finally{loginBtn.disabled=false;}
@@ -228,8 +236,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 
     passEl.addEventListener('keydown',function(e){if(e.key==='Enter')loginBtn.click();});
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initStandaloneAuthButtons);
-  else initStandaloneAuthButtons();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){initStandaloneAuthButtons();restoreStandaloneSession();});
+  else {initStandaloneAuthButtons();restoreStandaloneSession();}
 })();
 </script>
 
