@@ -268,6 +268,10 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
 <h2>Manager view</h2>
 <div id="trainManager" class="muted">No training progress yet.</div>
+<hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
+<h2>Refresher & certification</h2>
+<div id="trainRefresher" class="summarybox muted">Training refresher status will appear here.</div>
+<div id="trainFinal" class="summarybox muted">Complete the required modules to unlock the final certification test.</div>
 </div>
 </div>
 </section>
@@ -1016,13 +1020,49 @@ lessons.push(
   ["What if equipment cannot be properly cleaned?",["Ignore it","Report it","Use more perfume"],1]
  ]}
 );
-const TRAIN_GROUPS={"Core":0,"Operational":1,"Health & Safety":2};
+
+lessons.unshift(
+ {group:"Core",title:"New starter induction",icon:"👋",scenes:[
+  ["Welcome to Dexter's","This induction explains how to work safely, where to find help and how Dexter's systems fit together."],
+  ["Know who to ask","If you are unsure about food safety, allergens, equipment, customers or systems, stop and ask the responsible supervisor or manager."],
+  ["Know the key systems","Dexter's uses the Loyalty app, collection ordering, KDS, rewards and staff/admin tools. Use only the access and actions your role allows."],
+  ["Know the emergency basics","Know the exits, first-aid arrangements, fire procedure, emergency contacts and where current checklists and House Rules are kept."],
+  ["No unsafe shortcuts","Never copy a shortcut you have not been trained to use. Ask first."]
+ ],questions:[
+  ["What should a new starter do if unsure?",["Guess","Ask the responsible supervisor/manager","Copy someone else's shortcut"],1],
+  ["Should staff use admin actions outside their role?",["Yes","No","Only when busy"],1],
+  ["What emergency information should a new starter know?",["Exits, first aid and emergency procedure","Only the Wi-Fi password","Nothing"],0]
+ ]}
+);
+lessons.push(
+ {group:"Manager",managerOnly:true,title:"Manager incident reporting & escalation",icon:"📋",scenes:[
+  ["Take control of the immediate risk","Make the situation safe first and arrange first aid or emergency help where needed."],
+  ["Record the facts","Record what happened, when, where, who was involved, immediate action taken and any relevant evidence."],
+  ["Escalate correctly","Food-safety incidents, serious injuries, data breaches, threats, equipment hazards and other significant events must follow Dexter's escalation procedure."],
+  ["Review and prevent recurrence","Identify what needs changing: equipment, training, procedure, supervision or risk controls."],
+  ["Keep records secure","Incident information can contain personal data and should only be shared with people who need it for the incident process."]
+ ],questions:[
+  ["What comes first in an incident?",["Make the immediate situation safe","Write the report before helping anyone","Delete evidence"],0],
+  ["What should an incident record contain?",["Facts, timing, people involved and action taken","Rumours","Only a conclusion"],0],
+  ["Why review incidents and near misses?",["To prevent recurrence","To assign blame automatically","No reason"],0]
+ ]}
+);
+const TRAIN_GROUPS={"Core":0,"Operational":1,"Health & Safety":2,"Manager":3};
 lessons.forEach((l,i)=>{if(!l.group)l.group="Core"});
-let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{}};
-try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState={...trainState,...saved}}catch(e){}
+let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{},completedAt:{},finalAttempts:0,finalScore:null,certifiedAt:null,refreshDays:180};
+try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState={...trainState,...saved,completedAt:saved.completedAt||{}}}catch(e){}
 let videoScene={},videoTimers={};
 function saveTraining(){localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderLessons();renderTrainingManager()}
-function completedCount(){return Object.values(trainState.completed||{}).filter(Boolean).length}
+function visibleLessonIndexes(){return lessons.map((l,i)=>({l,i})).filter(x=>!x.l.managerOnly||trainState.role==='Manager'||trainState.role==='Supervisor').map(x=>x.i)}
+function requiredLessonIndexes(){return visibleLessonIndexes()}
+function completedCount(){return requiredLessonIndexes().filter(i=>!!trainState.completed[i]).length}
+function requiredComplete(){const req=requiredLessonIndexes();return req.length>0&&req.every(i=>!!trainState.completed[i])}
+function refresherDueDate(){
+ const dates=requiredLessonIndexes().map(i=>trainState.completedAt?.[i]).filter(Boolean).map(x=>new Date(x).getTime());
+ if(!dates.length)return null;
+ const earliest=Math.min(...dates);
+ return new Date(earliest+(Number(trainState.refreshDays||180)*86400000));
+}
 function stopVideo(i){if(videoTimers[i]){clearInterval(videoTimers[i]);delete videoTimers[i]}}
 function renderVideo(i){
  const l=lessons[i],scene=videoScene[i]||0,watched=!!trainState.watched[i],pct=watched?100:Math.round((scene/(l.scenes.length-1))*100);
@@ -1046,15 +1086,15 @@ function quizMarkup(l,i){
 function renderLessons(){
  $('trainStaffName').value=trainState.staffName||'';$('trainRole').value=trainState.role||'Staff';
  let lastGroup='';
- $('lessonList').innerHTML=lessons.map((l,i)=>{
+ $('lessonList').innerHTML=lessons.map((l,i)=>{if(l.managerOnly&&trainState.role!=='Manager'&&trainState.role!=='Supervisor')return '';
   const done=!!trainState.completed[i],watched=!!trainState.watched[i],attempts=trainState.attempts[i]||0,score=trainState.scores[i];
   const heading=l.group!==lastGroup?'<h2 style="margin-top:22px">'+l.group+' Training</h2><p class="tiny">'+(l.group==='Health & Safety'?'Workplace safety modules based on catering risk guidance.':l.group==='Operational'?"Dexter's day-to-day systems and service procedures.":"Essential training for every Dexter's staff member.")+'</p>':'';
   lastGroup=l.group;
   return heading+'<div class="lesson '+(done?'done':'')+'"><b>'+l.icon+' '+l.title+'</b><p class="muted">'+(done?'Completed':'Animated lesson + knowledge test')+'</p><div class="training-video" id="trainVideo'+i+'"></div>'+(watched?(done?'<div class="summarybox"><span class="ok"><b>Passed ✓</b></span><br><span class="tiny">Score '+score+'% · '+attempts+' attempt(s)</span></div>':quizMarkup(l,i)):'<p class="tiny">Finish the animated lesson to unlock the test.</p>')+'</div>';
  }).join('');
  lessons.forEach((_,i)=>renderVideo(i));
- const done=completedCount();$('trainDone').textContent=done+' / '+lessons.length;
- $('trainStatus').innerHTML=done===lessons.length?'<span class="ok"><b>All training completed.</b></span>':'<b>'+(lessons.length-done)+' module(s) remaining.</b><br><span class="muted">Each module requires the animated lesson and an 80% test score.</span>';
+ const req=requiredLessonIndexes(),done=completedCount();$('trainDone').textContent=done+' / '+req.length;
+ $('trainStatus').innerHTML=done===req.length?'<span class="ok"><b>All required training completed.</b></span>':'<b>'+(req.length-done)+' required module(s) remaining.</b><br><span class="muted">Each required module needs the animated lesson and an 80% test score.</span>';
 }
 window.checkLesson=i=>{
  const l=lessons[i];if(!trainState.watched[i])return;
@@ -1063,16 +1103,63 @@ window.checkLesson=i=>{
  const feedback=$('trainFeedback'+i);if(answered<l.questions.length){feedback.innerHTML='<span class="bad">Answer every question before submitting.</span>';return}
  trainState.attempts[i]=(trainState.attempts[i]||0)+1;
  const score=Math.round(correct/l.questions.length*100);trainState.scores[i]=score;
- if(score>=80){trainState.completed[i]=true;saveTraining()}
+ if(score>=80){trainState.completed[i]=true;trainState.completedAt=trainState.completedAt||{};trainState.completedAt[i]=new Date().toISOString();trainState.certifiedAt=null;trainState.finalScore=null;saveTraining()}
  else{feedback.innerHTML='<span class="bad">Score '+score+'%. You need 80% to pass. Review the lesson and try again.</span>';localStorage.setItem(TRAINKEY,JSON.stringify(trainState))}
 };
 function renderTrainingManager(){
- const done=completedCount(),pct=Math.round(done/lessons.length*100);
- const groups=['Core','Operational','Health & Safety'].map(g=>{const idx=lessons.map((l,i)=>[l,i]).filter(([l])=>l.group===g),gd=idx.filter(([,i])=>trainState.completed[i]).length;return '<div class="tiny"><b>'+g+':</b> '+gd+'/'+idx.length+'</div>'}).join('');
- $('trainManager').innerHTML='<div class="summarybox"><b>'+String(trainState.staffName||'Unnamed staff')+'</b><br><span class="muted">'+trainState.role+' · '+done+'/'+lessons.length+' complete</span><div class="progress"><i style="width:'+pct+'%"></i></div>'+groups+'<hr style="border:0;border-top:1px solid #ffffff17;margin:10px 0">'+lessons.map((l,i)=>'<div class="tiny">'+(trainState.completed[i]?'✓':'○')+' '+l.title+(trainState.scores[i]!=null?' — '+trainState.scores[i]+'%':'')+'</div>').join('')+'</div>';
+ const req=requiredLessonIndexes(),done=completedCount(),pct=req.length?Math.round(done/req.length*100):0;
+ const groups=['Core','Operational','Health & Safety','Manager'].map(g=>{
+  const idx=lessons.map((l,i)=>[l,i]).filter(([l,i])=>l.group===g&&req.includes(i));if(!idx.length)return '';
+  const gd=idx.filter(([,i])=>trainState.completed[i]).length;return '<div class="tiny"><b>'+g+':</b> '+gd+'/'+idx.length+'</div>'
+ }).join('');
+ $('trainManager').innerHTML='<div class="summarybox"><b>'+String(trainState.staffName||'Unnamed staff')+'</b><br><span class="muted">'+trainState.role+' · '+done+'/'+req.length+' required modules complete</span><div class="progress"><i style="width:'+pct+'%"></i></div>'+groups+'<hr style="border:0;border-top:1px solid #ffffff17;margin:10px 0">'+req.map(i=>'<div class="tiny">'+(trainState.completed[i]?'✓':'○')+' '+lessons[i].title+(trainState.scores[i]!=null?' — '+trainState.scores[i]+'%':'')+'</div>').join('')+'</div>';
+ renderRefresherAndFinal();
 }
+
+const FINAL_QUESTIONS=[
+ ["A customer asks about an allergen and you are unsure. What do you do?",["Guess","Check Dexter's recorded information and escalate if still unsure","Say it is safe"],1],
+ ["When should a collection order be marked collected?",["When handed to the customer","When accepted","When cooking starts"],0],
+ ["What is the minimum catering notice?",["24 hours","48 hours","No minimum"],1],
+ ["Can an approved deal be sent automatically?",["Yes","No, staff must send it separately","Always"],1],
+ ["What should happen to a spill?",["Leave it","Clean or isolate it promptly","Cover it with paper"],1],
+ ["Can hand rub replace proper handwashing?",["Yes","No","Always"],1],
+ ["What should staff do after vomiting/diarrhoea?",["Return immediately","Report it and remain away from food handling until at least 48 hours symptom-free","Only wear gloves"],1],
+ ["Recommended fridge/chill operating temperature in the training?",["5°C or below","15°C","Room temperature"],0],
+ ["Can food be used after its use-by date?",["Yes if it smells okay","No","Only when cooked"],1],
+ ["What if equipment appears unsafe?",["Keep using it","Stop using it and escalate","Ask a customer"],1],
+ ["Can staff silently substitute an unavailable item?",["Yes","No","If cheaper"],1],
+ ["What should happen if customer data is sent to the wrong person?",["Hide it","Report it immediately","Share it again"],1]
+];
+function renderRefresherAndFinal(){
+ const due=refresherDueDate(),now=new Date(),cert=trainState.certifiedAt?new Date(trainState.certifiedAt):null;
+ const certExpiry=cert?new Date(cert.getTime()+Number(trainState.refreshDays||180)*86400000):null;
+ let refreshHtml='<b>Refresher cycle:</b> every '+trainState.refreshDays+' days in this test setup.<br>';
+ if(cert){
+  refreshHtml+='<span class="'+(certExpiry<=now?'bad':'ok')+'"><b>'+(certExpiry<=now?'Certification refresher due':'Certification current')+'</b></span><br><span class="tiny">Certified '+cert.toLocaleDateString()+' · refresher due '+certExpiry.toLocaleDateString()+'</span>';
+ }else if(due){
+  refreshHtml+='<span class="'+(due<=now?'bad':'muted')+'">Module refresher reference: '+due.toLocaleDateString()+'</span>';
+ }else refreshHtml+='<span class="muted">Complete training to start the refresher clock.</span>';
+ $('trainRefresher').innerHTML=refreshHtml;
+ if(!requiredComplete()){
+  $('trainFinal').innerHTML='<b>Final certification locked</b><br><span class="muted">Complete all required modules for this role first.</span>';return;
+ }
+ if(trainState.certifiedAt){
+  $('trainFinal').innerHTML='<span class="ok"><b>Dexter\\'s Staff Training Certified ✓</b></span><br><span class="muted">Final score '+trainState.finalScore+'% · attempts '+trainState.finalAttempts+'</span><br><span class="tiny">Test certification record only. Refresher cycle: '+trainState.refreshDays+' days.</span>';return;
+ }
+ $('trainFinal').innerHTML='<b>Final certification test</b><p class="tiny">12 mixed questions. Pass mark 80%.</p>'+FINAL_QUESTIONS.map((q,i)=>'<div class="field"><b>'+(i+1)+'. '+q[0]+'</b><select id="finalAnswer'+i+'"><option value="">Choose an answer</option>'+q[1].map((a,ai)=>'<option value="'+ai+'">'+a+'</option>').join('')+'</select></div>').join('')+'<button class="btn" onclick="submitFinalTraining()">Submit final test</button><div id="finalTrainingFeedback" class="tiny"></div>';
+}
+window.submitFinalTraining=()=>{
+ if(!requiredComplete())return;
+ let answered=0,correct=0;
+ FINAL_QUESTIONS.forEach((q,i)=>{const el=$('finalAnswer'+i);if(el&&el.value!==''){answered++;if(Number(el.value)===q[2])correct++}});
+ const fb=$('finalTrainingFeedback');if(answered<FINAL_QUESTIONS.length){fb.innerHTML='<span class="bad">Answer all 12 questions before submitting.</span>';return}
+ trainState.finalAttempts=(trainState.finalAttempts||0)+1;
+ const score=Math.round(correct/FINAL_QUESTIONS.length*100);trainState.finalScore=score;
+ if(score>=80){trainState.certifiedAt=new Date().toISOString();localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderTrainingManager()}
+ else{fb.innerHTML='<span class="bad">Score '+score+'%. You need 80% to pass. Review the modules and try again.</span>';localStorage.setItem(TRAINKEY,JSON.stringify(trainState))}
+};
 $('trainStaffName').addEventListener('change',()=>{trainState.staffName=$('trainStaffName').value.trim()||'Unnamed staff';saveTraining()});
-$('trainRole').addEventListener('change',()=>{trainState.role=$('trainRole').value;saveTraining()});
+$('trainRole').addEventListener('change',()=>{trainState.role=$('trainRole').value;trainState.certifiedAt=null;trainState.finalScore=null;saveTraining()});
 renderLessons();renderTrainingManager();
 </script>
 </body>
