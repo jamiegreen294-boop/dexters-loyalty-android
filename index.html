@@ -46,7 +46,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-07-2348">
+<main class="wrap" data-build="2026-09-07-2350">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -2622,7 +2622,7 @@ window.approveDeal=i=>{
 window.rejectDeal=i=>{dealCandidates.splice(i,1);renderDealCandidates()};
 window.sendApprovedDeal=i=>{const d=dealApproved[i];if(!d)return;d.status='Sent to customer';d.sentAt=new Date().toISOString();localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));renderApprovedDeals()};
 window.removeApprovedDeal=i=>{dealApproved.splice(i,1);localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));renderApprovedDeals()};
-renderApprovedDeals();
+
 
 const CHALLENGEKEY='dexters_growth_challenges_test_v2';
 let challengeRules={
