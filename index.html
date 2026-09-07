@@ -46,7 +46,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-07-2325">
+<main class="wrap" data-build="2026-09-07-2338">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -162,9 +162,13 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
           });
         }
 
-        // If the full Back Office script has loaded, hand the session/account to it immediately.
-        if(typeof window.dextersCompleteSecureLogin==='function'){
+        // Hand off only after the whole Back Office script has finished initialising.
+        // Until then, keep the authenticated session/account queued safely.
+        if(window.__DEXTERS_MAIN_READY&&typeof window.dextersCompleteSecureLogin==='function'){
           await window.dextersCompleteSecureLogin(data.session,account);
+        }else{
+          window.__DEXTERS_PENDING_LOGIN={session:data.session,account:account};
+          msg.innerHTML='<span class="ok">Signed in securely. Finishing Back Office startup…</span>';
         }
       }catch(err){
         msg.innerHTML='<span class="bad">'+String(err&&err.message||err)+'</span>';
@@ -1209,6 +1213,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </main>
 
 <script>
+window.__DEXTERS_MAIN_READY=false;
 const SUPABASE_URL='https://bpnkouymdvcogeaqjmxl.supabase.co';
 const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
 const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
@@ -1380,7 +1385,7 @@ async function initSecureAuth(){
      }))}catch(e){}
    }
    if(event==='PASSWORD_RECOVERY')sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
-   if(SECURE_SESSION){SECURE_ACCOUNT=null;try{await loadSecureAccount()}catch(e){}}
+   if(SECURE_SESSION&&window.__DEXTERS_MAIN_READY){SECURE_ACCOUNT=null;try{await loadSecureAccount()}catch(e){}}
    CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';
    renderSecureAuth();
    if(event==='PASSWORD_RECOVERY'){
@@ -3450,6 +3455,16 @@ if($('refreshLiveOrders'))$('refreshLiveOrders').onclick=loadLiveOrders;
 if($('refreshLiveLoyalty'))$('refreshLiveLoyalty').onclick=loadLiveLoyalty;
 if($('refreshLiveFoodSafety'))$('refreshLiveFoodSafety').onclick=loadLiveFoodSafety;
 if($('refreshLiveDevices'))$('refreshLiveDevices').onclick=loadLiveDevices;
+
+window.__DEXTERS_MAIN_READY=true;
+if(window.__DEXTERS_PENDING_LOGIN){
+  const p=window.__DEXTERS_PENDING_LOGIN;
+  window.__DEXTERS_PENDING_LOGIN=null;
+  window.dextersCompleteSecureLogin(p.session,p.account).catch(function(e){
+    const m=document.getElementById('secureAuthMessage');
+    if(m)m.innerHTML='<span class="bad">Signed in, but Back Office startup failed: '+String(e.message||e)+'</span>';
+  });
+}
 initSecureAuth();
 renderLessons();renderTrainingManager();
 </script>
