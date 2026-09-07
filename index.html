@@ -59,8 +59,26 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div id="catDipChoices" class="summarybox"><b>2oz Dip Tubs</b><br><span class="muted">Add any Dexter's sauces you want.</span></div>
 <div id="catExtrasChoices" class="summarybox"><b>Paid Buffet Extras</b><br><span class="muted">Add extra buffet items if required.</span></div>
 <div class="summarybox"><b>Test estimate: <span id="catEstimate">£78.00</span></b><br><span class="tiny">Illustrative test pricing only — final Dexter's catering prices can be set before launch.</span></div>
-<div class="field">Dietary / allergy notes<textarea id="catNotes" rows="3" placeholder="List allergies or dietary requirements here"></textarea></div>
-<label class="field"><input id="catConfirm" type="checkbox" style="width:auto;margin-right:8px"> I confirm the details above are correct</label>
+<div id="catAllergyBox" class="summarybox">
+<b>Allergy & dietary requirements</b>
+<p class="tiny">Select anything relevant. Dexter's staff must review any allergy information before approving the catering request.</p>
+<div style="margin-top:8px">
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Gluten" style="width:auto;margin:0">Gluten</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Milk / dairy" style="width:auto;margin:0">Milk / dairy</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Egg" style="width:auto;margin:0">Egg</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Nuts" style="width:auto;margin:0">Nuts</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Sesame" style="width:auto;margin:0">Sesame</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Soya" style="width:auto;margin:0">Soya</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Fish / shellfish" style="width:auto;margin:0">Fish / shellfish</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Vegetarian" style="width:auto;margin:0">Vegetarian</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-allergy" type="checkbox" value="Vegan" style="width:auto;margin:0">Vegan</label>
+<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input id="catNoAllergy" type="checkbox" style="width:auto;margin:0">No known allergies or dietary requirements</label>
+</div>
+<div class="field">Allergy / dietary notes<textarea id="catNotes" rows="3" placeholder="Give details, names of affected guests, severity, or any other requirements"></textarea></div>
+<label class="field"><input id="catAllergyConfirm" type="checkbox" style="width:auto;margin-right:8px"> I understand Dexter's must confirm allergy suitability before the order is approved.</label>
+<label class="field"><input id="catContactConfirm" type="checkbox" style="width:auto;margin-right:8px"> Dexter's may contact me if any allergy or dietary information needs checked.</label>
+</div>
+<label class="field"><input id="catConfirm" type="checkbox" style="width:auto;margin-right:8px"> I confirm the catering details above are correct</label>
 <button class="btn" id="catSubmit">Send catering request</button>
 <div id="catCustomerStatus" class="summarybox muted">No request submitted yet.</div>
 </div>
@@ -273,7 +291,12 @@ $('catPeople').addEventListener('input',()=>{renderDipChoices();refreshCatTotal(
 $('catPack').addEventListener('change',updateCatEstimate);updateCatEstimate();
 $('catSubmit').onclick=()=>{
  const name=$('catName').value.trim(),contact=$('catContact').value.trim(),phone=$('catPhone').value.trim(),people=Math.max(1,Number($('catPeople').value||1)),date=$('catDate').value,time=$('catTime').value,pack=$('catPack').value,notes=$('catNotes').value.trim(),key=catKey(),rule=buffetRules[key];
+ const allergies=[...document.querySelectorAll('.cat-allergy')].filter(x=>x.checked).map(x=>x.value),noAllergy=$('catNoAllergy').checked;
  if(!name||!contact||!phone||!date||!time){$('catCustomerStatus').innerHTML='<span class="bad">Please complete the event, contact, phone, date and time.</span>';return}
+ if(!noAllergy && allergies.length===0){$('catCustomerStatus').innerHTML='<span class="bad">Please select any allergy/dietary requirements, or confirm there are none.</span>';return}
+ if(noAllergy && allergies.length){$('catCustomerStatus').innerHTML='<span class="bad">Please choose either allergy/dietary requirements or No known allergies — not both.</span>';return}
+ if(!$('catAllergyConfirm').checked){$('catCustomerStatus').innerHTML='<span class="bad">Please confirm that Dexter\'s must review allergy suitability before approval.</span>';return}
+ if(!$('catContactConfirm').checked){$('catCustomerStatus').innerHTML='<span class="bad">Please allow Dexter\'s to contact you if allergy information needs checked.</span>';return}
  const choices=[...$('catRequiredChoices').querySelectorAll('.cat-choice')].filter(x=>x.checked).map(x=>x.value);
  if(choices.length<rule.min || choices.length>rule.max){$('catCustomerStatus').innerHTML='<span class="bad">'+rule.label+' before sending the request.</span>';return}
  const allocations=[...$('catRequiredChoices').querySelectorAll('.cat-alloc')].map(x=>({name:x.dataset.name,qty:Number(x.value||0)})).filter(x=>x.qty>0);
@@ -289,16 +312,18 @@ $('catSubmit').onclick=()=>{
  if(dipTotal>dipLimit){$('catCustomerStatus').innerHTML='<span class="bad">You can choose up to '+dipLimit+' free 2oz dip tubs for '+people+' people.</span>';return}
  if(!$('catConfirm').checked){$('catCustomerStatus').innerHTML='<span class="bad">Please confirm the request details first.</span>';return}
  const unit=catPrice(),total=unit?(people*unit+paidDipsTotal+extrasTotalValue):null,id='CAT-'+String(Date.now()).slice(-6);
- cat.unshift({id,name,contact,phone,people,date,time,pack,notes,total,choices,allocations,dips,paidDips,paidDipsTotal,extras,extrasTotal:extrasTotalValue,status:'Awaiting staff review',created:new Date().toISOString()});
+ cat.unshift({id,name,contact,phone,people,date,time,pack,notes,allergies:noAllergy?["No known allergies or dietary requirements"]:allergies,allergyConfirmed:true,contactForAllergy:true,total,choices,allocations,dips,paidDips,paidDipsTotal,extras,extrasTotal:extrasTotalValue,status:'Awaiting staff review',created:new Date().toISOString()});
  localStorage.setItem(CATKEY,JSON.stringify(cat));$('catCustomerStatus').innerHTML='<b>'+id+'</b><br><span class="ok">Request sent for staff review.</span><br><span class="muted">You can see its test status in the staff queue on this device.</span>';renderCat()
 };
 function saveCat(){localStorage.setItem(CATKEY,JSON.stringify(cat));renderCat()}
 function renderCat(){
- $('catQueue').innerHTML=cat.map((x,i)=>'<div class="summarybox"><b>'+x.id+' · '+x.name+'</b><br>'+x.contact+' · '+x.phone+'<br>'+x.people+' people · '+x.date+' '+x.time+'<br><span class="muted">'+x.pack+(x.notes?' · Notes: '+x.notes:'')+'</span><br><span class="muted"><b>Choices:</b> '+((x.choices||[]).join(', ')||'None')+'</span><br><span class="muted"><b>Quantities:</b> '+((x.allocations||[]).map(a=>a.qty+' × '+a.name).join(', ')||'None')+'</span><br><span class="muted"><b>Free 2oz dips:</b> '+((x.dips||[]).map(d=>d.qty+' × '+d.name).join(', ')||'None')+'</span><br><span class="muted"><b>Paid extra dips:</b> '+((x.paidDips||[]).map(d=>d.qty+' × '+d.name+' (£'+(d.qty*d.price).toFixed(2)+')').join(', ')||'None')+'</span><br><span class="muted"><b>Buffet extras:</b> '+((x.extras||[]).map(d=>d.qty+' × '+d.name+' ['+d.unit+'] (£'+(d.qty*d.price).toFixed(2)+')').join(', ')||'None')+'</span><br><b>'+(x.total!=null?'Estimate £'+Number(x.total).toFixed(2):'Staff quote required')+'</b><br><span class="'+(x.status==='Approved'?'ok':x.status==='Rejected'?'bad':'')+'">'+x.status+'</span><div class="row" style="margin-top:9px"><button class="btn small" onclick="approveCat('+i+')">Approve</button><button class="btn alt small" onclick="amendCat('+i+')">Amend people</button><button class="btn alt small" onclick="declineCat('+i+')">Reject</button></div></div>').join('')||'No test requests yet.'
+ $('catQueue').innerHTML=cat.map((x,i)=>'<div class="summarybox"><b>'+x.id+' · '+x.name+'</b><br>'+x.contact+' · '+x.phone+'<br>'+x.people+' people · '+x.date+' '+x.time+'<br><span class="muted">'+x.pack+(x.notes?' · Notes: '+x.notes:'')+'</span><br><span class="muted"><b>Allergy/dietary:</b> '+((x.allergies||[]).join(', ')||'Not recorded')+'</span><br><span class="muted"><b>Choices:</b> '+((x.choices||[]).join(', ')||'None')+'</span><br><span class="muted"><b>Quantities:</b> '+((x.allocations||[]).map(a=>a.qty+' × '+a.name).join(', ')||'None')+'</span><br><span class="muted"><b>Free 2oz dips:</b> '+((x.dips||[]).map(d=>d.qty+' × '+d.name).join(', ')||'None')+'</span><br><span class="muted"><b>Paid extra dips:</b> '+((x.paidDips||[]).map(d=>d.qty+' × '+d.name+' (£'+(d.qty*d.price).toFixed(2)+')').join(', ')||'None')+'</span><br><span class="muted"><b>Buffet extras:</b> '+((x.extras||[]).map(d=>d.qty+' × '+d.name+' ['+d.unit+'] (£'+(d.qty*d.price).toFixed(2)+')').join(', ')||'None')+'</span><br><b>'+(x.total!=null?'Estimate £'+Number(x.total).toFixed(2):'Staff quote required')+'</b><br><span class="'+(x.status==='Approved'?'ok':x.status==='Rejected'?'bad':'')+'">'+x.status+'</span><div class="row" style="margin-top:9px"><button class="btn small" onclick="approveCat('+i+')">Approve</button><button class="btn alt small" onclick="amendCat('+i+')">Amend people</button><button class="btn alt small" onclick="declineCat('+i+')">Reject</button></div></div>').join('')||'No test requests yet.'
 }
 window.approveCat=i=>{cat[i].status='Approved';saveCat()};
 window.declineCat=i=>{cat[i].status='Rejected';saveCat()};
 window.amendCat=i=>{const n=prompt('Change number of people',cat[i].people);if(n===null)return;const p=Math.max(1,Number(n)||1);cat[i].people=p;const opt=[...$('catPack').options].find(o=>o.text===cat[i].pack),unit=Number(opt?.dataset.price||0);cat[i].total=unit?p*unit:null;cat[i].status='Amended — awaiting confirmation';saveCat()};
+$('catNoAllergy').onchange=()=>{if($('catNoAllergy').checked)document.querySelectorAll('.cat-allergy').forEach(x=>x.checked=false)};
+document.querySelectorAll('.cat-allergy').forEach(x=>x.onchange=()=>{if(x.checked)$('catNoAllergy').checked=false});
 renderCat();
 
 $('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number($('bizLimit').value||0);$('bizDash').innerHTML='<div class="metric"><span class="muted">'+n+'</span><b>£0 / £'+l.toFixed(0)+'</b></div><p><span class="badge">Active</span><span class="badge">'+$('bizCycle').value+' billing</span><span class="badge">0 open invoices</span></p><p class="muted">Approved employee list, statement downloads and per-user spending rules would sit here.</p>'};
