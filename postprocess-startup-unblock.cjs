@@ -2,27 +2,65 @@ const fs=require('fs');
 const file='dist/index.html';
 let s=fs.readFileSync(file,'utf8');
 
-// Remote libraries must never hold the parser open.
-s=s.replace(/<script\s+(?:defer\s+|async\s+)?src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2"><\/script>/,
-  '<script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>');
-s=s.replace(/<script\s+(?:defer\s+|async\s+)?src="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/qrcodejs\/1\.0\.0\/qrcode\.min\.js"><\/script>/,
-  '<script async src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>');
-
-// Local script files load after parsing, in document order.
-s=s.replace(/<script\b([^>]*?)\s+src="(\/[^"]+)"([^>]*)><\/script>/gi,(m,a,src,b)=>{
-  if(/\b(?:async|defer)\b/i.test(a+' '+b)) return m;
-  return '<script defer'+a+' src="'+src+'"'+b+'></script>';
+// Turn every executable app script into an inert queue entry. The browser can
+// finish parsing and show the page first; scripts are then restored in their
+// original order by one tiny bootstrap loader.
+let index=0;
+s=s.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi,(m,attrs,body)=>{
+  if(/type\s*=\s*["']application\/ld\+json/i.test(attrs)) return m;
+  const srcMatch=attrs.match(/\bsrc\s*=\s*"([^"]+)"/i) || attrs.match(/\bsrc\s*=\s*'([^']+)'/i);
+  const src=srcMatch?srcMatch[1]:'';
+  let kept=attrs
+    .replace(/\s+src\s*=\s*"[^"]*"/ig,'')
+    .replace(/\s+src\s*=\s*'[^']*'/ig,'')
+    .replace(/\s+type\s*=\s*"[^"]*"/ig,'')
+    .replace(/\s+type\s*=\s*'[^']*'/ig,'')
+    .replace(/\s+(?:async|defer)(?=\s|$)/ig,'');
+  const safeSrc=src.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  return '<script type="application/x-dexters-startup" data-dex-order="'+(index++)+'"'+
+    (safeSrc?' data-dex-src="'+safeSrc+'"':'')+kept+'>'+body+'</script>';
 });
 
-// Inline feature IIFEs are registered during parsing but execute just after
-// DOMContentLoaded, so MutationObservers/timers cannot starve the parser.
-s=s.replace(/<script\b((?![^>]*\bsrc=)[^>]*)>([\s\S]*?)<\/script>/gi,(m,attrs,body)=>{
-  if(!body.trim()) return m;
-  if(/type\s*=\s*["'](?:application\/ld\+json|text\/template|text\/plain)/i.test(attrs)) return m;
-  if(body.includes('__dextersStartupDeferred__')) return m;
-  const wrapped="/*__dextersStartupDeferred__*/window.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{\n"+body+"\n},0),{once:true});";
-  return '<script'+attrs+'>'+wrapped+'</script>';
-});
-
+const bootstrap=`
+<script id="dextersStartupBootstrap">
+(function(){
+  'use strict';
+  async function run(){
+    const queued=Array.from(document.querySelectorAll('script[type="application/x-dexters-startup"]'))
+      .sort((a,b)=>Number(a.dataset.dexOrder)-Number(b.dataset.dexOrder));
+    for(const old of queued){
+      const real=document.createElement('script');
+      for(const a of Array.from(old.attributes)){
+        if(['type','data-dex-order','data-dex-src'].includes(a.name)) continue;
+        real.setAttribute(a.name,a.value);
+      }
+      const src=old.dataset.dexSrc||'';
+      old.remove();
+      if(src){
+        real.src=src;
+        real.async=false;
+        const done=new Promise(resolve=>{
+          let finished=false;
+          const end=(kind)=>{if(finished)return;finished=true;clearTimeout(timer);console.log('[dex-startup]',kind,src);resolve();};
+          real.onload=()=>end('loaded');
+          real.onerror=()=>end('failed');
+          const timer=setTimeout(()=>end('timeout'), src.startsWith('/')?4000:6000);
+        });
+        document.body.appendChild(real);
+        await done;
+      }else{
+        real.textContent=old.textContent||'';
+        document.body.appendChild(real);
+        await new Promise(r=>setTimeout(r,0));
+      }
+    }
+    document.documentElement.dataset.dextersStartup='complete';
+    window.dispatchEvent(new Event('dexters:startup-complete'));
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{run().catch(e=>console.error('[dex-startup]',e))},{once:true});
+  else run().catch(e=>console.error('[dex-startup]',e));
+})();
+</script>`;
+s=s.replace('</body>',bootstrap+'</body>');
 fs.writeFileSync(file,s);
-console.log('Startup-unblock applied: parser-safe script scheduling');
+console.log('Startup-unblock applied: ordered post-parse script queue',index);
