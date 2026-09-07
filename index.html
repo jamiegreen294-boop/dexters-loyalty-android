@@ -46,7 +46,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-07-2307">
+<main class="wrap" data-build="2026-09-07-2315">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -85,7 +85,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
         window.__DEXTERS_AUTH_CLIENT=window.supabase.createClient(
           'https://bpnkouymdvcogeaqjmxl.supabase.co',
           'sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',
-          {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
+          {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:window.localStorage,storageKey:'dexters-backoffice-auth-v1'}}
         );
         window.__DEXTERS_AUTH_CLIENT.auth.onAuthStateChange(function(event,session){
           if(event==='PASSWORD_RECOVERY'){
@@ -115,6 +115,11 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
         if(error)throw error;
         if(!data.session)throw new Error('Secure session was not created.');
         window.__DEXTERS_SIGNED_IN_SESSION=data.session;
+        await new Promise(function(resolve){setTimeout(resolve,50)});
+        const savedSession=localStorage.getItem('dexters-backoffice-auth-v1');
+        if(!savedSession){
+          throw new Error('Secure session could not be saved on this browser.');
+        }
 
         const {data:account,error:accountError}=await client
           .from('backoffice_staff_accounts')
@@ -1202,7 +1207,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 const SUPABASE_URL='https://bpnkouymdvcogeaqjmxl.supabase.co';
 const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
 const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
-const SB=window.__DEXTERS_AUTH_CLIENT||window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const SB=window.__DEXTERS_AUTH_CLIENT||window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:window.localStorage,storageKey:'dexters-backoffice-auth-v1'}});
 let SECURE_SESSION=null,SECURE_ACCOUNT=null;
 let CURRENT_STAFF_ROLE='Staff';
 
@@ -1308,7 +1313,8 @@ function renderSecureAuth(){
 async function initSecureAuth(){
  if(!SB)return;
  const msg=$('secureAuthMessage');
- if(msg)msg.textContent='Checking secure session…';
+ const savedAuth=localStorage.getItem('dexters-backoffice-auth-v1');
+ if(msg)msg.textContent=savedAuth?'Restoring secure session…':'Checking secure session…';
  if(window.__DEXTERS_SIGNED_IN_SESSION){
    SECURE_SESSION=window.__DEXTERS_SIGNED_IN_SESSION;
    SECURE_ACCOUNT=window.__DEXTERS_SIGNED_IN_ACCOUNT||null;
