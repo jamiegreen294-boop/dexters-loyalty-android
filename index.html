@@ -206,10 +206,9 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="grid">
 <div class="card"><h2>Customer challenge progress</h2>
 <div class="field">Customer name<input id="challengeName" value="Test Customer"></div>
-<div class="field">Breakfast orders this month<input id="challengeBreakfast" type="number" min="0" value="2"></div>
-<div class="field">Different Street Subs tried<input id="challengeSubs" type="number" min="0" value="1"></div>
-<div class="field">Different weekdays ordered<input id="challengeDays" type="number" min="0" max="5" value="4"></div>
-<button class="btn" id="challengeRefresh">Update challenge progress</button>
+<div class="summarybox"><b>Automatic order counting</b><br><span class="muted">Progress is calculated from collected customer orders. Cancelled, rejected, uncollected and system/test orders are ignored.</span></div>
+<button class="btn" id="challengeRefresh">Recalculate from order history</button>
+<div id="challengeSyncStatus" class="summarybox muted">Using test order-history feed in this standalone build.</div>
 <div id="challengeList" style="margin-top:12px"></div>
 </div>
 
@@ -583,10 +582,36 @@ try{
  if(saved?.state) challengeState=saved.state;
 }catch(e){}
 function saveChallenges(){localStorage.setItem(CHALLENGEKEY,JSON.stringify({rules:challengeRules,state:challengeState}));renderChallenges();renderChallengeRules();renderScratch()}
+const challengeOrderFeed=[
+ {id:'demo-1',status:'collected',collected_at:new Date(Date.now()-2*86400000).toISOString(),items:[{name:'Breakfast — Full Scottish Breakfast',category_name:'Breakfast'}]},
+ {id:'demo-2',status:'collected',collected_at:new Date(Date.now()-5*86400000).toISOString(),items:[{name:'Breakfast — Breakfast Roll',category_name:'Breakfast'}]},
+ {id:'demo-3',status:'collected',collected_at:new Date(Date.now()-7*86400000).toISOString(),items:[{name:'Street Subs — Pepperoni & Cheese',base_name:'Pepperoni & Cheese',category_name:'Street Subs'}]},
+ {id:'demo-4',status:'ready',collected_at:null,items:[{name:'Street Subs — Philly Steak',base_name:'Philly Steak',category_name:'Street Subs'}]},
+ {id:'system-test-item',status:'collected',collected_at:new Date().toISOString(),items:[{name:'SYSTEM TEST ITEM — DO NOT PREPARE'}]}
+];
+function validChallengeOrders(){
+ const now=new Date(),monthAgo=new Date(now.getTime()-30*86400000);
+ return challengeOrderFeed.filter(o=>{
+  if(o.status!=='collected'||!o.collected_at)return false;
+  if(new Date(o.collected_at)<monthAgo)return false;
+  return !(o.items||[]).some(it=>/SYSTEM TEST|DO NOT PREPARE|TEST ITEM/i.test(String(it.name||'')));
+ });
+}
+function challengeCounts(){
+ const orders=validChallengeOrders();
+ let breakfast=0;
+ const subs=new Set(),weekdays=new Set();
+ orders.forEach(o=>{
+  const items=o.items||[];
+  if(items.some(it=>String(it.category_name||'').toLowerCase()==='breakfast')) breakfast++;
+  items.filter(it=>String(it.category_name||'').toLowerCase()==='street subs').forEach(it=>subs.add(String(it.base_name||it.name||'').toLowerCase()));
+  weekdays.add(new Date(o.collected_at).getDay());
+ });
+ return {breakfast,subs:subs.size,weekdays:weekdays.size,orders:orders.length};
+}
 function challengeValue(key){
- if(key==='breakfast')return Math.max(0,Number($('challengeBreakfast').value||0));
- if(key==='subs')return Math.max(0,Number($('challengeSubs').value||0));
- return Math.max(0,Number($('challengeDays').value||0));
+ const counts=challengeCounts();
+ return key==='breakfast'?counts.breakfast:key==='subs'?counts.subs:counts.weekdays;
 }
 function renderChallenges(){
  $('challengeList').innerHTML=Object.entries(challengeRules).map(([key,r])=>{
@@ -624,7 +649,11 @@ function renderScratch(){
   staff.innerHTML='No revealed reward awaiting approval.';
  }
 }
-$('challengeRefresh').onclick=()=>{maybeEarnScratch();saveChallenges()};
+$('challengeRefresh').onclick=()=>{
+ const counts=challengeCounts();
+ $('challengeSyncStatus').innerHTML='<span class="ok"><b>'+counts.orders+' qualifying collected order(s) counted.</b></span><br><span class="tiny">Standalone test feed. When moved into the Loyalty app this uses the signed-in customer\'s collection_orders history.</span>';
+ maybeEarnScratch();saveChallenges()
+};
 $('scratch').onclick=()=>{
  if(!challengeState.earned||challengeState.revealed)return;
  challengeState.revealed=true;saveChallenges();
@@ -643,6 +672,8 @@ $('challengeSave').onclick=()=>{
  challengeState={earned:false,revealed:false,pendingReward:null,approved:false,source:null};
  saveChallenges();
 };
+const initialCounts=challengeCounts();
+$('challengeSyncStatus').innerHTML='<b>'+initialCounts.orders+' qualifying collected order(s) counted.</b><br><span class="tiny">Standalone test feed. Live integration will use the signed-in customer\'s collection_orders history.</span>';
 renderChallenges();maybeEarnScratch();saveChallenges();
 
 const lessons=['Dexter\'s menu & modifiers','Allergens & customer safety','Loyalty points and rewards','KDS order handling','Opening & closing basics','Customer service & complaints'];let done=new Set();
