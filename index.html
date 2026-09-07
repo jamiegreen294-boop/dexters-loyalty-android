@@ -83,6 +83,18 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
           'https://bpnkouymdvcogeaqjmxl.supabase.co',
           'sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa'
         );
+        window.__DEXTERS_AUTH_CLIENT.auth.onAuthStateChange(function(event,session){
+          if(event==='PASSWORD_RECOVERY'){
+            sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
+            window.__DEXTERS_RECOVERY_SESSION=session||null;
+            setTimeout(function(){
+              const ov=document.getElementById('firstPasswordOverlay');
+              const msg=document.getElementById('firstPasswordMessage');
+              if(ov)ov.style.display='block';
+              if(msg)msg.innerHTML='<span class="ok">Reset link verified. Choose your new password below.</span>';
+            },0);
+          }
+        });
       }
       return window.__DEXTERS_AUTH_CLIENT;
     }
@@ -129,8 +141,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 
 <div id="firstPasswordOverlay" style="display:none;position:fixed;inset:0;z-index:1000;background:#09060df5;padding:24px;overflow:auto">
 <div class="card" style="max-width:520px;margin:8vh auto">
-<h2>Change your temporary password</h2>
-<p class="muted">For security, you must choose your own password before continuing.</p>
+<h2>Set your new password</h2>
+<p class="muted">Choose a new password for your Dexter's Back Office account.</p>
 <div class="field">New password<input id="firstNewPassword" type="password" autocomplete="new-password" minlength="10"></div>
 <div class="field">Confirm new password<input id="firstConfirmPassword" type="password" autocomplete="new-password" minlength="10"></div>
 <button class="btn" id="firstPasswordSave">Change password & continue</button>
@@ -1210,7 +1222,31 @@ async function initSecureAuth(){
  const {data}=await SB.auth.getSession();SECURE_SESSION=data.session||null;
  if(SECURE_SESSION){try{await loadSecureAccount()}catch(e){}}
  renderSecureAuth();
- SB.auth.onAuthStateChange(async(_event,session)=>{SECURE_SESSION=session||null;SECURE_ACCOUNT=null;if(session){try{await loadSecureAccount()}catch(e){}}CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';renderSecureAuth();await loadSecureCoreData();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();loadLiveReadOnly()});
+ const recoveryPending=sessionStorage.getItem('dexters_backoffice_recovery_pending')==='1'
+   || /(?:[?#&])type=recovery(?:[&#]|$)/.test(location.href);
+ if(recoveryPending&&SECURE_SESSION){
+   const ov=$('firstPasswordOverlay'),msg=$('firstPasswordMessage');
+   if(ov)ov.style.display='block';
+   if(msg)msg.innerHTML='<span class="ok">Reset link verified. Choose your new password below.</span>';
+ }
+ SB.auth.onAuthStateChange(async(event,session)=>{
+   SECURE_SESSION=session||null;SECURE_ACCOUNT=null;
+   if(event==='PASSWORD_RECOVERY')sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
+   if(session){try{await loadSecureAccount()}catch(e){}}
+   CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';
+   renderSecureAuth();
+   if(event==='PASSWORD_RECOVERY'){
+     const ov=$('firstPasswordOverlay'),msg=$('firstPasswordMessage');
+     if(ov)ov.style.display='block';
+     if(msg)msg.innerHTML='<span class="ok">Reset link verified. Choose your new password below.</span>';
+   }
+   if(SECURE_SESSION&&SECURE_ACCOUNT?.active&&!SECURE_ACCOUNT.must_change_password){
+     try{await loadSecureCoreData()}catch(e){}
+     try{loadLiveReadOnly()}catch(e){}
+   }
+   if(typeof renderStaffDb==='function')renderStaffDb();
+   if(typeof renderDexManagement==='function')renderDexManagement();
+ });
 }
 async function refreshStaffLoginStatus(){
  const box=$('staffLoginStatus'),s=typeof selectedStaff==='function'?selectedStaff():null;
@@ -3268,9 +3304,25 @@ if($('firstPasswordSave'))$('firstPasswordSave').onclick=async()=>{
  const a=$('firstNewPassword').value,b=$('firstConfirmPassword').value,msg=$('firstPasswordMessage');
  if(a.length<10)return msg.innerHTML='<span class="bad">Use at least 10 characters.</span>';
  if(a!==b)return msg.innerHTML='<span class="bad">Passwords do not match.</span>';
+ msg.textContent='Saving new password…';
  const {error}=await SB.auth.updateUser({password:a});
  if(error)return msg.innerHTML='<span class="bad">'+error.message+'</span>';
- try{await secureFunction('password_changed');SECURE_ACCOUNT.must_change_password=false;$('firstPasswordOverlay').style.display='none';msg.textContent='';renderSecureAuth();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement()}catch(e){msg.innerHTML='<span class="bad">'+e.message+'</span>'}
+ try{
+   const {data:sess}=await SB.auth.getSession();SECURE_SESSION=sess.session||SECURE_SESSION;
+   if(SECURE_SESSION){
+     try{await loadSecureAccount()}catch(e){}
+     try{await secureFunction('password_changed')}catch(e){}
+   }
+   if(SECURE_ACCOUNT)SECURE_ACCOUNT.must_change_password=false;
+   sessionStorage.removeItem('dexters_backoffice_recovery_pending');
+   history.replaceState({},document.title,location.origin+location.pathname);
+   $('firstPasswordOverlay').style.display='none';
+   msg.textContent='';
+   renderSecureAuth();
+   if(SECURE_ACCOUNT?.active){await loadSecureCoreData();loadLiveReadOnly();}
+   if(typeof renderStaffDb==='function')renderStaffDb();
+   if(typeof renderDexManagement==='function')renderDexManagement();
+ }catch(e){msg.innerHTML='<span class="bad">'+e.message+'</span>'}
 };
 if($('tempPasswordClose'))$('tempPasswordClose').onclick=()=>{$('tempPasswordValue').textContent='';$('tempPasswordOverlay').style.display='none'};
 
