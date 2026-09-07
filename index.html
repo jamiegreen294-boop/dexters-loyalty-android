@@ -1205,6 +1205,31 @@ const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval
 const SB=window.__DEXTERS_AUTH_CLIENT||window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let SECURE_SESSION=null,SECURE_ACCOUNT=null;
 let CURRENT_STAFF_ROLE='Staff';
+
+const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
+let dexManage={
+ tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
+ recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],holidayLedger:[],paySettings:{},payrollRuns:[],payrollAudit:[]
+};
+try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
+
+const STAFFDBKEY='dexters_growth_staff_database_test_v1';
+
+
+let staffDb={selected:null,staff:[]};
+try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
+if(!Array.isArray(staffDb.staff)||!staffDb.staff.length){
+ staffDb={selected:'staff-demo-1',staff:[{
+  id:'staff-demo-1',name:'Test Staff',role:'Staff',status:'Active',start:new Date().toISOString().slice(0,10),
+  phone:'',email:'',emergencyName:'',emergencyPhone:'',
+  permissions:['KDS','Collection orders','Loyalty scanner'],
+  docs:[],absences:[],incidents:[],notes:[],
+  training:{completed:0,total:0,finalScore:null,certifiedAt:null,refresherDue:null},
+  audit:[{at:new Date().toISOString(),action:'Test staff record created'}]
+ }]}
+ localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));
+}
+
 window.dextersCompleteSecureLogin=async function(session,account){
  SECURE_SESSION=session||null;
  SECURE_ACCOUNT=account||null;
@@ -1282,13 +1307,25 @@ function renderSecureAuth(){
 }
 async function initSecureAuth(){
  if(!SB)return;
+ const msg=$('secureAuthMessage');
+ if(msg)msg.textContent='Checking secure session…';
  if(window.__DEXTERS_SIGNED_IN_SESSION){
    SECURE_SESSION=window.__DEXTERS_SIGNED_IN_SESSION;
    SECURE_ACCOUNT=window.__DEXTERS_SIGNED_IN_ACCOUNT||null;
  }else{
-   const {data}=await SB.auth.getSession();SECURE_SESSION=data.session||null;
+   const {data,error}=await SB.auth.getSession();
+   if(error){
+     if(msg)msg.innerHTML='<span class="bad">Could not restore secure session: '+error.message+'</span>';
+     SECURE_SESSION=null;
+   }else{
+     SECURE_SESSION=data.session||null;
+   }
  }
- if(SECURE_SESSION){try{await loadSecureAccount()}catch(e){}}
+ if(SECURE_SESSION){
+   try{await loadSecureAccount()}catch(e){
+     if(msg)msg.innerHTML='<span class="bad">Signed in, but Back Office role could not load: '+String(e.message||e)+'</span>';
+   }
+ }
  renderSecureAuth();
  const recoveryPending=sessionStorage.getItem('dexters_backoffice_recovery_pending')==='1'
    || /(?:[?#&])type=recovery(?:[&#]|$)/.test(location.href);
@@ -1298,9 +1335,12 @@ async function initSecureAuth(){
    if(msg)msg.innerHTML='<span class="ok">Reset link verified. Choose your new password below.</span>';
  }
  SB.auth.onAuthStateChange(async(event,session)=>{
-   SECURE_SESSION=session||null;SECURE_ACCOUNT=null;
+   if(event==='SIGNED_OUT'){
+     SECURE_SESSION=null;SECURE_ACCOUNT=null;CURRENT_STAFF_ROLE='Staff';renderSecureAuth();return;
+   }
+   if(session)SECURE_SESSION=session;
    if(event==='PASSWORD_RECOVERY')sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
-   if(session){try{await loadSecureAccount()}catch(e){}}
+   if(SECURE_SESSION){SECURE_ACCOUNT=null;try{await loadSecureAccount()}catch(e){}}
    CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';
    renderSecureAuth();
    if(event==='PASSWORD_RECOVERY'){
@@ -1805,12 +1845,6 @@ let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing no
 
 
 
-const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
-let dexManage={
- tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
- recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],holidayLedger:[],paySettings:{},payrollRuns:[],payrollAudit:[]
-};
-try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
 function saveDexManage(){localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));renderDexManagement()}
 function tagPicker(id,current=[]){const el=$(id);if(!el)return;el.innerHTML=dexManage.tags.map(t=>'<label><input type="checkbox" value="'+t.name+'" '+(current.includes(t.name)?'checked':'')+'>'+t.name+'</label>').join('')}
 function pickedTags(id){const el=$(id);return el?[...el.querySelectorAll('input:checked')].map(x=>x.value):[]}
@@ -2743,22 +2777,6 @@ function renderComplianceDashboard(){
  const alerts=[...overdue.map(x=>'<div class="staff-alert"><b>'+x.s.name+'</b><br><span class="bad">'+x.d.type+' overdue '+x.d.expiry+'</span></div>'),...due.map(x=>'<div class="staff-alert"><b>'+x.s.name+'</b><br><span class="muted">'+x.d.type+' due '+x.d.expiry+'</span></div>')];
  $('compAlerts').innerHTML=alerts.join('')||'<div class="staff-alert staff-good"><b>All clear</b><br><span class="muted">No document review alerts.</span></div>';
  $('compRegister').innerHTML=all.map(x=>'<div class="summarybox"><b>'+x.s.name+' · '+x.d.type+'</b><br><span class="badge">'+(x.d.category||'Document')+'</span><span class="muted">'+(x.d.expiry?' · review/expiry '+x.d.expiry:' · no review date')+'</span></div>').join('')||'<span class="muted">No staff documents recorded.</span>';
-}
-const STAFFDBKEY='dexters_growth_staff_database_test_v1';
-
-
-let staffDb={selected:null,staff:[]};
-try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
-if(!Array.isArray(staffDb.staff)||!staffDb.staff.length){
- staffDb={selected:'staff-demo-1',staff:[{
-  id:'staff-demo-1',name:'Test Staff',role:'Staff',status:'Active',start:new Date().toISOString().slice(0,10),
-  phone:'',email:'',emergencyName:'',emergencyPhone:'',
-  permissions:['KDS','Collection orders','Loyalty scanner'],
-  docs:[],absences:[],incidents:[],notes:[],
-  training:{completed:0,total:0,finalScore:null,certifiedAt:null,refresherDue:null},
-  audit:[{at:new Date().toISOString(),action:'Test staff record created'}]
- }]}
- localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));
 }
 function saveStaffDb(){localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb()}
 function selectedStaff(){return staffDb.staff.find(s=>s.id===staffDb.selected)||null}
