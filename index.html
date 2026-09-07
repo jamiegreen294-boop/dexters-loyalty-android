@@ -86,10 +86,10 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="card"><h2>Dexter's Buffet Menu</h2>
 <div class="lesson"><b>Breakfast Rolls — £4.25pp</b><p class="muted">One hot roll per person. Choose a mix of Square Sausage, Bacon, Links x2, Potato Scone x2, Fried Egg or Scrambled Egg. Brown and tomato sauce supplied.</p></div>
 <div class="lesson"><b>Lunch Platter — £6.95pp</b><p class="muted">Mixed Dexter's cold rolls and wraps, cut for sharing. Fillings can include Ham Salad, Turkey Salad, Chopped Pork & Ham, Cheese & Ham, Cheese & Tomato, Cheese & Onion, Chicken Tikka and Tandoori Chicken.</p></div>
-<div class="lesson"><b>Classic Glasgow Buffet — £9.95pp</b><p class="muted">Mixed sandwiches & wraps, mini sausage rolls, mini pizza slices, southern fried chicken strips, vegetable pakora/samosas, mini spring rolls, cocktail sausages, crisps and Dexter's dips.</p></div>
+<div class="lesson"><b>Classic Glasgow Buffet — £9.95pp</b><p class="muted">Mixed sandwiches & wraps, mini sausage rolls, mini pizza slices, Dexter's Chicken Tenders, vegetable pakora/samosas, mini spring rolls, cocktail sausages, Walkers Ready Salted Crisps and Dexter's dips.</p></div>
 <div class="lesson"><b>Street Feast — £12.95pp</b><p class="muted">Dexter's Street Sub pieces, pizza slices, Chicken Tenders, Garlic Bread, Onion Rings, mini sausage rolls, pakora/samosas and dips. Sub choices can include Chicken Mayo Melt, Southern Fried Chicken, Chicken Tikka, Pepperoni & Cheese, Philly Steak and Chicken & Bacon.</p></div>
 <div class="lesson"><b>Hot Chinese Buffet — £12.95pp</b><p class="muted">Choose two mains from Chicken Breast Curry, Chicken Szechuan, Black Bean Chicken, Garlic Chicken, Sweet & Sour Chicken or Salt & Chilli Chicken. Served with Boiled Rice, Chips, mini spring rolls and Prawn Crackers.</p></div>
-<div class="lesson"><b>Buffet Extras</b><p class="muted">Mini quiche · sausage rolls · cocktail sausages · mini pizzas · vegetable pakora/samosas · mini spring rolls · chicken strips · fruit platter · cakes/traybakes · crisps · salad/coleslaw · dips.</p></div>
+<div class="lesson"><b>Buffet Extras</b><p class="muted">Mini quiche · sausage rolls · cocktail sausages · mini pizzas · vegetable pakora/samosas · mini spring rolls · chicken strips · fruit platter · cakes/traybakes · Walkers Ready Salted Crisps · salad/coleslaw · dips.</p></div>
 <p class="tiny">Set buffet prices are designed for 10+ people. Buffet-only items do not get added to Dexter's normal takeaway menu. Allergy and dietary requirements must be confirmed before staff approval.</p>
 <hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
 <h2>Staff approval queue</h2><div id="catQueue" class="muted">No test requests yet.</div></div>
@@ -192,7 +192,7 @@ const buffetCopy={
 const buffetRules={
 "Breakfast":{min:2,max:6,label:"Choose at least 2 roll fillings",items:["Square Sausage","Bacon","LINKS x2","POTATO SCONE x2","Fried Egg","Scrambled Egg"]},
 "Lunch":{min:4,max:8,label:"Choose at least 4 fillings",items:["Ham Salad","Turkey Salad","Chopped Pork & Ham","Cheese & Ham","Cheese & Tomato","Cheese & Onion","Chicken Tikka","Tandoori Chicken"]},
-"Classic":{min:6,max:10,label:"Choose at least 6 buffet items",items:["Mixed Dexter's sandwiches","Mixed Dexter's wraps","Mini sausage rolls","Mini pizza slices","Southern fried chicken strips","Vegetable pakora","Vegetable samosas","Mini spring rolls","Cocktail sausages","Walkers Ready Salted Crisps","Mini quiche","Salad & coleslaw"]},
+"Classic":{min:6,max:10,label:"Choose at least 6 buffet items",items:["Mixed Dexter's sandwiches","Mixed Dexter's wraps","Mini sausage rolls","Mini pizza slices","Dexter's Chicken Tenders","Vegetable pakora","Vegetable samosas","Mini spring rolls","Cocktail sausages","Walkers Ready Salted Crisps","Mini quiche","Salad & coleslaw"]},
 "Street":{min:5,max:10,label:"Choose at least 5 buffet items",items:["Chicken Mayo Melt sub pieces","Southern Fried Chicken sub pieces","Chicken Tikka sub pieces","Pepperoni & Cheese sub pieces","Philly Steak sub pieces","Chicken & Bacon sub pieces","Pizza slices","Dexter's Chicken Tenders","Garlic Bread","Onion Rings","Mini sausage rolls","Pakora / samosas"]},
 "Chinese":{min:2,max:2,label:"Choose exactly 2 Chinese mains",items:["Chicken Breast Curry","Chicken Szechuan","Black Bean Chicken","Garlic Chicken","Sweet & Sour Chicken","Salt & Chilli Chicken"]},
 "Build":{min:5,max:20,label:"Choose at least 5 buffet items",items:["Mixed sandwiches","Mixed wraps","Street Sub pieces","Pizza slices","Chicken Tenders","Mini sausage rolls","Cocktail sausages","Vegetable pakora","Vegetable samosas","Mini spring rolls","Mini quiche","Chicken strips","Fruit platter","Cakes / traybakes","Walkers Ready Salted Crisps","Salad / coleslaw","Garlic Bread","Onion Rings","Prawn Crackers"]}
@@ -256,21 +256,84 @@ function updateAllocationStatus(){
  if(key==='Chinese'){el.innerHTML=total===2?'<span class="ok">2 mains selected correctly.</span>':'<span class="bad">Total must equal 2.</span>';return}
  el.innerHTML=total===target?'<span class="ok">Allocation matches '+target+' people.</span>':'<span class="bad">'+total+' allocated · must equal '+target+'.</span>'
 }
-const chineseAllergens={
+
+const cateringAllergens={
+"Square Sausage":{contains:"Wheat/Gluten, Soya, Sulphites",may:""},
+"Bacon":{contains:"Wheat/Gluten",may:""},
+"LINKS x2":{contains:"Wheat/Gluten",may:"Sausage supplier label still to confirm"},
+"POTATO SCONE x2":{contains:"Wheat/Gluten",may:"Potato-scone supplier label still to confirm"},
+"Fried Egg":{contains:"Wheat/Gluten, Egg",may:""},
+"Scrambled Egg":{contains:"Wheat/Gluten, Egg",may:""},
+"Ham Salad":{contains:"Wheat/Gluten",may:""},
+"Turkey Salad":{contains:"Wheat/Gluten",may:""},
+"Chopped Pork & Ham":{contains:"Wheat/Gluten",may:""},
+"Cheese & Ham":{contains:"Wheat/Gluten, Milk",may:""},
+"Cheese & Tomato":{contains:"Wheat/Gluten, Milk",may:""},
+"Cheese & Onion":{contains:"Wheat/Gluten, Milk",may:""},
+"Chicken Tikka":{contains:"Wheat/Gluten",may:"Tikka seasoning supplier label still to confirm"},
+"Tandoori Chicken":{contains:"Wheat/Gluten",may:"Tandoori seasoning supplier label still to confirm"},
+"Mixed Dexter's sandwiches":{contains:"Varies by selected fillings",may:"Staff must confirm selected fillings"},
+"Mixed Dexter's wraps":{contains:"Varies by selected fillings",may:"Staff must confirm selected fillings"},
+"Mini sausage rolls":{contains:"Wheat/Gluten, Milk",may:""},
+"Mini pizza slices":{contains:"Wheat/Gluten, Milk",may:""},
+"Dexter's Chicken Tenders":{contains:"Wheat/Gluten",may:""},
+"Vegetable pakora":{contains:"Wheat/Gluten, Sulphites",may:""},
+"Vegetable samosas":{contains:"Wheat/Gluten",may:"Mustard, Peanuts, Soya, Milk, Tree Nuts, Sesame, Celery"},
+"Mini spring rolls":{contains:"Wheat/Gluten, Soya, Sesame",may:""},
+"Cocktail sausages":{contains:"Wheat/Gluten",may:""},
+"Walkers Ready Salted Crisps":{contains:"No declared UK 14 allergen in recipe",may:"Precautionary factory handling may apply"},
+"Mini quiche":{contains:"Wheat/Gluten, Milk, Egg",may:""},
+"Salad & coleslaw":{contains:"Egg, Mustard (coleslaw)",may:"Plain side salad has no declared UK 14 allergens"},
+"Chicken Mayo Melt sub pieces":{contains:"Milk, Egg, Mustard",may:"Sub roll supplier label still to confirm"},
+"Southern Fried Chicken sub pieces":{contains:"Wheat/Gluten, Milk, Egg, Mustard",may:"Sub roll supplier label still to confirm"},
+"Chicken Tikka sub pieces":{contains:"Milk, Egg, Mustard",may:"Sub roll and tikka seasoning labels still to confirm"},
+"Pepperoni & Cheese sub pieces":{contains:"Milk",may:"Sub roll supplier label still to confirm"},
+"Philly Steak sub pieces":{contains:"Milk",may:"Sub roll supplier label still to confirm"},
+"Chicken & Bacon sub pieces":{contains:"Milk",may:"Dexter's sauce and sub roll labels still to confirm"},
+"Pizza slices":{contains:"Wheat/Gluten, Milk",may:""},
+"Garlic Bread":{contains:"Wheat/Gluten, Milk",may:""},
+"Onion Rings":{contains:"Wheat/Gluten",may:""},
+"Pakora / samosas":{contains:"Wheat/Gluten; pakora also Sulphites",may:"Samosas may contain Mustard, Peanuts, Soya, Milk, Tree Nuts, Sesame, Celery"},
 "Chicken Breast Curry":{contains:"Wheat/Gluten, Celery, Milk, Egg",may:"Mustard"},
 "Chicken Szechuan":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"},
 "Black Bean Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"},
 "Garlic Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"},
 "Sweet & Sour Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg, Celery",may:"Mustard"},
-"Salt & Chilli Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"}
+"Salt & Chilli Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"},
+"Mixed sandwiches":{contains:"Varies by selected fillings",may:"Staff must confirm selected fillings"},
+"Mixed wraps":{contains:"Varies by selected fillings",may:"Staff must confirm selected fillings"},
+"Street Sub pieces":{contains:"Varies by selected sub",may:"Staff must confirm selected sub"},
+"Chicken Tenders":{contains:"Wheat/Gluten",may:""},
+"Fruit platter":{contains:"No declared UK 14 allergens",may:"Same-kitchen cross-contact possible"},
+"Cakes / traybakes":{contains:"Varies weekly",may:"Check current product label before approval"},
+"Crisps":{contains:"No declared UK 14 allergen in Walkers Ready Salted recipe",may:"Precautionary factory handling may apply"},
+"Salad / coleslaw":{contains:"Egg, Mustard (coleslaw)",may:"Plain side salad has no declared UK 14 allergens"},
+"Prawn Crackers":{contains:"Crustaceans",may:"Fish"}
 };
+const extraAllergens={
+"Mini Sausage Rolls":{contains:"Wheat/Gluten, Milk",may:""},
+"Vegetable Pakora":{contains:"Wheat/Gluten, Sulphites",may:""},
+"Vegetable Samosas":{contains:"Wheat/Gluten",may:"Mustard, Peanuts, Soya, Milk, Tree Nuts, Sesame, Celery"},
+"Mini Spring Rolls":{contains:"Wheat/Gluten, Soya, Sesame",may:""},
+"Cocktail Sausages":{contains:"Wheat/Gluten",may:""},
+"Mini Quiche":{contains:"Wheat/Gluten, Milk, Egg",may:""},
+"Mini Pizza Slices":{contains:"Wheat/Gluten, Milk",may:""},
+"Dexter's Chicken Tenders":{contains:"Wheat/Gluten",may:""},
+"Garlic Bread":{contains:"Wheat/Gluten, Milk",may:""},
+"Onion Rings":{contains:"Wheat/Gluten",may:""},
+"Walkers Ready Salted Crisps":{contains:"No declared UK 14 allergen in recipe",may:"Precautionary factory handling may apply"},
+"Salad & Coleslaw":{contains:"Egg, Mustard (coleslaw)",may:"Plain side salad has no declared UK 14 allergens"},
+"Fresh Fruit Platter":{contains:"No declared UK 14 allergens",may:"Same-kitchen cross-contact possible"},
+"Cakes / Traybakes":{contains:"Varies weekly",may:"Check current product label before approval"}
+};
+function allergenCard(name,a){
+ if(!a)return '<div class="lesson"><b>'+name+'</b><br><span class="muted">Allergen details still require staff confirmation.</span></div>';
+ return '<div class="lesson"><b>'+name+'</b><br><span class="bad"><b>Contains:</b> '+a.contains+'</span>'+(a.may?'<br><span class="muted"><b>May contain / check:</b> '+a.may+'</span>':'')+'</div>';
+}
 function renderAllergenMatrix(){
  const key=catKey(),box=$('catAllergenMatrix'); if(!box)return;
- if(key!=='Chinese'){
-   box.innerHTML='<b>Allergen information</b><br><span class="tiny">All Dexter\'s catering food is prepared in the same kitchen. Cross-contact with other allergens is possible. Staff must confirm allergy suitability before approval.</span>';
-   return;
- }
- box.innerHTML='<b>Chinese buffet allergen information</b><br><span class="tiny">All Dexter\'s catering food is prepared in the same kitchen. Cross-contact with other allergens is possible.</span><div style="margin-top:8px">'+Object.entries(chineseAllergens).map(([name,a])=>'<div class="lesson"><b>'+name+'</b><br><span class="bad"><b>Contains:</b> '+a.contains+'</span><br><span class="muted"><b>May contain:</b> '+a.may+'</span></div>').join('')+'</div><p class="tiny">Customers with allergies must declare them in the allergy section. Dexter\'s staff must review suitability before approving the order.</p>';
+ const items=(buffetRules[key]?.items||[]);
+ box.innerHTML='<b>'+(key==='Chinese'?'Chinese buffet allergen information':'Buffet allergen information')+'</b><br><span class="tiny">All Dexter\'s catering food is prepared in the same kitchen. Cross-contact with other allergens is possible.</span><div style="margin-top:8px">'+items.map(name=>allergenCard(name,cateringAllergens[name])).join('')+'</div><details style="margin-top:10px"><summary><b>Paid buffet extras allergen information</b></summary><div style="margin-top:8px">'+buffetExtras.map(x=>allergenCard(x.name,extraAllergens[x.name])).join('')+'</div></details><p class="tiny">Customers with allergies must declare them below. Dexter\'s staff must review the exact products and labels in use before approving an allergy order. Cakes/traybakes vary weekly and must always be checked against the current label.</p>';
 }
 function renderRequiredChoices(){
  const key=catKey(),rule=buffetRules[key];
