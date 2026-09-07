@@ -278,19 +278,30 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="rota">
-<div class="card notice"><b>Rota & Timekeeping</b><p class="muted">Create shifts and record attendance, lateness and actual hours.</p></div>
+<div class="card notice"><b>Rota & Timekeeping</b><p class="muted">Staff can see their own shifts and clock in/out. Managers can create and review shifts. Test only.</p></div>
+
 <div class="grid">
-<div class="card"><h2>Rota</h2><div id="rotaList"></div></div>
-<div class="card"><h2>Shift form</h2>
+<div class="card">
+<h2>My Shifts</h2>
+<div class="field">Test signed-in staff member<select id="myShiftStaff"></select></div>
+<div id="myShiftList"></div>
+</div>
+
+<div class="card" id="rotaManagerCard">
+<h2>Manager shift form</h2>
 <div class="field">Staff<select id="rotaStaff"></select></div>
 <div class="grid"><div class="field">Date<input id="rotaDate" type="date"></div><div class="field">Area / station<input id="rotaArea" placeholder="Kitchen / FOH / Prep"></div></div>
 <div class="grid"><div class="field">Scheduled start<input id="rotaStart" type="time"></div><div class="field">Scheduled finish<input id="rotaEnd" type="time"></div></div>
-<div class="grid"><div class="field">Actual start<input id="rotaActualStart" type="time"></div><div class="field">Actual finish<input id="rotaActualEnd" type="time"></div></div>
 <div class="field">Status<select id="rotaStatus"><option>Scheduled</option><option>Completed</option><option>Late</option><option>Absent</option><option>Holiday</option><option>Sick</option></select></div>
 <div class="field">Notes<textarea id="rotaNotes" rows="3"></textarea></div>
 <div class="field">Tags<div id="rotaTags" class="tag-picker"></div></div>
 <button class="btn" id="rotaAdd">Save shift</button>
 </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<h2>Rota & time records</h2>
+<div id="rotaList"></div>
 </div>
 </section>
 
@@ -936,13 +947,64 @@ function pickedTags(id){const el=$(id);return el?[...el.querySelectorAll('input:
 function tagChips(tags=[]){return (tags||[]).map(t=>'<span class="tag-chip">'+t+'</span>').join('')}
 function staffOptions(id){const el=$(id);if(!el||typeof staffDb==='undefined')return;el.innerHTML=staffDb.staff.map(s=>'<option value="'+s.id+'">'+s.name+' · '+s.role+'</option>').join('')}
 function staffNameById(id){const s=typeof staffDb!=='undefined'?staffDb.staff.find(x=>x.id===id):null;return s?s.name:'Unassigned'}
+
+let CURRENT_SHIFT_STAFF_ID=localStorage.getItem('dexters_test_current_shift_staff')||'';
+function shiftWorkedMinutes(r){
+ if(!r?.clockInAt||!r?.clockOutAt)return null;
+ const ms=new Date(r.clockOutAt)-new Date(r.clockInAt);
+ return Number.isFinite(ms)&&ms>=0?Math.round(ms/60000):null;
+}
+function formatWorkedMinutes(m){
+ const h=Math.floor(m/60),mins=m%60;
+ return (h?h+'h ':'')+mins+'m worked';
+}
+function renderMyShiftStaff(){
+ const el=$('myShiftStaff');if(!el||typeof staffDb==='undefined')return;
+ el.innerHTML=staffDb.staff.filter(s=>s.status!=='Inactive').map(s=>'<option value="'+s.id+'">'+s.name+' · '+s.role+'</option>').join('');
+ if(!CURRENT_SHIFT_STAFF_ID||!staffDb.staff.some(s=>s.id===CURRENT_SHIFT_STAFF_ID))CURRENT_SHIFT_STAFF_ID=staffDb.staff[0]?.id||'';
+ el.value=CURRENT_SHIFT_STAFF_ID;
+}
+function renderMyShifts(){
+ const box=$('myShiftList');if(!box)return;
+ renderMyShiftStaff();
+ const id=CURRENT_SHIFT_STAFF_ID;
+ const rows=dexManage.rota.map((r,i)=>({r,i})).filter(x=>x.r.staffId===id).sort((a,b)=>String(a.r.date||'').localeCompare(String(b.r.date||'')));
+ box.innerHTML=rows.map(({r,i})=>{
+   const worked=shiftWorkedMinutes(r);
+   const action=!r.clockInAt
+     ? '<button class="btn small" onclick="startDexShift('+i+')">Start Shift</button>'
+     : !r.clockOutAt
+       ? '<button class="btn small" onclick="endDexShift('+i+')">End Shift</button>'
+       : '<span class="ok"><b>Shift completed ✓</b></span>';
+   return '<div class="summarybox"><b>'+r.date+' · '+(r.area||'Shift')+'</b><br><span class="muted">'+(r.start||'—')+'–'+(r.end||'—')+'</span><br><span class="badge">'+r.status+'</span>'+tagChips(r.tags)+(r.clockInAt?'<br><span class="tiny">Started: '+new Date(r.clockInAt).toLocaleString()+'</span>':'')+(r.clockOutAt?'<br><span class="tiny">Ended: '+new Date(r.clockOutAt).toLocaleString()+(worked!=null?' · '+formatWorkedMinutes(worked):'')+'</span>':'')+'<div class="row" style="margin-top:8px">'+action+'</div></div>';
+ }).join('')||'<span class="muted">No shifts assigned to this staff member.</span>';
+}
+window.startDexShift=i=>{
+ const r=dexManage.rota[i];if(!r)return;
+ if(r.staffId!==CURRENT_SHIFT_STAFF_ID)return alert('This is not your assigned shift.');
+ if(r.clockInAt)return;
+ r.clockInAt=new Date().toISOString();r.status='In progress';r.timeAudit=r.timeAudit||[];r.timeAudit.push({at:r.clockInAt,action:'Shift started',staffId:r.staffId});
+ saveDexManage();
+};
+window.endDexShift=i=>{
+ const r=dexManage.rota[i];if(!r)return;
+ if(r.staffId!==CURRENT_SHIFT_STAFF_ID)return alert('This is not your assigned shift.');
+ if(!r.clockInAt)return alert('Start the shift first.');
+ if(r.clockOutAt)return;
+ r.clockOutAt=new Date().toISOString();r.status='Completed';r.timeAudit=r.timeAudit||[];r.timeAudit.push({at:r.clockOutAt,action:'Shift ended',staffId:r.staffId});
+ saveDexManage();
+};
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
- staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');renderMyShiftStaff();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
- if($('rotaList'))$('rotaList').innerHTML=dexManage.rota.map(r=>'<div class="summarybox"><b>'+r.date+' · '+staffNameById(r.staffId)+'</b><br><span class="badge">'+r.status+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.start+'–'+r.end+(r.area?' · '+r.area:'')+'</span><br><span class="tiny">'+(r.notes||'')+'</span></div>').join('')||'<span class="muted">No shifts recorded.</span>';
+ if($('rotaList'))$('rotaList').innerHTML=dexManage.rota.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map((r,i)=>{
+   const worked=shiftWorkedMinutes(r);
+   return '<div class="summarybox"><b>'+r.date+' · '+staffNameById(r.staffId)+'</b><br><span class="badge">'+r.status+'</span>'+tagChips(r.tags)+'<br><span class="muted">Scheduled '+(r.start||'—')+'–'+(r.end||'—')+(r.area?' · '+r.area:'')+'</span>'+(r.clockInAt?'<br><span class="tiny">Clocked in '+new Date(r.clockInAt).toLocaleString()+'</span>':'')+(r.clockOutAt?'<br><span class="tiny">Clocked out '+new Date(r.clockOutAt).toLocaleString()+(worked!=null?' · '+formatWorkedMinutes(worked):'')+'</span>':'')+(r.notes?'<br><span class="tiny">'+r.notes+'</span>':'')+'</div>';
+ }).join('')||'<span class="muted">No shifts recorded.</span>';
+ renderMyShifts();
  if($('taskList'))$('taskList').innerHTML=dexManage.tasks.map((r,i)=>'<div class="summarybox"><b>'+r.title+'</b><br><span class="badge">'+r.status+'</span><span class="badge">'+r.priority+'</span><span class="badge">'+r.type+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+staffNameById(r.assignee)+' · due '+(r.due||'not set')+'</span><br><span class="tiny">'+r.details+'</span>'+(r.resolution?'<br><span class="tiny">Resolution: '+r.resolution+'</span>':'')+(r.status!=='Completed'?'<div class="row"><button class="btn alt small" onclick="closeDexTask('+i+')">Mark complete</button></div>':'')+'</div>').join('')||'<span class="muted">No tasks or handovers.</span>';
  if($('equipList'))$('equipList').innerHTML=dexManage.equipment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.status+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+(r.location||'No location')+' · next '+(r.due||'not set')+'</span><br><span class="tiny">'+(r.fault||'')+(r.action?' · Action: '+r.action:'')+'</span></div>').join('')||'<span class="muted">No equipment records.</span>';
  if($('masterComplianceList'))$('masterComplianceList').innerHTML=dexManage.masterCompliance.map(r=>'<div class="summarybox"><b>'+r.title+'</b><br><span class="badge">'+r.type+'</span>'+tagChips(r.tags)+'<br><span class="muted">Review '+(r.review||'not set')+' · Owner '+(r.owner||'not set')+'</span><br><span class="tiny">'+r.controls+'</span></div>').join('')||'<span class="muted">No master compliance records.</span>';
@@ -963,10 +1025,11 @@ window.closeDexTask=i=>{if(!dexManage.tasks[i])return;dexManage.tasks[i].status=
 if($('addTagBtn'))$('addTagBtn').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');const name=$('newTagName').value.trim();if(!name||dexManage.tags.some(t=>t.name.toLowerCase()===name.toLowerCase()))return;dexManage.tags.push({name,system:false});$('newTagName').value='';saveDexManage()};
 if($('recAdd'))$('recAdd').onclick=()=>{const name=$('recName').value.trim();if(!name)return;dexManage.recruitment.unshift({name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value.trim(),applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interview:$('recInterview').value.trim(),rtw:$('recRTW').value,onboarding:$('recOnboarding').value.trim(),tags:pickedTags('recTags'),at:new Date().toISOString()});saveDexManage()};
 if($('appAdd'))$('appAdd').onclick=()=>{if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
-if($('rotaAdd'))$('rotaAdd').onclick=()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return;dexManage.rota.unshift({staffId:$('rotaStaff').value,date:$('rotaDate').value,area:$('rotaArea').value.trim(),start:$('rotaStart').value,end:$('rotaEnd').value,actualStart:$('rotaActualStart').value,actualEnd:$('rotaActualEnd').value,status:$('rotaStatus').value,notes:$('rotaNotes').value.trim(),tags:pickedTags('rotaTags')});saveDexManage()};
+if($('rotaAdd'))$('rotaAdd').onclick=()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return;dexManage.rota.unshift({staffId:$('rotaStaff').value,date:$('rotaDate').value,area:$('rotaArea').value.trim(),start:$('rotaStart').value,end:$('rotaEnd').value,status:$('rotaStatus').value,notes:$('rotaNotes').value.trim(),tags:pickedTags('rotaTags'),clockInAt:null,clockOutAt:null,timeAudit:[],createdAt:new Date().toISOString()});saveDexManage()};
 if($('taskAdd'))$('taskAdd').onclick=()=>{const title=$('taskTitle').value.trim();if(!title)return;dexManage.tasks.unshift({title,assignee:$('taskAssignee').value,type:$('taskType').value,priority:$('taskPriority').value,due:$('taskDue').value,details:$('taskDetails').value.trim(),resolution:$('taskResolution').value.trim(),tags:pickedTags('taskTags'),status:'Open',at:new Date().toISOString()});saveDexManage()};
 if($('eqAdd'))$('eqAdd').onclick=()=>{const name=$('eqName').value.trim();if(!name)return;dexManage.equipment.unshift({name,asset:$('eqAsset').value.trim(),location:$('eqLocation').value.trim(),status:$('eqStatus').value,last:$('eqLast').value,due:$('eqDue').value,fault:$('eqFault').value.trim(),action:$('eqAction').value.trim(),assignee:$('eqAssignee').value,engineer:$('eqEngineer').value.trim(),tags:pickedTags('eqTags'),at:new Date().toISOString()});saveDexManage()};
 if($('masterCompAdd'))$('masterCompAdd').onclick=()=>{const title=$('masterCompTitle').value.trim();if(!title)return;dexManage.masterCompliance.unshift({type:$('masterCompType').value,title,date:$('masterCompDate').value,review:$('masterCompReview').value,owner:$('masterCompOwner').value.trim(),hazard:$('masterCompHazard').value.trim(),scope:$('masterCompScope').value.trim(),controls:$('masterCompControls').value.trim(),actions:$('masterCompActions').value.trim(),tags:pickedTags('masterCompTags'),at:new Date().toISOString()});saveDexManage()};
+const myShiftStaffSel=$('myShiftStaff');if(myShiftStaffSel)myShiftStaffSel.onchange=()=>{CURRENT_SHIFT_STAFF_ID=myShiftStaffSel.value;localStorage.setItem('dexters_test_current_shift_staff',CURRENT_SHIFT_STAFF_ID);renderMyShifts()};
 renderDexManagement();
 
 const CUSTOMERDBKEY='dexters_backoffice_customer_files_test_v1';
@@ -1348,8 +1411,8 @@ window.syncSelectedTraining=()=>{
  }catch(e){alert('Could not read training progress.')}
 };
 populateStaffDocLibrary();clearStaffDocForm();renderComplianceDashboard();
-const currentRoleSel=$('currentStaffRole');if(currentRoleSel){currentRoleSel.value=CURRENT_STAFF_ROLE;currentRoleSel.onchange=()=>{CURRENT_STAFF_ROLE=currentRoleSel.value;renderStaffDb()}}
-renderStaffDb();
+const currentRoleSel=$('currentStaffRole');if(currentRoleSel){currentRoleSel.value=CURRENT_STAFF_ROLE;currentRoleSel.onchange=()=>{CURRENT_STAFF_ROLE=currentRoleSel.value;renderStaffDb();const mc=$('rotaManagerCard');if(mc)mc.style.display=(CURRENT_STAFF_ROLE==='Staff'?'none':'block')}}
+renderStaffDb();const rotaManagerCard=$('rotaManagerCard');if(rotaManagerCard)rotaManagerCard.style.display=(CURRENT_STAFF_ROLE==='Staff'?'none':'block');
 
 document.querySelectorAll('[data-sdtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-sdtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.staff-profile-section').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=document.getElementById('sdsec-'+b.dataset.sdtab);if(p)p.classList.add('active')});
 const staffKpiCount=document.getElementById('staffKpiCount');if(staffKpiCount)staffKpiCount.textContent=staffDb.staff.length;
