@@ -125,11 +125,27 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 #staffRecordView .staff-profile-tabs{border-bottom:1px solid #e4e0e6;padding-bottom:8px}
 @media(max-width:900px){#staffDirectory{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){#staffDirectory{grid-template-columns:1fr}.pass-staff-card{padding:14px}}
+
+.pass-sign-box{width:100%;min-height:118px;background:#fff;border:2px dashed #b6a7bc;border-radius:5px;padding:12px;cursor:pointer;color:#5b0b7e;display:block}
+.pass-sign-box:hover{border-color:#5b0b7e;background:#faf7fb}
+#sdSignatureEmpty{min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+#sdSignatureEmpty b{font-size:16px}#sdSignatureEmpty small{color:#817984}
+#sdSignaturePreview{display:flex;min-height:88px;align-items:center;gap:14px}
+#sdSignaturePreview img{max-width:220px;max-height:80px;object-fit:contain;background:#fff}
+#sdSignaturePreview small{color:#706a73}
+.pass-sign-overlay{position:fixed;inset:0;z-index:1600;background:#1f1826c9;align-items:center;justify-content:center;padding:16px}
+.pass-sign-modal{width:min(720px,100%);background:#fff;border-radius:6px;padding:18px;box-shadow:0 16px 50px #0006}
+.pass-sign-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.pass-sign-head h2{margin:0;color:#403a43}.pass-sign-head p{margin:5px 0 0}
+.pass-sign-canvas-wrap{border:2px solid #b7aeba;background:#fff;border-radius:5px;margin:12px 0;touch-action:none}
+#staffSignatureCanvas{display:block;width:100%;height:220px;touch-action:none}
+.pass-saved-signature{margin-top:10px;padding:8px 10px;border:1px solid #e0dce3;border-radius:4px;background:#faf9fb;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pass-saved-signature span{font-size:11px;color:#6f6972}.pass-saved-signature img{max-width:150px;max-height:48px;object-fit:contain}
+@media(max-width:560px){#staffSignatureCanvas{height:180px}.pass-sign-head{flex-direction:column}.pass-saved-signature{align-items:flex-start;flex-direction:column}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-11-staff-card-flow">
+<main class="wrap" data-build="2026-09-08-website-pass-12-staff-signatures">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -340,6 +356,16 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 <div class="summarybox"><b id="tempPasswordStaff"></b><br><code id="tempPasswordValue" style="font-size:20px;word-break:break-all"></code></div>
 <button class="btn" id="tempPasswordClose">I have saved/shared it securely</button>
 </div>
+</div>
+
+<div id="staffSignatureOverlay" class="pass-sign-overlay" style="display:none">
+  <div class="pass-sign-modal">
+    <div class="pass-sign-head"><div><h2>Staff signature</h2><p class="muted">Sign in the box below, then save the signature to this staff form.</p></div><button type="button" class="btn alt small" id="staffSignatureClose">Close</button></div>
+    <div class="field">Staff name<input id="staffSignatureName" autocomplete="name"></div>
+    <div class="pass-sign-canvas-wrap"><canvas id="staffSignatureCanvas" width="900" height="300"></canvas></div>
+    <div class="row"><button type="button" class="btn alt" id="staffSignatureClear">Clear</button><button type="button" class="btn" id="staffSignatureSave">Save signature</button></div>
+    <div id="staffSignatureMessage" class="tiny"></div>
+  </div>
 </div>
 
 <div class="dex-backoffice-shell" id="secureBackOfficeShell" style="display:none">
@@ -1108,7 +1134,14 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 </div>
 <div class="field">Completed by / manager<input id="sdDocCompletedBy"></div>
 <div class="field">Document details<textarea id="sdDocNote" rows="6"></textarea></div>
-<label class="field" style="display:flex;gap:8px;align-items:center"><input id="sdDocSigned" type="checkbox" style="width:auto;margin:0"> Staff member reviewed / acknowledged where applicable</label>
+<div class="field">
+  Staff acknowledgement / signature
+  <button type="button" id="sdSignatureBox" class="pass-sign-box">
+    <span id="sdSignatureEmpty"><b>Click to sign</b><small>Staff member signs here</small></span>
+    <span id="sdSignaturePreview" style="display:none"><img id="sdSignatureImage" alt="Staff signature"><small id="sdSignatureMeta"></small></span>
+  </button>
+  <input id="sdDocSigned" type="checkbox" style="display:none">
+</div>
 <button class="btn alt" id="staffAddDoc">Add completed document to staff file</button>
 </div>
 </div>
@@ -3175,9 +3208,45 @@ function updateStaffDocInfo(){
  const t=selectedStaffDocTemplate(),box=$('sdDocTemplateInfo');if(!box)return;
  box.innerHTML=t?'<b>'+t.title+'</b><br><span class="muted">Review: '+t.review+'</span><br><span class="tiny">'+t.prompt+'</span>':'Choose a template.';renderStaffDocStructuredFields();
 }
+let STAFF_SIGNATURE_DATA='',STAFF_SIGNATURE_NAME='',STAFF_SIGNATURE_AT='';
+function refreshStaffSignatureBox(){
+ const signed=$('sdDocSigned'),empty=$('sdSignatureEmpty'),preview=$('sdSignaturePreview'),img=$('sdSignatureImage'),meta=$('sdSignatureMeta');
+ if(!signed||!empty||!preview||!img||!meta)return;
+ const has=!!STAFF_SIGNATURE_DATA;
+ signed.checked=has;
+ empty.style.display=has?'none':'flex';
+ preview.style.display=has?'flex':'none';
+ if(has){img.src=STAFF_SIGNATURE_DATA;meta.textContent=(STAFF_SIGNATURE_NAME||'Staff member')+(STAFF_SIGNATURE_AT?' · '+new Date(STAFF_SIGNATURE_AT).toLocaleString():'');}
+ else{img.removeAttribute('src');meta.textContent='';}
+}
+function resetStaffSignature(){
+ STAFF_SIGNATURE_DATA='';STAFF_SIGNATURE_NAME='';STAFF_SIGNATURE_AT='';refreshStaffSignatureBox();
+}
+function loadStaffSignature(d){
+ STAFF_SIGNATURE_DATA=d?.signatureData||'';STAFF_SIGNATURE_NAME=d?.signatureName||'';STAFF_SIGNATURE_AT=d?.signedAt||'';refreshStaffSignatureBox();
+}
+function initStaffSignaturePad(){
+ const box=$('sdSignatureBox'),overlay=$('staffSignatureOverlay'),canvas=$('staffSignatureCanvas'),close=$('staffSignatureClose'),clear=$('staffSignatureClear'),save=$('staffSignatureSave'),name=$('staffSignatureName'),msg=$('staffSignatureMessage');
+ if(!box||!overlay||!canvas)return;
+ const ctx=canvas.getContext('2d');let drawing=false,hasInk=false;
+ function prep(){ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#2d2730';}
+ function pos(e){const r=canvas.getBoundingClientRect(),p=e.touches?.[0]||e;return {x:(p.clientX-r.left)*(canvas.width/r.width),y:(p.clientY-r.top)*(canvas.height/r.height)}}
+ function start(e){e.preventDefault();drawing=true;hasInk=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)}
+ function move(e){if(!drawing)return;e.preventDefault();const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()}
+ function end(e){if(e)e.preventDefault();drawing=false}
+ prep();
+ ['pointerdown','mousedown','touchstart'].forEach(ev=>canvas.addEventListener(ev,start,{passive:false}));
+ ['pointermove','mousemove','touchmove'].forEach(ev=>canvas.addEventListener(ev,move,{passive:false}));
+ ['pointerup','pointercancel','mouseup','mouseleave','touchend'].forEach(ev=>canvas.addEventListener(ev,end,{passive:false}));
+ box.onclick=()=>{const s=selectedStaff();name.value=STAFF_SIGNATURE_NAME||s?.name||'';ctx.clearRect(0,0,canvas.width,canvas.height);prep();hasInk=false;if(STAFF_SIGNATURE_DATA){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,canvas.width,canvas.height);im.src=STAFF_SIGNATURE_DATA;hasInk=true}msg.textContent='';overlay.style.display='flex'};
+ close.onclick=()=>overlay.style.display='none';
+ overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.style.display='none'});
+ clear.onclick=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);prep();hasInk=false;msg.textContent='Signature cleared.'};
+ save.onclick=()=>{const signer=name.value.trim();if(!signer)return msg.innerHTML='<span class="bad">Enter the staff member name.</span>';if(!hasInk)return msg.innerHTML='<span class="bad">Add a signature in the box first.</span>';STAFF_SIGNATURE_DATA=canvas.toDataURL('image/png');STAFF_SIGNATURE_NAME=signer;STAFF_SIGNATURE_AT=new Date().toISOString();refreshStaffSignatureBox();overlay.style.display='none'};
+}
 function clearStaffDocForm(){
  editingStaffDocIndex=null;
- $('sdDocDate').value=new Date().toISOString().slice(0,10);$('sdDocExpiry').value='';$('sdDocCompletedBy').value='';$('sdDocNote').value='';$('sdDocSigned').checked=false;renderStaffDocStructuredFields();$('staffAddDoc').textContent='Add completed document to staff file';
+ $('sdDocDate').value=new Date().toISOString().slice(0,10);$('sdDocExpiry').value='';$('sdDocCompletedBy').value='';$('sdDocNote').value='';resetStaffSignature();renderStaffDocStructuredFields();$('staffAddDoc').textContent='Add completed document to staff file';
 }
 function renderComplianceDashboard(){
  if(typeof staffDb==='undefined')return;
@@ -3259,7 +3328,7 @@ function renderStaffDb(){
  const t=s.training||{};
  const cert=t.certifiedAt?'<span class="ok"><b>Certified</b></span> · '+fmtDate(t.certifiedAt):'<span class="muted">Not certified yet</span>';
  $('staffTrainingSummary').innerHTML='<div class="summarybox"><b>'+Number(t.completed||0)+' / '+Number(t.total||0)+' modules complete</b><br>'+cert+(t.finalScore!=null?'<br>Final score: '+t.finalScore+'%':'')+(t.refresherDue?'<br>Refresher due: '+fmtDate(t.refresherDue):'')+'<br><span class="tiny">Training results can be synced from Dexter\'s Staff Training profile when integrated.</span></div><button class="btn alt small" onclick="syncSelectedTraining()">Sync current test training</button>';
- $('staffDocs').innerHTML=(s.docs||[]).map((d,i)=>'<div class="summarybox"><b>'+d.type+'</b><br><span class="badge">'+(d.category||'Document')+'</span>'+(d.signed?'<span class="badge">Acknowledged</span>':'')+'<br><span class="muted">'+(d.documentDate?'Dated '+fmtDate(d.documentDate)+' · ':'')+(d.expiry?'Review/expiry '+fmtDate(d.expiry):'No review date')+(d.completedBy?' · Completed by '+d.completedBy:'')+'</span>'+(d.note?'<br><span class="tiny">'+d.note+'</span>':'')+(d.formData&&Object.values(d.formData).filter(Boolean).length?'<br><span class="tiny">Structured form completed · '+Object.values(d.formData).filter(Boolean).length+' field(s)</span>':'')+'<div class="row" style="margin-top:8px"><button class="btn alt small" onclick="editStaffDoc('+i+')">Edit</button><button class="btn alt small" onclick="removeStaffDoc('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No document records.</span>';
+ $('staffDocs').innerHTML=(s.docs||[]).map((d,i)=>'<div class="summarybox"><b>'+d.type+'</b><br><span class="badge">'+(d.category||'Document')+'</span>'+(d.signed?'<span class="badge">Signed</span>':'')+'<br><span class="muted">'+(d.documentDate?'Dated '+fmtDate(d.documentDate)+' · ':'')+(d.expiry?'Review/expiry '+fmtDate(d.expiry):'No review date')+(d.completedBy?' · Completed by '+d.completedBy:'')+'</span>'+(d.note?'<br><span class="tiny">'+d.note+'</span>':'')+(d.formData&&Object.values(d.formData).filter(Boolean).length?'<br><span class="tiny">Structured form completed · '+Object.values(d.formData).filter(Boolean).length+' field(s)</span>':'')+(d.signatureData?'<div class="pass-saved-signature"><span>Signed by '+(d.signatureName||'staff member')+'</span><img src="'+d.signatureData+'" alt="Saved signature"></div>':'')+'<div class="row" style="margin-top:8px"><button class="btn alt small" onclick="editStaffDoc('+i+')">Edit</button><button class="btn alt small" onclick="removeStaffDoc('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No document records.</span>';
  $('staffAbsence').innerHTML=(s.absences||[]).map(a=>'<div class="summarybox"><b>'+a.type+'</b><br><span class="muted">'+fmtDate(a.from)+' → '+fmtDate(a.to)+(a.note?' · '+a.note:'')+'</span></div>').join('')||'<span class="muted">No absence records.</span>';
  $('staffIncidents').innerHTML=(s.incidents||[]).map(i=>'<div class="summarybox"><b>'+i.type+' · '+fmtDate(i.date)+'</b><br><span class="muted">'+i.details+'</span>'+(i.action?'<br><span class="tiny">Action: '+i.action+'</span>':'')+(i.evidence?'<br><span class="tiny">Evidence: '+i.evidence.name+'</span>'+(i.evidence.type&&i.evidence.type.startsWith('image/')?'<br><img class="evidence-thumb" src="'+i.evidence.data+'">':''):'')+'</div>').join('')||'<span class="muted">No incidents or near misses recorded.</span>';
  $('staffNotes').innerHTML=(s.notes||[]).map(n=>'<div class="summarybox"><span class="muted">'+n.text+'</span><br><span class="tiny">'+new Date(n.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager notes.</span>';
@@ -3323,12 +3392,12 @@ $('staffSaveProfile').onclick=()=>{
 };
 window.saveStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated by Super User');saveStaffDb()};
 window.resetStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=roleDefaultPerms(s.role);logStaff(s,'Permissions reset to '+s.role+' defaults by Super User');saveStaffDb()};
-$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),formData:collectStaffDocStructuredFields(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}clearStaffDocForm();saveStaffDb();renderComplianceDashboard();
+$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),formData:collectStaffDocStructuredFields(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,signatureData:STAFF_SIGNATURE_DATA||'',signatureName:STAFF_SIGNATURE_NAME||'',signedAt:STAFF_SIGNATURE_AT||'',updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}clearStaffDocForm();saveStaffDb();renderComplianceDashboard();
  if(CORE_DB_CONNECTED&&editingStaffDocIndex===null){
    SB.from('backoffice_staff_documents').insert({staff_record_id:s.id,category:rec.category,document_type:rec.type,document_date:rec.documentDate||null,review_expiry_date:rec.expiry||null,completed_by:rec.completedBy||null,acknowledged:!!rec.signed,details:rec.note||null,created_by:SECURE_SESSION.user.id}).then(({error})=>{if(error)alert('Secure document save failed: '+error.message);else loadSecureCoreData()});
  }
 };
-window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo();renderStaffDocStructuredFields(d.formData||{})}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';$('sdDocSigned').checked=!!d.signed;$('staffAddDoc').textContent='Save document changes'};
+window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo();renderStaffDocStructuredFields(d.formData||{})}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';loadStaffSignature(d);$('staffAddDoc').textContent='Save document changes'};
 window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb()};
 
 $('sdChecklistType').onchange=()=>{const items=staffChecklistDefaults($('sdChecklistType').value);if(items.length)$('sdChecklistItems').value=items.join('\n')};
@@ -3874,7 +3943,7 @@ try{renderCat()}catch(e){}
 try{renderDealCandidates()}catch(e){}
 try{renderApprovedDeals()}catch(e){}
 try{renderChallenges();maybeEarnScratch();saveChallenges()}catch(e){}
-try{populateStaffDocLibrary();clearStaffDocForm();renderComplianceDashboard()}catch(e){}
+try{populateStaffDocLibrary();initStaffSignaturePad();refreshStaffSignatureBox();clearStaffDocForm();renderComplianceDashboard()}catch(e){}
 try{
   renderStaffDb();
   const rotaManagerCard=$('rotaManagerCard');
