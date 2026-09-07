@@ -46,7 +46,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-07-2338">
+<main class="wrap" data-build="2026-09-07-2342">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -2528,7 +2528,9 @@ function loadWorkflowSettings(){const w=dexManage.workflow||{};if($('wfTraining'
 loadWorkflowSettings();
 
 [['fsDate',0],['rotaWeekStart',0],['timesheetStart',0],['timesheetEnd',6]].forEach(([id,add])=>{const el=$(id);if(el&&!el.value){const d=new Date();d.setDate(d.getDate()+add);el.value=d.toISOString().slice(0,10)}});
-renderDexManagement();
+
+// Full management rendering is intentionally deferred until all Back Office
+// constants (including the staff document library) have been initialized.
 
 const CUSTOMERDBKEY='dexters_backoffice_customer_files_test_v1';
 let customerDb={selected:null,customers:[]};
