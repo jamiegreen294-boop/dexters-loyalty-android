@@ -1,0 +1,24 @@
+name: Script inventory
+on:
+  push:
+    paths:
+      - '.github/workflows/script-inventory.yml'
+  workflow_dispatch:
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm run build
+      - name: List scripts
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('dist/index.html','utf8');
+          const scripts=[...s.matchAll(/<script\b[^>]*?(?:src="([^"]+)")?[^>]*>/gi)].map((m,i)=>({i,tag:m[0].slice(0,240),src:m[1]||''}));
+          console.log('SCRIPT_COUNT',scripts.length);
+          for(const x of scripts) console.log('SCRIPT',x.i,JSON.stringify(x.tag));
+          NODE
