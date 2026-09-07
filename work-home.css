@@ -53,9 +53,10 @@ body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:1
 /* 2026-09-07 live home polish */
 #homePage .work-top .work-small{
   background:transparent!important;
-  border:1px solid rgba(255,255,255,.28)!important;
+  border:0!important;
   color:var(--white)!important;
   box-shadow:none!important;
+  padding:8px 0!important;
 }
 #homePage .work-top .work-small:hover,
 #homePage .work-top .work-small:active{
@@ -87,3 +88,11 @@ body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:1
   font-weight:900!important;
 }
 .work-page-home:hover,.work-page-home:active{background:transparent!important;opacity:.8}
+
+.work-rewards-deals{border-radius:18px!important;background:var(--card)!important}
+.work-rewards-deals h2{margin-bottom:10px}
+.work-deal-item{background:var(--navy2);border:1px solid #ffffff18;border-radius:14px;padding:13px;margin-top:10px}
+.work-deal-tag{display:inline-block;border-radius:999px;padding:5px 8px;background:#ffffff12;color:var(--yellow);font-size:11px;font-weight:900}
+.work-deal-item h3{margin:9px 0 6px}
+.work-deal-old{text-decoration:line-through;color:var(--muted);margin-right:8px}
+.work-deal-price{font-size:26px;color:var(--green,#9ff3c5)}
