@@ -186,11 +186,25 @@ function renderRequiredChoices(){
  $('catRequiredChoices').innerHTML='<b>Required buffet choices</b><br><span class="tiny">'+rule.label+'</span><div style="margin-top:8px">'+rule.items.map((x,i)=>'<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-choice" type="checkbox" value="'+x+'" style="width:auto;margin:0"><span>'+x+'</span></label>').join('')+'</div><div id="catChoiceCount" class="tiny">0 selected</div>';
  $('catRequiredChoices').querySelectorAll('.cat-choice').forEach(ch=>ch.onchange=()=>{const all=[...$('catRequiredChoices').querySelectorAll('.cat-choice')],n=all.filter(x=>x.checked).length;if(n>rule.max){ch.checked=false} $('catChoiceCount').textContent=all.filter(x=>x.checked).length+' selected · '+rule.label})
 }
+function dipAllowance(){return Math.min(10,Math.ceil(Math.max(1,Number($('catPeople').value||1))/2))}
+function updateDipAllowance(){
+ const dips=[...$('catDipChoices').querySelectorAll('.cat-dip')],limit=dipAllowance(),used=dips.reduce((s,x)=>s+Number(x.value||0),0),left=Math.max(0,limit-used);
+ const el=$('catDipAllowance'); if(el) el.innerHTML='<b>'+used+' / '+limit+' free tubs selected</b><br><span class="tiny">'+left+' free tub'+(left===1?'':'s')+' remaining · 1 free 2oz tub per 2 people · max 10</span>';
+ dips.forEach(inp=>{inp.max=String(Number(inp.value||0)+left)});
+}
 function renderDipChoices(){
- $('catDipChoices').innerHTML='<b>2oz Dip Tubs</b><br><span class="tiny">Add any Dexter\'s sauces you want. Set quantity for each 2oz tub.</span><div style="margin-top:8px">'+dexterDips.map((x,i)=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span>'+x+'</span><input class="cat-dip" data-name="'+x+'" type="number" min="0" max="20" value="0" style="width:76px;margin:0"></div>').join('')+'</div>'
+ const limit=dipAllowance();
+ $('catDipChoices').innerHTML='<b>2oz Dip Tubs</b><br><span class="tiny">1 free 2oz tub per 2 people, rounded up. Maximum 10 free tubs.</span><div id="catDipAllowance" class="summarybox" style="margin-top:8px"></div><div style="margin-top:8px">'+dexterDips.map((x,i)=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span>'+x+'</span><input class="cat-dip" data-name="'+x+'" type="number" min="0" max="'+limit+'" value="0" style="width:76px;margin:0"></div>').join('')+'</div>';
+ $('catDipChoices').querySelectorAll('.cat-dip').forEach(inp=>inp.oninput=()=>{
+   const dips=[...$('catDipChoices').querySelectorAll('.cat-dip')],allow=dipAllowance(),others=dips.filter(x=>x!==inp).reduce((s,x)=>s+Number(x.value||0),0),maxHere=Math.max(0,allow-others);
+   if(Number(inp.value||0)>maxHere) inp.value=String(maxHere);
+   if(Number(inp.value||0)<0) inp.value='0';
+   updateDipAllowance();
+ });
+ updateDipAllowance();
 }
 function updateCatEstimate(){const people=Math.max(1,Number($('catPeople').value||1)),p=catPrice(),key=catKey(); $('catEstimate').textContent=p?('£'+(people*p).toFixed(2)):'Staff quote required'; $('catMenuPreview').innerHTML='<b>What\'s included</b><br>'+buffetCopy[key].map(x=>'• '+x).join('<br>');renderRequiredChoices();renderDipChoices()}
-$('catPeople').addEventListener('input',()=>{const p=catPrice(),people=Math.max(1,Number($('catPeople').value||1));$('catEstimate').textContent=p?('£'+(people*p).toFixed(2)):'Staff quote required'});
+$('catPeople').addEventListener('input',()=>{const p=catPrice(),people=Math.max(1,Number($('catPeople').value||1));$('catEstimate').textContent=p?('£'+(people*p).toFixed(2)):'Staff quote required';renderDipChoices()});
 $('catPack').addEventListener('change',updateCatEstimate);updateCatEstimate();
 $('catSubmit').onclick=()=>{
  const name=$('catName').value.trim(),contact=$('catContact').value.trim(),phone=$('catPhone').value.trim(),people=Math.max(1,Number($('catPeople').value||1)),date=$('catDate').value,time=$('catTime').value,pack=$('catPack').value,notes=$('catNotes').value.trim(),key=catKey(),rule=buffetRules[key];
@@ -198,6 +212,8 @@ $('catSubmit').onclick=()=>{
  const choices=[...$('catRequiredChoices').querySelectorAll('.cat-choice')].filter(x=>x.checked).map(x=>x.value);
  if(choices.length<rule.min || choices.length>rule.max){$('catCustomerStatus').innerHTML='<span class="bad">'+rule.label+' before sending the request.</span>';return}
  const dips=[...$('catDipChoices').querySelectorAll('.cat-dip')].map(x=>({name:x.dataset.name,qty:Number(x.value||0)})).filter(x=>x.qty>0);
+ const dipTotal=dips.reduce((s,d)=>s+d.qty,0),dipLimit=dipAllowance();
+ if(dipTotal>dipLimit){$('catCustomerStatus').innerHTML='<span class="bad">You can choose up to '+dipLimit+' free 2oz dip tubs for '+people+' people.</span>';return}
  if(!$('catConfirm').checked){$('catCustomerStatus').innerHTML='<span class="bad">Please confirm the request details first.</span>';return}
  const unit=catPrice(),total=unit?people*unit:null,id='CAT-'+String(Date.now()).slice(-6);
  cat.unshift({id,name,contact,phone,people,date,time,pack,notes,total,choices,dips,status:'Awaiting staff review',created:new Date().toISOString()});
