@@ -43,11 +43,67 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 @media(max-width:980px){.dex-backoffice-shell{grid-template-columns:1fr}.dex-backoffice-nav{border-right:0;border-bottom:1px solid #342640;display:flex;gap:5px;overflow:auto;align-items:center}.dex-backoffice-logo,.dex-backoffice-nav .navsub,.dex-backoffice-nav .navgroup{display:none}.dex-backoffice-nav .tab{width:auto;white-space:nowrap}.bo-module-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.bo-kpis{grid-template-columns:repeat(2,1fr)}.bo-module-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.top{display:block}.pill{display:inline-block;margin-top:8px}}
 
+
+/* PASS-inspired Back Office visual shell — Dexter's test only */
+:root{--pass-purple:#5b0b7e;--pass-purple-dark:#43045f;--pass-purple-soft:#efe7f3;--pass-bg:#f3f3f5;--pass-card:#ffffff;--pass-border:#dedde3;--pass-text:#37343b;--pass-muted:#74707a}
+body{background:var(--pass-bg);color:var(--pass-text)}
+.wrap{max-width:none;padding:0 0 28px}
+.home{display:none}
+.top{background:#fff;color:var(--pass-text);padding:24px 30px 20px;margin:0;border:0;border-radius:0;box-shadow:0 1px 0 #ddd}
+.top .eyebrow{color:var(--pass-purple);font-weight:900;letter-spacing:.08em}
+.top h1{color:#3d3940;margin:3px 0 7px;font-size:34px}
+.top .sub{color:#77727b;max-width:1000px}
+.top .pill{background:var(--pass-purple-soft);color:var(--pass-purple);border-color:#d9c7e3}
+#secureAuthCard{max-width:1180px;margin:18px auto!important;background:#fff;color:var(--pass-text);border:1px solid var(--pass-border);box-shadow:0 2px 8px #0000000d}
+#secureAuthCard .muted,#secureAuthCard .tiny{color:var(--pass-muted)}
+.dex-backoffice-shell{display:block!important;max-width:1180px;min-height:760px;margin:0 auto;border:1px solid var(--pass-border);border-radius:5px;background:#fff;box-shadow:0 3px 14px #00000012;overflow:visible}
+.dex-backoffice-nav{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:0;overflow-x:auto;padding:0 10px;background:linear-gradient(90deg,var(--pass-purple-dark),var(--pass-purple));border:0;border-radius:4px 4px 0 0;min-height:46px;box-shadow:0 2px 6px #00000025}
+.dex-backoffice-logo{display:block;color:#fff;font-size:14px;min-width:max-content;margin:0 14px 0 4px;padding:0;font-weight:1000;letter-spacing:.03em}
+.dex-backoffice-nav .navsub,.dex-backoffice-nav .navgroup{display:none}
+.dex-backoffice-nav .tab{display:block;width:auto!important;min-width:max-content;margin:0;border:0;border-radius:0;padding:15px 12px;background:transparent;color:#eadff0;font-size:12px;font-weight:700;text-align:center}
+.dex-backoffice-nav .tab:hover{background:#ffffff12;color:#fff}
+.dex-backoffice-nav .tab.active{background:#ffffff18;color:#fff;box-shadow:inset 0 -3px 0 #fff}
+.dex-backoffice-main{padding:24px;background:#f7f7f8;color:var(--pass-text);min-height:714px}
+.dex-backoffice-main>.panel{background:transparent}
+.card,.bo-kpi,.bo-module,.summarybox,.staff-pass-list,.staff-pass-profile,.week-day,.shift-card,.alert-item{background:#fff!important;color:var(--pass-text)!important;border-color:var(--pass-border)!important;box-shadow:0 1px 4px #0000000a}
+.card{border-radius:5px}
+.card.notice{background:#fff!important;border-left:4px solid var(--pass-purple)!important}
+.card h2,.card h3,.summarybox b,.bo-kpi b,.bo-module h3{color:#3f3b42}
+.muted,.tiny,.card .muted,.card .tiny,.summarybox .muted,.summarybox .tiny{color:var(--pass-muted)!important}
+.bo-kpis{gap:16px}
+.bo-kpi{border-radius:4px;padding:16px}
+.bo-kpi b{color:var(--pass-purple);font-size:26px}
+.bo-module-grid{gap:16px}
+.bo-module{border-radius:4px}
+.badge{background:#eee8f1;color:#5a3169;border-color:#d8cae0}
+.btn{background:var(--pass-purple);color:#fff;border-color:var(--pass-purple)}
+.btn:hover{filter:brightness(.96)}
+.btn.alt{background:#fff;color:var(--pass-purple);border-color:#c8b2d3}
+.field{color:#55515a}
+input,select,textarea{background:#fff!important;color:#38343c!important;border:1px solid #cbc9cf!important;border-radius:4px!important}
+input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:var(--pass-purple)!important}
+.tag-chip,.tag-picker label{background:#f6f1f8!important;color:#51365d!important;border-color:#d8c8df!important}
+.staff-profile-tabs button{background:#fff;color:#555;border-color:#d5d2d8}
+.staff-profile-tabs button.active{background:var(--pass-purple);color:#fff;border-color:var(--pass-purple)}
+.live-worker,.timeline-item{border-color:#e3e1e6}
+.ok{color:#20853a!important}.bad{color:#c6344b!important}
+@media(max-width:980px){
+ .top{padding:18px 16px 15px}.top h1{font-size:28px}
+ #secureAuthCard,.dex-backoffice-shell{margin-left:10px!important;margin-right:10px!important}
+ .dex-backoffice-nav{position:sticky;display:flex!important;border:0!important;padding:0 6px;gap:0}
+ .dex-backoffice-logo{display:block}.dex-backoffice-nav .tab{padding:14px 10px;font-size:11px}
+ .dex-backoffice-main{padding:16px}
+}
+@media(max-width:680px){
+ .top .sub{font-size:13px}.top h1{font-size:25px}
+ .dex-backoffice-main{padding:12px}
+ .bo-kpis{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-7-hr-forms">
+<main class="wrap" data-build="2026-09-08-website-pass-8-pass-layout">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
