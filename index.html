@@ -262,7 +262,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="staffdb">
-<div class="card notice"><b>Dexter's Staff Hub</b><p class="muted">PASS-style joined-up staff management layout for Dexter's. Test only — no live staff records are changed.</p></div>
+<div class="card notice"><b>Dexter's Staff Hub</b><p class="muted">PASS-style joined-up staff management layout for Dexter's. Access hierarchy: Super User → Manager → Team Leader → Staff. Only Super User has unrestricted access. Test only — no live staff records are changed.</p></div>
 <div class="staff-pass-shell">
 <aside class="staff-pass-nav">
 <div class="staff-pass-brand">DEXTER'S STAFF</div>
@@ -280,6 +280,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <button class="btn" id="staffAdd">+ Add test staff member</button>
 </div>
 
+<div class="summarybox"><b>Role access hierarchy</b><br><span class="badge">Super User — full system</span><span class="badge">Manager — management + operations</span><span class="badge">Team Leader — shift supervision</span><span class="badge">Staff — essential day-to-day access</span></div>
 <div class="staff-pass-kpis">
 <div class="staff-pass-kpi"><span class="muted">Staff records</span><b id="staffKpiCount">—</b></div>
 <div class="staff-pass-kpi"><span class="muted">Training</span><b>Tracked</b></div>
@@ -313,7 +314,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="grid">
 <div>
 <div class="field">Full name<input id="sdName"></div>
-<div class="field">Role<select id="sdRole"><option>Staff</option><option>Supervisor</option><option>Manager</option><option>Owner/Admin</option></select></div>
+<div class="field">Role<select id="sdRole"><option>Staff</option><option>Team Leader</option><option>Manager</option><option>Super User</option></select></div>
 <div class="field">Status<select id="sdStatus"><option>Active</option><option>On leave</option><option>Sick</option><option>Inactive</option></select></div>
 <div class="field">Start date<input id="sdStart" type="date"></div>
 </div>
@@ -383,7 +384,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="grid">
 <div class="card"><h2>Staff member</h2>
 <div class="field">Staff name<input id="trainStaffName" value="Test Staff"></div>
-<div class="field">Role<select id="trainRole"><option>Staff</option><option>Supervisor</option><option>Manager</option></select></div>
+<div class="field">Role<select id="trainRole"><option>Staff</option><option>Team Leader</option><option>Manager</option><option>Super User</option></select></div>
 <div id="lessonList"></div>
 </div>
 
@@ -825,7 +826,7 @@ renderChallenges();maybeEarnScratch();saveChallenges();
 
 
 const STAFFDBKEY='dexters_growth_staff_database_test_v1';
-const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports'];
+const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
 let staffDb={selected:null,staff:[]};
 try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
 if(!Array.isArray(staffDb.staff)||!staffDb.staff.length){
@@ -843,9 +844,9 @@ function saveStaffDb(){localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));
 function selectedStaff(){return staffDb.staff.find(s=>s.id===staffDb.selected)||null}
 function logStaff(s,action){s.audit=s.audit||[];s.audit.unshift({at:new Date().toISOString(),action});if(s.audit.length>100)s.audit=s.audit.slice(0,100)}
 function roleDefaultPerms(role){
- if(role==='Owner/Admin')return [...STAFF_PERMS];
- if(role==='Manager')return ['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports'];
- if(role==='Supervisor')return ['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Reports'];
+ if(role==='Super User') return [...STAFF_PERMS];
+ if(role==='Manager') return ['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Reports','Training management','Documents management','Absence management','Incident management','Audit history'];
+ if(role==='Team Leader') return ['KDS','Collection orders','Loyalty scanner','Rewards approval','Catering','Reports','Training management','Absence management','Incident management'];
  return ['KDS','Collection orders','Loyalty scanner'];
 }
 function renderStaffDirectory(){
@@ -1250,7 +1251,7 @@ lessons.unshift(
  ]}
 );
 lessons.push(
- {group:"Manager",managerOnly:true,title:"Manager incident reporting & escalation",icon:"📋",scenes:[
+ {group:"Management",managerOnly:true,title:"Manager incident reporting & escalation",icon:"📋",scenes:[
   ["Take control of the immediate risk","Make the situation safe first and arrange first aid or emergency help where needed."],
   ["Record the facts","Record what happened, when, where, who was involved, immediate action taken and any relevant evidence."],
   ["Escalate correctly","Food-safety incidents, serious injuries, data breaches, threats, equipment hazards and other significant events must follow Dexter's escalation procedure."],
@@ -1262,13 +1263,13 @@ lessons.push(
   ["Why review incidents and near misses?",["To prevent recurrence","To assign blame automatically","No reason"],0]
  ]}
 );
-const TRAIN_GROUPS={"Core":0,"Operational":1,"Health & Safety":2,"Manager":3};
+const TRAIN_GROUPS={"Core":0,"Operational":1,"Health & Safety":2,"Management":3};
 lessons.forEach((l,i)=>{if(!l.group)l.group="Core"});
 let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{},completedAt:{},finalAttempts:0,finalScore:null,certifiedAt:null,refreshDays:180};
 try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState={...trainState,...saved,completedAt:saved.completedAt||{}}}catch(e){}
 let videoScene={},videoTimers={};
 function saveTraining(){localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderLessons();renderTrainingManager()}
-function visibleLessonIndexes(){return lessons.map((l,i)=>({l,i})).filter(x=>!x.l.managerOnly||trainState.role==='Manager'||trainState.role==='Supervisor').map(x=>x.i)}
+function visibleLessonIndexes(){return lessons.map((l,i)=>({l,i})).filter(x=>!x.l.managerOnly||trainState.role==='Manager'||trainState.role==='Super User'||trainState.role==='Team Leader').map(x=>x.i)}
 function requiredLessonIndexes(){return visibleLessonIndexes()}
 function completedCount(){return requiredLessonIndexes().filter(i=>!!trainState.completed[i]).length}
 function requiredComplete(){const req=requiredLessonIndexes();return req.length>0&&req.every(i=>!!trainState.completed[i])}
@@ -1301,7 +1302,7 @@ function quizMarkup(l,i){
 function renderLessons(){
  $('trainStaffName').value=trainState.staffName||'';$('trainRole').value=trainState.role||'Staff';
  let lastGroup='';
- $('lessonList').innerHTML=lessons.map((l,i)=>{if(l.managerOnly&&trainState.role!=='Manager'&&trainState.role!=='Supervisor')return '';
+ $('lessonList').innerHTML=lessons.map((l,i)=>{if(l.managerOnly&&trainState.role!=='Manager'&&trainState.role!=='Super User'&&trainState.role!=='Team Leader')return '';
   const done=!!trainState.completed[i],watched=!!trainState.watched[i],attempts=trainState.attempts[i]||0,score=trainState.scores[i];
   const heading=l.group!==lastGroup?'<h2 style="margin-top:22px">'+l.group+' Training</h2><p class="tiny">'+(l.group==='Health & Safety'?'Workplace safety modules based on catering risk guidance.':l.group==='Operational'?"Dexter's day-to-day systems and service procedures.":"Essential training for every Dexter's staff member.")+'</p>':'';
   lastGroup=l.group;
@@ -1323,7 +1324,7 @@ window.checkLesson=i=>{
 };
 function renderTrainingManager(){
  const req=requiredLessonIndexes(),done=completedCount(),pct=req.length?Math.round(done/req.length*100):0;
- const groups=['Core','Operational','Health & Safety','Manager'].map(g=>{
+ const groups=['Core','Operational','Health & Safety','Management'].map(g=>{
   const idx=lessons.map((l,i)=>[l,i]).filter(([l,i])=>l.group===g&&req.includes(i));if(!idx.length)return '';
   const gd=idx.filter(([,i])=>trainState.completed[i]).length;return '<div class="tiny"><b>'+g+':</b> '+gd+'/'+idx.length+'</div>'
  }).join('');
