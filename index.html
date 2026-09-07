@@ -101,11 +101,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 }
 
 .pass-pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px}.pass-pagehead h2{margin:0;color:#3f3b42;font-size:22px}.pass-period{max-width:160px;margin:0}.pass-dashboard-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}.pass-dash-card{min-height:210px}.pass-dash-card h3{font-size:15px;margin:0 0 14px;color:#57515a}.pass-ring{width:150px;height:150px;margin:8px auto 16px;border-radius:50%;background:conic-gradient(#24a23e 0 84%,#e34b63 84% 100%);display:grid;place-items:center}.pass-ring:before{content:"";position:absolute}.pass-ring>div{width:118px;height:118px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.pass-ring b{font-size:30px;color:#4a4450}.pass-ring span{font-size:11px;color:#777}.pass-statline{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #ece9ee}.pass-statline span{color:#69646d;font-size:13px}.pass-statline b{color:#454047;font-size:13px}.pass-alert-card .alert-item{border:0!important;border-left:4px solid #e43c63!important;border-radius:0!important;background:#fff!important;margin:0 0 10px;padding:10px 12px}.staff-pass-list{background:#f7f7f8!important}.staff-pass-list #staffDirectory{display:grid;grid-template-columns:1fr;gap:9px}.pass-person-card{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:11px;background:#fff;border:1px solid #dfdce2;border-radius:4px;padding:11px;cursor:pointer;box-shadow:0 1px 3px #00000008}.pass-person-card:hover,.pass-person-card.selected{border-color:#8a58a0;box-shadow:0 0 0 2px #e8dced}.pass-avatar{width:44px;height:44px;border-radius:50%;background:#ece4f0;color:#5b0b7e;display:grid;place-items:center;font-weight:900}.pass-person-copy{min-width:0;display:flex;flex-direction:column}.pass-person-copy b{color:#3e3941}.pass-person-copy span,.pass-person-copy small{color:#77717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pass-person-copy span{font-size:12px}.pass-person-copy small{font-size:11px}.pass-status{font-size:9px;font-weight:900;text-transform:uppercase;padding:4px 6px;border-radius:3px;background:#eee;color:#666}.pass-status.active{background:#2b9a41;color:#fff}@media(max-width:900px){.pass-dashboard-grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.pass-pagehead{align-items:flex-start}.pass-dashboard-grid{grid-template-columns:1fr}.pass-period{max-width:130px}.pass-ring{width:128px;height:128px}.pass-ring>div{width:98px;height:98px}}
+
+.pass-manager-overview{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}.pass-manager-kpi{background:#fff;border:1px solid #dedde3;border-radius:4px;padding:14px;box-shadow:0 1px 4px #0000000a}.pass-manager-kpi span{display:block;color:#6f6972;font-size:12px}.pass-manager-kpi b{display:block;color:#4f0b70;font-size:27px;margin:4px 0}.pass-manager-kpi small{color:#8a858d}.pass-manager-alerts{margin:0 0 14px}.pass-manager-alerts h3{margin:0 0 10px}.pass-manager-alert{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;margin:6px 0;background:#fff;border-left:4px solid #c8c4cb}.pass-manager-alert b{color:#443f46}.pass-manager-alert span{color:#77717a;font-size:12px;text-align:right}.pass-manager-alert.danger{border-left-color:#e33c61}.pass-manager-alert.warning{border-left-color:#e2a726}.pass-manager-alert.good{border-left-color:#31a44b}@media(max-width:800px){.pass-manager-overview{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.pass-manager-overview{grid-template-columns:1fr 1fr}.pass-manager-alert{align-items:flex-start;flex-direction:column}.pass-manager-alert span{text-align:left}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-9-pass-dashboard-people">
+<main class="wrap" data-build="2026-09-08-website-pass-10-manager-staff-customers">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -758,6 +760,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 <section class="panel" id="customers">
 <div class="card notice"><b>Customer Files</b><p class="muted">PASS-style joined-up customer records for Dexter's — profile, loyalty, orders, catering, deals, challenges, complaints, documents, notes and audit history in one place. Test only.</p></div>
 <div class="card"><div class="row" style="justify-content:space-between"><div><h2>Live Loyalty summary</h2><p class="muted">Read-only totals from the existing live loyalty system.</p></div><button class="btn alt" id="refreshLiveLoyalty">Refresh</button></div><div id="liveLoyaltySummary"></div></div>
+<div class="pass-manager-overview">
+  <div class="pass-manager-kpi"><span>Customers</span><b id="custMgrTotal">0</b><small>records</small></div>
+  <div class="pass-manager-kpi"><span>Active</span><b id="custMgrActive">0</b><small>current</small></div>
+  <div class="pass-manager-kpi"><span>Open complaints</span><b id="custMgrComplaints">0</b><small>need attention</small></div>
+  <div class="pass-manager-kpi"><span>Catering records</span><b id="custMgrCatering">0</b><small>linked</small></div>
+</div>
+<div class="card pass-manager-alerts"><h3>Customer manager alerts</h3><div id="custMgrAlerts"></div></div>
 <div class="staff-pass-grid">
   <div class="staff-pass-list">
     <div class="field">Search customers<input id="custSearch" placeholder="Search name or phone"></div>
@@ -972,6 +981,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 <div class="staff-pass-kpi"><span class="muted">Documents</span><b>Tracked</b></div>
 <div class="staff-pass-kpi"><span class="muted">Audit</span><b>Live</b></div>
 </div>
+<div class="pass-manager-overview">
+  <div class="pass-manager-kpi"><span>Active staff</span><b id="staffMgrActive">0</b><small>working records</small></div>
+  <div class="pass-manager-kpi"><span>Sick / absent</span><b id="staffMgrAbsent">0</b><small>current status</small></div>
+  <div class="pass-manager-kpi"><span>Docs due</span><b id="staffMgrDocsDue">0</b><small>30 days / overdue</small></div>
+  <div class="pass-manager-kpi"><span>Return-to-work</span><b id="staffMgrRTW">0</b><small>follow-up records</small></div>
+</div>
+<div class="card pass-manager-alerts"><h3>Staff manager alerts</h3><div id="staffMgrAlerts"></div></div>
 
 <div class="staff-pass-grid">
 <div class="staff-pass-list">
@@ -2749,11 +2765,27 @@ function custInitials(n){return String(n||'Customer').split(/\s+/).map(x=>x[0]||
 function renderCustDirectory(){
  const q=($('custSearch')?.value||'').trim().toLowerCase();
  const items=customerDb.customers.filter(x=>!q||String(x.name).toLowerCase().includes(q)||String(x.phone||'').toLowerCase().includes(q));
- $('custDirectory').innerHTML=items.map(x=>'<div class="staff-pass-person '+(customerDb.selected===x.id?'active':'')+'" onclick="selectCustomerRecord(&quot;'+x.id+'&quot;)"><b>'+x.name+'</b><br><span class="muted">'+(x.phone||'No phone')+' · '+x.status+'</span></div>').join('')||'<span class="muted">No customers found.</span>';
+ $('custDirectory').innerHTML=items.map(x=>'<div class="pass-person-card '+(customerDb.selected===x.id?'selected':'')+'" onclick="selectCustomerRecord(&quot;'+x.id+'&quot;)"><div class="pass-avatar">'+custInitials(x.name)+'</div><div class="pass-person-copy"><b>'+x.name+'</b><span>'+(x.phone||'No phone')+'</span><small>'+(x.email||x.preferredContact||'No email')+'</small></div><span class="pass-status '+(x.status==='Active'?'active':'')+'">'+x.status+'</span></div>').join('')||'<span class="muted">No customers found.</span>';
 }
 window.selectCustomerRecord=id=>{customerDb.selected=id;localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));renderCustomerDb()};
+function renderCustomerManagerOverview(){
+ if(!$('custMgrTotal'))return;
+ const list=customerDb.customers||[];
+ const open=list.reduce((n,x)=>n+(x.complaints||[]).filter(c=>c.status!=='Resolved'&&c.status!=='Closed').length,0);
+ const catering=list.reduce((n,x)=>n+(x.catering||[]).length,0);
+ $('custMgrTotal').textContent=list.length;
+ $('custMgrActive').textContent=list.filter(x=>x.status==='Active').length;
+ $('custMgrComplaints').textContent=open;
+ $('custMgrCatering').textContent=catering;
+ const alerts=[];
+ list.forEach(x=>{
+   (x.complaints||[]).filter(c=>c.status!=='Resolved'&&c.status!=='Closed').forEach(c=>alerts.push('<div class="pass-manager-alert danger"><b>'+x.name+'</b><span>Open complaint'+(c.due?' · due '+c.due:'')+'</span></div>'));
+   if(x.status==='Blocked')alerts.push('<div class="pass-manager-alert warning"><b>'+x.name+'</b><span>Customer record is blocked</span></div>');
+ });
+ $('custMgrAlerts').innerHTML=alerts.slice(0,8).join('')||'<div class="pass-manager-alert good"><b>All clear</b><span>No urgent customer management alerts.</span></div>';
+}
 function renderCustomerDb(){
- renderCustDirectory();
+ renderCustDirectory();renderCustomerManagerOverview();
  const cu=selectedCustomer(),show=!!cu;
  $('custEmpty').style.display=show?'none':'block';$('custProfileWrap').style.display=show?'block':'none';if(!cu)return;
  $('custAvatar').textContent=custInitials(cu.name);$('custProfileTitle').textContent=cu.name;$('custProfileMeta').textContent=(cu.phone||'No phone')+' · '+cu.status;
@@ -3155,8 +3187,24 @@ function toggleLeavingFields(){
  if($('sdLeavingDateWrap'))$('sdLeavingDateWrap').style.display=leave?'block':'none';
  if($('sdLeavingReasonWrap'))$('sdLeavingReasonWrap').style.display=leave?'block':'none';
 }
+function renderStaffManagerOverview(){
+ if(!$('staffMgrActive')||typeof staffDb==='undefined')return;
+ const list=staffDb.staff||[],now=new Date(),soon=new Date(Date.now()+30*86400000);
+ const absent=list.filter(s=>['Sick','On Leave','Long-Term Absence'].includes(s.status)).length;
+ let docsDue=0,rtw=0,alerts=[];
+ list.forEach(s=>{
+   (s.docs||[]).forEach(d=>{if(d.expiry){const x=new Date(d.expiry+'T12:00:00');if(x<=soon){docsDue++;alerts.push('<div class="pass-manager-alert '+(x<now?'danger':'warning')+'"><b>'+s.name+'</b><span>'+d.type+' '+(x<now?'overdue':'due '+d.expiry)+'</span></div>')}}});
+   if(s.status==='Sick'||s.status==='Long-Term Absence')alerts.push('<div class="pass-manager-alert danger"><b>'+s.name+'</b><span>'+s.status+' — sickness follow-up required</span></div>');
+   (s.docs||[]).filter(d=>d.templateId==='return_work').forEach(()=>rtw++);
+ });
+ $('staffMgrActive').textContent=list.filter(s=>s.status==='Active').length;
+ $('staffMgrAbsent').textContent=absent;
+ $('staffMgrDocsDue').textContent=docsDue;
+ $('staffMgrRTW').textContent=rtw;
+ $('staffMgrAlerts').innerHTML=alerts.slice(0,10).join('')||'<div class="pass-manager-alert good"><b>All clear</b><span>No urgent staff management alerts.</span></div>';
+}
 function renderStaffDb(){
- renderStaffDirectory();renderComplianceDashboard();
+ renderStaffDirectory();renderComplianceDashboard();renderStaffManagerOverview();
  const s=selectedStaff(),show=!!s;
  $('staffEmpty').style.display=show?'none':'block';
  $('staffProfile').style.display=show?'block':'none';
