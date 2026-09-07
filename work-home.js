@@ -35,7 +35,17 @@ function start(){
   if(!existing){const b=node('button','work-page-home','← Home');b.type='button';b.onclick=()=>nav('homePage');page.prepend(b)}
  }
  const menuLink=node('button','work-small','Browse the full menu');menuLink.type='button';menuLink.onclick=()=>nav('menuPage');home.append(menuLink);
- const staffLink=node('button','work-small','Staff / Admin');staffLink.type='button';staffLink.onclick=()=>nav('staffPage');top.append(staffLink);const staffNav=$('staffNav');function syncStaff(){staffLink.hidden=!staffNav||staffNav.classList.contains('hidden')}syncStaff();if(staffNav)new MutationObserver(syncStaff).observe(staffNav,{attributes:true,attributeFilter:['class']});
+ const staffLink=node('button','work-small','Staff / Admin');staffLink.type='button';staffLink.onclick=()=>nav('staffPage');top.append(staffLink);
+ const staffNav=$('staffNav'),roleBadge=$('roleBadge');
+ function syncStaff(){
+   const role=((roleBadge?.textContent)||'').trim().toLowerCase();
+   const roleAllowed=/admin|staff|manager/.test(role);
+   const navAllowed=!!staffNav&&!staffNav.classList.contains('hidden');
+   staffLink.hidden=!(roleAllowed||navAllowed);
+ }
+ syncStaff();
+ if(staffNav)new MutationObserver(syncStaff).observe(staffNav,{attributes:true,attributeFilter:['class']});
+ if(roleBadge)new MutationObserver(syncStaff).observe(roleBadge,{childList:true,characterData:true,subtree:true,attributes:true});
  const homeNav=node('nav','');homeNav.id='workHomeNav';homeNav.setAttribute('aria-label','Customer home navigation');homeNav.innerHTML='<button type="button" id="workNavHome" class="active" aria-current="page"><b>🏠</b>Home</button><a href="/collection-order-test.html"><b>🍔</b>Order</a><button type="button" id="workNavRewards"><b>🎁</b>Rewards</button><a href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><b>💬</b>Dexter</a><button type="button" id="workNavAccount"><b>👤</b>Account</button>';document.body.append(homeNav);
  $('workNavHome').onclick=()=>nav('homePage');
  function syncWorkNav(){const rewardsOn=!!rewardsPage&&!rewardsPage.classList.contains('hidden'),accountOn=!!accountPage&&!accountPage.classList.contains('hidden'),homeOn=!rewardsOn&&!accountOn&&!home.classList.contains('hidden');for(const [id,selected]of [['workNavHome',homeOn],['workNavRewards',rewardsOn],['workNavAccount',accountOn]]){const button=$(id);button.classList.toggle('active',selected);if(selected)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')}}
