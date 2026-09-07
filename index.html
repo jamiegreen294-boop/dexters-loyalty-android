@@ -99,11 +99,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
  .dex-backoffice-main{padding:12px}
  .bo-kpis{grid-template-columns:repeat(2,1fr)}
 }
+
+.pass-pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px}.pass-pagehead h2{margin:0;color:#3f3b42;font-size:22px}.pass-period{max-width:160px;margin:0}.pass-dashboard-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}.pass-dash-card{min-height:210px}.pass-dash-card h3{font-size:15px;margin:0 0 14px;color:#57515a}.pass-ring{width:150px;height:150px;margin:8px auto 16px;border-radius:50%;background:conic-gradient(#24a23e 0 84%,#e34b63 84% 100%);display:grid;place-items:center}.pass-ring:before{content:"";position:absolute}.pass-ring>div{width:118px;height:118px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.pass-ring b{font-size:30px;color:#4a4450}.pass-ring span{font-size:11px;color:#777}.pass-statline{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #ece9ee}.pass-statline span{color:#69646d;font-size:13px}.pass-statline b{color:#454047;font-size:13px}.pass-alert-card .alert-item{border:0!important;border-left:4px solid #e43c63!important;border-radius:0!important;background:#fff!important;margin:0 0 10px;padding:10px 12px}.staff-pass-list{background:#f7f7f8!important}.staff-pass-list #staffDirectory{display:grid;grid-template-columns:1fr;gap:9px}.pass-person-card{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:11px;background:#fff;border:1px solid #dfdce2;border-radius:4px;padding:11px;cursor:pointer;box-shadow:0 1px 3px #00000008}.pass-person-card:hover,.pass-person-card.selected{border-color:#8a58a0;box-shadow:0 0 0 2px #e8dced}.pass-avatar{width:44px;height:44px;border-radius:50%;background:#ece4f0;color:#5b0b7e;display:grid;place-items:center;font-weight:900}.pass-person-copy{min-width:0;display:flex;flex-direction:column}.pass-person-copy b{color:#3e3941}.pass-person-copy span,.pass-person-copy small{color:#77717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pass-person-copy span{font-size:12px}.pass-person-copy small{font-size:11px}.pass-status{font-size:9px;font-weight:900;text-transform:uppercase;padding:4px 6px;border-radius:3px;background:#eee;color:#666}.pass-status.active{background:#2b9a41;color:#fff}@media(max-width:900px){.pass-dashboard-grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.pass-pagehead{align-items:flex-start}.pass-dashboard-grid{grid-template-columns:1fr}.pass-period{max-width:130px}.pass-ring{width:128px;height:128px}.pass-ring>div{width:98px;height:98px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-8-pass-layout">
+<main class="wrap" data-build="2026-09-08-website-pass-9-pass-dashboard-people">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -358,38 +360,53 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 
 <div class="dex-backoffice-main">
 <section class="panel active" id="dashboard">
-<div class="card notice"><b>Dexter's management dashboard</b><p class="muted">One joined-up view of the business, inspired by PASS's dashboard-and-record approach but built around Dexter's workflows.</p></div>
-<div class="bo-rolebar"><span class="badge">Super User — everything</span><span class="badge">Manager — management + operations</span><span class="badge">Team Leader — shift supervision</span><span class="badge">Staff — day-to-day tools</span></div>
-<div class="bo-kpis">
-<div class="bo-kpi"><span class="muted">Staff</span><b id="boStaffCount">—</b><span class="tiny">records</span></div>
-<div class="bo-kpi"><span class="muted">Training</span><b>Tracked</b><span class="tiny">certification & refreshers</span></div>
-<div class="bo-kpi"><span class="muted">Catering</span><b>48h</b><span class="tiny">minimum notice</span></div>
-<div class="bo-kpi"><span class="muted">Audit</span><b>On</b><span class="tiny">role & record changes</span></div>
+<div class="pass-pagehead">
+  <div><h2>Dexter's Dashboard</h2><div class="muted">Business overview, tasks, alerts and activity</div></div>
+  <div class="field pass-period">View<select id="dashPeriod"><option>Today</option><option>Last 7 days</option><option selected>Last 30 days</option></select></div>
 </div>
-<div class="bo-module-grid">
-<div class="bo-module"><h3>👥 Staff & HR</h3><p class="muted">Profiles, roles, permissions, documents, absence, incidents and audit records.</p></div>
-<div class="bo-module"><h3>🎓 Training</h3><p class="muted">Animated training, tests, certification and refresher tracking.</p></div>
-<div class="bo-module"><h3>🛡️ Compliance</h3><p class="muted">Health & safety, food safety, HR documents, acknowledgements and review dates.</p></div>
-<div class="bo-module"><h3>🧾 Orders & KDS</h3><p class="muted">Back-office oversight for Dexter's existing order and KDS workflows; no duplicate live tracking system.</p></div>
-<div class="bo-module"><h3>🥪 Catering</h3><p class="muted">Buffet requests, allergens, quotes, amendments and approvals.</p></div>
-<div class="bo-module"><h3>🎁 Loyalty & Growth</h3><p class="muted">Customers, loyalty, deals and challenge controls without replacing existing automatic rewards.</p></div>
+
+<div class="pass-dashboard-grid">
+  <div class="card pass-dash-card">
+    <h3>People</h3>
+    <div class="pass-ring"><div><b id="boStaffCount">—</b><span>staff records</span></div></div>
+    <div id="liveWorkers"></div>
+  </div>
+
+  <div class="card pass-dash-card">
+    <h3>Tasks</h3>
+    <div id="roleDashboard"></div>
+    <div class="pass-statline"><span>Training</span><b>Tracked</b></div>
+    <div class="pass-statline"><span>Audit</span><b>On</b></div>
+  </div>
+
+  <div class="card pass-dash-card pass-alert-card">
+    <h3>Alerts</h3>
+    <div id="autoAlerts"></div>
+  </div>
+
+  <div class="card pass-dash-card">
+    <h3>Operations</h3>
+    <div class="pass-statline"><span>Catering notice</span><b>48h</b></div>
+    <div class="pass-statline"><span>Orders & KDS</span><b>Connected</b></div>
+    <div class="pass-statline"><span>Compliance</span><b>Tracked</b></div>
+    <div class="pass-statline"><span>System health</span><b>Monitored</b></div>
+  </div>
+
+  <div class="card pass-dash-card">
+    <h3>Live connections</h3>
+    <div class="pass-statline"><span>Loyalty</span><b id="liveLoyaltyCount">—</b></div>
+    <div class="pass-statline"><span>Rewards ready</span><b id="liveRewardsReady">—</b></div>
+    <div class="pass-statline"><span>Live orders</span><b id="liveOrdersCount">—</b></div>
+    <div class="pass-statline"><span>Food safety</span><b id="liveFsStatus">—</b></div>
+    <button class="btn alt small" id="refreshLiveReadOnly">Refresh live data</button>
+    <div id="liveReadOnlyMessage" class="tiny" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card pass-dash-card">
+    <h3>Business timeline</h3>
+    <div id="businessTimeline"></div>
+  </div>
 </div>
-<div class="grid" style="margin-top:14px">
-<div class="card"><h2>Who's working now</h2><div id="liveWorkers"></div></div>
-<div class="card"><h2>Attention needed</h2><div id="autoAlerts"></div></div>
-</div>
-<div class="card" style="margin-top:14px"><h2>My dashboard</h2><div id="roleDashboard"></div></div>
-<div class="card" style="margin-top:14px">
-<div class="row" style="justify-content:space-between"><div><h2>Live Dexter's connections</h2><p class="muted" style="margin:0">Read-only view of existing live systems. No live records can be changed from these cards.</p></div><button class="btn alt" id="refreshLiveReadOnly">Refresh live data</button></div>
-<div class="bo-kpis" id="liveConnectionKpis">
-<div class="bo-kpi"><span class="muted">Loyalty</span><b id="liveLoyaltyCount">—</b><span class="tiny">accounts</span></div>
-<div class="bo-kpi"><span class="muted">Rewards ready</span><b id="liveRewardsReady">—</b><span class="tiny">live</span></div>
-<div class="bo-kpi"><span class="muted">Live orders</span><b id="liveOrdersCount">—</b><span class="tiny">recent feed</span></div>
-<div class="bo-kpi"><span class="muted">Food safety</span><b id="liveFsStatus">—</b><span class="tiny">recent records</span></div>
-</div>
-<div id="liveReadOnlyMessage" class="tiny"></div>
-</div>
-<div class="card" style="margin-top:14px"><h2>Business timeline</h2><div id="businessTimeline"></div></div>
 </section>
 
 <section class="panel" id="catering">
@@ -3129,7 +3146,7 @@ function roleDefaultPerms(role){
 function renderStaffDirectory(){
  const q=($('staffSearch').value||'').trim().toLowerCase();
  const items=staffDb.staff.filter(s=>!q||String(s.name).toLowerCase().includes(q)||String(s.role).toLowerCase().includes(q));
- $('staffDirectory').innerHTML=items.map(s=>'<div class="summarybox" style="cursor:pointer" onclick="selectStaffRecord(&quot;'+s.id+'&quot;)"><b>'+s.name+'</b><br><span class="badge">'+s.role+'</span><span class="badge">'+s.status+'</span>'+(staffDb.selected===s.id?'<br><span class="ok">Selected</span>':'')+'</div>').join('')||'<span class="muted">No staff match your search.</span>';
+ $('staffDirectory').innerHTML=items.map(s=>'<div class="pass-person-card '+(staffDb.selected===s.id?'selected':'')+'" onclick="selectStaffRecord(&quot;'+s.id+'&quot;)"><div class="pass-avatar">'+custInitials(s.name)+'</div><div class="pass-person-copy"><b>'+s.name+'</b><span>'+s.role+'</span><small>'+(s.email||s.phone||'No contact details')+'</small></div><span class="pass-status '+(s.status==='Active'?'active':'')+'">'+s.status+'</span></div>').join('')||'<span class="muted">No staff match your search.</span>';
 }
 window.selectStaffRecord=id=>{staffDb.selected=id;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb()};
 function fmtDate(d){if(!d)return '—';const x=new Date(d);return Number.isNaN(x.getTime())?d:x.toLocaleDateString()}
