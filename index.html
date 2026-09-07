@@ -47,7 +47,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-1">
+<main class="wrap" data-build="2026-09-08-website-pass-2-menu-reports">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -771,8 +771,29 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="menuadmin">
-<div class="card notice"><b>Menu & Admin</b><p class="muted">Management area for Dexter's menu, availability, modifiers and controlled admin changes.</p></div>
-<div class="bo-placeholder">Manager/Super User area. Live menu changes remain separate until explicitly approved.</div>
+<div class="card notice"><b>Menu & Admin</b><p class="muted">Test-only management area for menu notes, availability and change requests. Nothing here writes to Dexter's live customer menu.</p></div>
+<div class="grid">
+  <div class="card">
+    <h2>Menu change request</h2>
+    <div class="field">Item / category<input id="menuChangeItem" placeholder="e.g. Street Subs"></div>
+    <div class="field">Change type<select id="menuChangeType"><option>Price</option><option>Description</option><option>Modifier</option><option>Availability</option><option>Allergen note</option><option>Other</option></select></div>
+    <div class="field">Requested change<textarea id="menuChangeNote" rows="4" placeholder="Describe the proposed test change"></textarea></div>
+    <div class="field">Priority<select id="menuChangePriority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>
+    <button class="btn" id="menuChangeAdd">Add test change request</button>
+  </div>
+  <div class="card">
+    <h2>Test availability control</h2>
+    <p class="muted">This records a Back Office test status only. It does not alter live ordering.</p>
+    <div class="field">Item<input id="menuAvailItem" placeholder="Item name"></div>
+    <div class="field">Test status<select id="menuAvailStatus"><option>Available</option><option>Low stock</option><option>Out of stock</option><option>Hidden for review</option></select></div>
+    <div class="field">Reason<input id="menuAvailReason" placeholder="Optional reason"></div>
+    <button class="btn alt" id="menuAvailAdd">Save test status</button>
+  </div>
+</div>
+<div class="grid" style="margin-top:14px">
+  <div class="card"><h2>Change request queue</h2><div id="menuChangeList"></div></div>
+  <div class="card"><h2>Test availability list</h2><div id="menuAvailList"></div></div>
+</div>
 </section>
 
 <section class="panel" id="deals">
@@ -1227,8 +1248,22 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="reports">
-<div class="card notice"><b>Reports</b><p class="muted">Management reporting across staff, training, compliance, catering, customers and operations.</p></div>
-<div class="bo-placeholder">PASS-style at-a-glance reporting will pull from the joined-up Dexter's records as modules are connected.</div>
+<div class="card notice"><b>Reports</b><p class="muted">PASS-style at-a-glance management reporting from the records held in this Back Office test.</p></div>
+<div class="bo-kpis">
+  <div class="bo-kpi"><span class="muted">Active staff</span><b id="reportStaff">0</b><span class="tiny">current records</span></div>
+  <div class="bo-kpi"><span class="muted">Open tasks</span><b id="reportTasks">0</b><span class="tiny">not completed</span></div>
+  <div class="bo-kpi"><span class="muted">Compliance due</span><b id="reportCompliance">0</b><span class="tiny">next 30 days / overdue</span></div>
+  <div class="bo-kpi"><span class="muted">Catering</span><b id="reportCatering">0</b><span class="tiny">requests recorded</span></div>
+</div>
+<div class="grid">
+  <div class="card"><h2>People & HR</h2><div id="reportPeople"></div></div>
+  <div class="card"><h2>Operations</h2><div id="reportOps"></div></div>
+</div>
+<div class="grid" style="margin-top:14px">
+  <div class="card"><h2>Finance & stock</h2><div id="reportFinance"></div></div>
+  <div class="card"><h2>Compliance & maintenance</h2><div id="reportRisk"></div></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Report generated</h2><div id="reportGenerated" class="tiny"></div></div>
 </section>
 
 <section class="panel" id="archive">
@@ -1271,7 +1306,7 @@ let CURRENT_STAFF_ROLE='Staff';
 const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
 let dexManage={
  tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
- recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],holidayLedger:[],paySettings:{},payrollRuns:[],payrollAudit:[]
+ recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],holidayLedger:[],paySettings:{},payrollRuns:[],payrollAudit:[],menuChanges:[],menuAvailability:[]
 };
 try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
 
@@ -2433,9 +2468,42 @@ function renderHolidayLedger(){
  const id=$('holidayBalanceStaff')?.value||CURRENT_SHIFT_STAFF_ID;
  box.innerHTML=holidayLedgerEntries(id).map(x=>'<div class="summarybox"><b>'+x.kind+'</b><br><span class="badge">'+(x.status||x.unit||'Record')+'</span><span class="muted"> '+(x.amount!=null?(Number(x.amount)>=0?'+':'')+Number(x.amount).toFixed(2)+' '+(x.unit||''):'')+'</span><br><span class="tiny">'+(x.reason||x.description||'')+' · '+new Date(x.at).toLocaleString()+' · '+(x.by||'System')+'</span></div>').join('')||'<span class="muted">No holiday ledger entries yet.</span>';
 }
+function renderMenuAdmin(){
+ if(!$('menuChangeList')||!$('menuAvailList'))return;
+ dexManage.menuChanges=dexManage.menuChanges||[];
+ dexManage.menuAvailability=dexManage.menuAvailability||[];
+ $('menuChangeList').innerHTML=dexManage.menuChanges.map((x,i)=>'<div class="summarybox"><b>'+escLive(x.item||'Unnamed')+'</b><br><span class="badge">'+escLive(x.type)+'</span><span class="badge">'+escLive(x.priority)+'</span><br><span class="muted">'+escLive(x.note)+'</span><br><span class="tiny">Test request · '+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No test menu change requests.</span>';
+ $('menuAvailList').innerHTML=dexManage.menuAvailability.map(x=>'<div class="summarybox"><b>'+escLive(x.item||'Unnamed')+'</b><br><span class="badge">'+escLive(x.status)+'</span>'+(x.reason?'<br><span class="muted">'+escLive(x.reason)+'</span>':'')+'<br><span class="tiny">Back Office test status only · '+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No test availability records.</span>';
+}
+function renderReports(){
+ if(!$('reportStaff'))return;
+ const staff=(typeof staffDb!=='undefined'&&Array.isArray(staffDb.staff))?staffDb.staff:[];
+ const activeStaff=staff.filter(s=>!['Inactive','No Longer Employed'].includes(s.status)).length;
+ const openTasks=(dexManage.tasks||[]).filter(t=>t.status!=='Completed').length;
+ const now=new Date(),soon=new Date(Date.now()+30*86400000);
+ let complianceDue=0;
+ staff.forEach(s=>(s.docs||[]).forEach(d=>{if(d.expiry){const x=new Date(d.expiry+'T12:00:00');if(x<=soon)complianceDue++}}));
+ (dexManage.masterCompliance||[]).forEach(r=>{if(r.review){const x=new Date(r.review+'T12:00:00');if(x<=soon)complianceDue++}});
+ const cateringCount=(typeof cat!=='undefined'&&Array.isArray(cat))?cat.length:0;
+ $('reportStaff').textContent=activeStaff;
+ $('reportTasks').textContent=openTasks;
+ $('reportCompliance').textContent=complianceDue;
+ $('reportCatering').textContent=cateringCount;
+ const trainingDone=staff.filter(s=>Number(s.training?.completed||0)>0).length;
+ const absent=staff.reduce((n,s)=>n+(s.absences||[]).length,0);
+ $('reportPeople').innerHTML='<div class="summarybox"><b>'+activeStaff+' active staff</b><br><span class="muted">'+trainingDone+' with recorded training progress · '+absent+' absence record(s)</span></div>';
+ const shifts=(dexManage.rota||[]).length, announcements=(dexManage.announcements||[]).length;
+ $('reportOps').innerHTML='<div class="summarybox"><b>'+shifts+' rota shift record(s)</b><br><span class="muted">'+openTasks+' open task(s) · '+announcements+' announcement(s) · '+cateringCount+' catering request(s)</span></div>';
+ const sales=(dexManage.salesDays||[]).reduce((n,x)=>n+Number(x.total||x.sales||0),0);
+ const waste=(dexManage.waste||[]).length, low=(dexManage.stock||[]).filter(x=>Number(x.quantity||x.qty||0)<=Number(x.reorderLevel||x.par||0)).length;
+ $('reportFinance').innerHTML='<div class="summarybox"><b>£'+Number(sales).toFixed(2)+' recorded sales</b><br><span class="muted">'+low+' low-stock record(s) · '+waste+' wastage record(s)</span></div>';
+ const faults=(dexManage.equipment||[]).filter(x=>x.status&&x.status!=='Operational').length;
+ $('reportRisk').innerHTML='<div class="summarybox"><b>'+complianceDue+' compliance item(s) due/overdue</b><br><span class="muted">'+faults+' equipment item(s) needing attention</span></div>';
+ $('reportGenerated').textContent='Generated from the current PASS Back Office test records at '+new Date().toLocaleString()+'.';
+}
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
- staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderPayroll();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderPayroll();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();renderMenuAdmin();renderReports();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
@@ -3503,6 +3571,19 @@ if($('firstPasswordSave'))$('firstPasswordSave').onclick=async()=>{
 };
 if($('tempPasswordClose'))$('tempPasswordClose').onclick=()=>{$('tempPasswordValue').textContent='';$('tempPasswordOverlay').style.display='none'};
 
+if($('menuChangeAdd'))$('menuChangeAdd').onclick=()=>{
+ const item=$('menuChangeItem').value.trim(),note=$('menuChangeNote').value.trim();
+ if(!item||!note)return;
+ dexManage.menuChanges=dexManage.menuChanges||[];
+ dexManage.menuChanges.unshift({item,type:$('menuChangeType').value,note,priority:$('menuChangePriority').value,at:new Date().toISOString()});
+ $('menuChangeItem').value='';$('menuChangeNote').value='';saveDexManage();
+};
+if($('menuAvailAdd'))$('menuAvailAdd').onclick=()=>{
+ const item=$('menuAvailItem').value.trim();if(!item)return;
+ dexManage.menuAvailability=dexManage.menuAvailability||[];
+ dexManage.menuAvailability.unshift({item,status:$('menuAvailStatus').value,reason:$('menuAvailReason').value.trim(),at:new Date().toISOString()});
+ $('menuAvailItem').value='';$('menuAvailReason').value='';saveDexManage();
+};
 if($('refreshLiveReadOnly'))$('refreshLiveReadOnly').onclick=loadLiveReadOnly;
 if($('refreshLiveOrders'))$('refreshLiveOrders').onclick=loadLiveOrders;
 if($('refreshLiveLoyalty'))$('refreshLiveLoyalty').onclick=loadLiveLoyalty;
