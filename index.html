@@ -757,6 +757,161 @@ const lessons=[
   ["Should staff promise an unauthorised refund?",["Yes","No","Always"],1]
  ]}
 ];
+lessons.push(
+ {group:"Operational",title:"Collection orders & customer pickup",icon:"🛍️",scenes:[
+  ["Match the right order","Check the customer/order reference and collection details before handing anything over."],
+  ["Read the final status","Only hand over the completed order and make sure any amendments are reflected."],
+  ["Mark collected accurately","The collected status drives loyalty points, order history and challenge progress."],
+  ["Late or changed collections","If something no longer matches the order, stop and confirm it rather than guessing."]
+ ],questions:[
+  ["What should you check before handing over an order?",["Only the bag colour","Customer/order details and final order","Nothing"],1],
+  ["When should an order be marked collected?",["When it is actually handed over","When cooking starts","As soon as ordered"],0],
+  ["Why does collected status matter?",["It affects order history and reward progress","It only changes font size","It does not matter"],0]
+ ]},
+ {group:"Operational",title:"Food safety, cleaning & cross-contamination",icon:"🧼",scenes:[
+  ["Clean hands and surfaces","Use the correct handwashing and cleaning procedure before and during food preparation."],
+  ["Separate contamination risks","Keep raw and ready-to-eat food and equipment controlled to prevent cross-contamination."],
+  ["Store food correctly","Follow Dexter's current food-safety system for chilled, frozen and dry storage."],
+  ["Report anything unsafe","Do not serve food you believe may be unsafe. Stop and escalate."]
+ ],questions:[
+  ["What should happen if food may be unsafe?",["Serve it quickly","Stop and escalate","Hide it"],1],
+  ["Why separate raw and ready-to-eat food?",["To reduce cross-contamination risk","For appearance only","No reason"],0],
+  ["Should cleaning follow the current Dexter's procedure?",["Yes","Only at closing","No"],0]
+ ]},
+ {group:"Operational",title:"Printer & receipt handling",icon:"🖨️",scenes:[
+  ["Check before reprinting","A failed-looking screen does not always mean nothing printed."],
+  ["Avoid duplicates","Confirm whether the kitchen/customer ticket already exists before sending another."],
+  ["Use the correct receipt","Loyalty, order and kitchen tickets have different purposes."],
+  ["Escalate repeated faults","Record persistent printer or bridge problems so they can be fixed."]
+ ],questions:[
+  ["Before reprinting, what should staff do?",["Check if it already printed","Always press print three times","Restart every device"],0],
+  ["Why avoid duplicate tickets?",["They can cause duplicate preparation/confusion","They save paper","They are required"],0],
+  ["What should happen with repeated faults?",["Ignore them","Record/escalate them","Delete orders"],1]
+ ]},
+ {group:"Operational",title:"Catering & buffet orders",icon:"🥪",scenes:[
+  ["48 hours minimum","Dexter's catering requests must be at least 48 hours ahead."],
+  ["Check quantities and allergens","Review headcount, selected items, quantities and the customer's allergen declaration."],
+  ["Staff approval matters","Amended quotes or collection times must go through the approval/confirmation flow."],
+  ["Never guess allergen answers","Use recorded information and escalate uncertainty."]
+ ],questions:[
+  ["Minimum catering notice?",["24 hours","48 hours","No notice"],1],
+  ["Can staff approve an amended quote before required customer confirmation?",["Yes","No","Always"],1],
+  ["What if allergen information is uncertain?",["Guess","Check records and escalate","Say it contains nothing"],1]
+ ]},
+ {group:"Operational",title:"Deals, scratch cards & rewards",icon:"🎟️",scenes:[
+  ["Recommendations are not automatic","A suggested deal must be staff-approved before it can move forward."],
+  ["Sending is a separate action","Approved deals are not sent until staff explicitly send them."],
+  ["Protect existing rewards","Avoid duplicate or incompatible stacking with Dexter's existing automatic deals."],
+  ["Scratch rewards need approval","A revealed test reward is not issued until the staff approval step is complete."]
+ ],questions:[
+  ["Does a recommended deal send automatically?",["Yes","No","Only on Fridays"],1],
+  ["After approval, is a deal automatically sent?",["Yes","No, staff still send it","Always"],1],
+  ["Can a scratch reward be issued before approval?",["Yes","No","If under £1"],1]
+ ]},
+ {group:"Operational",title:"Out-of-stock & order amendments",icon:"✏️",scenes:[
+  ["Mark genuine outages","If an item is unavailable, use the correct out-of-stock process."],
+  ["Give the customer a clear choice","Where an order needs changing, let the customer choose an available alternative."],
+  ["Keep records aligned","The customer view, KDS and final order should all reflect the same amendment."],
+  ["Do not substitute silently","Never replace a customer's item without confirmation."]
+ ],questions:[
+  ["Can staff silently substitute an item?",["Yes","No","Only if cheaper"],1],
+  ["What should happen when an item is genuinely unavailable?",["Use the out-of-stock process","Keep selling it","Delete the menu"],0],
+  ["What should match after an amendment?",["Customer view, KDS and final order","Only the receipt","Nothing"],0]
+ ]},
+ {group:"Operational",title:"Sunday roast & pre-orders",icon:"🍗",scenes:[
+  ["Check the exact pre-order","Confirm adult/kids, meat choice, quantity, payment/deposit status and collection time."],
+  ["Use the recorded collection time","Do not move a customer's collection slot without the proper amendment process."],
+  ["Check paid versus deposit","Make sure staff understand whether a balance remains."],
+  ["Mark collected correctly","Only complete the pre-order when the customer actually collects it."]
+ ],questions:[
+  ["What should be checked on a roast pre-order?",["Meat/size, quantity, payment status and time","Only surname","Only price"],0],
+  ["Does deposit paid mean paid in full?",["Always","No","Yes"],1],
+  ["When should it be marked collected?",["At pickup","At opening","When booked"],0]
+ ]},
+ {group:"Operational",title:"Equipment faults & incident escalation",icon:"🛠️",scenes:[
+  ["Stop unsafe equipment","If equipment appears unsafe, stop using it and make the area safe."],
+  ["Do not attempt unauthorised repairs","Electrical, gas or specialist equipment faults require the appropriate competent person."],
+  ["Record the fault","Tell the responsible manager what happened and what equipment is affected."],
+  ["Protect service and safety","Use the approved fallback process rather than improvising something unsafe."]
+ ],questions:[
+  ["What if equipment appears unsafe?",["Keep using it","Stop using it and escalate","Hit it"],1],
+  ["Should staff attempt unauthorised repairs?",["Yes","No","Always"],1],
+  ["Why record faults?",["So the risk and repair can be managed","For decoration","No need"],0]
+ ]},
+
+ {group:"Health & Safety",title:"Slips, trips & safe floors",icon:"⚠️",scenes:[
+  ["Spills are a major risk","Food, water, grease and packaging can create serious slip or trip hazards."],
+  ["Act straight away","Clean or isolate spills promptly and keep walkways clear."],
+  ["Use the right controls","Follow Dexter's cleaning procedure and use suitable warning/control measures while a hazard remains."],
+  ["Report recurring hazards","Leaks, damaged flooring or repeated contamination need manager action."]
+ ],questions:[
+  ["What should happen to a spill?",["Leave it until closing","Clean/isolate it promptly","Walk around it all day"],1],
+  ["Should walkways be kept clear?",["Yes","No","Only for customers"],0],
+  ["What about a recurring leak?",["Ignore it","Report/escalate it","Cover it with cardboard"],1]
+ ]},
+ {group:"Health & Safety",title:"Knives, hot surfaces, fryers & burns",icon:"🔪",scenes:[
+  ["Use knives safely","Use the correct knife, stable cutting surface and safe handling method."],
+  ["Control hot hazards","Treat pans, ovens, grills, hot liquids and fryer oil as burn/scald risks."],
+  ["Never improvise around hot oil","Follow the approved fryer cleaning/emptying procedure and never rush it."],
+  ["Report damaged equipment","Unsafe handles, guards, tools or hot equipment must be taken out of unsafe use and reported."]
+ ],questions:[
+  ["Should fryer cleaning be improvised?",["Yes","No","Only if quiet"],1],
+  ["What should be used for knife work?",["A stable cutting surface and correct knife","Any loose surface","Your hand"],0],
+  ["What if hot equipment is damaged?",["Keep using it","Take unsafe use out of service and report it","Hide it"],1]
+ ]},
+ {group:"Health & Safety",title:"Manual handling & back safety",icon:"📦",scenes:[
+  ["Avoid hazardous lifting where possible","Use trolleys, split loads or ask for help where that reduces risk."],
+  ["Think before lifting","Consider the task, load, environment and your own capability."],
+  ["Use safe technique","Keep control of the load and avoid twisting or rushing with heavy items."],
+  ["Report pain early","Aches or strains should be reported before they become worse."]
+ ],questions:[
+  ["What is best if a load is too heavy?",["Lift it alone quickly","Use help/aids or split the load","Drag it"],1],
+  ["What should be considered before lifting?",["Task, load, environment and capability","Only the colour","Nothing"],0],
+  ["Should recurring back pain be reported?",["Yes","No","Only after a year"],0]
+ ]},
+ {group:"Health & Safety",title:"Cleaning chemicals, COSHH & skin safety",icon:"🧴",scenes:[
+  ["Cleaning products can harm","Use chemicals only as instructed and keep them safely stored and labelled."],
+  ["Never mix chemicals","Mixing cleaning products can create dangerous reactions or fumes."],
+  ["Protect skin","Frequent wet work and some chemicals can cause dermatitis; use the controls and PPE provided."],
+  ["Ventilation matters","Cooking fumes and chemicals need the workplace ventilation/extraction controls to be working."]
+ ],questions:[
+  ["Should cleaning chemicals be mixed together?",["Yes","No","Only with hot water"],1],
+  ["Why protect hands from repeated wet work/chemicals?",["To reduce dermatitis risk","To keep jewellery dry","No reason"],0],
+  ["What if extraction/ventilation is not working correctly?",["Ignore it","Report/escalate it","Block it"],1]
+ ]},
+ {group:"Health & Safety",title:"Gas, fire & emergency action",icon:"🔥",scenes:[
+  ["Know the emergency procedure","Staff must know Dexter's current fire, evacuation and gas-leak arrangements."],
+  ["Gas work is specialist work","Do not repair or interfere with gas fittings unless you are appropriately qualified and authorised."],
+  ["Raise the alarm","If there is fire, suspected gas leak or immediate danger, follow the emergency process rather than investigating beyond your training."],
+  ["Keep escape routes usable","Do not block exits or emergency routes with stock, bins or equipment."]
+ ],questions:[
+  ["Who should repair gas fittings?",["Any staff member","Appropriately qualified/authorised engineer","A customer"],1],
+  ["Should emergency exits be kept clear?",["Yes","No","Only when open"],0],
+  ["What should staff follow during a gas/fire emergency?",["Dexter's emergency procedure","Their own experiment","Nothing"],0]
+ ]},
+ {group:"Health & Safety",title:"First aid, accidents & near misses",icon:"🩹",scenes:[
+  ["Get the right help","For an injury or medical emergency, use Dexter's first-aid/emergency arrangements."],
+  ["Record incidents","Accidents and relevant near misses should be reported through the business procedure."],
+  ["Do not exceed your training","Only give first aid you are trained/authorised to give; call emergency services when needed."],
+  ["Learn from near misses","A near miss can show a hazard needs fixing before someone is injured."]
+ ],questions:[
+  ["Should relevant near misses be reported?",["Yes","No","Only if a customer saw it"],0],
+  ["Should staff give first aid beyond their training?",["Yes","No","Always"],1],
+  ["Why record incidents?",["To help manage hazards and follow procedure","For entertainment","No reason"],0]
+ ]},
+ {group:"Health & Safety",title:"Young workers & new starters",icon:"🧑‍🍳",scenes:[
+  ["Extra consideration may be needed","Young or inexperienced workers may not recognise hazards as readily as experienced staff."],
+  ["Train before risky tasks","Do not assume a new starter understands knives, hot equipment, chemicals or manual handling."],
+  ["Supervise appropriately","Use the controls and supervision identified by Dexter's risk assessment."],
+  ["Speak up","New staff should ask when unsure rather than copy an unsafe shortcut."]
+ ],questions:[
+  ["Should a new starter be assumed to know all kitchen risks?",["Yes","No","Always"],1],
+  ["When should risky-task instruction happen?",["Before the task","After an accident","Never"],0],
+  ["What should a new worker do if unsure?",["Guess","Ask/speak up","Copy any shortcut"],1]
+ ]}
+);
+const TRAIN_GROUPS={"Core":0,"Operational":1,"Health & Safety":2};
+lessons.forEach((l,i)=>{if(!l.group)l.group="Core"});
 let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{}};
 try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState={...trainState,...saved}}catch(e){}
 let videoScene={},videoTimers={};
@@ -784,9 +939,12 @@ function quizMarkup(l,i){
 }
 function renderLessons(){
  $('trainStaffName').value=trainState.staffName||'';$('trainRole').value=trainState.role||'Staff';
+ let lastGroup='';
  $('lessonList').innerHTML=lessons.map((l,i)=>{
   const done=!!trainState.completed[i],watched=!!trainState.watched[i],attempts=trainState.attempts[i]||0,score=trainState.scores[i];
-  return '<div class="lesson '+(done?'done':'')+'"><b>'+l.icon+' '+l.title+'</b><p class="muted">'+(done?'Completed':'Animated lesson + knowledge test')+'</p><div class="training-video" id="trainVideo'+i+'"></div>'+(watched?(done?'<div class="summarybox"><span class="ok"><b>Passed ✓</b></span><br><span class="tiny">Score '+score+'% · '+attempts+' attempt(s)</span></div>':quizMarkup(l,i)):'<p class="tiny">Finish the animated lesson to unlock the test.</p>')+'</div>';
+  const heading=l.group!==lastGroup?'<h2 style="margin-top:22px">'+l.group+' Training</h2><p class="tiny">'+(l.group==='Health & Safety'?'Workplace safety modules based on catering risk guidance.':l.group==='Operational'?"Dexter's day-to-day systems and service procedures.":"Essential training for every Dexter's staff member.")+'</p>':'';
+  lastGroup=l.group;
+  return heading+'<div class="lesson '+(done?'done':'')+'"><b>'+l.icon+' '+l.title+'</b><p class="muted">'+(done?'Completed':'Animated lesson + knowledge test')+'</p><div class="training-video" id="trainVideo'+i+'"></div>'+(watched?(done?'<div class="summarybox"><span class="ok"><b>Passed ✓</b></span><br><span class="tiny">Score '+score+'% · '+attempts+' attempt(s)</span></div>':quizMarkup(l,i)):'<p class="tiny">Finish the animated lesson to unlock the test.</p>')+'</div>';
  }).join('');
  lessons.forEach((_,i)=>renderVideo(i));
  const done=completedCount();$('trainDone').textContent=done+' / '+lessons.length;
@@ -804,7 +962,8 @@ window.checkLesson=i=>{
 };
 function renderTrainingManager(){
  const done=completedCount(),pct=Math.round(done/lessons.length*100);
- $('trainManager').innerHTML='<div class="summarybox"><b>'+String(trainState.staffName||'Unnamed staff')+'</b><br><span class="muted">'+trainState.role+' · '+done+'/'+lessons.length+' complete</span><div class="progress"><i style="width:'+pct+'%"></i></div>'+lessons.map((l,i)=>'<div class="tiny">'+(trainState.completed[i]?'✓':'○')+' '+l.title+(trainState.scores[i]!=null?' — '+trainState.scores[i]+'%':'')+'</div>').join('')+'</div>';
+ const groups=['Core','Operational','Health & Safety'].map(g=>{const idx=lessons.map((l,i)=>[l,i]).filter(([l])=>l.group===g),gd=idx.filter(([,i])=>trainState.completed[i]).length;return '<div class="tiny"><b>'+g+':</b> '+gd+'/'+idx.length+'</div>'}).join('');
+ $('trainManager').innerHTML='<div class="summarybox"><b>'+String(trainState.staffName||'Unnamed staff')+'</b><br><span class="muted">'+trainState.role+' · '+done+'/'+lessons.length+' complete</span><div class="progress"><i style="width:'+pct+'%"></i></div>'+groups+'<hr style="border:0;border-top:1px solid #ffffff17;margin:10px 0">'+lessons.map((l,i)=>'<div class="tiny">'+(trainState.completed[i]?'✓':'○')+' '+l.title+(trainState.scores[i]!=null?' — '+trainState.scores[i]+'%':'')+'</div>').join('')+'</div>';
 }
 $('trainStaffName').addEventListener('change',()=>{trainState.staffName=$('trainStaffName').value.trim()||'Unnamed staff';saveTraining()});
 $('trainRole').addEventListener('change',()=>{trainState.role=$('trainRole').value;saveTraining()});
