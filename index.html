@@ -41,12 +41,17 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="grid">
 <div class="card"><h2>New catering request</h2>
 <div class="field">Event / company name<input id="catName" placeholder="e.g. Office lunch"></div>
-<div class="field">People<input id="catPeople" inputmode="numeric" value="12"></div>
+<div class="field">Customer / contact name<input id="catContact" placeholder="e.g. Jamie"></div>
+<div class="field">Contact number<input id="catPhone" inputmode="tel" placeholder="e.g. 07..."></div>
+<div class="field">People<input id="catPeople" type="number" min="1" value="12"></div>
 <div class="field">Date<input id="catDate" type="date"></div>
 <div class="field">Collection time<input id="catTime" type="time" value="12:30"></div>
-<div class="field">Package<select id="catPack"><option>Breakfast rolls buffet</option><option>Sandwich & wrap platters</option><option>Hot lunch buffet</option><option>Custom Dexter's menu order</option></select></div>
-<div class="field">Dietary / allergy notes<textarea id="catNotes" rows="3"></textarea></div>
-<button class="btn" id="catSubmit">Create test request</button>
+<div class="field">Package<select id="catPack"><option data-price="6.50">Breakfast rolls buffet</option><option data-price="7.50">Sandwich & wrap platters</option><option data-price="10.00">Hot lunch buffet</option><option data-price="0">Custom Dexter's menu order</option></select></div>
+<div class="summarybox"><b>Test estimate: <span id="catEstimate">£78.00</span></b><br><span class="tiny">Illustrative test pricing only — final Dexter's catering prices can be set before launch.</span></div>
+<div class="field">Dietary / allergy notes<textarea id="catNotes" rows="3" placeholder="List allergies or dietary requirements here"></textarea></div>
+<label class="field"><input id="catConfirm" type="checkbox" style="width:auto;margin-right:8px"> I confirm the details above are correct</label>
+<button class="btn" id="catSubmit">Send catering request</button>
+<div id="catCustomerStatus" class="summarybox muted">No request submitted yet.</div>
 </div>
 <div class="card"><h2>Staff approval queue</h2><div id="catQueue" class="muted">No test requests yet.</div></div>
 </div>
@@ -134,10 +139,27 @@ const $=id=>document.getElementById(id);
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')});
 const today=new Date(), iso=d=>d.toISOString().slice(0,10);$('catDate').value=iso(new Date(Date.now()+3*86400000));$('laterDate').value=iso(new Date(Date.now()+86400000));
 
-let cat=[];
-$('catSubmit').onclick=()=>{cat.unshift({name:$('catName').value||'Untitled catering request',people:$('catPeople').value,date:$('catDate').value,time:$('catTime').value,pack:$('catPack').value,status:'Awaiting approval'});renderCat()};
-function renderCat(){$('catQueue').innerHTML=cat.map((x,i)=>'<div class="summarybox"><b>'+x.name+'</b><br>'+x.people+' people · '+x.date+' '+x.time+'<br><span class="muted">'+x.pack+'</span><br><span class="'+(x.status==='Approved'?'ok':'')+'">'+x.status+'</span><div class="row" style="margin-top:9px"><button class="btn small" onclick="approveCat('+i+')">Approve</button><button class="btn alt small" onclick="declineCat('+i+')">Reject</button></div></div>').join('')||'No test requests yet.'}
-window.approveCat=i=>{cat[i].status='Approved';renderCat()};window.declineCat=i=>{cat[i].status='Rejected';renderCat()};
+const CATKEY='dexters_growth_catering_test_v2';
+let cat=[];try{cat=JSON.parse(localStorage.getItem(CATKEY)||'[]')}catch(e){cat=[]}
+function catPrice(){const opt=$('catPack').selectedOptions[0];return Number(opt?.dataset.price||0)}
+function updateCatEstimate(){const people=Math.max(1,Number($('catPeople').value||1)),p=catPrice();$('catEstimate').textContent=p?('£'+(people*p).toFixed(2)):'Staff quote required'}
+$('catPeople').addEventListener('input',updateCatEstimate);$('catPack').addEventListener('change',updateCatEstimate);updateCatEstimate();
+$('catSubmit').onclick=()=>{
+ const name=$('catName').value.trim(),contact=$('catContact').value.trim(),phone=$('catPhone').value.trim(),people=Math.max(1,Number($('catPeople').value||1)),date=$('catDate').value,time=$('catTime').value,pack=$('catPack').value,notes=$('catNotes').value.trim();
+ if(!name||!contact||!phone||!date||!time){$('catCustomerStatus').innerHTML='<span class="bad">Please complete the event, contact, phone, date and time.</span>';return}
+ if(!$('catConfirm').checked){$('catCustomerStatus').innerHTML='<span class="bad">Please confirm the request details first.</span>';return}
+ const unit=catPrice(),total=unit?people*unit:null,id='CAT-'+String(Date.now()).slice(-6);
+ cat.unshift({id,name,contact,phone,people,date,time,pack,notes,total,status:'Awaiting staff review',created:new Date().toISOString()});
+ localStorage.setItem(CATKEY,JSON.stringify(cat));$('catCustomerStatus').innerHTML='<b>'+id+'</b><br><span class="ok">Request sent for staff review.</span><br><span class="muted">You can see its test status in the staff queue on this device.</span>';renderCat()
+};
+function saveCat(){localStorage.setItem(CATKEY,JSON.stringify(cat));renderCat()}
+function renderCat(){
+ $('catQueue').innerHTML=cat.map((x,i)=>'<div class="summarybox"><b>'+x.id+' · '+x.name+'</b><br>'+x.contact+' · '+x.phone+'<br>'+x.people+' people · '+x.date+' '+x.time+'<br><span class="muted">'+x.pack+(x.notes?' · Notes: '+x.notes:'')+'</span><br><b>'+(x.total!=null?'Estimate £'+Number(x.total).toFixed(2):'Staff quote required')+'</b><br><span class="'+(x.status==='Approved'?'ok':x.status==='Rejected'?'bad':'')+'">'+x.status+'</span><div class="row" style="margin-top:9px"><button class="btn small" onclick="approveCat('+i+')">Approve</button><button class="btn alt small" onclick="amendCat('+i+')">Amend people</button><button class="btn alt small" onclick="declineCat('+i+')">Reject</button></div></div>').join('')||'No test requests yet.'
+}
+window.approveCat=i=>{cat[i].status='Approved';saveCat()};
+window.declineCat=i=>{cat[i].status='Rejected';saveCat()};
+window.amendCat=i=>{const n=prompt('Change number of people',cat[i].people);if(n===null)return;const p=Math.max(1,Number(n)||1);cat[i].people=p;const opt=[...$('catPack').options].find(o=>o.text===cat[i].pack),unit=Number(opt?.dataset.price||0);cat[i].total=unit?p*unit:null;cat[i].status='Amended — awaiting confirmation';saveCat()};
+renderCat();
 
 $('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number($('bizLimit').value||0);$('bizDash').innerHTML='<div class="metric"><span class="muted">'+n+'</span><b>£0 / £'+l.toFixed(0)+'</b></div><p><span class="badge">Active</span><span class="badge">'+$('bizCycle').value+' billing</span><span class="badge">0 open invoices</span></p><p class="muted">Approved employee list, statement downloads and per-user spending rules would sit here.</p>'};
 
