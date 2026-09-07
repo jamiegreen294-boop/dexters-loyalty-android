@@ -42,11 +42,46 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 .week-board{display:grid;grid-template-columns:repeat(7,minmax(145px,1fr));gap:8px;overflow:auto}.week-day{min-height:160px;border:1px solid #3b2a49;border-radius:12px;padding:8px;background:#120d19}.week-day.dragover{outline:2px dashed #9d7bb3}.shift-card{padding:8px;border:1px solid #533d65;border-radius:10px;background:#1b1223;margin:6px 0;cursor:grab}.live-worker{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #ffffff12}.alert-item{padding:10px;border:1px solid #4e395e;border-radius:12px;margin:7px 0}.timeline-item{padding:10px 0;border-bottom:1px solid #ffffff12}.evidence-thumb{max-width:120px;max-height:90px;border-radius:8px;margin-top:6px}
 @media(max-width:980px){.dex-backoffice-shell{grid-template-columns:1fr}.dex-backoffice-nav{border-right:0;border-bottom:1px solid #342640;display:flex;gap:5px;overflow:auto;align-items:center}.dex-backoffice-logo,.dex-backoffice-nav .navsub,.dex-backoffice-nav .navgroup{display:none}.dex-backoffice-nav .tab{width:auto;white-space:nowrap}.bo-module-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.bo-kpis{grid-template-columns:repeat(2,1fr)}.bo-module-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.top{display:block}.pill{display:inline-block;margin-top:8px}}
+
+/* 2026-09-07 private Back Office mobile layout refresh.
+   gh-pages / dexters-hub test only — does not alter the live customer app. */
+@media(max-width:680px){
+  body{background:linear-gradient(180deg,#21102f 0,#100817 36%,#08050c 100%)}
+  .wrap{padding:14px 12px 88px;max-width:none}
+  .home{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border:1px solid #6b4283;border-radius:13px;background:#171022;margin:0 0 10px;font-size:15px}
+  .top{margin-top:0;padding:4px 2px 8px}
+  .top h1{font-size:38px;line-height:1;margin:5px 0 8px}
+  .top .sub{font-size:14px;line-height:1.35;margin:0}
+  .top .pill{margin-top:10px}
+  #secureAuthCard{border-radius:16px;padding:14px;margin:10px 0!important}
+  #secureAuthCard h2{font-size:22px}
+  #secureSignedIn{display:flex!important;align-items:center;gap:8px;flex-wrap:wrap}
+  #secureSignedIn[style*="display:none"]{display:none!important}
+  #secureAuthMessage{font-size:12px}
+  .dex-backoffice-shell{border:0;border-radius:0;background:transparent;min-height:0;overflow:visible}
+  .dex-backoffice-nav{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:10px 0 12px;border:0;border-bottom:1px solid #432d52;background:linear-gradient(180deg,#100817 78%,#100817ee);overflow:visible}
+  .dex-backoffice-logo{display:block!important;grid-column:1/-1;font-size:13px;letter-spacing:.13em;color:var(--gold);margin:0 2px 2px}
+  .dex-backoffice-nav .navsub,.dex-backoffice-nav .navgroup{display:none!important}
+  .dex-backoffice-nav .tab{width:100%;min-width:0;white-space:normal;text-align:center;margin:0;padding:10px 8px;border:1px solid #4b315d;border-radius:12px;background:#171022;font-size:13px;line-height:1.15}
+  .dex-backoffice-nav .tab.active{background:linear-gradient(120deg,#ffd43b,#7c3aed);color:#160f1b;border-color:transparent}
+  .dex-backoffice-main{padding:10px 0 0}
+  .dex-backoffice-main>.panel>.card.notice:first-child{margin-top:0}
+  .card{border-radius:15px;padding:13px;margin:10px 0;box-shadow:0 8px 24px #0004}
+  .bo-rolebar{display:none}
+  .bo-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:9px 0}
+  .bo-kpi{padding:11px;border-radius:12px}.bo-kpi b{font-size:20px}
+  .bo-module-grid{grid-template-columns:1fr;gap:8px}
+  .bo-module{padding:12px;border-radius:12px}.bo-module p{margin-bottom:0}
+  .grid{grid-template-columns:1fr;gap:8px}
+  .row{align-items:stretch}.row .btn{flex:1}
+  input,select,textarea{font-size:16px}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-07-2350">
+<main class="wrap" data-build="2026-09-07-2358-mobile-refresh">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
