@@ -47,7 +47,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-0003-refresh-session-fix">
+<main class="wrap" data-build="2026-09-08-0010-refresh-init-order-fix">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -153,13 +153,13 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
         let tries=0;
         const handoff=setInterval(function(){
           tries++;
-          if(typeof window.dextersCompleteSecureLogin==='function'){
+          if(window.__DEXTERS_MAIN_READY&&typeof window.dextersCompleteSecureLogin==='function'){
             clearInterval(handoff);
             window.__DEXTERS_PENDING_LOGIN=null;
             Promise.resolve(window.dextersCompleteSecureLogin(session,account)).catch(function(e){
               msg.innerHTML='<span class="bad">Signed in, but secure data could not load: '+String(e.message||e)+'</span>';
             });
-          }else if(tries>=40){
+          }else if(tries>=120){
             clearInterval(handoff);
           }
         },100);
@@ -203,13 +203,13 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
         let tries=0;
         const handoff=setInterval(function(){
           tries++;
-          if(typeof window.dextersCompleteSecureLogin==='function'){
+          if(window.__DEXTERS_MAIN_READY&&typeof window.dextersCompleteSecureLogin==='function'){
             clearInterval(handoff);
             window.__DEXTERS_PENDING_LOGIN=null;
             Promise.resolve(window.dextersCompleteSecureLogin(data.session,account)).catch(function(e){
               msg.innerHTML='<span class="bad">Signed in, but secure data could not load: '+String(e.message||e)+'</span>';
             });
-          }else if(tries>=40){
+          }else if(tries>=120){
             clearInterval(handoff);
           }
         },100);
