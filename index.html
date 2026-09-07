@@ -46,7 +46,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-07-2342">
+<main class="wrap" data-build="2026-09-07-2348">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -1882,7 +1882,7 @@ window.customerConfirmCat=i=>{cat[i].status='Customer confirmed — ready for st
 window.customerRejectCat=i=>{cat[i].status='Customer declined amended quote';saveCat()};
 $('catNoAllergy').onchange=()=>{if($('catNoAllergy').checked)document.querySelectorAll('.cat-allergy').forEach(x=>x.checked=false)};
 document.querySelectorAll('.cat-allergy').forEach(x=>x.onchange=()=>{if(x.checked)$('catNoAllergy').checked=false});
-renderCat();
+
 
 $('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number($('bizLimit').value||0);$('bizDash').innerHTML='<div class="metric"><span class="muted">'+n+'</span><b>£0 / £'+l.toFixed(0)+'</b></div><p><span class="badge">Active</span><span class="badge">'+$('bizCycle').value+' billing</span><span class="badge">0 open invoices</span></p><p class="muted">Approved employee list, statement downloads and per-user spending rules would sit here.</p>'};
 
@@ -2610,14 +2610,14 @@ $('dealRun').onclick=()=>{
  if(bday) out.push({title:'Birthday Treat 🎂',offer:'Birthday-only Dexter\'s reward',reason:'Birthday is this week',rule:'Birthday · one use · separate from 12-month auto deal',expiry:dealExpiry(7),customer});
  if(unused) out.push({title:'Reward Reminder',offer:'Remind customer about their unused reward — no extra discount added',reason:'An existing reward is unused',rule:'Reminder only · prevents unnecessary stacking',expiry:dealExpiry(3),customer});
  dealCandidates=out.slice(0,4);
- renderDealCandidates();
+ 
 };
 window.approveDeal=i=>{
  const d=dealCandidates[i]; if(!d)return;
  dealApproved.unshift({...d,status:'Approved — waiting to send',approvedAt:new Date().toISOString()});
  localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));
  dealCandidates.splice(i,1);
- renderDealCandidates();renderApprovedDeals();
+ renderDealCandidates();
 };
 window.rejectDeal=i=>{dealCandidates.splice(i,1);renderDealCandidates()};
 window.sendApprovedDeal=i=>{const d=dealApproved[i];if(!d)return;d.status='Sent to customer';d.sentAt=new Date().toISOString();localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));renderApprovedDeals()};
@@ -2729,7 +2729,7 @@ $('challengeSave').onclick=()=>{
 };
 const initialCounts=challengeCounts();
 $('challengeSyncStatus').innerHTML='<b>'+initialCounts.orders+' qualifying collected order(s) counted.</b><br><span class="tiny">Standalone test feed. Live integration will use the signed-in customer\'s collection_orders history.</span>';
-renderChallenges();maybeEarnScratch();saveChallenges();
+
 
 
 
@@ -2952,8 +2952,8 @@ window.syncSelectedTraining=()=>{
   logStaff(s,'Training summary synced from Staff Training test');saveStaffDb();
  }catch(e){alert('Could not read training progress.')}
 };
-populateStaffDocLibrary();clearStaffDocForm();renderComplianceDashboard();
-renderStaffDb();const rotaManagerCard=$('rotaManagerCard');if(rotaManagerCard)rotaManagerCard.style.display=(CURRENT_STAFF_ROLE==='Staff'?'none':'block');
+
+
 
 document.querySelectorAll('[data-sdtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-sdtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.staff-profile-section').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=document.getElementById('sdsec-'+b.dataset.sdtab);if(p)p.classList.add('active')});
 const staffKpiCount=document.getElementById('staffKpiCount');if(staffKpiCount)staffKpiCount.textContent=staffDb.staff.length;
@@ -3457,6 +3457,19 @@ if($('refreshLiveOrders'))$('refreshLiveOrders').onclick=loadLiveOrders;
 if($('refreshLiveLoyalty'))$('refreshLiveLoyalty').onclick=loadLiveLoyalty;
 if($('refreshLiveFoodSafety'))$('refreshLiveFoodSafety').onclick=loadLiveFoodSafety;
 if($('refreshLiveDevices'))$('refreshLiveDevices').onclick=loadLiveDevices;
+
+// Run initial UI rendering only after every Back Office declaration is ready.
+try{renderCat()}catch(e){}
+try{renderDealCandidates()}catch(e){}
+try{renderApprovedDeals()}catch(e){}
+try{renderChallenges();maybeEarnScratch();saveChallenges()}catch(e){}
+try{populateStaffDocLibrary();clearStaffDocForm();renderComplianceDashboard()}catch(e){}
+try{
+  renderStaffDb();
+  const rotaManagerCard=$('rotaManagerCard');
+  if(rotaManagerCard)rotaManagerCard.style.display=(CURRENT_STAFF_ROLE==='Staff'?'none':'block');
+}catch(e){}
+try{renderDexManagement()}catch(e){}
 
 window.__DEXTERS_MAIN_READY=true;
 if(window.__DEXTERS_PENDING_LOGIN){
