@@ -1,0 +1,26 @@
+name: Inline startup analysis
+on:
+  push:
+    paths:
+      - '.github/workflows/inline-startup-analysis.yml'
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm run build
+      - name: Analyse inline scripts
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),s=fs.readFileSync('dist/index.html','utf8');
+          const rx=/<script\b([^>]*)>([\s\S]*?)<\/script>/gi; let m,i=0;
+          while((m=rx.exec(s))){
+            const attrs=m[1],body=m[2],id=(attrs.match(/id="([^"]+)"/)||[])[1]||'',src=(attrs.match(/src="([^"]+)"/)||[])[1]||'';
+            const pats=['while(','while (','for(;;','for (;;','document.write','Atomics.wait','location.reload','location.replace','location.href=','setInterval','MutationObserver'];
+            const found=pats.filter(p=>body.includes(p));
+            console.log('S',i++,'id='+id,'src='+src,'len='+body.length,'found='+JSON.stringify(found),'start='+JSON.stringify(body.slice(0,180).replace(/\s+/g,' ')));
+          }
+          NODE
