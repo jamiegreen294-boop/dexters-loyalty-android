@@ -202,11 +202,18 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="compliance">
-<div class="card notice"><b>HR & Compliance</b><p class="muted">Dexter's central compliance area for HR documents, Health & Safety, Food Safety, review dates and evidence.</p></div>
-<div class="grid">
-<div class="card"><h2>Document library</h2><div class="bo-placeholder">Staff-file document templates, editable records and review/expiry tracking sit here and link back to each staff profile.</div></div>
-<div class="card"><h2>Compliance alerts</h2><div class="bo-placeholder">Training due, document reviews, incident follow-up and other actions will surface here.</div></div>
+<div class="card notice"><b>HR & Compliance</b><p class="muted">Central Dexter's view of HR, Health & Safety, Food Safety and staff-file evidence.</p></div>
+<div class="bo-kpis">
+<div class="bo-kpi"><span class="muted">Staff docs</span><b id="compDocCount">0</b></div>
+<div class="bo-kpi"><span class="muted">Due in 30 days</span><b id="compDueCount">0</b></div>
+<div class="bo-kpi"><span class="muted">Overdue</span><b id="compOverdueCount">0</b></div>
+<div class="bo-kpi"><span class="muted">Incidents</span><b id="compIncidentCount">0</b></div>
 </div>
+<div class="grid">
+<div class="card"><h2>Document library</h2><div id="compLibrary"></div></div>
+<div class="card"><h2>Compliance alerts</h2><div id="compAlerts"></div></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Staff document register</h2><div id="compRegister"></div></div>
 </section>
 
 <section class="panel" id="orders">
@@ -435,12 +442,20 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="staff-profile-section" id="sdsec-permissions"><div id="staffPermissions"></div></div>
 
 <div class="staff-profile-section" id="sdsec-documents">
+<div class="summarybox"><b>Staff document library</b><br><span class="muted">Choose a Dexter's HR / H&S template, complete it, and save it into this staff file. Saved documents can be edited later.</span></div>
 <div id="staffDocs"></div>
 <div id="staffDocForm" style="display:none">
-<div class="field">Document type<select id="sdDocType"><option>Right to work</option><option>Food hygiene certificate</option><option>Training certificate</option><option>Contract</option><option>Policy acknowledgement</option><option>Other</option></select></div>
-<div class="field">Expiry date<input id="sdDocExpiry" type="date"></div>
-<div class="field">Reference / note<input id="sdDocNote"></div>
-<button class="btn alt" id="staffAddDoc">Add document</button>
+<div class="field">Category<select id="sdDocCategory"></select></div>
+<div class="field">Template<select id="sdDocTemplate"></select></div>
+<div id="sdDocTemplateInfo" class="summarybox muted">Choose a template.</div>
+<div class="grid">
+<div class="field">Document date<input id="sdDocDate" type="date"></div>
+<div class="field">Review / expiry date<input id="sdDocExpiry" type="date"></div>
+</div>
+<div class="field">Completed by / manager<input id="sdDocCompletedBy"></div>
+<div class="field">Document details<textarea id="sdDocNote" rows="6"></textarea></div>
+<label class="field" style="display:flex;gap:8px;align-items:center"><input id="sdDocSigned" type="checkbox" style="width:auto;margin:0"> Staff member reviewed / acknowledged where applicable</label>
+<button class="btn alt" id="staffAddDoc">Add completed document to staff file</button>
 </div>
 </div>
 
@@ -989,6 +1004,99 @@ $('challengeSyncStatus').innerHTML='<b>'+initialCounts.orders+' qualifying colle
 renderChallenges();maybeEarnScratch();saveChallenges();
 
 
+
+const STAFF_DOCUMENT_LIBRARY={
+"Employment & Onboarding":[
+ {id:"written_statement",title:"Written Statement of Employment Particulars",review:"On start / whenever terms change",prompt:"Role, start date, pay/frequency, hours, place of work, holiday, probation, notice, sick pay/procedure, other paid leave, benefits, obligatory training and where wider pension/training/disciplinary/grievance information can be found."},
+ {id:"starter_form",title:"New Starter Information Form",review:"Onboarding",prompt:"Contact details, role, start date, emergency contact and essential onboarding information."},
+ {id:"right_to_work",title:"Right to Work Check Record",review:"Before employment / recheck if required",prompt:"Check method, date, document/share-code reference, checker and any recheck date."},
+ {id:"privacy_ack",title:"Staff Privacy Notice Acknowledgement",review:"On issue/change",prompt:"Record that the staff member received Dexter's staff privacy information."},
+ {id:"handbook_ack",title:"Staff Handbook / Policies Acknowledgement",review:"On issue/change",prompt:"Record handbook/policies issued, version/date and acknowledgement."},
+ {id:"probation",title:"Probation Review",review:"During / end of probation",prompt:"Attendance, performance, conduct, training, support, actions and outcome."},
+ {id:"terms_change",title:"Role / Terms Change Record",review:"Whenever terms change",prompt:"Change, effective date, reason, new role/hours/pay where applicable and approval."},
+ {id:"leaver",title:"Leaver / Exit Checklist",review:"On leaving",prompt:"Final date, keys/equipment returned, access removed, final actions and exit notes."}
+],
+"HR & Attendance":[
+ {id:"holiday",title:"Holiday Request / Outcome",review:"Per request",prompt:"Requested dates, decision, manager and outcome."},
+ {id:"sickness",title:"Sickness / Absence Record",review:"Per absence",prompt:"Dates, notification, reason category, fit note/self-certification where applicable and return date."},
+ {id:"return_work",title:"Return-to-Work Meeting",review:"After sickness",prompt:"Return date, fitness to return, adjustments/support and follow-up."},
+ {id:"flexible",title:"Flexible Working Request / Outcome",review:"Per request",prompt:"Request, proposed pattern, consideration, outcome and follow-up."},
+ {id:"review",title:"Performance Review / 1-to-1",review:"Periodic",prompt:"Strengths, objectives, support/training needs, actions and review date."},
+ {id:"grievance",title:"Formal Grievance Record",review:"Per case",prompt:"Issue raised, evidence, meetings, decision, reasons and appeal/follow-up."},
+ {id:"disciplinary",title:"Disciplinary / Investigation Record",review:"Per case",prompt:"Issue, investigation, evidence, response, decision, action/warning and appeal."},
+ {id:"exit_interview",title:"Exit Interview",review:"On leaving",prompt:"Feedback, reason for leaving, management/training comments and actions."}
+],
+"Health & Safety":[
+ {id:"hs_induction",title:"Health & Safety Induction Sign-Off",review:"New starter / refresher",prompt:"Emergency exits, fire, first aid, accident reporting, slips/trips, knives/hot equipment, manual handling, chemicals/COSHH, PPE and hazard reporting."},
+ {id:"risk_ack",title:"Risk Assessment / Safe System Acknowledgement",review:"When assessment changes",prompt:"Assessment/procedure reviewed, version/date, controls explained and acknowledgement."},
+ {id:"manual_handling",title:"Manual Handling Training Record",review:"Training/refresher",prompt:"Safe lifting/moving, task controls, trainer and competency."},
+ {id:"coshh",title:"COSHH / Cleaning Chemical Training Record",review:"Training/refresher/change",prompt:"Chemicals, hazards, storage, use/dilution, PPE, spill/first-aid response and acknowledgement."},
+ {id:"ppe",title:"PPE Issue Record",review:"On issue/replacement",prompt:"PPE issued, size/quantity, date, instruction and replacement/return."},
+ {id:"fire",title:"Fire Safety Induction / Drill Record",review:"Induction / drills",prompt:"Evacuation routes, alarm, assembly point, role, issues and follow-up."},
+ {id:"first_aid",title:"First Aid Treatment Record",review:"Per treatment",prompt:"Date/time, person, injury/illness, treatment, first aider and onward action."},
+ {id:"accident",title:"Accident Record",review:"Per incident",prompt:"Date/time/location, what happened, injury, witnesses, immediate action, first aid and manager review."},
+ {id:"near_miss",title:"Near-Miss / Hazard Report",review:"Per event",prompt:"Hazard/near miss, potential harm, immediate controls, action owner and completion date."},
+ {id:"young_worker",title:"Young Worker / New Starter Risk Controls Acknowledgement",review:"Before relevant work/change",prompt:"Extra supervision/training/restrictions and acknowledgement."},
+ {id:"equipment",title:"Equipment Training / Authorisation Sign-Off",review:"Before use/refresher",prompt:"Equipment, safe use, cleaning/isolation, trainer, competency and authorisation."}
+],
+"Food Safety & CookSafe":[
+ {id:"food_hygiene",title:"Food Hygiene Induction Record",review:"Induction/refresher",prompt:"Personal hygiene, contamination, cleaning, temperature control, stock control, pest/waste and reporting."},
+ {id:"allergen",title:"Allergen Training Record",review:"Before work / refresher",prompt:"Training date, topics, assessment score and refresher date."},
+ {id:"handwashing",title:"Handwashing Competency Check",review:"Induction/refresher",prompt:"Observed technique, steps demonstrated, coaching and outcome."},
+ {id:"temperature",title:"Temperature Control Training Record",review:"Induction/refresher",prompt:"Chilled/frozen storage, cooking/reheating/hot holding, thermometer use and corrective action."},
+ {id:"cleaning",title:"Cleaning Schedule Training Record",review:"Induction/refresher",prompt:"Tasks, frequency, chemicals/methods, food-contact controls and records."},
+ {id:"cross_contam",title:"Cross-Contamination Prevention Training",review:"Induction/refresher",prompt:"Raw/ready-to-eat separation, equipment, storage, cleaning and allergen cross-contact."},
+ {id:"delivery",title:"Delivery & Stock Control Training Record",review:"Induction/refresher",prompt:"Delivery condition, dates, temperatures, stock rotation and rejection/escalation."},
+ {id:"pest",title:"Pest & Waste Control Training Record",review:"Induction/refresher",prompt:"Pest signs, reporting, bins/waste and contamination response."},
+ {id:"illness",title:"Food Handler Illness / Fitness-to-Work Record",review:"When illness reported / return",prompt:"Symptoms/dates relevant to food handling, management action, exclusion and return date."},
+ {id:"cooksafe_action",title:"CookSafe Corrective Action / Retraining Record",review:"After non-conformance",prompt:"Failure, immediate corrective action, retraining, supervision changes and competency recheck."}
+],
+"Training & Competency":[
+ {id:"training_module",title:"Dexter's Training Module Completion",review:"Per module",prompt:"Module, completion date, score, attempts and evidence."},
+ {id:"staff_cert",title:"Dexter's Staff Training Certification",review:"Certification/refresher",prompt:"Required modules, final assessment score, certification date and refresher due."},
+ {id:"external_cert",title:"External Training Certificate Record",review:"Per certificate",prompt:"Course/provider, certificate/reference, achieved date and expiry/refresher."},
+ {id:"competency",title:"Role Competency Sign-Off",review:"After training/role change",prompt:"Task/system competency, assessor, outcome, restrictions/support and next review."}
+],
+"Security, Systems & Data":[
+ {id:"system_access",title:"System Access / Permission Record",review:"On access change",prompt:"Role, systems, permission level, approval and removal date."},
+ {id:"keys",title:"Keys / Access Device Issue Record",review:"On issue/return",prompt:"Key/device, identifier, issue date, acknowledgement and return/loss action."},
+ {id:"data_training",title:"Data Protection / Privacy Training Record",review:"Induction/refresher",prompt:"Customer/staff data, authorised access, sharing/screenshots, incidents and reporting."},
+ {id:"data_incident",title:"Data / Privacy Incident Record",review:"Per incident",prompt:"Data involved, event, date/time, containment, internal notification and follow-up."},
+ {id:"cash_security",title:"Cash Handling / Security Training Record",review:"Induction/refresher",prompt:"Till/cash procedure, keys/codes, threatening situations, safe closing and escalation."}
+]
+};
+const STAFF_DOC_CATEGORIES=Object.keys(STAFF_DOCUMENT_LIBRARY);
+let editingStaffDocIndex=null;
+function populateStaffDocLibrary(){
+ const cat=$('sdDocCategory'),tpl=$('sdDocTemplate'); if(!cat||!tpl)return;
+ cat.innerHTML=STAFF_DOC_CATEGORIES.map(x=>'<option>'+x+'</option>').join('');
+ const refill=()=>{tpl.innerHTML=(STAFF_DOCUMENT_LIBRARY[cat.value]||[]).map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');updateStaffDocInfo()};
+ cat.onchange=refill;tpl.onchange=updateStaffDocInfo;refill();
+}
+function selectedStaffDocTemplate(){
+ const cat=$('sdDocCategory')?.value,id=$('sdDocTemplate')?.value;
+ return (STAFF_DOCUMENT_LIBRARY[cat]||[]).find(x=>x.id===id)||null;
+}
+function updateStaffDocInfo(){
+ const t=selectedStaffDocTemplate(),box=$('sdDocTemplateInfo');if(!box)return;
+ box.innerHTML=t?'<b>'+t.title+'</b><br><span class="muted">Review: '+t.review+'</span><br><span class="tiny">'+t.prompt+'</span>':'Choose a template.';
+}
+function clearStaffDocForm(){
+ editingStaffDocIndex=null;
+ $('sdDocDate').value=new Date().toISOString().slice(0,10);$('sdDocExpiry').value='';$('sdDocCompletedBy').value='';$('sdDocNote').value='';$('sdDocSigned').checked=false;$('staffAddDoc').textContent='Add completed document to staff file';
+}
+function renderComplianceDashboard(){
+ if(typeof staffDb==='undefined')return;
+ const all=staffDb.staff.flatMap(s=>(s.docs||[]).map((d,i)=>({s,d,i})));
+ const now=new Date(),soon=new Date(Date.now()+30*86400000);
+ const due=all.filter(x=>x.d.expiry&&new Date(x.d.expiry)>=now&&new Date(x.d.expiry)<=soon);
+ const overdue=all.filter(x=>x.d.expiry&&new Date(x.d.expiry)<now);
+ $('compDocCount').textContent=all.length;$('compDueCount').textContent=due.length;$('compOverdueCount').textContent=overdue.length;$('compIncidentCount').textContent=staffDb.staff.reduce((n,s)=>n+(s.incidents||[]).length,0);
+ $('compLibrary').innerHTML=STAFF_DOC_CATEGORIES.map(cat=>'<div class="summarybox"><b>'+cat+'</b><br><span class="muted">'+STAFF_DOCUMENT_LIBRARY[cat].length+' template(s)</span></div>').join('');
+ const alerts=[...overdue.map(x=>'<div class="staff-alert"><b>'+x.s.name+'</b><br><span class="bad">'+x.d.type+' overdue '+x.d.expiry+'</span></div>'),...due.map(x=>'<div class="staff-alert"><b>'+x.s.name+'</b><br><span class="muted">'+x.d.type+' due '+x.d.expiry+'</span></div>')];
+ $('compAlerts').innerHTML=alerts.join('')||'<div class="staff-alert staff-good"><b>All clear</b><br><span class="muted">No document review alerts.</span></div>';
+ $('compRegister').innerHTML=all.map(x=>'<div class="summarybox"><b>'+x.s.name+' · '+x.d.type+'</b><br><span class="badge">'+(x.d.category||'Document')+'</span><span class="muted">'+(x.d.expiry?' · review/expiry '+x.d.expiry:' · no review date')+'</span></div>').join('')||'<span class="muted">No staff documents recorded.</span>';
+}
 const STAFFDBKEY='dexters_growth_staff_database_test_v1';
 const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
 let CURRENT_STAFF_ROLE='Super User';
@@ -1022,7 +1130,7 @@ function renderStaffDirectory(){
 window.selectStaffRecord=id=>{staffDb.selected=id;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb()};
 function fmtDate(d){if(!d)return '—';const x=new Date(d);return Number.isNaN(x.getTime())?d:x.toLocaleDateString()}
 function renderStaffDb(){
- renderStaffDirectory();
+ renderStaffDirectory();renderComplianceDashboard();
  const s=selectedStaff(),show=!!s;
  $('staffEmpty').style.display=show?'none':'block';
  $('staffProfile').style.display=show?'block':'none';
@@ -1036,7 +1144,7 @@ function renderStaffDb(){
  const t=s.training||{};
  const cert=t.certifiedAt?'<span class="ok"><b>Certified</b></span> · '+fmtDate(t.certifiedAt):'<span class="muted">Not certified yet</span>';
  $('staffTrainingSummary').innerHTML='<div class="summarybox"><b>'+Number(t.completed||0)+' / '+Number(t.total||0)+' modules complete</b><br>'+cert+(t.finalScore!=null?'<br>Final score: '+t.finalScore+'%':'')+(t.refresherDue?'<br>Refresher due: '+fmtDate(t.refresherDue):'')+'<br><span class="tiny">Training results can be synced from Dexter\'s Staff Training profile when integrated.</span></div><button class="btn alt small" onclick="syncSelectedTraining()">Sync current test training</button>';
- $('staffDocs').innerHTML=(s.docs||[]).map((d,i)=>'<div class="summarybox"><b>'+d.type+'</b><br><span class="muted">'+(d.expiry?'Expires '+fmtDate(d.expiry):'No expiry')+(d.note?' · '+d.note:'')+'</span><button class="btn alt small" onclick="removeStaffDoc('+i+')">Remove</button></div>').join('')||'<span class="muted">No document records.</span>';
+ $('staffDocs').innerHTML=(s.docs||[]).map((d,i)=>'<div class="summarybox"><b>'+d.type+'</b><br><span class="badge">'+(d.category||'Document')+'</span>'+(d.signed?'<span class="badge">Acknowledged</span>':'')+'<br><span class="muted">'+(d.documentDate?'Dated '+fmtDate(d.documentDate)+' · ':'')+(d.expiry?'Review/expiry '+fmtDate(d.expiry):'No review date')+(d.completedBy?' · Completed by '+d.completedBy:'')+'</span>'+(d.note?'<br><span class="tiny">'+d.note+'</span>':'')+'<div class="row" style="margin-top:8px"><button class="btn alt small" onclick="editStaffDoc('+i+')">Edit</button><button class="btn alt small" onclick="removeStaffDoc('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No document records.</span>';
  $('staffAbsence').innerHTML=(s.absences||[]).map(a=>'<div class="summarybox"><b>'+a.type+'</b><br><span class="muted">'+fmtDate(a.from)+' → '+fmtDate(a.to)+(a.note?' · '+a.note:'')+'</span></div>').join('')||'<span class="muted">No absence records.</span>';
  $('staffIncidents').innerHTML=(s.incidents||[]).map(i=>'<div class="summarybox"><b>'+i.type+' · '+fmtDate(i.date)+'</b><br><span class="muted">'+i.details+'</span>'+(i.action?'<br><span class="tiny">Action: '+i.action+'</span>':'')+'</div>').join('')||'<span class="muted">No incidents or near misses recorded.</span>';
  $('staffNotes').innerHTML=(s.notes||[]).map(n=>'<div class="summarybox"><span class="muted">'+n.text+'</span><br><span class="tiny">'+new Date(n.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager notes.</span>';
@@ -1059,7 +1167,8 @@ $('staffSaveProfile').onclick=()=>{
 };
 window.saveStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated by Super User');saveStaffDb()};
 window.resetStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=roleDefaultPerms(s.role);logStaff(s,'Permissions reset to '+s.role+' defaults by Super User');saveStaffDb()};
-$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;s.docs=s.docs||[];s.docs.unshift({type:$('sdDocType').value,expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),at:new Date().toISOString()});logStaff(s,'Document record added: '+$('sdDocType').value);$('sdDocExpiry').value='';$('sdDocNote').value='';saveStaffDb()};
+$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}clearStaffDocForm();saveStaffDb();renderComplianceDashboard()};
+window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo()}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';$('sdDocSigned').checked=!!d.signed;$('staffAddDoc').textContent='Save document changes'};
 window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb()};
 $('staffAddAbsence').onclick=()=>{const s=selectedStaff();if(!s)return;const from=$('sdAbsFrom').value,to=$('sdAbsTo').value;if(!from||!to){alert('Add both dates.');return}s.absences=s.absences||[];s.absences.unshift({type:$('sdAbsType').value,from,to,note:$('sdAbsNote').value.trim(),at:new Date().toISOString()});logStaff(s,'Absence added: '+$('sdAbsType').value+' '+from+' to '+to);$('sdAbsNote').value='';saveStaffDb()};
 $('staffAddIncident').onclick=()=>{const s=selectedStaff();if(!s)return;const details=$('sdIncidentDetails').value.trim(),date=$('sdIncidentDate').value||new Date().toISOString().slice(0,10);if(!details){alert('Add incident details.');return}s.incidents=s.incidents||[];s.incidents.unshift({type:$('sdIncidentType').value,date,details,action:$('sdIncidentAction').value.trim(),at:new Date().toISOString()});logStaff(s,'Incident recorded: '+$('sdIncidentType').value);$('sdIncidentDetails').value='';$('sdIncidentAction').value='';saveStaffDb()};
@@ -1077,6 +1186,7 @@ window.syncSelectedTraining=()=>{
   logStaff(s,'Training summary synced from Staff Training test');saveStaffDb();
  }catch(e){alert('Could not read training progress.')}
 };
+populateStaffDocLibrary();clearStaffDocForm();renderComplianceDashboard();
 const currentRoleSel=$('currentStaffRole');if(currentRoleSel){currentRoleSel.value=CURRENT_STAFF_ROLE;currentRoleSel.onchange=()=>{CURRENT_STAFF_ROLE=currentRoleSel.value;renderStaffDb()}}
 renderStaffDb();
 
