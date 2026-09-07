@@ -71,12 +71,18 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <button class="tab" data-tab="catering" data-minrole="Team Leader">Catering</button>
 <button class="tab" data-tab="customers" data-minrole="Team Leader">Customers & Loyalty</button>
 <button class="tab" data-tab="menuadmin" data-minrole="Manager">Menu & Admin</button>
+<button class="tab" data-tab="stock" data-minrole="Team Leader">Stock & Waste</button>
+<button class="tab" data-tab="suppliers" data-minrole="Manager">Suppliers & Purchasing</button>
 <div class="navgroup">Growth</div>
 <button class="tab" data-tab="deals" data-minrole="Team Leader">Deals Engine</button>
 <button class="tab" data-tab="challenges" data-minrole="Team Leader">Challenges</button>
 <div class="navgroup">Management</div>
 <button class="tab" data-tab="maintenance" data-minrole="Team Leader">Maintenance & Equipment</button>
 <button class="tab" data-tab="payroll" data-minrole="Manager">Payroll</button>
+<button class="tab" data-tab="financeops" data-minrole="Manager">Sales & Cash-up</button>
+<button class="tab" data-tab="allergens" data-minrole="Manager">Allergen & Recipe Master</button>
+<button class="tab" data-tab="controlcentre" data-minrole="Team Leader">Daily Control Centre</button>
+<button class="tab" data-tab="systemhealth" data-minrole="Manager">System Health</button>
 <button class="tab" data-tab="reports" data-minrole="Manager">Reports</button>
 <button class="tab" data-tab="archive" data-minrole="Manager">Archive</button>
 <button class="tab" data-tab="globalsearch" data-minrole="Staff">Global Search</button>
@@ -315,7 +321,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 
 <div class="card" style="margin-top:14px">
 <h2>Drag & Drop Weekly Rota</h2>
-<div class="field">Week starting<input id="rotaWeekStart" type="date"></div>
+<div class="field">Week starting<input id="rotaWeekStart" type="date"></div><button class="btn alt" id="publishRotaWeek">Publish rota to staff</button>
 <p class="tiny">Drag a shift card to another day to change its date. Times and staff stay attached to the shift.</p>
 <div id="rotaWeekBoard" class="week-board"></div>
 </div>
@@ -351,7 +357,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="leave">
-<div class="card notice"><b>Leave, Availability & Shift Swaps</b><p class="muted">Staff self-service requests with manager approval and audit history.</p></div>
+<div class="card notice"><b>Leave, Availability & Shift Swaps</b><p class="muted">Staff self-service requests with manager approval, contract-based holiday entitlement and audit history.</p></div>
+<div class="card" style="margin-bottom:14px"><h2>Holiday entitlement & balance</h2><div class="field">Staff member<select id="holidayBalanceStaff"></select></div><div id="holidayBalanceCard"></div></div>
 <div class="grid">
 <div class="card"><h2>Holiday / leave request</h2>
 <div class="field">Staff<select id="leaveStaff"></select></div>
@@ -681,6 +688,11 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <option>Other</option>
 </select></div>
 <div class="field">Start date<input id="sdStart" type="date"></div>
+<div class="field">Contract type<select id="sdContractType"><option>Regular hours</option><option>Irregular hours</option><option>Part-year worker</option></select></div>
+<div class="grid"><div class="field">Contracted days / week<input id="sdContractDays" type="number" min="0" max="7" step="0.5"></div><div class="field">Contracted hours / week<input id="sdContractHours" type="number" min="0" step="0.25"></div></div>
+<div class="grid"><div class="field">Leave year starts<input id="sdLeaveYearStart" type="date"></div><div class="field">Contractual holiday weeks<input id="sdHolidayWeeks" type="number" min="5.6" step="0.1" value="5.6"></div></div>
+<label class="field" style="display:flex;gap:8px;align-items:center"><input id="sdBankHolidaysIncluded" type="checkbox" style="width:auto;margin:0"> Bank holidays included in contractual entitlement</label>
+<div class="summarybox" id="sdHolidaySummary"><b>Holiday entitlement</b><br><span class="muted">Save contract details to calculate entitlement.</span></div>
 </div>
 <div>
 <div class="field">Phone<input id="sdPhone" inputmode="tel"></div>
@@ -692,6 +704,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="field">National Insurance number<input id="sdNino" placeholder="e.g. QQ123456C"></div>
 <div class="grid"><div class="field">Tax code<input id="sdTaxCode" placeholder="e.g. 1257L"></div><div class="field">NI category<input id="sdNiCategory" placeholder="e.g. A"></div></div>
 <div class="field">Hourly rate (£)<input id="sdHourlyRate" type="number" min="0" step="0.01"></div>
+<div class="grid"><div class="field">Employee pension %<input id="sdPensionEmployeePct" type="number" min="0" step="0.1"></div><div class="field">Employer pension %<input id="sdPensionEmployerPct" type="number" min="0" step="0.1"></div></div>
+<div class="field">Student loan / payroll deduction note<input id="sdPayrollDeductionNote"></div>
 </div>
 </div>
 <button class="btn" id="staffSaveProfile">Save profile</button>
@@ -905,6 +919,71 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <h2>Payroll audit trail</h2>
 <div id="payrollAuditLog"></div>
 </div>
+</section>
+
+<section class="panel" id="stock">
+<div class="card notice"><b>Stock & Wastage</b><p class="muted">Daily stock counts, low-stock alerts, out-of-stock control and wastage history.</p></div>
+<div class="grid">
+<div class="card"><h2>Stock item</h2>
+<div class="field">Item<input id="stockName"></div><div class="grid"><div class="field">Current quantity<input id="stockQty" type="number" step="0.01"></div><div class="field">Unit<input id="stockUnit" placeholder="kg / packs / portions"></div></div>
+<div class="grid"><div class="field">Low-stock level<input id="stockLow" type="number" step="0.01"></div><div class="field">Unit cost (£)<input id="stockCost" type="number" step="0.01"></div></div>
+<label class="field" style="display:flex;gap:8px;align-items:center"><input id="stockOut" type="checkbox" style="width:auto;margin:0"> Out of stock today</label>
+<button class="btn" id="stockSave">Add stock item</button>
+</div>
+<div class="card"><h2>Wastage record</h2><div class="field">Stock item<select id="wasteStock"></select></div><div class="grid"><div class="field">Quantity wasted<input id="wasteQty" type="number" step="0.01"></div><div class="field">Reason<select id="wasteReason"><option>Expired</option><option>Damaged</option><option>Overproduction</option><option>Customer return</option><option>Quality issue</option><option>Other</option></select></div></div><div class="field">Note<input id="wasteNote"></div><button class="btn alt" id="wasteAdd">Record wastage</button></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Stock register</h2><div id="stockList"></div></div>
+<div class="card" style="margin-top:14px"><h2>Wastage history</h2><div id="wasteList"></div></div>
+</section>
+
+<section class="panel" id="suppliers">
+<div class="card notice"><b>Suppliers & Purchasing</b><p class="muted">Supplier directory, purchase orders, deliveries, invoices and price history.</p></div>
+<div class="grid">
+<div class="card"><h2>Supplier</h2><div class="field">Supplier name<input id="supplierName"></div><div class="field">Contact / phone<input id="supplierContact"></div><div class="field">Email<input id="supplierEmail"></div><button class="btn" id="supplierAdd">Add supplier</button><div id="supplierList"></div></div>
+<div class="card"><h2>Purchase / delivery record</h2><div class="field">Supplier<select id="purchaseSupplier"></select></div><div class="field">Reference / invoice<input id="purchaseRef"></div><div class="grid"><div class="field">Date<input id="purchaseDate" type="date"></div><div class="field">Total (£)<input id="purchaseTotal" type="number" step="0.01"></div></div><div class="field">Details<textarea id="purchaseDetails" rows="4"></textarea></div><div class="field">Status<select id="purchaseStatus"><option>Ordered</option><option>Delivered</option><option>Invoice received</option><option>Paid</option><option>Issue</option></select></div><button class="btn alt" id="purchaseAdd">Save purchase record</button></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Purchase history</h2><div id="purchaseList"></div></div>
+</section>
+
+<section class="panel" id="financeops">
+<div class="card notice"><b>Sales, Labour & Cash-up</b><p class="muted">Daily sales, labour %, refunds/voids/discounts and end-of-day manager sign-off.</p></div>
+<div class="grid">
+<div class="card"><h2>Daily sales record</h2><div class="field">Date<input id="salesDate" type="date"></div><div class="grid"><div class="field">Till / counter sales (£)<input id="salesTill" type="number" step="0.01"></div><div class="field">Collection / app sales (£)<input id="salesApp" type="number" step="0.01"></div></div><div class="grid"><div class="field">Catering (£)<input id="salesCatering" type="number" step="0.01"></div><div class="field">Other delivery/platform (£)<input id="salesOther" type="number" step="0.01"></div></div><button class="btn" id="salesSave">Save sales day</button></div>
+<div class="card"><h2>Cash-up</h2><div class="field">Date<input id="cashDate" type="date"></div><div class="grid"><div class="field">Expected cash (£)<input id="cashExpected" type="number" step="0.01"></div><div class="field">Actual cash (£)<input id="cashActual" type="number" step="0.01"></div></div><div class="grid"><div class="field">Card total (£)<input id="cashCard" type="number" step="0.01"></div><div class="field">Delivery platforms (£)<input id="cashPlatforms" type="number" step="0.01"></div></div><div class="field">Manager signature<input id="cashSignature"></div><div class="field">Note<textarea id="cashNote" rows="3"></textarea></div><button class="btn alt" id="cashSave">Sign off cash-up</button></div>
+</div>
+<div class="grid" style="margin-top:14px">
+<div class="card"><h2>Refund / void / discount</h2><div class="field">Type<select id="adjustType"><option>Refund</option><option>Void</option><option>Discount</option></select></div><div class="grid"><div class="field">Amount (£)<input id="adjustAmount" type="number" step="0.01"></div><div class="field">Order/reference<input id="adjustRef"></div></div><div class="field">Reason<input id="adjustReason"></div><button class="btn alt" id="adjustAdd">Record adjustment</button><div id="adjustList"></div></div>
+<div class="card"><h2>Sales & labour dashboard</h2><div id="salesLabourDashboard"></div></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Cash-up history</h2><div id="cashList"></div></div>
+</section>
+
+<section class="panel" id="allergens">
+<div class="card notice"><b>Allergen & Recipe Master</b><p class="muted">One controlled source for recipe, allergen and costing references. Test data only until supplier/allergen verification is completed.</p></div>
+<div class="grid">
+<div class="card"><h2>Recipe / menu item</h2><div class="field">Item name<input id="recipeName"></div><div class="field">Ingredients<textarea id="recipeIngredients" rows="5"></textarea></div><div class="field">Allergens<input id="recipeAllergens" placeholder="e.g. Gluten, Milk, Egg"></div><div class="grid"><div class="field">Selling price (£)<input id="recipeSell" type="number" step="0.01"></div><div class="field">Recipe cost (£)<input id="recipeCost" type="number" step="0.01"></div></div><div class="field">Source / verification note<input id="recipeSource"></div><button class="btn" id="recipeSave">Save master record</button></div>
+<div class="card"><h2>Cost & margin</h2><div id="recipeMargin"></div><p class="tiny">This test stores costing references here; it does not yet write into the separate live recipe-costing service.</p></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Master records</h2><div id="recipeList"></div></div>
+</section>
+
+<section class="panel" id="controlcentre">
+<div class="card notice"><b>Daily Control Centre</b><p class="muted">What Dexter's needs to complete today: compliance, opening/closing, handover, outages and unresolved actions.</p></div>
+<div class="grid">
+<div class="card"><h2>Today's compliance</h2><div id="dailyCompliance"></div></div>
+<div class="card"><h2>Manager handover</h2><div class="field">Handover note<textarea id="managerHandoverNote" rows="4"></textarea></div><div class="field">Priority<select id="managerHandoverPriority"><option>Normal</option><option>High</option><option>Urgent</option></select></div><button class="btn alt" id="managerHandoverAdd">Add handover</button><div id="managerHandoverList"></div></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Emergency & outage procedures</h2><div class="field">Procedure<select id="emergencyType"><option>Power failure</option><option>Internet outage</option><option>KDS outage</option><option>Fridge/freezer failure</option><option>Printer failure</option><option>Water supply issue</option><option>Fire / evacuation</option><option>Other</option></select></div><div class="field">Dexter's procedure<textarea id="emergencyProcedure" rows="5"></textarea></div><button class="btn alt" id="emergencySave">Save procedure</button><div id="emergencyList"></div></div>
+</section>
+
+<section class="panel" id="systemhealth">
+<div class="card notice"><b>System Health & Error Log</b><p class="muted">Operational status for Dexter's core apps and devices. Test status is manually/locally recorded until real health checks are connected.</p></div>
+<div class="grid">
+<div class="card"><h2>Service status</h2><div class="field">Service<select id="healthService"><option>Loyalty App</option><option>Collection Ordering</option><option>KDS</option><option>Back Office</option><option>Staff Hub</option><option>Printer Bridge</option><option>Foodhub Scanner</option><option>Internet</option></select></div><div class="field">Status<select id="healthStatus"><option>Operational</option><option>Degraded</option><option>Offline</option><option>Maintenance</option></select></div><div class="field">Note<input id="healthNote"></div><button class="btn alt" id="healthSave">Update status</button><div id="healthList"></div></div>
+<div class="card"><h2>Error log</h2><div class="field">Area<input id="errorArea" placeholder="App / device / module"></div><div class="field">Error / symptom<textarea id="errorMessage" rows="3"></textarea></div><div class="field">Severity<select id="errorSeverity"><option>Info</option><option>Warning</option><option>Critical</option></select></div><button class="btn alt" id="errorAdd">Log error</button><div id="errorList"></div></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Owner daily summary</h2><div id="ownerDailySummary"></div></div>
+<div class="card" style="margin-top:14px"><h2>Backup & Restore</h2><p class="muted">Export a complete browser-test backup or restore a previous test backup.</p><div class="row"><button class="btn alt" id="backupExport">Create backup</button><label class="btn alt" style="cursor:pointer">Restore backup<input id="backupImport" type="file" accept="application/json" style="display:none"></label></div><textarea id="backupOutput" rows="5" readonly placeholder="Backup JSON appears here for the test build."></textarea></div>
 </section>
 
 <section class="panel" id="reports">
@@ -1220,7 +1299,7 @@ let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing no
 const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
 let dexManage={
  tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
- recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],paySettings:{},payrollRuns:[],payrollAudit:[]
+ recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],paySettings:{},payrollRuns:[],payrollAudit:[]
 };
 try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
 function saveDexManage(){localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));renderDexManagement()}
@@ -1368,7 +1447,7 @@ function payrollRowsForWeek(start,end){
   return {
    staffId:s.id,name:s.name,payrollId:s.payrollId||'',nino:s.nino||'',taxCode:s.taxCode||'',niCategory:s.niCategory||'A',
    shifts:shifts.length,minutes,hours,rate,gross,
-   taxablePay:gross,taxDeducted:0,employeeNI:0,employerNI:0,pensionEmployee:0,pensionEmployer:0,studentLoan:0,otherDeductions:0,netPay:gross,
+   taxablePay:gross,taxDeducted:0,employeeNI:0,employerNI:0,pensionEmployee:gross*Number(s.pensionEmployeePct||0)/100,pensionEmployer:gross*Number(s.pensionEmployerPct||0)/100,studentLoan:0,otherDeductions:0,netPay:gross-(gross*Number(s.pensionEmployeePct||0)/100),
    notes:''
   };
  });
@@ -1393,7 +1472,7 @@ function renderPayroll(){
    const gross=r.rows.reduce((n,x)=>n+Number(x.gross||0),0);
    let action='<button class="btn alt small" onclick="viewPayroll('+i+')">Review</button>';
    if(r.status==='Draft'&&CURRENT_STAFF_ROLE==='Manager')action+=' <button class="btn alt small" onclick="managerApprovePay('+i+')">Manager Approve</button>';
-   if(r.status==='Awaiting Super User Verification'&&CURRENT_STAFF_ROLE==='Super User')action+=' <button class="btn alt small" onclick="superVerifyPay('+i+')">Super User Verify</button>';
+   if(r.status==='Awaiting Super User Verification'&&CURRENT_STAFF_ROLE==='Super User')action+=' <button class="btn alt small" onclick="superVerifyPay('+i+')">Super User Verify & Lock</button>';
    return '<div class="summarybox"><b>Week '+r.weekStart+' → '+r.weekEnd+'</b><br><span class="badge">'+r.status+'</span><span class="badge">Pay '+r.payDate+'</span><br><span class="muted">'+r.rows.length+' staff · '+payMoney(gross)+' gross</span><div class="row" style="margin-top:8px">'+action+'</div></div>';
  }).join('')||'<span class="muted">No weekly payroll runs.</span>';
 
@@ -1411,7 +1490,7 @@ window.viewPayroll=i=>{
 };
 window.savePayrollReview=i=>{
  if(CURRENT_STAFF_ROLE!=='Manager')return alert('Manager access required.');
- const r=dexManage.payrollRuns[i];if(!r||r.status!=='Draft')return;
+ const r=dexManage.payrollRuns[i];if(!r||r.status!=='Draft'||payrollRunLocked(r))return alert('This payroll is locked and cannot be edited.');
  r.rows.forEach((x,ri)=>{x.taxDeducted=Number($('prTax'+ri).value||0);x.employeeNI=Number($('prEni'+ri).value||0);x.employerNI=Number($('prErni'+ri).value||0);x.pensionEmployee=Number($('prPen'+ri).value||0);x.studentLoan=Number($('prLoan'+ri).value||0);x.otherDeductions=Number($('prOther'+ri).value||0);x.notes=$('prNotes'+ri).value.trim();recalcPayrollRow(x)});
  r.managerReviewedAt=new Date().toISOString();payAudit('Manager saved payroll review',r.id);saveDexManage();viewPayroll(i);
 };
@@ -1427,7 +1506,7 @@ window.superVerifyPay=i=>{
  const r=dexManage.payrollRuns[i];if(!r||r.status!=='Awaiting Super User Verification')return;
  const h=dexManage.hmrcSettings||{};
  if(!h.office||!h.payeRef||!h.accountsRef)return alert('Enter the employer PAYE and Accounts Office references first.');
- r.status='Ready for HMRC Submission';r.superVerifiedAt=new Date().toISOString();payAudit('Super User verified payroll for HMRC submission queue',r.id);saveDexManage();
+ r.status='Ready for HMRC Submission';r.superVerifiedAt=new Date().toISOString();r.lockedAt=r.superVerifiedAt;r.lockedBy='Super User';payAudit('Super User verified and locked payroll for HMRC submission queue',r.id);addTimeline('Payroll','Payroll '+r.weekStart+' locked after Super User verification');saveDexManage();
 };
 
 function addTimeline(type,text,meta=''){
@@ -1603,9 +1682,104 @@ function renderCustomerWorkflow(cu){
  $('custConsentSummary').innerHTML='<div class="summarybox"><b>Consent status</b><br><span class="badge">Marketing '+(co.marketing?'Yes':'No')+'</span><span class="badge">SMS '+(co.sms?'Yes':'No')+'</span><span class="badge">Email '+(co.email?'Yes':'No')+'</span></div>';
  $('custComms').innerHTML=(cu.communications||[]).map(x=>'<div class="summarybox"><span class="muted">'+x.text+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No communication history.</span>';
 }
+
+function parseLocalDate(s){return s?new Date(s+'T12:00:00'):null}
+function daysBetweenInclusive(a,b){const A=parseLocalDate(a),B=parseLocalDate(b);if(!A||!B)return 0;return Math.max(0,Math.floor((B-A)/86400000)+1)}
+function currentLeaveYearBounds(s){
+ const now=new Date(),base=parseLocalDate(s.leaveYearStart||now.getFullYear()+'-01-01')||new Date(now.getFullYear(),0,1);
+ let start=new Date(now.getFullYear(),base.getMonth(),base.getDate());
+ if(now<start)start.setFullYear(start.getFullYear()-1);
+ const end=new Date(start);end.setFullYear(end.getFullYear()+1);end.setDate(end.getDate()-1);
+ return {start:dateYMD(start),end:dateYMD(end)};
+}
+function statutoryHolidayForStaff(s){
+ const bounds=currentLeaveYearBounds(s),weeks=Math.max(5.6,Number(s.holidayWeeks||5.6));
+ if(['Irregular hours','Part-year worker'].includes(s.contractType)){
+   const hours=dexManage.rota.filter(r=>r.staffId===s.id&&r.date>=bounds.start&&r.date<=bounds.end&&r.clockInAt&&r.clockOutAt).reduce((n,r)=>n+(shiftWorkedMinutes(r)||0)/60,0);
+   return {unit:'hours',annual:null,accrued:hours*0.1207,bounds,method:'12.07% of recorded hours worked'};
+ }
+ const days=Number(s.contractDays||0),hours=Number(s.contractHours||0);
+ let annualDays=Math.min(28,days*5.6);
+ if(weeks>5.6)annualDays=days*weeks;
+ let annualHours=hours?hours*weeks:null;
+ const start=s.start&&s.start>bounds.start?s.start:bounds.start;
+ const fraction=Math.min(1,daysBetweenInclusive(start,bounds.end)/daysBetweenInclusive(bounds.start,bounds.end));
+ return {unit:hours?'hours':'days',annual:hours?annualHours:annualDays,accrued:(hours?annualHours:annualDays)*fraction,bounds,method:'Contract-based annual entitlement, pro-rated for start date'};
+}
+function approvedHolidayUsed(s){
+ const h=statutoryHolidayForStaff(s),bounds=h.bounds;
+ const req=(dexManage.leaveRequests||[]).filter(r=>r.staffId===s.id&&r.status==='Approved'&&r.type==='Holiday'&&r.to>=bounds.start&&r.from<=bounds.end);
+ if(h.unit==='days')return req.reduce((n,r)=>n+daysBetweenInclusive(r.from,r.to),0);
+ const avgDay=s.contractDays?Number(s.contractHours||0)/Number(s.contractDays||1):0;
+ return req.reduce((n,r)=>n+daysBetweenInclusive(r.from,r.to)*avgDay,0);
+}
+function holidayBalanceForStaff(s){const h=statutoryHolidayForStaff(s),used=approvedHolidayUsed(s);return {...h,used,balance:Math.max(0,h.accrued-used)}}
+function renderStaffHolidaySummary(s){
+ if(!$('sdHolidaySummary')||!s)return;
+ const h=holidayBalanceForStaff(s),u=h.unit;
+ $('sdHolidaySummary').innerHTML='<b>Holiday entitlement</b><br><span class="badge">'+s.contractType+'</span><br><span class="muted">Leave year '+h.bounds.start+' → '+h.bounds.end+'</span><br><b>'+h.accrued.toFixed(2)+' '+u+' accrued / entitled to date</b><br><span class="tiny">'+h.used.toFixed(2)+' '+u+' approved · '+h.balance.toFixed(2)+' '+u+' remaining · '+h.method+'</span>';
+}
+function renderHolidayBalance(){
+ staffOptions('holidayBalanceStaff');
+ const id=$('holidayBalanceStaff')?.value||CURRENT_SHIFT_STAFF_ID,s=typeof staffDb!=='undefined'?staffDb.staff.find(x=>x.id===id):null;
+ if(!$('holidayBalanceCard'))return;
+ if(!s){$('holidayBalanceCard').innerHTML='<span class="muted">Choose a staff member.</span>';return}
+ const h=holidayBalanceForStaff(s);
+ $('holidayBalanceCard').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Accrued / entitled</span><b>'+h.accrued.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div><div class="bo-kpi"><span class="muted">Approved leave</span><b>'+h.used.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div><div class="bo-kpi"><span class="muted">Remaining</span><b>'+h.balance.toFixed(2)+'</b><span class="tiny">'+h.unit+'</span></div></div><div class="summarybox"><span class="muted">'+h.bounds.start+' → '+h.bounds.end+' · '+h.method+'</span></div>';
+}
+function renderStock(){
+ if(!$('stockList'))return;
+ $('stockList').innerHTML=(dexManage.stock||[]).map((x,i)=>'<div class="summarybox"><b>'+x.name+'</b><br><span class="badge">'+(x.out?'OUT OF STOCK':Number(x.qty)<=Number(x.low)?'LOW':'In stock')+'</span><span class="muted"> '+x.qty+' '+x.unit+' · '+payMoney(x.cost)+' / unit</span></div>').join('')||'<span class="muted">No stock items.</span>';
+ $('wasteStock').innerHTML=(dexManage.stock||[]).map((x,i)=>'<option value="'+i+'">'+x.name+'</option>').join('');
+ $('wasteList').innerHTML=(dexManage.waste||[]).map(w=>'<div class="summarybox"><b>'+w.itemName+' · '+w.qty+'</b><br><span class="badge">'+w.reason+'</span><span class="muted"> '+new Date(w.at).toLocaleString()+'</span><br><span class="tiny">'+w.note+'</span></div>').join('')||'<span class="muted">No wastage records.</span>';
+}
+function renderSuppliers(){
+ if(!$('supplierList'))return;
+ $('supplierList').innerHTML=(dexManage.suppliers||[]).map((s,i)=>'<div class="summarybox"><b>'+s.name+'</b><br><span class="muted">'+s.contact+' · '+s.email+'</span></div>').join('')||'<span class="muted">No suppliers.</span>';
+ $('purchaseSupplier').innerHTML=(dexManage.suppliers||[]).map((s,i)=>'<option value="'+i+'">'+s.name+'</option>').join('');
+ $('purchaseList').innerHTML=(dexManage.purchases||[]).map(p=>'<div class="summarybox"><b>'+p.supplierName+' · '+(p.ref||'No ref')+'</b><br><span class="badge">'+p.status+'</span><span class="muted"> '+p.date+' · '+payMoney(p.total)+'</span><br><span class="tiny">'+p.details+'</span></div>').join('')||'<span class="muted">No purchase records.</span>';
+}
+function dailyLabourCost(date){
+ if(typeof staffDb==='undefined')return 0;
+ return dexManage.rota.filter(r=>r.date===date&&r.clockInAt&&r.clockOutAt).reduce((n,r)=>{const s=staffDb.staff.find(x=>x.id===r.staffId);return n+((shiftWorkedMinutes(r)||0)/60)*Number(s?.hourlyRate||0)},0);
+}
+function renderFinanceOps(){
+ if(!$('salesLabourDashboard'))return;
+ const rows=(dexManage.salesDays||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+ $('salesLabourDashboard').innerHTML=rows.slice(0,10).map(r=>{const sales=Number(r.till)+Number(r.app)+Number(r.catering)+Number(r.other),lab=dailyLabourCost(r.date),pct=sales?lab/sales*100:0;return '<div class="summarybox"><b>'+r.date+' · '+payMoney(sales)+'</b><br><span class="muted">Labour '+payMoney(lab)+' · '+pct.toFixed(1)+'%</span></div>'}).join('')||'<span class="muted">No sales days recorded.</span>';
+ $('cashList').innerHTML=(dexManage.cashups||[]).map(x=>'<div class="summarybox"><b>'+x.date+'</b><br><span class="muted">Expected '+payMoney(x.expected)+' · Actual '+payMoney(x.actual)+' · Difference '+payMoney(x.actual-x.expected)+'</span><br><span class="tiny">Signed '+x.signature+' · '+x.note+'</span></div>').join('')||'<span class="muted">No cash-ups.</span>';
+ $('adjustList').innerHTML=(dexManage.financialAdjustments||[]).map(x=>'<div class="summarybox"><b>'+x.type+' · '+payMoney(x.amount)+'</b><br><span class="muted">'+(x.ref||'No ref')+' · '+x.reason+'</span></div>').join('')||'<span class="muted">No refunds/voids/discounts.</span>';
+}
+function renderRecipes(){
+ if(!$('recipeList'))return;
+ $('recipeList').innerHTML=(dexManage.recipes||[]).map(r=>{const margin=Number(r.sell)-Number(r.cost),pct=Number(r.sell)?margin/Number(r.sell)*100:0;return '<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+(r.allergens||'No allergens entered')+'</span><br><span class="muted">Sell '+payMoney(r.sell)+' · Cost '+payMoney(r.cost)+' · Margin '+pct.toFixed(1)+'%</span><br><span class="tiny">'+r.ingredients+'</span></div>'}).join('')||'<span class="muted">No recipe/allergen master records.</span>';
+ const total=(dexManage.recipes||[]).length,avg=total?(dexManage.recipes.reduce((n,r)=>n+(Number(r.sell)?(Number(r.sell)-Number(r.cost))/Number(r.sell)*100:0),0)/total):0;
+ $('recipeMargin').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Master items</span><b>'+total+'</b></div><div class="bo-kpi"><span class="muted">Average gross margin</span><b>'+avg.toFixed(1)+'%</b></div></div>';
+}
+function renderControlCentre(){
+ if(!$('dailyCompliance'))return;
+ const today=new Date().toISOString().slice(0,10),fs=(dexManage.foodSafety||[]).filter(x=>x.date===today);
+ const required=['Opening checks','Fridge / freezer temperatures','Cleaning schedule','Closing checks'];
+ $('dailyCompliance').innerHTML=required.map(x=>'<div class="summarybox"><b>'+x+'</b><br>'+(fs.some(r=>r.type===x)?'<span class="ok">Recorded ✓</span>':'<span class="bad">Not recorded today</span>')+'</div>').join('');
+ $('managerHandoverList').innerHTML=(dexManage.handoverNotes||[]).map(x=>'<div class="summarybox"><b>'+x.priority+' handover</b><br><span class="muted">'+x.note+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager handover notes.</span>';
+ $('emergencyList').innerHTML=(dexManage.emergencyProcedures||[]).map(x=>'<div class="summarybox"><b>'+x.type+'</b><br><span class="muted">'+x.procedure+'</span></div>').join('')||'<span class="muted">No procedures saved.</span>';
+}
+function renderSystemHealth(){
+ if(!$('healthList'))return;
+ $('healthList').innerHTML=(dexManage.systemHealth||[]).map(x=>'<div class="summarybox"><b>'+x.service+'</b><br><span class="badge">'+x.status+'</span><span class="muted"> '+x.note+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No health status recorded.</span>';
+ $('errorList').innerHTML=(dexManage.errorLog||[]).map(x=>'<div class="summarybox"><b>'+x.area+'</b><br><span class="badge">'+x.severity+'</span><span class="muted"> '+x.message+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No errors logged.</span>';
+ const today=new Date().toISOString().slice(0,10),sale=(dexManage.salesDays||[]).find(x=>x.date===today),sales=sale?Number(sale.till)+Number(sale.app)+Number(sale.catering)+Number(sale.other):0,lab=dailyLabourCost(today);
+ $('ownerDailySummary').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Sales today</span><b>'+payMoney(sales)+'</b></div><div class="bo-kpi"><span class="muted">Labour today</span><b>'+payMoney(lab)+'</b></div><div class="bo-kpi"><span class="muted">Open tasks</span><b>'+dexManage.tasks.filter(t=>t.status!=='Completed').length+'</b></div><div class="bo-kpi"><span class="muted">Errors</span><b>'+dexManage.errorLog.filter(e=>e.severity==='Critical').length+'</b></div></div>';
+}
+function publishRotaWeek(){
+ const start=$('rotaWeekStart')?.value;if(!start)return;const d=parseLocalDate(start),end=new Date(d);end.setDate(end.getDate()+6);const e=dateYMD(end);
+ dexManage.rota.filter(r=>r.date>=start&&r.date<=e).forEach(r=>{r.published=true;notifyStaff(r.staffId,'Rota published',r.date+' · '+r.start+'–'+r.end,'Rota')});
+ addTimeline('Rota','Rota published '+start+' → '+e);saveDexManage();
+}
+function payrollRunLocked(r){return ['Ready for HMRC Submission','Submitted to HMRC','Finalised'].includes(r.status)||!!r.lockedAt}
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
- staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderPayroll();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderPayroll();
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderPayroll();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
@@ -1670,6 +1844,24 @@ if($('ackSave'))$('ackSave').onclick=()=>{const i=Number($('ackPolicy').value),p
 if($('formCreate'))$('formCreate').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can create form templates.');const name=$('formName').value.trim();if(!name)return;dexManage.formTemplates.unshift({id:'form-'+Date.now(),name,version:$('formVersion').value.trim()||'1.0',fields:$('formFields').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),createdAt:new Date().toISOString()});addTimeline('Form Builder',name+' template created');saveDexManage()};
 if($('globalSearchInput'))$('globalSearchInput').oninput=renderGlobalSearch;
 if($('eqServiceAdd'))$('eqServiceAdd').onclick=()=>{const i=Number($('eqServiceEquipment').value),e=dexManage.equipment[i];if(!e)return;dexManage.equipmentService.unshift({equipmentIndex:i,equipmentName:e.name,date:$('eqServiceDate').value||new Date().toISOString().slice(0,10),engineer:$('eqServiceEngineer').value.trim(),work:$('eqServiceWork').value.trim(),cost:Number($('eqServiceCost').value||0),at:new Date().toISOString()});addTimeline('Maintenance',e.name+' service history updated');saveDexManage()};
+
+if($('holidayBalanceStaff'))$('holidayBalanceStaff').onchange=renderHolidayBalance;
+if($('publishRotaWeek'))$('publishRotaWeek').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');publishRotaWeek()};
+if($('stockSave'))$('stockSave').onclick=()=>{const name=$('stockName').value.trim();if(!name)return;dexManage.stock.unshift({name,qty:Number($('stockQty').value||0),unit:$('stockUnit').value.trim(),low:Number($('stockLow').value||0),cost:Number($('stockCost').value||0),out:$('stockOut').checked,at:new Date().toISOString()});addTimeline('Stock',name+' stock record added');saveDexManage()};
+if($('wasteAdd'))$('wasteAdd').onclick=()=>{const i=Number($('wasteStock').value),item=dexManage.stock[i];if(!item)return;const q=Number($('wasteQty').value||0);item.qty=Math.max(0,Number(item.qty)-q);dexManage.waste.unshift({itemIndex:i,itemName:item.name,qty:q,reason:$('wasteReason').value,note:$('wasteNote').value.trim(),at:new Date().toISOString()});addTimeline('Waste',item.name+' · '+q+' '+item.unit);saveDexManage()};
+if($('supplierAdd'))$('supplierAdd').onclick=()=>{const name=$('supplierName').value.trim();if(!name)return;dexManage.suppliers.unshift({name,contact:$('supplierContact').value.trim(),email:$('supplierEmail').value.trim(),at:new Date().toISOString()});saveDexManage()};
+if($('purchaseAdd'))$('purchaseAdd').onclick=()=>{const i=Number($('purchaseSupplier').value),s=dexManage.suppliers[i];if(!s)return;dexManage.purchases.unshift({supplierIndex:i,supplierName:s.name,ref:$('purchaseRef').value.trim(),date:$('purchaseDate').value||new Date().toISOString().slice(0,10),total:Number($('purchaseTotal').value||0),details:$('purchaseDetails').value.trim(),status:$('purchaseStatus').value,at:new Date().toISOString()});addTimeline('Purchasing',s.name+' · '+$('purchaseStatus').value);saveDexManage()};
+if($('salesSave'))$('salesSave').onclick=()=>{const date=$('salesDate').value||new Date().toISOString().slice(0,10),r={date,till:Number($('salesTill').value||0),app:Number($('salesApp').value||0),catering:Number($('salesCatering').value||0),other:Number($('salesOther').value||0),at:new Date().toISOString()};dexManage.salesDays=dexManage.salesDays.filter(x=>x.date!==date);dexManage.salesDays.unshift(r);addTimeline('Sales','Daily sales saved '+date);saveDexManage()};
+if($('cashSave'))$('cashSave').onclick=()=>{const sig=$('cashSignature').value.trim();if(!sig)return alert('Manager signature required.');dexManage.cashups.unshift({date:$('cashDate').value||new Date().toISOString().slice(0,10),expected:Number($('cashExpected').value||0),actual:Number($('cashActual').value||0),card:Number($('cashCard').value||0),platforms:Number($('cashPlatforms').value||0),signature:sig,note:$('cashNote').value.trim(),at:new Date().toISOString()});addTimeline('Cash-up','End-of-day cash-up signed');saveDexManage()};
+if($('adjustAdd'))$('adjustAdd').onclick=()=>{dexManage.financialAdjustments.unshift({type:$('adjustType').value,amount:Number($('adjustAmount').value||0),ref:$('adjustRef').value.trim(),reason:$('adjustReason').value.trim(),by:CURRENT_STAFF_ROLE,at:new Date().toISOString()});addTimeline('Finance',$('adjustType').value+' recorded');saveDexManage()};
+if($('recipeSave'))$('recipeSave').onclick=()=>{const name=$('recipeName').value.trim();if(!name)return;dexManage.recipes.unshift({name,ingredients:$('recipeIngredients').value.trim(),allergens:$('recipeAllergens').value.trim(),sell:Number($('recipeSell').value||0),cost:Number($('recipeCost').value||0),source:$('recipeSource').value.trim(),version:1,at:new Date().toISOString()});addTimeline('Recipe',name+' master record added');saveDexManage()};
+if($('managerHandoverAdd'))$('managerHandoverAdd').onclick=()=>{const note=$('managerHandoverNote').value.trim();if(!note)return;dexManage.handoverNotes.unshift({note,priority:$('managerHandoverPriority').value,by:CURRENT_STAFF_ROLE,at:new Date().toISOString()});saveDexManage()};
+if($('emergencySave'))$('emergencySave').onclick=()=>{const type=$('emergencyType').value,procedure=$('emergencyProcedure').value.trim();if(!procedure)return;dexManage.emergencyProcedures=dexManage.emergencyProcedures.filter(x=>x.type!==type);dexManage.emergencyProcedures.unshift({type,procedure,updatedAt:new Date().toISOString(),by:CURRENT_STAFF_ROLE});saveDexManage()};
+if($('healthSave'))$('healthSave').onclick=()=>{const service=$('healthService').value;dexManage.systemHealth=dexManage.systemHealth.filter(x=>x.service!==service);dexManage.systemHealth.unshift({service,status:$('healthStatus').value,note:$('healthNote').value.trim(),at:new Date().toISOString()});saveDexManage()};
+if($('errorAdd'))$('errorAdd').onclick=()=>{const msg=$('errorMessage').value.trim();if(!msg)return;dexManage.errorLog.unshift({area:$('errorArea').value.trim(),message:msg,severity:$('errorSeverity').value,at:new Date().toISOString(),by:CURRENT_STAFF_ROLE});addTimeline('Error',$('errorArea').value.trim()+' · '+$('errorSeverity').value);saveDexManage()};
+if($('backupExport'))$('backupExport').onclick=()=>{const backup={version:1,createdAt:new Date().toISOString(),management:dexManage,staff:typeof staffDb!=='undefined'?staffDb:null,customers:typeof customerDb!=='undefined'?customerDb:null};$('backupOutput').value=JSON.stringify(backup,null,2)};
+if($('backupImport'))$('backupImport').onchange=e=>{const file=e.target.files?.[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const b=JSON.parse(rd.result);if(!b.management)throw new Error('Invalid backup');dexManage=b.management;localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));if(b.staff&&typeof staffDb!=='undefined'){staffDb=b.staff;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb))}if(b.customers&&typeof customerDb!=='undefined'){customerDb=b.customers;localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb))}location.reload()}catch(err){alert('Backup could not be restored: '+err.message)}};rd.readAsText(file)};
+[['purchaseDate',0],['salesDate',0],['cashDate',0]].forEach(([id,add])=>{const el=$(id);if(el&&!el.value)el.value=new Date().toISOString().slice(0,10)});
 const myShiftStaffSel=$('myShiftStaff');if(myShiftStaffSel)myShiftStaffSel.onchange=()=>{CURRENT_SHIFT_STAFF_ID=myShiftStaffSel.value;localStorage.setItem('dexters_test_current_shift_staff',CURRENT_SHIFT_STAFF_ID);renderMyShifts()};
 
 if($('payStaff'))$('payStaff').onchange=loadPaySetting;
@@ -2041,8 +2233,8 @@ function renderStaffDb(){
  if(!s){
   $('staffPermissions').innerHTML=$('staffTrainingSummary').innerHTML=$('staffDocs').innerHTML=$('staffAbsence').innerHTML=$('staffIncidents').innerHTML=$('staffNotes').innerHTML=$('staffAudit').innerHTML='Choose a staff member first.';return;
  }
- $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdRole').disabled=CURRENT_STAFF_ROLE!=='Super User';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';$('sdLeavingDate').value=s.leavingDate||'';$('sdLeavingReason').value=s.leavingReason||'Resigned';toggleLeavingFields();
- $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';tagPicker('sdTags',s.tags||[]);$('sdPayrollId').value=s.payrollId||'';$('sdNino').value=s.nino||'';$('sdTaxCode').value=s.taxCode||'';$('sdNiCategory').value=s.niCategory||'A';$('sdHourlyRate').value=s.hourlyRate||'';
+ $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdRole').disabled=CURRENT_STAFF_ROLE!=='Super User';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';$('sdLeavingDate').value=s.leavingDate||'';$('sdLeavingReason').value=s.leavingReason||'Resigned';$('sdContractType').value=s.contractType||'Regular hours';$('sdContractDays').value=s.contractDays??5;$('sdContractHours').value=s.contractHours??'';$('sdLeaveYearStart').value=s.leaveYearStart||new Date().getFullYear()+'-01-01';$('sdHolidayWeeks').value=s.holidayWeeks??5.6;$('sdBankHolidaysIncluded').checked=s.bankHolidaysIncluded!==false;toggleLeavingFields();renderStaffHolidaySummary(s);
+ $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';tagPicker('sdTags',s.tags||[]);$('sdPayrollId').value=s.payrollId||'';$('sdNino').value=s.nino||'';$('sdTaxCode').value=s.taxCode||'';$('sdNiCategory').value=s.niCategory||'A';$('sdHourlyRate').value=s.hourlyRate||'';$('sdPensionEmployeePct').value=s.pensionEmployeePct||0;$('sdPensionEmployerPct').value=s.pensionEmployerPct||0;$('sdPayrollDeductionNote').value=s.payrollDeductionNote||'';
  renderStaffChecklists(s);
  $('staffPermissions').innerHTML=STAFF_PERMS.map(p=>'<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input class="sd-perm" type="checkbox" value="'+p+'" '+((s.permissions||[]).includes(p)?'checked':'')+(CURRENT_STAFF_ROLE==='Super User'?'':' disabled')+' style="width:auto;margin:0">'+p+'</label>').join('')+(CURRENT_STAFF_ROLE==='Super User'?'<button class="btn alt small" onclick="saveStaffPermissions()">Save permissions</button><button class="btn alt small" onclick="resetStaffPermissions()">Use role defaults</button>':'<div class="summarybox muted">Permission editing is restricted to Super User.</div>');
  const t=s.training||{};
@@ -2054,7 +2246,7 @@ function renderStaffDb(){
  $('staffNotes').innerHTML=(s.notes||[]).map(n=>'<div class="summarybox"><span class="muted">'+n.text+'</span><br><span class="tiny">'+new Date(n.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager notes.</span>';
  $('staffAudit').innerHTML=(s.audit||[]).map(a=>'<div class="tiny" style="padding:7px 0;border-bottom:1px solid #ffffff10"><b>'+new Date(a.at).toLocaleString()+'</b> — '+a.action+'</div>').join('')||'<span class="muted">No audit history.</span>';
 }
-$('staffSearch').addEventListener('input',renderStaffDirectory);$('sdStatus').addEventListener('change',toggleLeavingFields);
+$('staffSearch').addEventListener('input',renderStaffDirectory);$('sdStatus').addEventListener('change',toggleLeavingFields);['sdContractType','sdContractDays','sdContractHours','sdLeaveYearStart','sdHolidayWeeks'].forEach(id=>$(id).addEventListener('change',()=>{const s=selectedStaff();if(s){s.contractType=$('sdContractType').value;s.contractDays=Number($('sdContractDays').value||0);s.contractHours=Number($('sdContractHours').value||0);s.leaveYearStart=$('sdLeaveYearStart').value;s.holidayWeeks=Math.max(5.6,Number($('sdHolidayWeeks').value||5.6));renderStaffHolidaySummary(s)}}));
 $('staffAdd').onclick=()=>{
  const name=prompt('Test staff name');if(!name||!name.trim())return;
  const id='staff-'+Date.now();
@@ -2065,7 +2257,7 @@ $('staffSaveProfile').onclick=()=>{
  const s=selectedStaff();if(!s)return;const oldRole=s.role;
  s.name=$('sdName').value.trim()||'Unnamed staff';
  if(CURRENT_STAFF_ROLE==='Super User'){s.role=$('sdRole').value}else{$('sdRole').value=s.role}
- s.status=$('sdStatus').value;s.start=$('sdStart').value;s.leavingDate=s.status==='No Longer Employed'?$('sdLeavingDate').value:'';s.leavingReason=s.status==='No Longer Employed'?$('sdLeavingReason').value:'';s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');s.payrollId=$('sdPayrollId').value.trim();s.nino=$('sdNino').value.trim().toUpperCase();s.taxCode=$('sdTaxCode').value.trim().toUpperCase();s.niCategory=$('sdNiCategory').value.trim().toUpperCase()||'A';s.hourlyRate=Number($('sdHourlyRate').value||0);
+ s.status=$('sdStatus').value;s.start=$('sdStart').value;s.leavingDate=s.status==='No Longer Employed'?$('sdLeavingDate').value:'';s.leavingReason=s.status==='No Longer Employed'?$('sdLeavingReason').value:'';s.contractType=$('sdContractType').value;s.contractDays=Number($('sdContractDays').value||0);s.contractHours=Number($('sdContractHours').value||0);s.leaveYearStart=$('sdLeaveYearStart').value;s.holidayWeeks=Math.max(5.6,Number($('sdHolidayWeeks').value||5.6));s.bankHolidaysIncluded=$('sdBankHolidaysIncluded').checked;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');s.payrollId=$('sdPayrollId').value.trim();s.nino=$('sdNino').value.trim().toUpperCase();s.taxCode=$('sdTaxCode').value.trim().toUpperCase();s.niCategory=$('sdNiCategory').value.trim().toUpperCase()||'A';s.hourlyRate=Number($('sdHourlyRate').value||0);s.pensionEmployeePct=Number($('sdPensionEmployeePct').value||0);s.pensionEmployerPct=Number($('sdPensionEmployerPct').value||0);s.payrollDeductionNote=$('sdPayrollDeductionNote').value.trim();
  if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else if(s.status==='No Longer Employed'){logStaff(s,'Employment status changed to No Longer Employed'+(s.leavingDate?' · leaving date '+s.leavingDate:'')+(s.leavingReason?' · '+s.leavingReason:''))}else logStaff(s,'Staff profile updated');
  saveStaffDb();
 };
