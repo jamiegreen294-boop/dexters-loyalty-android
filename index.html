@@ -36,6 +36,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 .dex-backoffice-nav .tab{display:block;width:100%;text-align:left;margin:4px 0;border:0;border-radius:10px;padding:10px 12px;background:transparent;color:#d8cce0;font-weight:850}.dex-backoffice-nav .tab.active,.dex-backoffice-nav .tab:hover{background:#2b1d38;color:#fff}.dex-backoffice-nav .navgroup{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#8f7d9a;margin:16px 8px 5px}
 .dex-backoffice-main{padding:18px;min-width:0}.dex-backoffice-main>.panel{margin:0}.bo-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.bo-kpi{background:#15101d;border:1px solid #3b2a49;border-radius:14px;padding:13px}.bo-kpi b{display:block;font-size:24px}.bo-module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.bo-module{background:#15101d;border:1px solid #3b2a49;border-radius:15px;padding:14px}.bo-module h3{margin:0 0 6px}.bo-rolebar{display:flex;gap:6px;flex-wrap:wrap}.bo-placeholder{padding:18px;border:1px dashed #654a76;border-radius:15px;background:#120d19}
 .tag-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;border:1px solid #654a76;background:#22172d;font-size:12px;font-weight:800;margin:3px}.tag-chip.system{border-color:#8b6ba1}.tag-chip button{border:0;background:transparent;color:inherit;padding:0;font-weight:1000}.tag-picker{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.tag-picker label{display:inline-flex;gap:5px;align-items:center;border:1px solid #4d385c;border-radius:999px;padding:6px 9px}.tag-picker input{width:auto;margin:0}
+.week-board{display:grid;grid-template-columns:repeat(7,minmax(145px,1fr));gap:8px;overflow:auto}.week-day{min-height:160px;border:1px solid #3b2a49;border-radius:12px;padding:8px;background:#120d19}.week-day.dragover{outline:2px dashed #9d7bb3}.shift-card{padding:8px;border:1px solid #533d65;border-radius:10px;background:#1b1223;margin:6px 0;cursor:grab}.live-worker{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #ffffff12}.alert-item{padding:10px;border:1px solid #4e395e;border-radius:12px;margin:7px 0}.timeline-item{padding:10px 0;border-bottom:1px solid #ffffff12}.evidence-thumb{max-width:120px;max-height:90px;border-radius:8px;margin-top:6px}
 @media(max-width:980px){.dex-backoffice-shell{grid-template-columns:1fr}.dex-backoffice-nav{border-right:0;border-bottom:1px solid #342640;display:flex;gap:5px;overflow:auto;align-items:center}.dex-backoffice-logo,.dex-backoffice-nav .navsub,.dex-backoffice-nav .navgroup{display:none}.dex-backoffice-nav .tab{width:auto;white-space:nowrap}.bo-module-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.bo-kpis{grid-template-columns:repeat(2,1fr)}.bo-module-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.top{display:block}.pill{display:inline-block;margin-top:8px}}
 </style>
@@ -94,6 +95,11 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="bo-module"><h3>🥪 Catering</h3><p class="muted">Buffet requests, allergens, quotes, amendments and approvals.</p></div>
 <div class="bo-module"><h3>🎁 Loyalty & Growth</h3><p class="muted">Customers, loyalty, deals and challenge controls without replacing existing automatic rewards.</p></div>
 </div>
+<div class="grid" style="margin-top:14px">
+<div class="card"><h2>Who's working now</h2><div id="liveWorkers"></div></div>
+<div class="card"><h2>Attention needed</h2><div id="autoAlerts"></div></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Business timeline</h2><div id="businessTimeline"></div></div>
 </section>
 
 <section class="panel" id="catering">
@@ -298,6 +304,13 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="field">Tags<div id="rotaTags" class="tag-picker"></div></div>
 <button class="btn" id="rotaAdd">Save shift</button>
 </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<h2>Drag & Drop Weekly Rota</h2>
+<div class="field">Week starting<input id="rotaWeekStart" type="date"></div>
+<p class="tiny">Drag a shift card to another day to change its date. Times and staff stay attached to the shift.</p>
+<div id="rotaWeekBoard" class="week-board"></div>
 </div>
 
 <div class="card" style="margin-top:14px">
@@ -520,6 +533,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <button class="active" data-sdtab="profile">Profile</button>
 <button data-sdtab="training">Training</button>
 <button data-sdtab="documents">Documents</button>
+<button data-sdtab="checklists">Checklists</button>
 <button data-sdtab="absence">Absence</button>
 <button data-sdtab="incidents">Incidents</button>
 <button data-sdtab="permissions">Permissions</button>
@@ -590,6 +604,15 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </div>
 </div>
 
+<div class="staff-profile-section" id="sdsec-checklists">
+<div id="staffChecklistList"></div>
+<div class="summarybox"><b>Assign checklist</b><br><span class="muted">Onboarding, opening/closing, food safety, equipment authorisation and custom staff checklists.</span></div>
+<div class="field">Checklist<select id="sdChecklistType"><option>New Starter Onboarding</option><option>Health & Safety Induction</option><option>Food Safety Induction</option><option>Equipment Authorisation</option><option>Opening Procedure</option><option>Closing Procedure</option><option>Probation Checklist</option><option>Custom Checklist</option></select></div>
+<div class="field">Due date<input id="sdChecklistDue" type="date"></div>
+<div class="field">Checklist items<textarea id="sdChecklistItems" rows="5" placeholder="One item per line"></textarea></div>
+<button class="btn alt" id="staffAddChecklist">Assign checklist</button>
+</div>
+
 <div class="staff-profile-section" id="sdsec-absence">
 <div id="staffAbsence"></div>
 <div id="staffAbsenceForm" style="display:none">
@@ -608,6 +631,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="field">Date<input id="sdIncidentDate" type="date"></div>
 <div class="field">Details<textarea id="sdIncidentDetails" rows="3"></textarea></div>
 <div class="field">Action / follow-up<textarea id="sdIncidentAction" rows="2"></textarea></div>
+<div class="field">Photo / evidence<input id="sdIncidentEvidence" type="file" accept="image/*,.pdf"></div>
 <button class="btn alt" id="staffAddIncident">Record incident</button>
 </div>
 </div>
@@ -768,6 +792,14 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <section class="panel" id="settings">
 <div class="card notice"><b>Settings & Permissions</b><p class="muted">Super User-only area for roles, module access and back-office configuration.</p></div>
 <div class="summarybox"><b>Access hierarchy</b><br><span class="badge">Super User</span><span class="badge">Manager</span><span class="badge">Team Leader</span><span class="badge">Staff</span><p class="tiny">Only Super User can change another person's role or permissions.</p></div>
+<div class="card" style="margin-top:14px"><h2>Workflow Automation</h2>
+<p class="muted">Automatic back-office actions generated from Dexter's records.</p>
+<label class="field" style="display:flex;gap:8px;align-items:center"><input id="wfTraining" type="checkbox" style="width:auto;margin:0"> Create alert when training/refresher is due</label>
+<label class="field" style="display:flex;gap:8px;align-items:center"><input id="wfDocs" type="checkbox" style="width:auto;margin:0"> Create alert for staff document expiry/review</label>
+<label class="field" style="display:flex;gap:8px;align-items:center"><input id="wfIncidents" type="checkbox" style="width:auto;margin:0"> Create follow-up task when incident is recorded</label>
+<label class="field" style="display:flex;gap:8px;align-items:center"><input id="wfPayroll" type="checkbox" style="width:auto;margin:0"> Alert Super User when payroll is Manager-approved</label>
+<button class="btn alt" id="saveWorkflowSettings">Save workflow settings</button>
+</div>
 <div class="card" style="margin-top:14px"><h2>System Tags</h2><p class="muted">Tags can group and filter staff, customers, applicants, shifts, tasks, incidents, equipment and compliance records.</p><div id="tagLibrary"></div><div class="field">New custom tag<input id="newTagName" placeholder="e.g. Kitchen, FOH, Needs follow-up"></div><button class="btn alt" id="addTagBtn">Add custom tag</button></div>
 </section>
 </div>
@@ -1054,7 +1086,7 @@ let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing no
 const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
 let dexManage={
  tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
- recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],paySettings:{},payrollRuns:[],payrollAudit:[]
+ recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},paySettings:{},payrollRuns:[],payrollAudit:[]
 };
 try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
 function saveDexManage(){localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));renderDexManagement()}
@@ -1099,7 +1131,7 @@ window.startDexShift=i=>{
  const r=dexManage.rota[i];if(!r)return;
  if(r.staffId!==CURRENT_SHIFT_STAFF_ID)return alert('This is not your assigned shift.');
  if(r.clockInAt)return;
- r.clockInAt=new Date().toISOString();r.status='In progress';r.timeAudit=r.timeAudit||[];r.timeAudit.push({at:r.clockInAt,action:'Shift started',staffId:r.staffId});
+ r.clockInAt=new Date().toISOString();r.status='In progress';r.timeAudit=r.timeAudit||[];r.timeAudit.push({at:r.clockInAt,action:'Shift started',staffId:r.staffId});addTimeline('Timekeeping',staffNameById(r.staffId)+' started shift');
  saveDexManage();
 };
 window.endDexShift=i=>{
@@ -1107,7 +1139,7 @@ window.endDexShift=i=>{
  if(r.staffId!==CURRENT_SHIFT_STAFF_ID)return alert('This is not your assigned shift.');
  if(!r.clockInAt)return alert('Start the shift first.');
  if(r.clockOutAt)return;
- r.clockOutAt=new Date().toISOString();r.status='Completed';r.timeAudit=r.timeAudit||[];r.timeAudit.push({at:r.clockOutAt,action:'Shift ended',staffId:r.staffId});
+ r.clockOutAt=new Date().toISOString();r.status='Completed';r.timeAudit=r.timeAudit||[];r.timeAudit.push({at:r.clockOutAt,action:'Shift ended',staffId:r.staffId});addTimeline('Timekeeping',staffNameById(r.staffId)+' ended shift');
  saveDexManage();
 };
 
@@ -1254,7 +1286,7 @@ window.managerApprovePay=i=>{
  const r=dexManage.payrollRuns[i];if(!r||r.status!=='Draft')return;
  const missing=r.rows.filter(x=>!x.payrollId||!x.taxCode||!x.niCategory);
  if(missing.length)return alert('Complete payroll ID, tax code and NI category on all staff files before approval.');
- r.status='Awaiting Super User Verification';r.managerApprovedAt=new Date().toISOString();payAudit('Manager approved weekly payroll',r.id);saveDexManage();
+ r.status='Awaiting Super User Verification';r.managerApprovedAt=new Date().toISOString();payAudit('Manager approved weekly payroll',r.id);addTimeline('Payroll','Weekly payroll '+r.weekStart+' approved by Manager and sent for Super User verification');saveDexManage();
 };
 window.superVerifyPay=i=>{
  if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can perform final payroll verification.');
@@ -1263,9 +1295,82 @@ window.superVerifyPay=i=>{
  if(!h.office||!h.payeRef||!h.accountsRef)return alert('Enter the employer PAYE and Accounts Office references first.');
  r.status='Ready for HMRC Submission';r.superVerifiedAt=new Date().toISOString();payAudit('Super User verified payroll for HMRC submission queue',r.id);saveDexManage();
 };
+
+function addTimeline(type,text,meta=''){
+ dexManage.timeline=dexManage.timeline||[];
+ dexManage.timeline.unshift({at:new Date().toISOString(),type,text,meta});
+ dexManage.timeline=dexManage.timeline.slice(0,300);
+}
+function activeWorkflow(k){return dexManage.workflow?.[k]!==false}
+function renderLiveWorkers(){
+ if(!$('liveWorkers'))return;
+ const active=dexManage.rota.filter(r=>r.clockInAt&&!r.clockOutAt);
+ $('liveWorkers').innerHTML=active.map(r=>'<div class="live-worker"><div><b>'+staffNameById(r.staffId)+'</b><br><span class="tiny">'+(r.area||'Shift')+' · started '+new Date(r.clockInAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'</span></div><span class="ok">Clocked in</span></div>').join('')||'<span class="muted">Nobody is clocked in right now.</span>';
+}
+function collectAutoAlerts(){
+ const out=[],now=new Date(),soon=new Date(Date.now()+30*86400000);
+ if(activeWorkflow('docs')&&typeof staffDb!=='undefined')staffDb.staff.forEach(s=>(s.docs||[]).forEach(d=>{if(!d.expiry)return;const x=new Date(d.expiry);if(x<now)out.push({level:'bad',text:s.name+' · '+d.type+' overdue'});else if(x<=soon)out.push({level:'warn',text:s.name+' · '+d.type+' due '+d.expiry})}));
+ if(typeof staffDb!=='undefined')staffDb.staff.forEach(s=>(s.checklists||[]).forEach(cl=>{if(cl.status!=='Completed'&&cl.due&&new Date(cl.due)<now)out.push({level:'bad',text:s.name+' · '+cl.type+' checklist overdue'})}));
+ dexManage.tasks.filter(t=>t.status!=='Completed'&&t.due&&new Date(t.due)<now).forEach(t=>out.push({level:'bad',text:'Task overdue · '+t.title}));
+ dexManage.equipment.filter(e=>e.status!=='Operational').forEach(e=>out.push({level:'warn',text:'Equipment · '+e.name+' · '+e.status}));
+ if(activeWorkflow('payroll'))dexManage.payrollRuns.filter(r=>r.status==='Awaiting Super User Verification').forEach(r=>out.push({level:'warn',text:'Payroll '+r.weekStart+' awaiting Super User verification'}));
+ return out;
+}
+function renderAutoAlerts(){
+ if(!$('autoAlerts'))return;
+ const a=collectAutoAlerts();$('autoAlerts').innerHTML=a.slice(0,12).map(x=>'<div class="alert-item"><span class="'+(x.level==='bad'?'bad':'muted')+'">'+x.text+'</span></div>').join('')||'<span class="ok">No urgent alerts.</span>';
+}
+function renderBusinessTimeline(){
+ if(!$('businessTimeline'))return;
+ const all=[...(dexManage.timeline||[])];
+ if(typeof staffDb!=='undefined')staffDb.staff.forEach(s=>(s.audit||[]).slice(0,5).forEach(a=>all.push({at:a.at,type:'Staff',text:s.name+' · '+a.action})));
+ (dexManage.payrollAudit||[]).slice(0,10).forEach(a=>all.push({at:a.at,type:'Payroll',text:a.action}));
+ all.sort((a,b)=>new Date(b.at)-new Date(a.at));
+ $('businessTimeline').innerHTML=all.slice(0,20).map(x=>'<div class="timeline-item"><b>'+x.type+'</b> · '+x.text+'<br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No activity yet.</span>';
+}
+function dateYMD(d){const x=new Date(d);return x.toISOString().slice(0,10)}
+function renderRotaWeek(){
+ const board=$('rotaWeekBoard');if(!board)return;
+ let start=$('rotaWeekStart').value;
+ if(!start){const now=new Date(),day=(now.getDay()+6)%7;now.setDate(now.getDate()-day);start=dateYMD(now);$('rotaWeekStart').value=start}
+ const base=new Date(start+'T12:00:00');
+ board.innerHTML=[0,1,2,3,4,5,6].map(n=>{
+  const d=new Date(base);d.setDate(base.getDate()+n);const ymd=dateYMD(d);
+  const cards=dexManage.rota.map((r,i)=>({r,i})).filter(x=>x.r.date===ymd).map(({r,i})=>'<div class="shift-card" draggable="true" data-shift-index="'+i+'"><b>'+staffNameById(r.staffId)+'</b><br><span class="tiny">'+(r.start||'—')+'–'+(r.end||'—')+' · '+(r.area||'Shift')+'</span></div>').join('');
+  return '<div class="week-day" data-date="'+ymd+'"><b>'+d.toLocaleDateString([], {weekday:'short',day:'numeric',month:'short'})+'</b>'+cards+'</div>'
+ }).join('');
+ board.querySelectorAll('.shift-card').forEach(card=>card.ondragstart=e=>e.dataTransfer.setData('text/plain',card.dataset.shiftIndex));
+ board.querySelectorAll('.week-day').forEach(day=>{
+  day.ondragover=e=>{e.preventDefault();day.classList.add('dragover')};
+  day.ondragleave=()=>day.classList.remove('dragover');
+  day.ondrop=e=>{e.preventDefault();day.classList.remove('dragover');const i=Number(e.dataTransfer.getData('text/plain'));if(!dexManage.rota[i])return;const old=dexManage.rota[i].date;dexManage.rota[i].date=day.dataset.date;dexManage.rota[i].timeAudit=dexManage.rota[i].timeAudit||[];dexManage.rota[i].timeAudit.push({at:new Date().toISOString(),action:'Shift moved from '+old+' to '+day.dataset.date,staffId:dexManage.rota[i].staffId});addTimeline('Rota',staffNameById(dexManage.rota[i].staffId)+' shift moved to '+day.dataset.date);saveDexManage()}
+ });
+}
+function staffChecklistDefaults(type){
+ const m={
+ 'New Starter Onboarding':['Staff file created','Right to work checked','Emergency contact recorded','Policies issued','H&S induction complete','Food safety induction complete','Systems access assigned'],
+ 'Health & Safety Induction':['Fire exits explained','First aid arrangements explained','Accident reporting explained','Slips/trips controls explained','Manual handling explained','COSHH explained'],
+ 'Food Safety Induction':['Personal hygiene','Allergen procedure','Cross-contamination controls','Temperature controls','Cleaning schedule','Illness reporting'],
+ 'Equipment Authorisation':['Safe use demonstrated','Shutdown/isolation explained','Cleaning method explained','Fault reporting explained','Competency checked'],
+ 'Opening Procedure':['Opening checklist reviewed','Equipment checks','Food safety checks','Systems ready'],
+ 'Closing Procedure':['Closing checklist reviewed','Cleaning complete','Equipment safe','Security checks complete'],
+ 'Probation Checklist':['Attendance reviewed','Training reviewed','Performance reviewed','Conduct reviewed','Objectives agreed']
+ };
+ return m[type]||[];
+}
+function renderStaffChecklists(s){
+ if(!$('staffChecklistList'))return;
+ $('staffChecklistList').innerHTML=(s.checklists||[]).map((cl,i)=>'<div class="summarybox"><b>'+cl.type+'</b><br><span class="badge">'+cl.status+'</span><span class="muted"> · due '+(cl.due||'not set')+'</span>'+cl.items.map((it,ii)=>'<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input type="checkbox" style="width:auto;margin:0" '+(it.done?'checked':'')+' onchange="toggleStaffChecklistItem('+i+','+ii+',this.checked)"> '+it.text+'</label>').join('')+'</div>').join('')||'<span class="muted">No checklists assigned.</span>';
+}
+window.toggleStaffChecklistItem=(i,ii,done)=>{const s=selectedStaff();if(!s||!s.checklists?.[i]?.items?.[ii])return;s.checklists[i].items[ii].done=done;s.checklists[i].status=s.checklists[i].items.every(x=>x.done)?'Completed':'In progress';logStaff(s,'Checklist updated: '+s.checklists[i].type);saveStaffDb();addTimeline('Checklist',s.name+' · '+s.checklists[i].type+' '+s.checklists[i].status);saveDexManage()};
+function readEvidenceFile(input,cb){
+ const file=input?.files?.[0];if(!file)return cb(null);
+ if(file.size>1200000){alert('For this test build, evidence files must be under 1.2 MB.');return cb(null)}
+ const reader=new FileReader();reader.onload=()=>cb({name:file.name,type:file.type,data:reader.result});reader.readAsDataURL(file);
+}
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
- staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');renderMyShiftStaff();renderPayroll();renderPayroll();
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');renderMyShiftStaff();renderPayroll();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderPayroll();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
@@ -1332,6 +1437,14 @@ if($('payCreateRun'))$('payCreateRun').onclick=()=>{
  payrollAudit('Weekly payroll draft created',run.id);
  saveDexManage();previewPayrollRun(0);
 };
+
+if($('rotaWeekStart'))$('rotaWeekStart').onchange=renderRotaWeek;
+if($('saveWorkflowSettings'))$('saveWorkflowSettings').onclick=()=>{
+ if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can change workflow automation settings.');
+ dexManage.workflow={training:$('wfTraining').checked,docs:$('wfDocs').checked,incidents:$('wfIncidents').checked,payroll:$('wfPayroll').checked};addTimeline('Settings','Workflow automation settings updated');saveDexManage();
+};
+function loadWorkflowSettings(){const w=dexManage.workflow||{};if($('wfTraining'))$('wfTraining').checked=w.training!==false;if($('wfDocs'))$('wfDocs').checked=w.docs!==false;if($('wfIncidents'))$('wfIncidents').checked=w.incidents!==false;if($('wfPayroll'))$('wfPayroll').checked=w.payroll!==false}
+loadWorkflowSettings();
 renderDexManagement();
 
 const CUSTOMERDBKEY='dexters_backoffice_customer_files_test_v1';
@@ -1671,13 +1784,14 @@ function renderStaffDb(){
  }
  $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdRole').disabled=CURRENT_STAFF_ROLE!=='Super User';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';$('sdLeavingDate').value=s.leavingDate||'';$('sdLeavingReason').value=s.leavingReason||'Resigned';toggleLeavingFields();
  $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';tagPicker('sdTags',s.tags||[]);$('sdPayrollId').value=s.payrollId||'';$('sdNino').value=s.nino||'';$('sdTaxCode').value=s.taxCode||'';$('sdNiCategory').value=s.niCategory||'A';$('sdHourlyRate').value=s.hourlyRate||'';
+ renderStaffChecklists(s);
  $('staffPermissions').innerHTML=STAFF_PERMS.map(p=>'<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input class="sd-perm" type="checkbox" value="'+p+'" '+((s.permissions||[]).includes(p)?'checked':'')+(CURRENT_STAFF_ROLE==='Super User'?'':' disabled')+' style="width:auto;margin:0">'+p+'</label>').join('')+(CURRENT_STAFF_ROLE==='Super User'?'<button class="btn alt small" onclick="saveStaffPermissions()">Save permissions</button><button class="btn alt small" onclick="resetStaffPermissions()">Use role defaults</button>':'<div class="summarybox muted">Permission editing is restricted to Super User.</div>');
  const t=s.training||{};
  const cert=t.certifiedAt?'<span class="ok"><b>Certified</b></span> · '+fmtDate(t.certifiedAt):'<span class="muted">Not certified yet</span>';
  $('staffTrainingSummary').innerHTML='<div class="summarybox"><b>'+Number(t.completed||0)+' / '+Number(t.total||0)+' modules complete</b><br>'+cert+(t.finalScore!=null?'<br>Final score: '+t.finalScore+'%':'')+(t.refresherDue?'<br>Refresher due: '+fmtDate(t.refresherDue):'')+'<br><span class="tiny">Training results can be synced from Dexter\'s Staff Training profile when integrated.</span></div><button class="btn alt small" onclick="syncSelectedTraining()">Sync current test training</button>';
  $('staffDocs').innerHTML=(s.docs||[]).map((d,i)=>'<div class="summarybox"><b>'+d.type+'</b><br><span class="badge">'+(d.category||'Document')+'</span>'+(d.signed?'<span class="badge">Acknowledged</span>':'')+'<br><span class="muted">'+(d.documentDate?'Dated '+fmtDate(d.documentDate)+' · ':'')+(d.expiry?'Review/expiry '+fmtDate(d.expiry):'No review date')+(d.completedBy?' · Completed by '+d.completedBy:'')+'</span>'+(d.note?'<br><span class="tiny">'+d.note+'</span>':'')+'<div class="row" style="margin-top:8px"><button class="btn alt small" onclick="editStaffDoc('+i+')">Edit</button><button class="btn alt small" onclick="removeStaffDoc('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No document records.</span>';
  $('staffAbsence').innerHTML=(s.absences||[]).map(a=>'<div class="summarybox"><b>'+a.type+'</b><br><span class="muted">'+fmtDate(a.from)+' → '+fmtDate(a.to)+(a.note?' · '+a.note:'')+'</span></div>').join('')||'<span class="muted">No absence records.</span>';
- $('staffIncidents').innerHTML=(s.incidents||[]).map(i=>'<div class="summarybox"><b>'+i.type+' · '+fmtDate(i.date)+'</b><br><span class="muted">'+i.details+'</span>'+(i.action?'<br><span class="tiny">Action: '+i.action+'</span>':'')+'</div>').join('')||'<span class="muted">No incidents or near misses recorded.</span>';
+ $('staffIncidents').innerHTML=(s.incidents||[]).map(i=>'<div class="summarybox"><b>'+i.type+' · '+fmtDate(i.date)+'</b><br><span class="muted">'+i.details+'</span>'+(i.action?'<br><span class="tiny">Action: '+i.action+'</span>':'')+(i.evidence?'<br><span class="tiny">Evidence: '+i.evidence.name+'</span>'+(i.evidence.type&&i.evidence.type.startsWith('image/')?'<br><img class="evidence-thumb" src="'+i.evidence.data+'">':''):'')+'</div>').join('')||'<span class="muted">No incidents or near misses recorded.</span>';
  $('staffNotes').innerHTML=(s.notes||[]).map(n=>'<div class="summarybox"><span class="muted">'+n.text+'</span><br><span class="tiny">'+new Date(n.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager notes.</span>';
  $('staffAudit').innerHTML=(s.audit||[]).map(a=>'<div class="tiny" style="padding:7px 0;border-bottom:1px solid #ffffff10"><b>'+new Date(a.at).toLocaleString()+'</b> — '+a.action+'</div>').join('')||'<span class="muted">No audit history.</span>';
 }
@@ -1701,8 +1815,12 @@ window.resetStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('O
 $('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}clearStaffDocForm();saveStaffDb();renderComplianceDashboard()};
 window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo()}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';$('sdDocSigned').checked=!!d.signed;$('staffAddDoc').textContent='Save document changes'};
 window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb()};
+
+$('sdChecklistType').onchange=()=>{const items=staffChecklistDefaults($('sdChecklistType').value);if(items.length)$('sdChecklistItems').value=items.join('\n')};
+$('sdChecklistType').dispatchEvent(new Event('change'));
+$('staffAddChecklist').onclick=()=>{const s=selectedStaff();if(!s)return;const type=$('sdChecklistType').value;const raw=$('sdChecklistItems').value.trim();const items=(raw?raw.split(/\n+/):staffChecklistDefaults(type)).map(text=>({text:text.trim(),done:false})).filter(x=>x.text);s.checklists=s.checklists||[];s.checklists.unshift({type,due:$('sdChecklistDue').value,status:'Not started',items,createdAt:new Date().toISOString()});logStaff(s,'Checklist assigned: '+type);addTimeline('Checklist',s.name+' assigned '+type);saveStaffDb();saveDexManage()};
 $('staffAddAbsence').onclick=()=>{const s=selectedStaff();if(!s)return;const from=$('sdAbsFrom').value,to=$('sdAbsTo').value;if(!from||!to){alert('Add both dates.');return}s.absences=s.absences||[];s.absences.unshift({type:$('sdAbsType').value,from,to,note:$('sdAbsNote').value.trim(),at:new Date().toISOString()});logStaff(s,'Absence added: '+$('sdAbsType').value+' '+from+' to '+to);$('sdAbsNote').value='';saveStaffDb()};
-$('staffAddIncident').onclick=()=>{const s=selectedStaff();if(!s)return;const details=$('sdIncidentDetails').value.trim(),date=$('sdIncidentDate').value||new Date().toISOString().slice(0,10);if(!details){alert('Add incident details.');return}s.incidents=s.incidents||[];s.incidents.unshift({type:$('sdIncidentType').value,date,details,action:$('sdIncidentAction').value.trim(),at:new Date().toISOString()});logStaff(s,'Incident recorded: '+$('sdIncidentType').value);$('sdIncidentDetails').value='';$('sdIncidentAction').value='';saveStaffDb()};
+$('staffAddIncident').onclick=()=>{const s=selectedStaff();if(!s)return;const details=$('sdIncidentDetails').value.trim();if(!details)return;readEvidenceFile($('sdIncidentEvidence'),evidence=>{s.incidents=s.incidents||[];const rec={type:$('sdIncidentType').value,date:$('sdIncidentDate').value||new Date().toISOString().slice(0,10),details,action:$('sdIncidentAction').value.trim(),evidence,at:new Date().toISOString()};s.incidents.unshift(rec);logStaff(s,'Incident recorded: '+rec.type);addTimeline('Incident',s.name+' · '+rec.type);if(activeWorkflow('incidents')){dexManage.tasks.unshift({title:'Follow up: '+rec.type+' · '+s.name,assignee:s.id,type:'Incident action',priority:'High',due:'',details:rec.action||rec.details,resolution:'',tags:['Incident','Follow-up'],status:'Open',at:new Date().toISOString()})}$('sdIncidentDetails').value='';$('sdIncidentAction').value='';$('sdIncidentEvidence').value='';saveStaffDb();saveDexManage()})};
 $('staffAddNote').onclick=()=>{const s=selectedStaff();if(!s)return;const text=$('sdNote').value.trim();if(!text)return;s.notes=s.notes||[];s.notes.unshift({text,at:new Date().toISOString()});logStaff(s,'Manager note added');$('sdNote').value='';saveStaffDb()};
 window.syncSelectedTraining=()=>{
  const s=selectedStaff();if(!s)return;
