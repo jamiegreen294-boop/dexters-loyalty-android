@@ -194,10 +194,36 @@ const dexterDips=[
 ];
 function catKey(){const txt=$('catPack').value;return txt.includes('Breakfast')?'Breakfast':txt.includes('Lunch')?'Lunch':txt.includes('Classic')?'Classic':txt.includes('Street')?'Street':txt.includes('Chinese')?'Chinese':'Build'}
 function catPrice(){const opt=$('catPack').selectedOptions[0];return Number(opt?.dataset.price||0)}
+function allocationTarget(){
+ const key=catKey(),people=Math.max(1,Number($('catPeople').value||1));
+ if(key==='Breakfast'||key==='Lunch') return people;
+ if(key==='Chinese') return 2;
+ return null;
+}
+function renderAllocations(){
+ const selected=[...$('catRequiredChoices').querySelectorAll('.cat-choice')].filter(x=>x.checked).map(x=>x.value),target=allocationTarget(),key=catKey();
+ let box=$('catAllocationBox');
+ if(!box){box=document.createElement('div');box.id='catAllocationBox';box.className='summarybox';$('catRequiredChoices').appendChild(box)}
+ if(!selected.length){box.innerHTML='<b>Quantity allocation</b><br><span class="tiny">Select your buffet choices first.</span>';return}
+ if(target===null){
+   box.innerHTML='<b>Quantity allocation</b><br><span class="tiny">Enter how many portions/pieces you want for each selected item.</span><div style="margin-top:8px">'+selected.map(x=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span>'+x+'</span><input class="cat-alloc" data-name="'+x+'" type="number" min="1" max="200" value="1" style="width:86px;margin:0"></div>').join('')+'</div><div id="catAllocStatus" class="tiny">Enter quantities for each selected item.</div>';
+ }else{
+   box.innerHTML='<b>Quantity allocation</b><br><span class="tiny">'+(key==='Chinese'?'Choose 2 mains — quantity here represents your 2 selected mains.':'Split '+target+' people across the selected choices. The total must equal '+target+'.')+'</span><div style="margin-top:8px">'+selected.map(x=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span>'+x+'</span><input class="cat-alloc" data-name="'+x+'" type="number" min="'+(key==='Chinese'?1:0)+'" max="'+target+'" value="'+(key==='Chinese'?1:0)+'" style="width:86px;margin:0"></div>').join('')+'</div><div id="catAllocStatus" class="tiny"></div>';
+ }
+ $('catRequiredChoices').querySelectorAll('.cat-alloc').forEach(inp=>inp.oninput=updateAllocationStatus);
+ updateAllocationStatus();
+}
+function updateAllocationStatus(){
+ const inputs=[...$('catRequiredChoices').querySelectorAll('.cat-alloc')],target=allocationTarget(),key=catKey(),total=inputs.reduce((s,x)=>s+Number(x.value||0),0),el=$('catAllocStatus'); if(!el)return;
+ if(target===null){el.textContent=total+' total portions/pieces selected';return}
+ if(key==='Chinese'){el.innerHTML=total===2?'<span class="ok">2 mains selected correctly.</span>':'<span class="bad">Total must equal 2.</span>';return}
+ el.innerHTML=total===target?'<span class="ok">Allocation matches '+target+' people.</span>':'<span class="bad">'+total+' allocated · must equal '+target+'.</span>'
+}
 function renderRequiredChoices(){
  const key=catKey(),rule=buffetRules[key];
  $('catRequiredChoices').innerHTML='<b>Required buffet choices</b><br><span class="tiny">'+rule.label+'</span><div style="margin-top:8px">'+rule.items.map((x,i)=>'<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-choice" type="checkbox" value="'+x+'" style="width:auto;margin:0"><span>'+x+'</span></label>').join('')+'</div><div id="catChoiceCount" class="tiny">0 selected</div>';
- $('catRequiredChoices').querySelectorAll('.cat-choice').forEach(ch=>ch.onchange=()=>{const all=[...$('catRequiredChoices').querySelectorAll('.cat-choice')],n=all.filter(x=>x.checked).length;if(n>rule.max){ch.checked=false} $('catChoiceCount').textContent=all.filter(x=>x.checked).length+' selected · '+rule.label})
+ $('catRequiredChoices').querySelectorAll('.cat-choice').forEach(ch=>ch.onchange=()=>{const all=[...$('catRequiredChoices').querySelectorAll('.cat-choice')],n=all.filter(x=>x.checked).length;if(n>rule.max){ch.checked=false} $('catChoiceCount').textContent=all.filter(x=>x.checked).length+' selected · '+rule.label;renderAllocations()});
+ renderAllocations();
 }
 function dipAllowance(){return Math.min(10,Math.ceil(Math.max(1,Number($('catPeople').value||1))/2))}
 function updateDipAllowance(){
@@ -227,6 +253,10 @@ $('catSubmit').onclick=()=>{
  if(!name||!contact||!phone||!date||!time){$('catCustomerStatus').innerHTML='<span class="bad">Please complete the event, contact, phone, date and time.</span>';return}
  const choices=[...$('catRequiredChoices').querySelectorAll('.cat-choice')].filter(x=>x.checked).map(x=>x.value);
  if(choices.length<rule.min || choices.length>rule.max){$('catCustomerStatus').innerHTML='<span class="bad">'+rule.label+' before sending the request.</span>';return}
+ const allocations=[...$('catRequiredChoices').querySelectorAll('.cat-alloc')].map(x=>({name:x.dataset.name,qty:Number(x.value||0)})).filter(x=>x.qty>0);
+ const target=allocationTarget(),allocTotal=allocations.reduce((s,a)=>s+a.qty,0);
+ if(target!==null && allocTotal!==target){$('catCustomerStatus').innerHTML='<span class="bad">Please complete the quantity allocation. The total must equal '+target+'.</span>';return}
+ if(target===null && allocations.length!==choices.length){$('catCustomerStatus').innerHTML='<span class="bad">Please enter a quantity for every selected buffet item.</span>';return}
  const dips=[...$('catDipChoices').querySelectorAll('.cat-dip')].map(x=>({name:x.dataset.name,qty:Number(x.value||0)})).filter(x=>x.qty>0);
  const paidDips=[...$('catDipChoices').querySelectorAll('.cat-paid-dip')].map(x=>({name:x.dataset.name,qty:Number(x.value||0),price:Number(x.dataset.price||0)})).filter(x=>x.qty>0);
  const paidDipsTotal=paidDips.reduce((s,d)=>s+d.qty*d.price,0);
@@ -234,12 +264,12 @@ $('catSubmit').onclick=()=>{
  if(dipTotal>dipLimit){$('catCustomerStatus').innerHTML='<span class="bad">You can choose up to '+dipLimit+' free 2oz dip tubs for '+people+' people.</span>';return}
  if(!$('catConfirm').checked){$('catCustomerStatus').innerHTML='<span class="bad">Please confirm the request details first.</span>';return}
  const unit=catPrice(),total=unit?(people*unit+paidDipsTotal):null,id='CAT-'+String(Date.now()).slice(-6);
- cat.unshift({id,name,contact,phone,people,date,time,pack,notes,total,choices,dips,paidDips,paidDipsTotal,status:'Awaiting staff review',created:new Date().toISOString()});
+ cat.unshift({id,name,contact,phone,people,date,time,pack,notes,total,choices,allocations,dips,paidDips,paidDipsTotal,status:'Awaiting staff review',created:new Date().toISOString()});
  localStorage.setItem(CATKEY,JSON.stringify(cat));$('catCustomerStatus').innerHTML='<b>'+id+'</b><br><span class="ok">Request sent for staff review.</span><br><span class="muted">You can see its test status in the staff queue on this device.</span>';renderCat()
 };
 function saveCat(){localStorage.setItem(CATKEY,JSON.stringify(cat));renderCat()}
 function renderCat(){
- $('catQueue').innerHTML=cat.map((x,i)=>'<div class="summarybox"><b>'+x.id+' · '+x.name+'</b><br>'+x.contact+' · '+x.phone+'<br>'+x.people+' people · '+x.date+' '+x.time+'<br><span class="muted">'+x.pack+(x.notes?' · Notes: '+x.notes:'')+'</span><br><span class="muted"><b>Choices:</b> '+((x.choices||[]).join(', ')||'None')+'</span><br><span class="muted"><b>Free 2oz dips:</b> '+((x.dips||[]).map(d=>d.qty+' × '+d.name).join(', ')||'None')+'</span><br><span class="muted"><b>Paid extra dips:</b> '+((x.paidDips||[]).map(d=>d.qty+' × '+d.name+' (£'+(d.qty*d.price).toFixed(2)+')').join(', ')||'None')+'</span><br><b>'+(x.total!=null?'Estimate £'+Number(x.total).toFixed(2):'Staff quote required')+'</b><br><span class="'+(x.status==='Approved'?'ok':x.status==='Rejected'?'bad':'')+'">'+x.status+'</span><div class="row" style="margin-top:9px"><button class="btn small" onclick="approveCat('+i+')">Approve</button><button class="btn alt small" onclick="amendCat('+i+')">Amend people</button><button class="btn alt small" onclick="declineCat('+i+')">Reject</button></div></div>').join('')||'No test requests yet.'
+ $('catQueue').innerHTML=cat.map((x,i)=>'<div class="summarybox"><b>'+x.id+' · '+x.name+'</b><br>'+x.contact+' · '+x.phone+'<br>'+x.people+' people · '+x.date+' '+x.time+'<br><span class="muted">'+x.pack+(x.notes?' · Notes: '+x.notes:'')+'</span><br><span class="muted"><b>Choices:</b> '+((x.choices||[]).join(', ')||'None')+'</span><br><span class="muted"><b>Quantities:</b> '+((x.allocations||[]).map(a=>a.qty+' × '+a.name).join(', ')||'None')+'</span><br><span class="muted"><b>Free 2oz dips:</b> '+((x.dips||[]).map(d=>d.qty+' × '+d.name).join(', ')||'None')+'</span><br><span class="muted"><b>Paid extra dips:</b> '+((x.paidDips||[]).map(d=>d.qty+' × '+d.name+' (£'+(d.qty*d.price).toFixed(2)+')').join(', ')||'None')+'</span><br><b>'+(x.total!=null?'Estimate £'+Number(x.total).toFixed(2):'Staff quote required')+'</b><br><span class="'+(x.status==='Approved'?'ok':x.status==='Rejected'?'bad':'')+'">'+x.status+'</span><div class="row" style="margin-top:9px"><button class="btn small" onclick="approveCat('+i+')">Approve</button><button class="btn alt small" onclick="amendCat('+i+')">Amend people</button><button class="btn alt small" onclick="declineCat('+i+')">Reject</button></div></div>').join('')||'No test requests yet.'
 }
 window.approveCat=i=>{cat[i].status='Approved';saveCat()};
 window.declineCat=i=>{cat[i].status='Rejected';saveCat()};
