@@ -28,6 +28,8 @@ function start(){
  home.prepend(top,hero,collection,grid,offers,usual,current);home.classList.add('work-home');
  // The quick action and bottom navigation already provide WhatsApp access.
  for(const heading of home.querySelectorAll('.card > h2')){if(heading.textContent.trim()==='💬 Message Dexter’s')heading.closest('.card').remove()}
+ const pageHomeIds=['qrPage','accountPage','spinPage','staffPage','menuPage'];
+ for(const id of pageHomeIds){const page=$(id);if(page&&!page.querySelector('.work-page-home')){const b=node('button','work-page-home','← Home');b.type='button';b.onclick=()=>nav('homePage');page.prepend(b)}}
  const menuLink=node('button','work-small','Browse the full menu');menuLink.type='button';menuLink.onclick=()=>nav('menuPage');home.append(menuLink);
  const staffLink=node('button','work-small','Staff / Admin');staffLink.type='button';staffLink.onclick=()=>nav('staffPage');top.append(staffLink);const staffNav=$('staffNav');function syncStaff(){staffLink.hidden=!staffNav||staffNav.classList.contains('hidden')}syncStaff();if(staffNav)new MutationObserver(syncStaff).observe(staffNav,{attributes:true,attributeFilter:['class']});
  const homeNav=node('nav','');homeNav.id='workHomeNav';homeNav.setAttribute('aria-label','Customer home navigation');homeNav.innerHTML='<button type="button" id="workNavHome" class="active" aria-current="page"><b>🏠</b>Home</button><a href="/collection-order-test.html"><b>🍔</b>Order</a><button type="button" id="workNavRewards"><b>🎁</b>Rewards</button><a href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><b>💬</b>Dexter</a><button type="button" id="workNavAccount"><b>👤</b>Account</button>';document.body.append(homeNav);
