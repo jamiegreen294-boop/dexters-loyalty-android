@@ -47,7 +47,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-2-menu-reports">
+<main class="wrap" data-build="2026-09-08-website-pass-3-payroll-cleanup">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -1306,7 +1306,7 @@ let CURRENT_STAFF_ROLE='Staff';
 const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
 let dexManage={
  tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
- recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],holidayLedger:[],paySettings:{},payrollRuns:[],payrollAudit:[],menuChanges:[],menuAvailability:[]
+ recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],timeline:[],workflow:{training:true,docs:true,incidents:true,payroll:true},leaveRequests:[],shiftSwaps:[],availability:{},notifications:[],announcements:[],foodSafety:[],policies:[],policyAcks:[],formTemplates:[],timesheets:[],equipmentService:[],stock:[],waste:[],suppliers:[],purchases:[],salesDays:[],cashups:[],financialAdjustments:[],recipes:[],handoverNotes:[],emergencyProcedures:[],systemHealth:[],errorLog:[],holidayLedger:[],paySettings:{},menuChanges:[],menuAvailability:[]
 };
 try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
 
@@ -2063,7 +2063,7 @@ function payrollAudit(action,runId=''){
  dexManage.payrollAudit.unshift({at:new Date().toISOString(),role:CURRENT_STAFF_ROLE,action,runId});
  dexManage.payrollAudit=dexManage.payrollAudit.slice(0,200);
 }
-function renderPayroll(){
+function renderLegacyPayroll(){
  if(!$('payrollRuns'))return;
  payrollStaffOptions();loadPaySetting();
  const runs=dexManage.payrollRuns||[];
@@ -2503,7 +2503,7 @@ function renderReports(){
 }
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
- staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderPayroll();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();renderMenuAdmin();renderReports();
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();renderMenuAdmin();renderReports();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
