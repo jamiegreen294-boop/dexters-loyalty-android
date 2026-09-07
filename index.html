@@ -47,7 +47,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-6-role-guards">
+<main class="wrap" data-build="2026-09-08-website-pass-7-hr-forms">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -490,9 +490,15 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="grid"><div class="field">Email<input id="recEmail" type="email"></div><div class="field">Role applied for<input id="recRole"></div></div>
 <div class="grid"><div class="field">Applied date<input id="recApplied" type="date"></div><div class="field">Stage<select id="recStage"><option>Applied</option><option>Shortlisted</option><option>Interview</option><option>Trial shift</option><option>Offer</option><option>Hired</option><option>Unsuccessful</option></select></div></div>
 <div class="field">Availability<textarea id="recAvailability" rows="3"></textarea></div>
+<div class="grid"><div class="field">Interview / trial date<input id="recInterviewDate" type="date"></div><div class="field">Interviewer<input id="recInterviewer"></div></div>
 <div class="field">Interview / trial notes<textarea id="recInterview" rows="4"></textarea></div>
+<div class="grid"><div class="field">Interview outcome<select id="recInterviewOutcome"><option>Pending</option><option>Proceed</option><option>Hold</option><option>Do not proceed</option></select></div><div class="field">Score / rating<input id="recScore" placeholder="e.g. 8/10"></div></div>
 <div class="field">Right-to-work status<select id="recRTW"><option>Not checked</option><option>Checked</option><option>Follow-up required</option></select></div>
+<div class="grid"><div class="field">RTW check method<select id="recRTWMethod"><option>Not recorded</option><option>Original documents</option><option>Online share code</option><option>Other permitted check</option></select></div><div class="field">RTW check date<input id="recRTWDate" type="date"></div></div>
+<div class="field">RTW document/share-code reference<input id="recRTWRef"></div>
+<div class="field">References / previous employment notes<textarea id="recReferences" rows="3"></textarea></div>
 <div class="field">Offer / onboarding actions<textarea id="recOnboarding" rows="4"></textarea></div>
+<div class="grid"><div class="field">Proposed start date<input id="recStartDate" type="date"></div><div class="field">Final decision<select id="recDecision"><option>Pending</option><option>Offer</option><option>Hired</option><option>Unsuccessful</option></select></div></div>
 <div class="field">Tags<div id="recTags" class="tag-picker"></div></div>
 <button class="btn" id="recAdd">Save applicant</button>
 </div>
@@ -981,6 +987,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="field">Category<select id="sdDocCategory"></select></div>
 <div class="field">Template<select id="sdDocTemplate"></select></div>
 <div id="sdDocTemplateInfo" class="summarybox muted">Choose a template.</div>
+<div id="sdDocStructuredFields"></div>
 <div class="grid">
 <div class="field">Document date<input id="sdDocDate" type="date"></div>
 <div class="field">Review / expiry date<input id="sdDocExpiry" type="date"></div>
@@ -2505,7 +2512,7 @@ function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
  staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();renderMenuAdmin();renderReports();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
- if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
+ if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+' · RTW '+(r.rtw||'Not checked')+'</span><br><span class="tiny">'+(r.interviewOutcome||r.stage||'')+(r.decision?' · Decision: '+r.decision:'')+(r.interview?' · '+r.interview:'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
  if($('rotaList'))$('rotaList').innerHTML=dexManage.rota.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map((r,i)=>{
    const worked=shiftWorkedMinutes(r);
@@ -2531,7 +2538,7 @@ function renderDexManagement(){
 window.removeDexTag=i=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');if(dexManage.tags[i]?.system)return;dexManage.tags.splice(i,1);saveDexManage()};
 window.closeDexTask=i=>{if(!dexManage.tasks[i])return;dexManage.tasks[i].status='Completed';saveDexManage()};
 if($('addTagBtn'))$('addTagBtn').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');const name=$('newTagName').value.trim();if(!name||dexManage.tags.some(t=>t.name.toLowerCase()===name.toLowerCase()))return;dexManage.tags.push({name,system:false});$('newTagName').value='';saveDexManage()};
-if($('recAdd'))$('recAdd').onclick=()=>{const name=$('recName').value.trim();if(!name)return;dexManage.recruitment.unshift({name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value.trim(),applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interview:$('recInterview').value.trim(),rtw:$('recRTW').value,onboarding:$('recOnboarding').value.trim(),tags:pickedTags('recTags'),at:new Date().toISOString()});saveDexManage()};
+if($('recAdd'))$('recAdd').onclick=()=>{const name=$('recName').value.trim();if(!name)return;dexManage.recruitment.unshift({name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value.trim(),applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interviewDate:$('recInterviewDate').value,interviewer:$('recInterviewer').value.trim(),interview:$('recInterview').value.trim(),interviewOutcome:$('recInterviewOutcome').value,score:$('recScore').value.trim(),rtw:$('recRTW').value,rtwMethod:$('recRTWMethod').value,rtwDate:$('recRTWDate').value,rtwRef:$('recRTWRef').value.trim(),references:$('recReferences').value.trim(),onboarding:$('recOnboarding').value.trim(),startDate:$('recStartDate').value,decision:$('recDecision').value,tags:pickedTags('recTags'),at:new Date().toISOString()});saveDexManage()};
 if($('appAdd'))$('appAdd').onclick=()=>{if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
 if($('rotaAdd'))$('rotaAdd').onclick=async()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return;
  const item={staffId:$('rotaStaff').value,date:$('rotaDate').value,area:$('rotaArea').value.trim(),start:$('rotaStart').value,end:$('rotaEnd').value,status:$('rotaStatus').value,notes:$('rotaNotes').value.trim(),tags:pickedTags('rotaTags'),clockInAt:null,clockOutAt:null,timeAudit:[],createdAt:new Date().toISOString()};
@@ -2924,13 +2931,123 @@ function selectedStaffDocTemplate(){
  const cat=$('sdDocCategory')?.value,id=$('sdDocTemplate')?.value;
  return (STAFF_DOCUMENT_LIBRARY[cat]||[]).find(x=>x.id===id)||null;
 }
+const STAFF_DOC_FORM_FIELDS={
+ sickness:[
+  {id:'reportedDate',label:'Date/time sickness was reported',type:'datetime-local'},
+  {id:'reportedTo',label:'Reported to',type:'text'},
+  {id:'firstDay',label:'First day absent',type:'date'},
+  {id:'expectedReturn',label:'Expected return date',type:'date'},
+  {id:'reasonCategory',label:'Reason / illness category',type:'text'},
+  {id:'symptoms',label:'Symptoms / reason given',type:'textarea'},
+  {id:'workRelated',label:'Could this be work-related?',type:'select',options:['No','Yes','Unsure']},
+  {id:'foodHandlerSymptoms',label:'Vomiting / diarrhoea / food-handler exclusion concern?',type:'select',options:['No','Yes','Not applicable']},
+  {id:'selfCert',label:'Self-certification / fit note status',type:'select',options:['Not required yet','Self-certified','Fit note received','Fit note requested']},
+  {id:'fitNoteDates',label:'Fit note dates / reference',type:'text'},
+  {id:'contactPlan',label:'Agreed contact during absence',type:'textarea'},
+  {id:'actualReturn',label:'Actual return date',type:'date'}
+ ],
+ return_work:[
+  {id:'meetingDate',label:'Return-to-work meeting date',type:'date'},
+  {id:'absenceFrom',label:'Absence from',type:'date'},
+  {id:'absenceTo',label:'Absence to / last day absent',type:'date'},
+  {id:'reason',label:'Reason for absence / summary',type:'textarea'},
+  {id:'fitToReturn',label:'Staff confirms fit to return?',type:'select',options:['Yes','Yes, with support/adjustments','No — escalate']},
+  {id:'ongoingSymptoms',label:'Any ongoing symptoms / treatment?',type:'textarea'},
+  {id:'medicationImpact',label:'Any medication or treatment affecting work?',type:'textarea'},
+  {id:'workCause',label:'Does the staff member believe work contributed?',type:'select',options:['No','Yes','Unsure']},
+  {id:'adjustments',label:'Temporary adjustments / support agreed',type:'textarea'},
+  {id:'foodHandlerCheck',label:'Food-handler fitness / exclusion considered?',type:'select',options:['Not applicable','Fit for food handling','Restriction / exclusion required']},
+  {id:'absencePattern',label:'Attendance pattern / previous related absence discussed?',type:'textarea'},
+  {id:'followUp',label:'Follow-up action and review date',type:'textarea'},
+  {id:'staffComments',label:'Staff member comments',type:'textarea'}
+ ],
+ right_to_work:[
+  {id:'checkDate',label:'Check date',type:'date'},
+  {id:'method',label:'Check method',type:'select',options:['Original documents','Online share code','Other permitted check']},
+  {id:'documentType',label:'Document / status checked',type:'text'},
+  {id:'reference',label:'Document/share-code reference',type:'text'},
+  {id:'expiry',label:'Permission / document expiry (if applicable)',type:'date'},
+  {id:'recheck',label:'Recheck date (if required)',type:'date'},
+  {id:'checker',label:'Checker name',type:'text'},
+  {id:'outcome',label:'Outcome',type:'select',options:['Right to work confirmed','Time-limited right to work','Follow-up required']}
+ ],
+ holiday:[
+  {id:'requestDate',label:'Request date',type:'date'},
+  {id:'from',label:'Holiday from',type:'date'},
+  {id:'to',label:'Holiday to',type:'date'},
+  {id:'daysHours',label:'Days / hours requested',type:'text'},
+  {id:'decision',label:'Decision',type:'select',options:['Pending','Approved','Rejected','Amended']},
+  {id:'decisionReason',label:'Decision / amendment reason',type:'textarea'}
+ ],
+ probation:[
+  {id:'reviewDate',label:'Review date',type:'date'},
+  {id:'attendance',label:'Attendance / punctuality',type:'textarea'},
+  {id:'performance',label:'Performance against role',type:'textarea'},
+  {id:'conduct',label:'Conduct / teamwork',type:'textarea'},
+  {id:'training',label:'Training completed / still required',type:'textarea'},
+  {id:'support',label:'Support / improvements required',type:'textarea'},
+  {id:'outcome',label:'Outcome',type:'select',options:['Pass probation','Extend probation','Further review required','End employment']},
+  {id:'nextReview',label:'Next review date',type:'date'}
+ ],
+ grievance:[
+  {id:'raisedDate',label:'Date grievance raised',type:'date'},
+  {id:'issue',label:'Issue raised',type:'textarea'},
+  {id:'evidence',label:'Evidence / witnesses supplied',type:'textarea'},
+  {id:'meeting',label:'Meeting details',type:'textarea'},
+  {id:'decision',label:'Decision and reasons',type:'textarea'},
+  {id:'appeal',label:'Appeal / follow-up',type:'textarea'}
+ ],
+ disciplinary:[
+  {id:'caseDate',label:'Case / investigation date',type:'date'},
+  {id:'issue',label:'Allegation / issue',type:'textarea'},
+  {id:'investigation',label:'Investigation and evidence',type:'textarea'},
+  {id:'staffResponse',label:'Staff response',type:'textarea'},
+  {id:'decision',label:'Decision',type:'textarea'},
+  {id:'action',label:'Action / warning issued',type:'textarea'},
+  {id:'appeal',label:'Appeal information / outcome',type:'textarea'}
+ ],
+ flexible:[
+  {id:'requestDate',label:'Request date',type:'date'},
+  {id:'currentPattern',label:'Current working pattern',type:'textarea'},
+  {id:'requestedPattern',label:'Requested working pattern',type:'textarea'},
+  {id:'requestedStart',label:'Requested start date',type:'date'},
+  {id:'consideration',label:'Business consideration / discussion',type:'textarea'},
+  {id:'outcome',label:'Outcome',type:'select',options:['Pending','Approved','Approved with changes','Rejected']},
+  {id:'reason',label:'Outcome reason / agreed changes',type:'textarea'},
+  {id:'reviewDate',label:'Review date',type:'date'}
+ ],
+ exit_interview:[
+  {id:'leaveDate',label:'Leaving date',type:'date'},
+  {id:'reason',label:'Reason for leaving',type:'textarea'},
+  {id:'whatWorked',label:'What went well at Dexter\'s?',type:'textarea'},
+  {id:'improvements',label:'What could be improved?',type:'textarea'},
+  {id:'management',label:'Management / support feedback',type:'textarea'},
+  {id:'training',label:'Training feedback',type:'textarea'},
+  {id:'rehire',label:'Would rehire?',type:'select',options:['Yes','No','Review if reapplying']},
+  {id:'actions',label:'Management actions from feedback',type:'textarea'}
+ ]
+};
+function renderStaffDocStructuredFields(values={}){
+ const box=$('sdDocStructuredFields');if(!box)return;
+ const t=selectedStaffDocTemplate(),fields=t?STAFF_DOC_FORM_FIELDS[t.id]:null;
+ if(!fields){box.innerHTML='';return}
+ box.innerHTML='<div class="summarybox"><b>Complete '+t.title+'</b><br><span class="tiny">This template has its own questions so HR records are not all the same.</span></div>'+fields.map(f=>{
+   const v=values?.[f.id]??'';
+   if(f.type==='textarea')return '<div class="field">'+f.label+'<textarea class="sd-structured" data-key="'+f.id+'" rows="3">'+String(v).replace(/</g,'&lt;')+'</textarea></div>';
+   if(f.type==='select')return '<div class="field">'+f.label+'<select class="sd-structured" data-key="'+f.id+'">'+f.options.map(o=>'<option '+(String(v)===o?'selected':'')+'>'+o+'</option>').join('')+'</select></div>';
+   return '<div class="field">'+f.label+'<input class="sd-structured" data-key="'+f.id+'" type="'+f.type+'" value="'+String(v).replace(/"/g,'&quot;')+'"></div>';
+ }).join('');
+}
+function collectStaffDocStructuredFields(){
+ const out={};document.querySelectorAll('#sdDocStructuredFields .sd-structured').forEach(el=>out[el.dataset.key]=el.value);return out;
+}
 function updateStaffDocInfo(){
  const t=selectedStaffDocTemplate(),box=$('sdDocTemplateInfo');if(!box)return;
- box.innerHTML=t?'<b>'+t.title+'</b><br><span class="muted">Review: '+t.review+'</span><br><span class="tiny">'+t.prompt+'</span>':'Choose a template.';
+ box.innerHTML=t?'<b>'+t.title+'</b><br><span class="muted">Review: '+t.review+'</span><br><span class="tiny">'+t.prompt+'</span>':'Choose a template.';renderStaffDocStructuredFields();
 }
 function clearStaffDocForm(){
  editingStaffDocIndex=null;
- $('sdDocDate').value=new Date().toISOString().slice(0,10);$('sdDocExpiry').value='';$('sdDocCompletedBy').value='';$('sdDocNote').value='';$('sdDocSigned').checked=false;$('staffAddDoc').textContent='Add completed document to staff file';
+ $('sdDocDate').value=new Date().toISOString().slice(0,10);$('sdDocExpiry').value='';$('sdDocCompletedBy').value='';$('sdDocNote').value='';$('sdDocSigned').checked=false;renderStaffDocStructuredFields();$('staffAddDoc').textContent='Add completed document to staff file';
 }
 function renderComplianceDashboard(){
  if(typeof staffDb==='undefined')return;
@@ -2981,7 +3098,7 @@ function renderStaffDb(){
  const t=s.training||{};
  const cert=t.certifiedAt?'<span class="ok"><b>Certified</b></span> · '+fmtDate(t.certifiedAt):'<span class="muted">Not certified yet</span>';
  $('staffTrainingSummary').innerHTML='<div class="summarybox"><b>'+Number(t.completed||0)+' / '+Number(t.total||0)+' modules complete</b><br>'+cert+(t.finalScore!=null?'<br>Final score: '+t.finalScore+'%':'')+(t.refresherDue?'<br>Refresher due: '+fmtDate(t.refresherDue):'')+'<br><span class="tiny">Training results can be synced from Dexter\'s Staff Training profile when integrated.</span></div><button class="btn alt small" onclick="syncSelectedTraining()">Sync current test training</button>';
- $('staffDocs').innerHTML=(s.docs||[]).map((d,i)=>'<div class="summarybox"><b>'+d.type+'</b><br><span class="badge">'+(d.category||'Document')+'</span>'+(d.signed?'<span class="badge">Acknowledged</span>':'')+'<br><span class="muted">'+(d.documentDate?'Dated '+fmtDate(d.documentDate)+' · ':'')+(d.expiry?'Review/expiry '+fmtDate(d.expiry):'No review date')+(d.completedBy?' · Completed by '+d.completedBy:'')+'</span>'+(d.note?'<br><span class="tiny">'+d.note+'</span>':'')+'<div class="row" style="margin-top:8px"><button class="btn alt small" onclick="editStaffDoc('+i+')">Edit</button><button class="btn alt small" onclick="removeStaffDoc('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No document records.</span>';
+ $('staffDocs').innerHTML=(s.docs||[]).map((d,i)=>'<div class="summarybox"><b>'+d.type+'</b><br><span class="badge">'+(d.category||'Document')+'</span>'+(d.signed?'<span class="badge">Acknowledged</span>':'')+'<br><span class="muted">'+(d.documentDate?'Dated '+fmtDate(d.documentDate)+' · ':'')+(d.expiry?'Review/expiry '+fmtDate(d.expiry):'No review date')+(d.completedBy?' · Completed by '+d.completedBy:'')+'</span>'+(d.note?'<br><span class="tiny">'+d.note+'</span>':'')+(d.formData&&Object.values(d.formData).filter(Boolean).length?'<br><span class="tiny">Structured form completed · '+Object.values(d.formData).filter(Boolean).length+' field(s)</span>':'')+'<div class="row" style="margin-top:8px"><button class="btn alt small" onclick="editStaffDoc('+i+')">Edit</button><button class="btn alt small" onclick="removeStaffDoc('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No document records.</span>';
  $('staffAbsence').innerHTML=(s.absences||[]).map(a=>'<div class="summarybox"><b>'+a.type+'</b><br><span class="muted">'+fmtDate(a.from)+' → '+fmtDate(a.to)+(a.note?' · '+a.note:'')+'</span></div>').join('')||'<span class="muted">No absence records.</span>';
  $('staffIncidents').innerHTML=(s.incidents||[]).map(i=>'<div class="summarybox"><b>'+i.type+' · '+fmtDate(i.date)+'</b><br><span class="muted">'+i.details+'</span>'+(i.action?'<br><span class="tiny">Action: '+i.action+'</span>':'')+(i.evidence?'<br><span class="tiny">Evidence: '+i.evidence.name+'</span>'+(i.evidence.type&&i.evidence.type.startsWith('image/')?'<br><img class="evidence-thumb" src="'+i.evidence.data+'">':''):'')+'</div>').join('')||'<span class="muted">No incidents or near misses recorded.</span>';
  $('staffNotes').innerHTML=(s.notes||[]).map(n=>'<div class="summarybox"><span class="muted">'+n.text+'</span><br><span class="tiny">'+new Date(n.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager notes.</span>';
@@ -3044,12 +3161,12 @@ $('staffSaveProfile').onclick=()=>{
 };
 window.saveStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated by Super User');saveStaffDb()};
 window.resetStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=roleDefaultPerms(s.role);logStaff(s,'Permissions reset to '+s.role+' defaults by Super User');saveStaffDb()};
-$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}clearStaffDocForm();saveStaffDb();renderComplianceDashboard();
+$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),formData:collectStaffDocStructuredFields(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}clearStaffDocForm();saveStaffDb();renderComplianceDashboard();
  if(CORE_DB_CONNECTED&&editingStaffDocIndex===null){
    SB.from('backoffice_staff_documents').insert({staff_record_id:s.id,category:rec.category,document_type:rec.type,document_date:rec.documentDate||null,review_expiry_date:rec.expiry||null,completed_by:rec.completedBy||null,acknowledged:!!rec.signed,details:rec.note||null,created_by:SECURE_SESSION.user.id}).then(({error})=>{if(error)alert('Secure document save failed: '+error.message);else loadSecureCoreData()});
  }
 };
-window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo()}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';$('sdDocSigned').checked=!!d.signed;$('staffAddDoc').textContent='Save document changes'};
+window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo();renderStaffDocStructuredFields(d.formData||{})}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';$('sdDocSigned').checked=!!d.signed;$('staffAddDoc').textContent='Save document changes'};
 window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb()};
 
 $('sdChecklistType').onchange=()=>{const items=staffChecklistDefaults($('sdChecklistType').value);if(items.length)$('sdChecklistItems').value=items.join('\n')};
