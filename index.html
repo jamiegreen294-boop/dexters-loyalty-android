@@ -35,6 +35,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 .dex-backoffice-nav{background:#15101d;border-right:1px solid #342640;padding:16px;position:relative}.dex-backoffice-logo{font-size:19px;font-weight:1000;margin-bottom:4px}.dex-backoffice-nav .navsub{font-size:11px;color:#a997b4;margin-bottom:16px}
 .dex-backoffice-nav .tab{display:block;width:100%;text-align:left;margin:4px 0;border:0;border-radius:10px;padding:10px 12px;background:transparent;color:#d8cce0;font-weight:850}.dex-backoffice-nav .tab.active,.dex-backoffice-nav .tab:hover{background:#2b1d38;color:#fff}.dex-backoffice-nav .navgroup{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#8f7d9a;margin:16px 8px 5px}
 .dex-backoffice-main{padding:18px;min-width:0}.dex-backoffice-main>.panel{margin:0}.bo-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.bo-kpi{background:#15101d;border:1px solid #3b2a49;border-radius:14px;padding:13px}.bo-kpi b{display:block;font-size:24px}.bo-module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.bo-module{background:#15101d;border:1px solid #3b2a49;border-radius:15px;padding:14px}.bo-module h3{margin:0 0 6px}.bo-rolebar{display:flex;gap:6px;flex-wrap:wrap}.bo-placeholder{padding:18px;border:1px dashed #654a76;border-radius:15px;background:#120d19}
+.tag-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;border:1px solid #654a76;background:#22172d;font-size:12px;font-weight:800;margin:3px}.tag-chip.system{border-color:#8b6ba1}.tag-chip button{border:0;background:transparent;color:inherit;padding:0;font-weight:1000}.tag-picker{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.tag-picker label{display:inline-flex;gap:5px;align-items:center;border:1px solid #4d385c;border-radius:999px;padding:6px 9px}.tag-picker input{width:auto;margin:0}
 @media(max-width:980px){.dex-backoffice-shell{grid-template-columns:1fr}.dex-backoffice-nav{border-right:0;border-bottom:1px solid #342640;display:flex;gap:5px;overflow:auto;align-items:center}.dex-backoffice-logo,.dex-backoffice-nav .navsub,.dex-backoffice-nav .navgroup{display:none}.dex-backoffice-nav .tab{width:auto;white-space:nowrap}.bo-module-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.bo-kpis{grid-template-columns:repeat(2,1fr)}.bo-module-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.top{display:block}.pill{display:inline-block;margin-top:8px}}
 </style>
@@ -56,7 +57,11 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <button class="tab" data-tab="staffdb" data-minrole="Team Leader">Staff</button>
 <button class="tab" data-tab="training" data-minrole="Staff">Training</button>
 <button class="tab" data-tab="compliance" data-minrole="Team Leader">HR & Compliance</button>
+<button class="tab" data-tab="recruitment" data-minrole="Manager">Recruitment</button>
+<button class="tab" data-tab="appraisals" data-minrole="Team Leader">Supervisions & Appraisals</button>
 <div class="navgroup">Operations</div>
+<button class="tab" data-tab="rota" data-minrole="Staff">Rota & Timekeeping</button>
+<button class="tab" data-tab="handover" data-minrole="Staff">Tasks & Handover</button>
 <button class="tab" data-tab="orders" data-minrole="Staff">Orders & KDS</button>
 <button class="tab" data-tab="catering" data-minrole="Team Leader">Catering</button>
 <button class="tab" data-tab="customers" data-minrole="Team Leader">Customers & Loyalty</button>
@@ -65,6 +70,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <button class="tab" data-tab="deals" data-minrole="Team Leader">Deals Engine</button>
 <button class="tab" data-tab="challenges" data-minrole="Team Leader">Challenges</button>
 <div class="navgroup">Management</div>
+<button class="tab" data-tab="maintenance" data-minrole="Team Leader">Maintenance & Equipment</button>
 <button class="tab" data-tab="reports" data-minrole="Manager">Reports</button>
 <button class="tab" data-tab="settings" data-minrole="Super User">Settings & Permissions</button>
 </aside>
@@ -202,7 +208,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="compliance">
-<div class="card notice"><b>HR & Compliance</b><p class="muted">Central Dexter's view of HR, Health & Safety, Food Safety and staff-file evidence.</p></div>
+<div class="card notice"><b>HR & Compliance</b><p class="muted">Central Dexter's view of HR, Health & Safety, Food Safety, policies, review dates and evidence.</p></div>
 <div class="bo-kpis">
 <div class="bo-kpi"><span class="muted">Staff docs</span><b id="compDocCount">0</b></div>
 <div class="bo-kpi"><span class="muted">Due in 30 days</span><b id="compDueCount">0</b></div>
@@ -214,6 +220,94 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="card"><h2>Compliance alerts</h2><div id="compAlerts"></div></div>
 </div>
 <div class="card" style="margin-top:14px"><h2>Staff document register</h2><div id="compRegister"></div></div>
+<div class="grid" style="margin-top:14px">
+<div class="card">
+<h2>Master Compliance Library</h2><div id="masterComplianceList"></div>
+<div class="field">Record type<select id="masterCompType">
+<option>General Risk Assessment</option><option>Fire Risk Assessment</option><option>COSHH Assessment</option><option>CookSafe / Food Safety Procedure</option><option>Cleaning Schedule</option><option>Pest Control Record</option><option>Emergency Procedure</option><option>Equipment Safety Check</option><option>Policy / Procedure</option>
+</select></div>
+<div class="field">Title<input id="masterCompTitle" placeholder="e.g. Kitchen slips & trips risk assessment"></div>
+<div class="grid"><div class="field">Effective date<input id="masterCompDate" type="date"></div><div class="field">Review date<input id="masterCompReview" type="date"></div></div>
+<div class="field">Owner / responsible person<input id="masterCompOwner"></div>
+<div class="field">Hazard / purpose<textarea id="masterCompHazard" rows="3"></textarea></div>
+<div class="field">Who may be affected / scope<textarea id="masterCompScope" rows="3"></textarea></div>
+<div class="field">Controls / procedure<textarea id="masterCompControls" rows="5"></textarea></div>
+<div class="field">Further actions required<textarea id="masterCompActions" rows="4"></textarea></div>
+<div class="field">Tags<div id="masterCompTags" class="tag-picker"></div></div>
+<button class="btn alt" id="masterCompAdd">Save master compliance record</button>
+</div>
+<div class="card"><h2>Compliance Calendar</h2><div id="complianceCalendar"></div></div>
+</div>
+</section>
+
+<section class="panel" id="recruitment">
+<div class="card notice"><b>Recruitment & Onboarding</b><p class="muted">Track applicants, interviews, offers and onboarding into a Dexter's staff file.</p></div>
+<div class="grid">
+<div class="card"><h2>Applicants</h2><div id="recruitList"></div></div>
+<div class="card"><h2>Applicant form</h2>
+<div class="grid"><div class="field">Full name<input id="recName"></div><div class="field">Phone<input id="recPhone" inputmode="tel"></div></div>
+<div class="grid"><div class="field">Email<input id="recEmail" type="email"></div><div class="field">Role applied for<input id="recRole"></div></div>
+<div class="grid"><div class="field">Applied date<input id="recApplied" type="date"></div><div class="field">Stage<select id="recStage"><option>Applied</option><option>Shortlisted</option><option>Interview</option><option>Trial shift</option><option>Offer</option><option>Hired</option><option>Unsuccessful</option></select></div></div>
+<div class="field">Availability<textarea id="recAvailability" rows="3"></textarea></div>
+<div class="field">Interview / trial notes<textarea id="recInterview" rows="4"></textarea></div>
+<div class="field">Right-to-work status<select id="recRTW"><option>Not checked</option><option>Checked</option><option>Follow-up required</option></select></div>
+<div class="field">Offer / onboarding actions<textarea id="recOnboarding" rows="4"></textarea></div>
+<div class="field">Tags<div id="recTags" class="tag-picker"></div></div>
+<button class="btn" id="recAdd">Save applicant</button>
+</div>
+</div>
+</section>
+
+<section class="panel" id="appraisals">
+<div class="card notice"><b>Supervisions & Appraisals</b><p class="muted">1-to-1s, probation reviews, performance reviews and agreed actions saved against staff records.</p></div>
+<div class="grid">
+<div class="card"><h2>Review history</h2><div id="appraisalList"></div></div>
+<div class="card"><h2>Review form</h2>
+<div class="field">Staff member<select id="appStaff"></select></div>
+<div class="grid"><div class="field">Review type<select id="appType"><option>1-to-1</option><option>Probation review</option><option>Performance review</option><option>Return-to-work follow-up</option><option>Training review</option></select></div><div class="field">Review date<input id="appDate" type="date"></div></div>
+<div class="field">What is going well<textarea id="appStrengths" rows="3"></textarea></div>
+<div class="field">Concerns / support needed<textarea id="appConcerns" rows="3"></textarea></div>
+<div class="field">Objectives / agreed actions<textarea id="appActions" rows="4"></textarea></div>
+<div class="field">Training / development needs<textarea id="appTraining" rows="3"></textarea></div>
+<div class="field">Staff comments<textarea id="appStaffComments" rows="3"></textarea></div>
+<div class="grid"><div class="field">Outcome<select id="appOutcome"><option>Satisfactory</option><option>Support required</option><option>Improvement plan</option><option>Escalate to manager</option></select></div><div class="field">Next review<input id="appNext" type="date"></div></div>
+<div class="field">Tags<div id="appTags" class="tag-picker"></div></div>
+<button class="btn" id="appAdd">Save review</button>
+</div>
+</div>
+</section>
+
+<section class="panel" id="rota">
+<div class="card notice"><b>Rota & Timekeeping</b><p class="muted">Create shifts and record attendance, lateness and actual hours.</p></div>
+<div class="grid">
+<div class="card"><h2>Rota</h2><div id="rotaList"></div></div>
+<div class="card"><h2>Shift form</h2>
+<div class="field">Staff<select id="rotaStaff"></select></div>
+<div class="grid"><div class="field">Date<input id="rotaDate" type="date"></div><div class="field">Area / station<input id="rotaArea" placeholder="Kitchen / FOH / Prep"></div></div>
+<div class="grid"><div class="field">Scheduled start<input id="rotaStart" type="time"></div><div class="field">Scheduled finish<input id="rotaEnd" type="time"></div></div>
+<div class="grid"><div class="field">Actual start<input id="rotaActualStart" type="time"></div><div class="field">Actual finish<input id="rotaActualEnd" type="time"></div></div>
+<div class="field">Status<select id="rotaStatus"><option>Scheduled</option><option>Completed</option><option>Late</option><option>Absent</option><option>Holiday</option><option>Sick</option></select></div>
+<div class="field">Notes<textarea id="rotaNotes" rows="3"></textarea></div>
+<div class="field">Tags<div id="rotaTags" class="tag-picker"></div></div>
+<button class="btn" id="rotaAdd">Save shift</button>
+</div>
+</div>
+</section>
+
+<section class="panel" id="handover">
+<div class="card notice"><b>Tasks & Handover</b><p class="muted">Assign actions, add deadlines, priorities, tags and resolution notes.</p></div>
+<div class="grid">
+<div class="card"><h2>Open tasks & handovers</h2><div id="taskList"></div></div>
+<div class="card"><h2>Task / handover form</h2>
+<div class="field">Title<input id="taskTitle"></div>
+<div class="grid"><div class="field">Assigned to<select id="taskAssignee"></select></div><div class="field">Type<select id="taskType"><option>Task</option><option>Shift handover</option><option>Incident action</option><option>Compliance action</option><option>Maintenance action</option></select></div></div>
+<div class="grid"><div class="field">Priority<select id="taskPriority"><option>Normal</option><option>High</option><option>Urgent</option></select></div><div class="field">Due date<input id="taskDue" type="date"></div></div>
+<div class="field">Details<textarea id="taskDetails" rows="4"></textarea></div>
+<div class="field">Completion / resolution notes<textarea id="taskResolution" rows="3"></textarea></div>
+<div class="field">Tags<div id="taskTags" class="tag-picker"></div></div>
+<button class="btn" id="taskAdd">Create action</button>
+</div>
+</div>
 </section>
 
 <section class="panel" id="orders">
@@ -260,6 +354,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
             <div class="field">Status<select id="cuStatus"><option>Active</option><option>Inactive</option><option>Blocked</option></select></div>
             <div class="field">Joined<input id="cuJoined" type="date"></div>
             <div class="field">Preferred contact<select id="cuContact"><option>App</option><option>SMS</option><option>Email</option><option>Phone</option></select></div>
+<div class="field">Tags<div id="cuTags" class="tag-picker"></div></div>
           </div>
         </div>
         <button class="btn" id="custSave">Save customer profile</button>
@@ -433,6 +528,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="field">Email<input id="sdEmail" type="email"></div>
 <div class="field">Emergency contact<input id="sdEmergencyName"></div>
 <div class="field">Emergency phone<input id="sdEmergencyPhone" inputmode="tel"></div>
+<div class="field">Tags<div id="sdTags" class="tag-picker"></div></div>
 </div>
 </div>
 <button class="btn" id="staffSaveProfile">Save profile</button>
@@ -519,6 +615,24 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </div>
 </div>
 </section>
+<section class="panel" id="maintenance">
+<div class="card notice"><b>Maintenance & Equipment</b><p class="muted">Equipment register, checks, faults, service dates and corrective actions.</p></div>
+<div class="grid">
+<div class="card"><h2>Equipment register</h2><div id="equipList"></div></div>
+<div class="card"><h2>Equipment / fault form</h2>
+<div class="grid"><div class="field">Equipment<input id="eqName"></div><div class="field">Asset / serial reference<input id="eqAsset"></div></div>
+<div class="grid"><div class="field">Location<input id="eqLocation" placeholder="Kitchen / counter / office"></div><div class="field">Status<select id="eqStatus"><option>Operational</option><option>Needs attention</option><option>Out of service</option></select></div></div>
+<div class="grid"><div class="field">Last checked<input id="eqLast" type="date"></div><div class="field">Next check/service<input id="eqDue" type="date"></div></div>
+<div class="field">Fault / issue<textarea id="eqFault" rows="3"></textarea></div>
+<div class="field">Immediate action taken<textarea id="eqAction" rows="3"></textarea></div>
+<div class="field">Assigned to<select id="eqAssignee"></select></div>
+<div class="field">Engineer / supplier reference<input id="eqEngineer"></div>
+<div class="field">Tags<div id="eqTags" class="tag-picker"></div></div>
+<button class="btn" id="eqAdd">Save equipment record</button>
+</div>
+</div>
+</section>
+
 <section class="panel" id="reports">
 <div class="card notice"><b>Reports</b><p class="muted">Management reporting across staff, training, compliance, catering, customers and operations.</p></div>
 <div class="bo-placeholder">PASS-style at-a-glance reporting will pull from the joined-up Dexter's records as modules are connected.</div>
@@ -527,6 +641,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <section class="panel" id="settings">
 <div class="card notice"><b>Settings & Permissions</b><p class="muted">Super User-only area for roles, module access and back-office configuration.</p></div>
 <div class="summarybox"><b>Access hierarchy</b><br><span class="badge">Super User</span><span class="badge">Manager</span><span class="badge">Team Leader</span><span class="badge">Staff</span><p class="tiny">Only Super User can change another person's role or permissions.</p></div>
+<div class="card" style="margin-top:14px"><h2>System Tags</h2><p class="muted">Tags can group and filter staff, customers, applicants, shifts, tasks, incidents, equipment and compliance records.</p><div id="tagLibrary"></div><div class="field">New custom tag<input id="newTagName" placeholder="e.g. Kitchen, FOH, Needs follow-up"></div><button class="btn alt" id="addTagBtn">Add custom tag</button></div>
 </section>
 </div>
 </div>
@@ -808,6 +923,52 @@ $('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number
 let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing now','Almost ready','Ready for collection'];$('trackNext').onclick=()=>{track=Math.min(track+1,4);document.querySelectorAll('#trackSteps .dot').forEach((d,i)=>d.classList.toggle('on',i<=track));$('trackMsg').textContent='Order #TEST-1042 — '+labels[track]+(track===4?' ✅':'')};
 
 
+
+const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
+let dexManage={
+ tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
+ recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[]
+};
+try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
+function saveDexManage(){localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));renderDexManagement()}
+function tagPicker(id,current=[]){const el=$(id);if(!el)return;el.innerHTML=dexManage.tags.map(t=>'<label><input type="checkbox" value="'+t.name+'" '+(current.includes(t.name)?'checked':'')+'>'+t.name+'</label>').join('')}
+function pickedTags(id){const el=$(id);return el?[...el.querySelectorAll('input:checked')].map(x=>x.value):[]}
+function tagChips(tags=[]){return (tags||[]).map(t=>'<span class="tag-chip">'+t+'</span>').join('')}
+function staffOptions(id){const el=$(id);if(!el||typeof staffDb==='undefined')return;el.innerHTML=staffDb.staff.map(s=>'<option value="'+s.id+'">'+s.name+' · '+s.role+'</option>').join('')}
+function staffNameById(id){const s=typeof staffDb!=='undefined'?staffDb.staff.find(x=>x.id===id):null;return s?s.name:'Unassigned'}
+function renderDexManagement(){
+ ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');
+ if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
+ if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
+ if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
+ if($('rotaList'))$('rotaList').innerHTML=dexManage.rota.map(r=>'<div class="summarybox"><b>'+r.date+' · '+staffNameById(r.staffId)+'</b><br><span class="badge">'+r.status+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.start+'–'+r.end+(r.area?' · '+r.area:'')+'</span><br><span class="tiny">'+(r.notes||'')+'</span></div>').join('')||'<span class="muted">No shifts recorded.</span>';
+ if($('taskList'))$('taskList').innerHTML=dexManage.tasks.map((r,i)=>'<div class="summarybox"><b>'+r.title+'</b><br><span class="badge">'+r.status+'</span><span class="badge">'+r.priority+'</span><span class="badge">'+r.type+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+staffNameById(r.assignee)+' · due '+(r.due||'not set')+'</span><br><span class="tiny">'+r.details+'</span>'+(r.resolution?'<br><span class="tiny">Resolution: '+r.resolution+'</span>':'')+(r.status!=='Completed'?'<div class="row"><button class="btn alt small" onclick="closeDexTask('+i+')">Mark complete</button></div>':'')+'</div>').join('')||'<span class="muted">No tasks or handovers.</span>';
+ if($('equipList'))$('equipList').innerHTML=dexManage.equipment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.status+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+(r.location||'No location')+' · next '+(r.due||'not set')+'</span><br><span class="tiny">'+(r.fault||'')+(r.action?' · Action: '+r.action:'')+'</span></div>').join('')||'<span class="muted">No equipment records.</span>';
+ if($('masterComplianceList'))$('masterComplianceList').innerHTML=dexManage.masterCompliance.map(r=>'<div class="summarybox"><b>'+r.title+'</b><br><span class="badge">'+r.type+'</span>'+tagChips(r.tags)+'<br><span class="muted">Review '+(r.review||'not set')+' · Owner '+(r.owner||'not set')+'</span><br><span class="tiny">'+r.controls+'</span></div>').join('')||'<span class="muted">No master compliance records.</span>';
+ if($('complianceCalendar')){
+   const dates=[];
+   dexManage.masterCompliance.forEach(r=>{if(r.review)dates.push({date:r.review,text:r.title,type:'Compliance'})});
+   dexManage.equipment.forEach(r=>{if(r.due)dates.push({date:r.due,text:r.name,type:'Equipment'})});
+   dexManage.appraisals.forEach(r=>{if(r.next)dates.push({date:r.next,text:staffNameById(r.staffId)+' '+r.type,type:'Staff review'})});
+   if(typeof staffDb!=='undefined')staffDb.staff.forEach(s=>(s.docs||[]).forEach(d=>{if(d.expiry)dates.push({date:d.expiry,text:s.name+' · '+d.type,type:'Staff document'})}));
+   dates.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+   $('complianceCalendar').innerHTML=dates.slice(0,30).map(x=>'<div class="summarybox"><b>'+x.date+'</b><br><span class="badge">'+x.type+'</span><span class="muted">'+x.text+'</span></div>').join('')||'<span class="muted">No review dates recorded.</span>';
+ }
+ if(typeof selectedStaff==='function'){const s=selectedStaff();tagPicker('sdTags',s?.tags||[])}
+ if(typeof selectedCustomer==='function'){const cu=selectedCustomer();tagPicker('cuTags',cu?.tags||[])}
+}
+window.removeDexTag=i=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');if(dexManage.tags[i]?.system)return;dexManage.tags.splice(i,1);saveDexManage()};
+window.closeDexTask=i=>{if(!dexManage.tasks[i])return;dexManage.tasks[i].status='Completed';saveDexManage()};
+if($('addTagBtn'))$('addTagBtn').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');const name=$('newTagName').value.trim();if(!name||dexManage.tags.some(t=>t.name.toLowerCase()===name.toLowerCase()))return;dexManage.tags.push({name,system:false});$('newTagName').value='';saveDexManage()};
+if($('recAdd'))$('recAdd').onclick=()=>{const name=$('recName').value.trim();if(!name)return;dexManage.recruitment.unshift({name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value.trim(),applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interview:$('recInterview').value.trim(),rtw:$('recRTW').value,onboarding:$('recOnboarding').value.trim(),tags:pickedTags('recTags'),at:new Date().toISOString()});saveDexManage()};
+if($('appAdd'))$('appAdd').onclick=()=>{if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
+if($('rotaAdd'))$('rotaAdd').onclick=()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return;dexManage.rota.unshift({staffId:$('rotaStaff').value,date:$('rotaDate').value,area:$('rotaArea').value.trim(),start:$('rotaStart').value,end:$('rotaEnd').value,actualStart:$('rotaActualStart').value,actualEnd:$('rotaActualEnd').value,status:$('rotaStatus').value,notes:$('rotaNotes').value.trim(),tags:pickedTags('rotaTags')});saveDexManage()};
+if($('taskAdd'))$('taskAdd').onclick=()=>{const title=$('taskTitle').value.trim();if(!title)return;dexManage.tasks.unshift({title,assignee:$('taskAssignee').value,type:$('taskType').value,priority:$('taskPriority').value,due:$('taskDue').value,details:$('taskDetails').value.trim(),resolution:$('taskResolution').value.trim(),tags:pickedTags('taskTags'),status:'Open',at:new Date().toISOString()});saveDexManage()};
+if($('eqAdd'))$('eqAdd').onclick=()=>{const name=$('eqName').value.trim();if(!name)return;dexManage.equipment.unshift({name,asset:$('eqAsset').value.trim(),location:$('eqLocation').value.trim(),status:$('eqStatus').value,last:$('eqLast').value,due:$('eqDue').value,fault:$('eqFault').value.trim(),action:$('eqAction').value.trim(),assignee:$('eqAssignee').value,engineer:$('eqEngineer').value.trim(),tags:pickedTags('eqTags'),at:new Date().toISOString()});saveDexManage()};
+if($('masterCompAdd'))$('masterCompAdd').onclick=()=>{const title=$('masterCompTitle').value.trim();if(!title)return;dexManage.masterCompliance.unshift({type:$('masterCompType').value,title,date:$('masterCompDate').value,review:$('masterCompReview').value,owner:$('masterCompOwner').value.trim(),hazard:$('masterCompHazard').value.trim(),scope:$('masterCompScope').value.trim(),controls:$('masterCompControls').value.trim(),actions:$('masterCompActions').value.trim(),tags:pickedTags('masterCompTags'),at:new Date().toISOString()});saveDexManage()};
+renderDexManagement();
+
 const CUSTOMERDBKEY='dexters_backoffice_customer_files_test_v1';
 let customerDb={selected:null,customers:[]};
 try{const saved=JSON.parse(localStorage.getItem(CUSTOMERDBKEY)||'null');if(saved)customerDb=saved}catch(e){}
@@ -834,7 +995,7 @@ function renderCustomerDb(){
  const cu=selectedCustomer(),show=!!cu;
  $('custEmpty').style.display=show?'none':'block';$('custProfileWrap').style.display=show?'block':'none';if(!cu)return;
  $('custAvatar').textContent=custInitials(cu.name);$('custProfileTitle').textContent=cu.name;$('custProfileMeta').textContent=(cu.phone||'No phone')+' · '+cu.status;
- $('cuName').value=cu.name||'';$('cuPhone').value=cu.phone||'';$('cuEmail').value=cu.email||'';$('cuStatus').value=cu.status||'Active';$('cuJoined').value=cu.joined||'';$('cuContact').value=cu.preferredContact||'App';
+ $('cuName').value=cu.name||'';$('cuPhone').value=cu.phone||'';$('cuEmail').value=cu.email||'';$('cuStatus').value=cu.status||'Active';$('cuJoined').value=cu.joined||'';$('cuContact').value=cu.preferredContact||'App';tagPicker('cuTags',cu.tags||[]);
  const l=cu.loyalty||{points:0,stamps:0,rewards:[]};
  $('custLoyalty').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Points</span><b>'+Number(l.points||0)+'</b></div><div class="bo-kpi"><span class="muted">Stamps</span><b>'+Number(l.stamps||0)+'</b></div></div><div class="summarybox"><b>Rewards</b><br><span class="muted">'+((l.rewards||[]).join(' · ')||'No test rewards')+'</span></div>';
  $('custOrders').innerHTML=(cu.orders||[]).map(o=>'<div class="summarybox"><b>'+o.ref+'</b><br><span class="muted">'+o.date+' · '+o.status+'</span></div>').join('')||'<span class="muted">No linked test orders yet.</span>';
@@ -849,7 +1010,7 @@ function renderCustomerDb(){
 document.querySelectorAll('[data-custtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-custtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('[id^="custPane-"]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=$('custPane-'+b.dataset.custtab);if(p)p.classList.add('active')});
 $('custSearch').addEventListener('input',renderCustDirectory);
 $('custAdd').onclick=()=>{const name=prompt('Customer name');if(!name?.trim())return;const id='cust-'+Date.now();customerDb.customers.push({id,name:name.trim(),phone:'',email:'',status:'Active',joined:new Date().toISOString().slice(0,10),preferredContact:'App',loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],audit:[]});customerDb.selected=id;logCustomer(selectedCustomer(),'Customer record created');saveCustomerDb()};
-$('custSave').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.name=$('cuName').value.trim()||'Unnamed customer';cu.phone=$('cuPhone').value.trim();cu.email=$('cuEmail').value.trim();cu.status=$('cuStatus').value;cu.joined=$('cuJoined').value;cu.preferredContact=$('cuContact').value;logCustomer(cu,'Customer profile updated');saveCustomerDb()};
+$('custSave').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.name=$('cuName').value.trim()||'Unnamed customer';cu.phone=$('cuPhone').value.trim();cu.email=$('cuEmail').value.trim();cu.status=$('cuStatus').value;cu.joined=$('cuJoined').value;cu.preferredContact=$('cuContact').value;cu.tags=pickedTags('cuTags');logCustomer(cu,'Customer profile updated');saveCustomerDb()};
 $('custAddComplaint').onclick=()=>{const cu=selectedCustomer(),text=$('cuComplaint').value.trim();if(!cu||!text)return;cu.complaints.unshift({text,at:new Date().toISOString()});logCustomer(cu,'Complaint/incident record added');$('cuComplaint').value='';saveCustomerDb()};
 $('custAddDocument').onclick=()=>{const cu=selectedCustomer(),note=$('cuDocNote').value.trim();if(!cu||!note)return;cu.documents.unshift({type:$('cuDocType').value,note,at:new Date().toISOString()});logCustomer(cu,'Customer document added: '+$('cuDocType').value);$('cuDocNote').value='';saveCustomerDb()};
 window.saveCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;cu.documents[i].note=$('cuDocEdit'+i).value;cu.documents[i].updatedAt=new Date().toISOString();logCustomer(cu,'Customer document updated: '+cu.documents[i].type);saveCustomerDb()};
@@ -1139,7 +1300,7 @@ function renderStaffDb(){
   $('staffPermissions').innerHTML=$('staffTrainingSummary').innerHTML=$('staffDocs').innerHTML=$('staffAbsence').innerHTML=$('staffIncidents').innerHTML=$('staffNotes').innerHTML=$('staffAudit').innerHTML='Choose a staff member first.';return;
  }
  $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdRole').disabled=CURRENT_STAFF_ROLE!=='Super User';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';
- $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';
+ $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';tagPicker('sdTags',s.tags||[]);
  $('staffPermissions').innerHTML=STAFF_PERMS.map(p=>'<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input class="sd-perm" type="checkbox" value="'+p+'" '+((s.permissions||[]).includes(p)?'checked':'')+(CURRENT_STAFF_ROLE==='Super User'?'':' disabled')+' style="width:auto;margin:0">'+p+'</label>').join('')+(CURRENT_STAFF_ROLE==='Super User'?'<button class="btn alt small" onclick="saveStaffPermissions()">Save permissions</button><button class="btn alt small" onclick="resetStaffPermissions()">Use role defaults</button>':'<div class="summarybox muted">Permission editing is restricted to Super User.</div>');
  const t=s.training||{};
  const cert=t.certifiedAt?'<span class="ok"><b>Certified</b></span> · '+fmtDate(t.certifiedAt):'<span class="muted">Not certified yet</span>';
@@ -1161,7 +1322,7 @@ $('staffSaveProfile').onclick=()=>{
  const s=selectedStaff();if(!s)return;const oldRole=s.role;
  s.name=$('sdName').value.trim()||'Unnamed staff';
  if(CURRENT_STAFF_ROLE==='Super User'){s.role=$('sdRole').value}else{$('sdRole').value=s.role}
- s.status=$('sdStatus').value;s.start=$('sdStart').value;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();
+ s.status=$('sdStatus').value;s.start=$('sdStart').value;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');
  if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else logStaff(s,'Staff profile updated');
  saveStaffDb();
 };
