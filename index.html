@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#140a20">
 <title>Dexter's Back Office — Test</title>
 <style>
@@ -43,7 +46,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap">
+<main class="wrap" data-build="2026-09-07-2307">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -81,7 +84,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
       if(!window.__DEXTERS_AUTH_CLIENT){
         window.__DEXTERS_AUTH_CLIENT=window.supabase.createClient(
           'https://bpnkouymdvcogeaqjmxl.supabase.co',
-          'sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa'
+          'sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',
+          {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
         );
         window.__DEXTERS_AUTH_CLIENT.auth.onAuthStateChange(function(event,session){
           if(event==='PASSWORD_RECOVERY'){
@@ -1197,7 +1201,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script>
 const SUPABASE_URL='https://bpnkouymdvcogeaqjmxl.supabase.co';
 const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
-const SB=window.__DEXTERS_AUTH_CLIENT||window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
+const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
+const SB=window.__DEXTERS_AUTH_CLIENT||window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let SECURE_SESSION=null,SECURE_ACCOUNT=null;
 let CURRENT_STAFF_ROLE='Staff';
 window.dextersCompleteSecureLogin=async function(session,account){
@@ -2740,7 +2745,7 @@ function renderComplianceDashboard(){
  $('compRegister').innerHTML=all.map(x=>'<div class="summarybox"><b>'+x.s.name+' · '+x.d.type+'</b><br><span class="badge">'+(x.d.category||'Document')+'</span><span class="muted">'+(x.d.expiry?' · review/expiry '+x.d.expiry:' · no review date')+'</span></div>').join('')||'<span class="muted">No staff documents recorded.</span>';
 }
 const STAFFDBKEY='dexters_growth_staff_database_test_v1';
-const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports','Training management','Documents management','Absence management','Incident management','Audit history','Role & permission management'];
+
 
 let staffDb={selected:null,staff:[]};
 try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
