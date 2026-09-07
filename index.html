@@ -144,6 +144,16 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="card"><h2>Attention needed</h2><div id="autoAlerts"></div></div>
 </div>
 <div class="card" style="margin-top:14px"><h2>My dashboard</h2><div id="roleDashboard"></div></div>
+<div class="card" style="margin-top:14px">
+<div class="row" style="justify-content:space-between"><div><h2>Live Dexter's connections</h2><p class="muted" style="margin:0">Read-only view of existing live systems. No live records can be changed from these cards.</p></div><button class="btn alt" id="refreshLiveReadOnly">Refresh live data</button></div>
+<div class="bo-kpis" id="liveConnectionKpis">
+<div class="bo-kpi"><span class="muted">Loyalty</span><b id="liveLoyaltyCount">—</b><span class="tiny">accounts</span></div>
+<div class="bo-kpi"><span class="muted">Rewards ready</span><b id="liveRewardsReady">—</b><span class="tiny">live</span></div>
+<div class="bo-kpi"><span class="muted">Live orders</span><b id="liveOrdersCount">—</b><span class="tiny">recent feed</span></div>
+<div class="bo-kpi"><span class="muted">Food safety</span><b id="liveFsStatus">—</b><span class="tiny">recent records</span></div>
+</div>
+<div id="liveReadOnlyMessage" class="tiny"></div>
+</div>
 <div class="card" style="margin-top:14px"><h2>Business timeline</h2><div id="businessTimeline"></div></div>
 </section>
 
@@ -452,6 +462,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </div>
 <div class="card"><h2>Records & missed actions</h2><div id="fsRecords"></div></div>
 </div>
+<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div><h2>Live Food Safety connection</h2><p class="muted">Read-only view of the existing Food Safety records.</p></div><button class="btn alt" id="refreshLiveFoodSafety">Refresh</button></div><div id="liveFoodSafetyFeed"></div></div>
 </section>
 
 <section class="panel" id="policies">
@@ -483,11 +494,12 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 
 <section class="panel" id="orders">
 <div class="card notice"><b>Orders & KDS oversight</b><p class="muted">Back-office management view for Dexter's existing collection ordering and KDS. This does not create another tracking system.</p></div>
-<div class="bo-placeholder">Order/KDS reporting, exception handling, amendments, outages and operational history will be joined here when the test back office is connected to the existing Dexter's order data.</div>
+<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Live order & KDS feed</h2><p class="muted">Read-only. Includes live collection, Sunday Roast, table-service and existing Dexter's order/KDS records.</p></div><button class="btn alt" id="refreshLiveOrders">Refresh</button></div><div id="liveOrdersFeed"></div></div>
 </section>
 
 <section class="panel" id="customers">
 <div class="card notice"><b>Customer Files</b><p class="muted">PASS-style joined-up customer records for Dexter's — profile, loyalty, orders, catering, deals, challenges, complaints, documents, notes and audit history in one place. Test only.</p></div>
+<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Live Loyalty summary</h2><p class="muted">Read-only totals from the existing live loyalty system.</p></div><button class="btn alt" id="refreshLiveLoyalty">Refresh</button></div><div id="liveLoyaltySummary"></div></div>
 <div class="staff-pass-grid">
   <div class="staff-pass-list">
     <div class="field">Search customers<input id="custSearch" placeholder="Search name or phone"></div>
@@ -1025,6 +1037,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="card"><h2>Service status</h2><div class="field">Service<select id="healthService"><option>Loyalty App</option><option>Collection Ordering</option><option>KDS</option><option>Back Office</option><option>Staff Hub</option><option>Printer Bridge</option><option>Foodhub Scanner</option><option>Internet</option></select></div><div class="field">Status<select id="healthStatus"><option>Operational</option><option>Degraded</option><option>Offline</option><option>Maintenance</option></select></div><div class="field">Note<input id="healthNote"></div><button class="btn alt" id="healthSave">Update status</button><div id="healthList"></div></div>
 <div class="card"><h2>Error log</h2><div class="field">Area<input id="errorArea" placeholder="App / device / module"></div><div class="field">Error / symptom<textarea id="errorMessage" rows="3"></textarea></div><div class="field">Severity<select id="errorSeverity"><option>Info</option><option>Warning</option><option>Critical</option></select></div><button class="btn alt" id="errorAdd">Log error</button><div id="errorList"></div></div>
 </div>
+<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div><h2>Live device & printer health</h2><p class="muted">Read-only status from existing printer/device records.</p></div><button class="btn alt" id="refreshLiveDevices">Refresh</button></div><div id="liveDeviceHealth"></div></div>
 <div class="card" style="margin-top:14px"><h2>Owner daily summary</h2><div id="ownerDailySummary"></div></div>
 <div class="card" style="margin-top:14px"><h2>Backup & Restore</h2><p class="muted">Export a complete browser-test backup or restore a previous test backup.</p><div class="row"><button class="btn alt" id="backupExport">Create backup</button><label class="btn alt" style="cursor:pointer">Restore backup<input id="backupImport" type="file" accept="application/json" style="display:none"></label></div><textarea id="backupOutput" rows="5" readonly placeholder="Backup JSON appears here for the test build."></textarea></div>
 </section>
@@ -1131,7 +1144,7 @@ async function initSecureAuth(){
  const {data}=await SB.auth.getSession();SECURE_SESSION=data.session||null;
  if(SECURE_SESSION){try{await loadSecureAccount()}catch(e){}}
  renderSecureAuth();
- SB.auth.onAuthStateChange(async(_event,session)=>{SECURE_SESSION=session||null;SECURE_ACCOUNT=null;if(session){try{await loadSecureAccount()}catch(e){}}CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';renderSecureAuth();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement()});
+ SB.auth.onAuthStateChange(async(_event,session)=>{SECURE_SESSION=session||null;SECURE_ACCOUNT=null;if(session){try{await loadSecureAccount()}catch(e){}}CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';renderSecureAuth();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();loadLiveReadOnly()});
 }
 async function refreshStaffLoginStatus(){
  const box=$('staffLoginStatus'),s=typeof selectedStaff==='function'?selectedStaff():null;
@@ -1139,6 +1152,62 @@ async function refreshStaffLoginStatus(){
  if(!SECURE_SESSION){box.innerHTML='<span class="muted">Sign in securely above to manage this staff login.</span>';return}
  if(!['Manager','Super User'].includes(SECURE_ACCOUNT?.role||'')){box.innerHTML='<span class="muted">Manager or Super User access required for account management.</span>';return}
  box.innerHTML=s.email?'<span class="muted">Secure login can use '+s.email+'.</span>':'<span class="bad">Add the staff member’s email before creating their login.</span>';
+}
+
+async function liveRpc(name,args={}){
+ if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.active)throw new Error('Secure sign-in required.');
+ const {data,error}=await SB.rpc(name,args);
+ if(error)throw error;
+ return data;
+}
+function escLive(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function fmtLiveDate(v){try{return v?new Date(v).toLocaleString():'—'}catch(e){return v||'—'}}
+async function loadLiveOrders(){
+ const box=document.getElementById('liveOrdersFeed');if(box)box.innerHTML='<span class="muted">Loading live order feed…</span>';
+ try{
+  const rows=await liveRpc('backoffice_live_order_feed',{p_limit:50});
+  const list=Array.isArray(rows)?rows:[];
+  const count=document.getElementById('liveOrdersCount');if(count)count.textContent=list.length;
+  if(box)box.innerHTML=list.map(r=>'<div class="summarybox"><b>'+escLive(r.source)+' · '+escLive(r.reference||r.id)+'</b><br><span class="badge">'+escLive(r.status)+'</span>'+(r.customer_name?' <span class="muted">'+escLive(r.customer_name)+'</span>':'')+(r.total!=null?' <span class="muted">· £'+Number(r.total).toFixed(2)+'</span>':'')+'<br><span class="tiny">'+escLive(r.requested_for||'')+' · '+fmtLiveDate(r.created_at)+'</span></div>').join('')||'<span class="muted">No live orders returned.</span>';
+ }catch(e){if(box)box.innerHTML='<span class="bad">'+escLive(e.message)+'</span>'}
+}
+async function loadLiveLoyalty(){
+ const box=document.getElementById('liveLoyaltySummary');
+ try{
+  const d=await liveRpc('backoffice_live_loyalty_summary');
+  const a=document.getElementById('liveLoyaltyCount');if(a)a.textContent=d?.accounts??'—';
+  const r=document.getElementById('liveRewardsReady');if(r)r.textContent=d?.reward_ready??'—';
+  if(box)box.innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Accounts</span><b>'+escLive(d?.accounts??0)+'</b></div><div class="bo-kpi"><span class="muted">Rewards ready</span><b>'+escLive(d?.reward_ready??0)+'</b></div><div class="bo-kpi"><span class="muted">Total stamps</span><b>'+escLive(d?.total_stamps??0)+'</b></div><div class="bo-kpi"><span class="muted">Points held</span><b>'+escLive(d?.total_points??0)+'</b></div></div>';
+ }catch(e){if(box)box.innerHTML='<span class="bad">'+escLive(e.message)+'</span>'}
+}
+async function loadLiveFoodSafety(){
+ const box=document.getElementById('liveFoodSafetyFeed');
+ try{
+  const d=await liveRpc('backoffice_live_food_safety_summary');
+  const temps=Array.isArray(d?.latest_temperatures)?d.latest_temperatures:[],inc=Array.isArray(d?.open_incidents)?d.open_incidents:[];
+  const s=document.getElementById('liveFsStatus');if(s)s.textContent=inc.length?inc.length+' alerts':'OK';
+  if(box)box.innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Active FS staff</span><b>'+escLive(d?.staff_count??0)+'</b></div><div class="bo-kpi"><span class="muted">Recent temps</span><b>'+temps.length+'</b></div><div class="bo-kpi"><span class="muted">Open incidents</span><b>'+inc.length+'</b></div></div>'+
+    (temps.slice(0,8).map(t=>'<div class="summarybox"><b>'+escLive(t.check_type||'Temperature')+' · '+escLive(t.item_name||'')+'</b><br><span class="badge">'+escLive(t.status||'')+'</span> <span class="muted">'+escLive(t.temperature_c)+'°C</span><br><span class="tiny">'+fmtLiveDate(t.checked_at)+'</span></div>').join('')||'<span class="muted">No recent temperature records.</span>')+
+    (inc.length?'<h3>Open incidents</h3>'+inc.slice(0,8).map(i=>'<div class="summarybox"><b>'+escLive(i.incident_type||'Incident')+'</b><br><span class="badge">'+escLive(i.status||'Open')+'</span><span class="muted"> '+escLive(i.description||'')+'</span></div>').join(''):'');
+ }catch(e){if(box)box.innerHTML='<span class="bad">'+escLive(e.message)+'</span>'}
+}
+async function loadLiveDevices(){
+ const box=document.getElementById('liveDeviceHealth');if(!box)return;
+ if(secureRoleRank(SECURE_ACCOUNT?.role)<3){box.innerHTML='<span class="muted">Manager access required.</span>';return}
+ try{
+  const d=await liveRpc('backoffice_live_device_summary');
+  const printers=Array.isArray(d?.printers)?d.printers:[];
+  box.innerHTML=printers.map(p=>'<div class="summarybox"><b>'+escLive(p.name)+'</b><br><span class="badge">'+(p.enabled?'Enabled':'Disabled')+'</span><span class="muted"> Last seen '+fmtLiveDate(p.last_seen_at)+'</span></div>').join('')+
+    '<div class="summarybox"><b>Print queue</b><br><span class="muted">Pending '+escLive(d?.print_queue?.pending??0)+' · Failed '+escLive(d?.print_queue?.failed??0)+'</span></div>';
+ }catch(e){box.innerHTML='<span class="bad">'+escLive(e.message)+'</span>'}
+}
+async function loadLiveReadOnly(){
+ const msg=document.getElementById('liveReadOnlyMessage');
+ if(msg)msg.textContent='Refreshing read-only live connections…';
+ const jobs=[loadLiveOrders(),loadLiveLoyalty(),loadLiveFoodSafety()];
+ if(secureRoleRank(SECURE_ACCOUNT?.role)>=3)jobs.push(loadLiveDevices());
+ await Promise.allSettled(jobs);
+ if(msg)msg.innerHTML='<span class="ok">Live read-only refresh complete.</span> <span class="muted">No write actions were performed.</span>';
 }
 
 const $=id=>document.getElementById(id);
@@ -2952,7 +3021,7 @@ if($('secureLoginBtn'))$('secureLoginBtn').onclick=async()=>{
  $('secureAuthMessage').textContent='Signing in…';
  const {data,error}=await SB.auth.signInWithPassword({email,password});
  if(error){$('secureAuthMessage').innerHTML='<span class="bad">'+error.message+'</span>';return}
- SECURE_SESSION=data.session;await loadSecureAccount();renderSecureAuth();renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();
+ SECURE_SESSION=data.session;await loadSecureAccount();renderSecureAuth();renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();if(SECURE_ACCOUNT?.active&&!SECURE_ACCOUNT.must_change_password)loadLiveReadOnly();
 };
 if($('secureForgotBtn'))$('secureForgotBtn').onclick=async()=>{
  const email=$('secureLoginEmail').value.trim();if(!email)return alert('Enter your email first.');
@@ -2969,6 +3038,12 @@ if($('firstPasswordSave'))$('firstPasswordSave').onclick=async()=>{
  try{await secureFunction('password_changed');SECURE_ACCOUNT.must_change_password=false;$('firstPasswordOverlay').style.display='none';msg.textContent='';renderSecureAuth();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement()}catch(e){msg.innerHTML='<span class="bad">'+e.message+'</span>'}
 };
 if($('tempPasswordClose'))$('tempPasswordClose').onclick=()=>{$('tempPasswordValue').textContent='';$('tempPasswordOverlay').style.display='none'};
+
+if($('refreshLiveReadOnly'))$('refreshLiveReadOnly').onclick=loadLiveReadOnly;
+if($('refreshLiveOrders'))$('refreshLiveOrders').onclick=loadLiveOrders;
+if($('refreshLiveLoyalty'))$('refreshLiveLoyalty').onclick=loadLiveLoyalty;
+if($('refreshLiveFoodSafety'))$('refreshLiveFoodSafety').onclick=loadLiveFoodSafety;
+if($('refreshLiveDevices'))$('refreshLiveDevices').onclick=loadLiveDevices;
 initSecureAuth();
 renderLessons();renderTrainingManager();
 </script>
