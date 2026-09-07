@@ -28,8 +28,6 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 
 <div class="tabs">
 <button class="tab active" data-tab="catering">Catering</button>
-<button class="tab" data-tab="business">Business Accounts</button>
-<button class="tab" data-tab="tracking">Order Tracking</button>
 <button class="tab" data-tab="deals">Deals Engine</button>
 <button class="tab" data-tab="challenges">Scratch & Challenges</button>
 <button class="tab" data-tab="training">Staff Training</button>
@@ -204,14 +202,47 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="challenges">
-<div class="card notice"><b>Digital Scratch Cards + Challenges</b><p class="muted">Scratch cards can be triggered by genuine activity; challenges reward repeat visits or trying different menu categories.</p></div>
+<div class="card notice"><b>Digital Scratch Cards + Challenges</b><p class="muted">Challenges reward genuine customer activity. A scratch card can be earned when a challenge is completed, but rewards stay test-only until staff approve them.</p></div>
 <div class="grid">
-<div class="card"><h2>Scratch card</h2><p class="muted">Tap the card to reveal this test prize.</p><div class="scratch" id="scratch">SCRATCH TO REVEAL 🎃</div><p class="tiny">Test only — no live prize is issued.</p></div>
-<div class="card"><h2>Current challenges</h2>
-<div class="challenge"><div><b>Breakfast Regular</b><div class="muted">Buy breakfast 3 times this month</div><div class="progress"><i style="width:66%"></i></div></div><b>2/3</b></div>
-<div class="challenge"><div><b>Street Sub Explorer</b><div class="muted">Try 3 different Street Subs</div><div class="progress"><i style="width:33%"></i></div></div><b>1/3</b></div>
-<div class="challenge"><div><b>Weekday Streak</b><div class="muted">Order on 5 different weekdays</div><div class="progress"><i style="width:80%"></i></div></div><b>4/5</b></div>
-</div></div>
+<div class="card"><h2>Customer challenge progress</h2>
+<div class="field">Customer name<input id="challengeName" value="Test Customer"></div>
+<div class="field">Breakfast orders this month<input id="challengeBreakfast" type="number" min="0" value="2"></div>
+<div class="field">Different Street Subs tried<input id="challengeSubs" type="number" min="0" value="1"></div>
+<div class="field">Different weekdays ordered<input id="challengeDays" type="number" min="0" max="5" value="4"></div>
+<button class="btn" id="challengeRefresh">Update challenge progress</button>
+<div id="challengeList" style="margin-top:12px"></div>
+</div>
+
+<div class="card"><h2>Earned scratch card</h2>
+<p class="muted">A scratch card unlocks only after a challenge is completed. One earned card can be revealed once.</p>
+<div class="scratch" id="scratch">COMPLETE A CHALLENGE TO UNLOCK 🎃</div>
+<div id="scratchStatus" class="summarybox muted">No scratch card earned yet.</div>
+<hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
+<h2>Staff reward approval</h2>
+<div id="scratchStaff" class="muted">No revealed reward awaiting approval.</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:14px"><h2>Staff challenge controls</h2>
+<div class="grid">
+<div>
+<div class="field">Challenge<select id="challengeAdminSelect">
+<option value="breakfast">Breakfast Regular</option>
+<option value="subs">Street Sub Explorer</option>
+<option value="weekdays">Weekday Streak</option>
+</select></div>
+<div class="field">Target<input id="challengeTarget" type="number" min="1" value="3"></div>
+<div class="field">Reward<select id="challengeReward">
+<option value="100 bonus points">100 bonus points</option>
+<option value="150 bonus points">150 bonus points</option>
+<option value="Free 2oz Dexter's sauce">Free 2oz Dexter's sauce</option>
+<option value="Staff-selected reward">Staff-selected reward</option>
+</select></div>
+<button class="btn alt" id="challengeSave">Save test challenge rule</button>
+</div>
+<div><div id="challengeRules" class="muted"></div><p class="tiny">Test only. No live points, prizes or customer rewards are changed.</p></div>
+</div>
+</div>
 </section>
 
 <section class="panel" id="training">
@@ -539,7 +570,80 @@ window.sendApprovedDeal=i=>{const d=dealApproved[i];if(!d)return;d.status='Sent 
 window.removeApprovedDeal=i=>{dealApproved.splice(i,1);localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));renderApprovedDeals()};
 renderApprovedDeals();
 
-$('scratch').onclick=()=>{$('scratch').classList.add('revealed');$('scratch').textContent='YOU WON: BONUS 100 POINTS 🎉'};
+const CHALLENGEKEY='dexters_growth_challenges_test_v2';
+let challengeRules={
+ breakfast:{title:'Breakfast Regular',target:3,reward:'100 bonus points',label:'Breakfast orders this month'},
+ subs:{title:'Street Sub Explorer',target:3,reward:'150 bonus points',label:'Different Street Subs tried'},
+ weekdays:{title:'Weekday Streak',target:5,reward:"Free 2oz Dexter's sauce",label:'Different weekdays ordered'}
+};
+let challengeState={earned:false,revealed:false,pendingReward:null,approved:false,source:null};
+try{
+ const saved=JSON.parse(localStorage.getItem(CHALLENGEKEY)||'null');
+ if(saved?.rules) challengeRules=saved.rules;
+ if(saved?.state) challengeState=saved.state;
+}catch(e){}
+function saveChallenges(){localStorage.setItem(CHALLENGEKEY,JSON.stringify({rules:challengeRules,state:challengeState}));renderChallenges();renderChallengeRules();renderScratch()}
+function challengeValue(key){
+ if(key==='breakfast')return Math.max(0,Number($('challengeBreakfast').value||0));
+ if(key==='subs')return Math.max(0,Number($('challengeSubs').value||0));
+ return Math.max(0,Number($('challengeDays').value||0));
+}
+function renderChallenges(){
+ $('challengeList').innerHTML=Object.entries(challengeRules).map(([key,r])=>{
+  const val=challengeValue(key),pct=Math.min(100,Math.round((val/r.target)*100)),done=val>=r.target;
+  return '<div class="challenge"><div><b>'+r.title+'</b><div class="muted">'+r.label+'</div><div class="progress"><i style="width:'+pct+'%"></i></div><div class="tiny">Reward after completion: '+r.reward+'</div></div><b class="'+(done?'ok':'')+'">'+Math.min(val,r.target)+'/'+r.target+(done?' ✓':'')+'</b></div>';
+ }).join('');
+}
+function maybeEarnScratch(){
+ if(challengeState.revealed||challengeState.earned)return;
+ const completed=Object.entries(challengeRules).find(([key,r])=>challengeValue(key)>=r.target);
+ if(completed){
+  challengeState.earned=true;
+  challengeState.source=completed[0];
+  challengeState.pendingReward=completed[1].reward;
+ }
+}
+function renderScratch(){
+ const el=$('scratch'),staff=$('scratchStaff');
+ el.classList.toggle('revealed',challengeState.revealed);
+ if(challengeState.approved){
+  el.textContent='REWARD APPROVED ✓';
+  $('scratchStatus').innerHTML='<span class="ok"><b>'+challengeState.pendingReward+'</b> approved by staff.</span>';
+  staff.innerHTML='<span class="ok">Reward approved in this test.</span>';
+ }else if(challengeState.revealed){
+  el.textContent='YOU REVEALED: '+challengeState.pendingReward+' 🎉';
+  $('scratchStatus').innerHTML='<b>Reward revealed</b><br><span class="muted">Waiting for staff approval before it could be issued.</span>';
+  staff.innerHTML='<div class="summarybox"><b>'+challengeState.pendingReward+'</b><br><span class="muted">Earned from '+challengeRules[challengeState.source].title+'</span><div class="row" style="margin-top:8px"><button class="btn small" onclick="approveScratchReward()">Approve reward</button><button class="btn alt small" onclick="rejectScratchReward()">Reject</button></div></div>';
+ }else if(challengeState.earned){
+  el.textContent='SCRATCH TO REVEAL 🎃';
+  $('scratchStatus').innerHTML='<span class="ok">Challenge complete — one scratch card unlocked.</span>';
+  staff.innerHTML='No revealed reward awaiting approval.';
+ }else{
+  el.textContent='COMPLETE A CHALLENGE TO UNLOCK 🎃';
+  $('scratchStatus').innerHTML='<span class="muted">No scratch card earned yet.</span>';
+  staff.innerHTML='No revealed reward awaiting approval.';
+ }
+}
+$('challengeRefresh').onclick=()=>{maybeEarnScratch();saveChallenges()};
+$('scratch').onclick=()=>{
+ if(!challengeState.earned||challengeState.revealed)return;
+ challengeState.revealed=true;saveChallenges();
+};
+window.approveScratchReward=()=>{if(!challengeState.revealed)return;challengeState.approved=true;saveChallenges()};
+window.rejectScratchReward=()=>{challengeState={earned:false,revealed:false,pendingReward:null,approved:false,source:null};saveChallenges()};
+function renderChallengeRules(){
+ $('challengeRules').innerHTML=Object.entries(challengeRules).map(([k,r])=>'<div class="summarybox"><b>'+r.title+'</b><br><span class="muted">Target: '+r.target+' · Reward: '+r.reward+'</span></div>').join('');
+ const key=$('challengeAdminSelect').value,r=challengeRules[key];
+ $('challengeTarget').value=r.target;$('challengeReward').value=r.reward;
+}
+$('challengeAdminSelect').onchange=()=>{const r=challengeRules[$('challengeAdminSelect').value];$('challengeTarget').value=r.target;$('challengeReward').value=r.reward};
+$('challengeSave').onclick=()=>{
+ const key=$('challengeAdminSelect').value,target=Math.max(1,Number($('challengeTarget').value||1)),reward=$('challengeReward').value;
+ challengeRules[key].target=target;challengeRules[key].reward=reward;
+ challengeState={earned:false,revealed:false,pendingReward:null,approved:false,source:null};
+ saveChallenges();
+};
+renderChallenges();maybeEarnScratch();saveChallenges();
 
 const lessons=['Dexter\'s menu & modifiers','Allergens & customer safety','Loyalty points and rewards','KDS order handling','Opening & closing basics','Customer service & complaints'];let done=new Set();
 function renderLessons(){$('lessonList').innerHTML=lessons.map((x,i)=>'<div class="lesson '+(done.has(i)?'done':'')+'"><b>'+x+'</b><p class="muted">'+(done.has(i)?'Completed in this test':'Short lesson + quick knowledge check')+'</p><button class="btn small" onclick="toggleLesson('+i+')">'+(done.has(i)?'Completed ✓':'Mark complete')+'</button></div>').join('');$('trainDone').textContent=done.size+' / '+lessons.length;$('trainStatus').textContent=done.size===lessons.length?'All test training completed.':' '+(lessons.length-done.size)+' module(s) remaining.'}
