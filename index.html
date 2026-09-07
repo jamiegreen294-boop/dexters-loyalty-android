@@ -148,15 +148,39 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="business">
-<div class="card notice"><b>Dexter's Business Accounts</b><p class="muted">Local companies can have approved users, spend limits, order history and invoice-style statements.</p></div>
+<div class="card notice"><b>Dexter's Business Accounts</b><p class="muted">Local companies can apply for a trade account with approved users, spend limits, statements and a staff-reviewed business credit assessment.</p></div>
 <div class="grid">
-<div class="card"><h2>Create test business</h2>
+<div class="card"><h2>Business application</h2>
 <div class="field">Business name<input id="bizName" placeholder="e.g. Glasgow Office Ltd"></div>
+<div class="field">Company number<input id="bizCompanyNo" placeholder="e.g. SC123456"></div>
 <div class="field">Contact name<input id="bizContact"></div>
-<div class="field">Monthly spend limit (£)<input id="bizLimit" inputmode="decimal" value="500"></div>
+<div class="field">Contact email<input id="bizEmail" type="email" placeholder="accounts@company.co.uk"></div>
+<div class="field">Requested credit limit (£)<input id="bizLimit" inputmode="decimal" value="500"></div>
 <div class="field">Billing cycle<select id="bizCycle"><option>Weekly</option><option>Monthly</option></select></div>
-<button class="btn" id="bizCreate">Create test account</button></div>
-<div class="card"><h2>Account dashboard</h2><div id="bizDash" class="muted">No business account created yet.</div></div>
+
+<details class="flowstep" open>
+<summary><span><span class="stepnum">1</span>Business credit review</span></summary>
+<div class="flowbody">
+<p class="tiny">Test assessment only. Final credit is always approved by Dexter's staff. No personal consumer credit search is carried out.</p>
+<div class="field">Years trading<input id="bizYears" type="number" min="0" value="3"></div>
+<div class="field">Companies House status<select id="bizStatus"><option value="active">Active</option><option value="late">Active — filing/accounts late</option><option value="new">Newly incorporated</option><option value="concern">Needs manual review</option></select></div>
+<div class="field">Trade payment history<select id="bizPay"><option value="good">Good / pays on time</option><option value="unknown">No history yet</option><option value="slow">Sometimes late</option><option value="poor">Repeatedly late / unpaid</option></select></div>
+<label class="field"><input id="bizConsent" type="checkbox" style="width:auto;margin-right:8px"> I confirm the business has authorised Dexter's to review business/public-record information for trade-account purposes.</label>
+<button class="btn alt" id="bizCreditCheck">Run test credit review</button>
+<div id="bizCreditResult" class="summarybox muted">Credit review not run yet.</div>
+</div>
+</details>
+
+<button class="btn" id="bizCreate">Submit business account application</button>
+<div id="bizApplyStatus" class="summarybox muted">No application submitted yet.</div>
+</div>
+
+<div class="card"><h2>Account dashboard</h2>
+<div id="bizDash" class="muted">No business account created yet.</div>
+<hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
+<h2>Staff credit decision</h2>
+<div id="bizStaffDecision" class="muted">Submit a test business application first.</div>
+</div>
 </div>
 </section>
 
@@ -478,7 +502,47 @@ $('catNoAllergy').onchange=()=>{if($('catNoAllergy').checked)document.querySelec
 document.querySelectorAll('.cat-allergy').forEach(x=>x.onchange=()=>{if(x.checked)$('catNoAllergy').checked=false});
 renderCat();
 
-$('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number($('bizLimit').value||0);$('bizDash').innerHTML='<div class="metric"><span class="muted">'+n+'</span><b>£0 / £'+l.toFixed(0)+'</b></div><p><span class="badge">Active</span><span class="badge">'+$('bizCycle').value+' billing</span><span class="badge">0 open invoices</span></p><p class="muted">Approved employee list, statement downloads and per-user spending rules would sit here.</p>'};
+let bizCredit=null,bizApplication=null;
+function calcBizCredit(){
+ const years=Math.max(0,Number($('bizYears').value||0)),status=$('bizStatus').value,pay=$('bizPay').value,requested=Math.max(0,Number($('bizLimit').value||0));
+ let score=50;
+ score+=Math.min(20,years*4);
+ if(status==='active')score+=20;
+ if(status==='late')score-=10;
+ if(status==='new')score-=5;
+ if(status==='concern')score-=30;
+ if(pay==='good')score+=20;
+ if(pay==='unknown')score+=0;
+ if(pay==='slow')score-=15;
+ if(pay==='poor')score-=35;
+ score=Math.max(0,Math.min(100,score));
+ const band=score>=80?'Low risk':score>=60?'Moderate risk':score>=40?'Higher review':'High risk / manual review';
+ let recommended=score>=80?Math.min(requested||1000,1500):score>=60?Math.min(requested||500,750):score>=40?Math.min(requested||250,300):0;
+ return {score,band,recommended,requested};
+}
+$('bizCreditCheck').onclick=()=>{
+ if(!$('bizConsent').checked){$('bizCreditResult').innerHTML='<span class="bad">Business authorisation is required before running the test review.</span>';return}
+ bizCredit=calcBizCredit();
+ $('bizCreditResult').innerHTML='<b>'+bizCredit.band+'</b><br><span class="muted">Test score: '+bizCredit.score+'/100</span><br><b>Recommended starting limit: £'+bizCredit.recommended.toFixed(0)+'</b><br><span class="tiny">This is an internal test recommendation only. Dexter\'s staff must make the final decision.</span>';
+};
+$('bizCreate').onclick=()=>{
+ const name=$('bizName').value.trim(),companyNo=$('bizCompanyNo').value.trim(),contact=$('bizContact').value.trim(),email=$('bizEmail').value.trim();
+ if(!name||!companyNo||!contact||!email){$('bizApplyStatus').innerHTML='<span class="bad">Complete the business name, company number, contact and email.</span>';return}
+ if(!$('bizConsent').checked){$('bizApplyStatus').innerHTML='<span class="bad">Business authorisation is required.</span>';return}
+ if(!bizCredit)bizCredit=calcBizCredit();
+ bizApplication={name,companyNo,contact,email,requested:Math.max(0,Number($('bizLimit').value||0)),cycle:$('bizCycle').value,credit:bizCredit,status:'Awaiting staff credit decision',approvedLimit:0};
+ $('bizApplyStatus').innerHTML='<b>Application submitted</b><br><span class="ok">'+name+'</span><br><span class="muted">Awaiting Dexter\'s staff credit decision.</span>';
+ renderBiz();
+};
+function renderBiz(){
+ if(!bizApplication){$('bizDash').innerHTML='No business account created yet.';$('bizStaffDecision').innerHTML='Submit a test business application first.';return}
+ const b=bizApplication;
+ $('bizDash').innerHTML='<div class="metric"><span class="muted">'+b.name+'</span><b>£0 / £'+Number(b.approvedLimit||0).toFixed(0)+'</b></div><p><span class="badge">'+b.status+'</span><span class="badge">'+b.cycle+' billing</span><span class="badge">'+b.companyNo+'</span></p><p class="muted">Approved users, order history and statements will sit here once the account is approved.</p>';
+ $('bizStaffDecision').innerHTML='<div class="summarybox"><b>'+b.credit.band+'</b><br><span class="muted">Test score '+b.credit.score+'/100 · Requested £'+b.requested.toFixed(0)+'</span><br><b>Recommended start: £'+b.credit.recommended.toFixed(0)+'</b><div class="field">Approved credit limit (£)<input id="bizApprovedLimit" inputmode="decimal" value="'+b.credit.recommended.toFixed(0)+'"></div><div class="field">Staff note<textarea id="bizStaffNote" rows="2" placeholder="Reason for decision"></textarea></div><div class="row"><button class="btn small" onclick="approveBiz()">Approve account</button><button class="btn alt small" onclick="holdBiz()">Manual review</button><button class="btn alt small" onclick="declineBiz()">Decline credit</button></div></div>';
+}
+window.approveBiz=()=>{const lim=Math.max(0,Number($('bizApprovedLimit').value||0));bizApplication.approvedLimit=lim;bizApplication.status='Approved';renderBiz()};
+window.holdBiz=()=>{bizApplication.status='Manual review';renderBiz()};
+window.declineBiz=()=>{bizApplication.approvedLimit=0;bizApplication.status='Credit declined';renderBiz()};
 
 let later=[];
 $('laterBook').onclick=()=>{later.unshift({date:$('laterDate').value,time:$('laterTime').value,items:$('laterItems').value});$('laterList').innerHTML=later.map(x=>'<div class="summarybox"><b>'+x.date+' at '+x.time+'</b><br><span class="muted">'+x.items.replace(/\n/g,' · ')+'</span><br><span class="ok">Scheduled</span></div>').join('')};
