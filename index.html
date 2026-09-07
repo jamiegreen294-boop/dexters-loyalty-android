@@ -141,11 +141,21 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 .pass-saved-signature{margin-top:10px;padding:8px 10px;border:1px solid #e0dce3;border-radius:4px;background:#faf9fb;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .pass-saved-signature span{font-size:11px;color:#6f6972}.pass-saved-signature img{max-width:150px;max-height:48px;object-fit:contain}
 @media(max-width:560px){#staffSignatureCanvas{height:180px}.pass-sign-head{flex-direction:column}.pass-saved-signature{align-items:flex-start;flex-direction:column}}
+
+#customers .staff-pass-grid{display:block!important}
+#customerCardView{width:100%;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+#custDirectory{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px!important;margin-top:12px}
+.pass-customer-card{appearance:none;width:100%;text-align:left;background:#fff;border:1px solid #dedde3;border-radius:5px;padding:16px;color:#3e3941;cursor:pointer;box-shadow:0 1px 4px #0000000a;transition:.15s}
+.pass-customer-card:hover{border-color:#9b6fad;box-shadow:0 4px 12px #00000012;transform:translateY(-1px)}
+.pass-customer-card h3{margin:12px 0 2px;font-size:17px;color:#3d3840}
+#customerRecordView{width:100%;background:#fff!important;border:1px solid #dedde3!important;padding:18px!important}
+@media(max-width:900px){#custDirectory{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){#custDirectory{grid-template-columns:1fr}.pass-customer-card{padding:14px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-12-staff-signatures">
+<main class="wrap" data-build="2026-09-08-website-pass-13-customer-card-signatures">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -365,6 +375,16 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
     <div class="pass-sign-canvas-wrap"><canvas id="staffSignatureCanvas" width="900" height="300"></canvas></div>
     <div class="row"><button type="button" class="btn alt" id="staffSignatureClear">Clear</button><button type="button" class="btn" id="staffSignatureSave">Save signature</button></div>
     <div id="staffSignatureMessage" class="tiny"></div>
+  </div>
+</div>
+
+<div id="customerSignatureOverlay" class="pass-sign-overlay" style="display:none">
+  <div class="pass-sign-modal">
+    <div class="pass-sign-head"><div><h2>Customer signature</h2><p class="muted">Sign in the box below, then save the signature to this customer form.</p></div><button type="button" class="btn alt small" id="customerSignatureClose">Close</button></div>
+    <div class="field">Customer name<input id="customerSignatureName" autocomplete="name"></div>
+    <div class="pass-sign-canvas-wrap"><canvas id="customerSignatureCanvas" width="900" height="300"></canvas></div>
+    <div class="row"><button type="button" class="btn alt" id="customerSignatureClear">Clear</button><button type="button" class="btn" id="customerSignatureSave">Save signature</button></div>
+    <div id="customerSignatureMessage" class="tiny"></div>
   </div>
 </div>
 
@@ -816,14 +836,19 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 </div>
 <div class="card pass-manager-alerts"><h3>Customer manager alerts</h3><div id="custMgrAlerts"></div></div>
 <div class="staff-pass-grid">
-  <div class="staff-pass-list">
+  <div class="staff-pass-list" id="customerCardView">
+    <h2>Customers</h2><p class="muted">Choose a customer card to open the full record, forms and history.</p>
     <div class="field">Search customers<input id="custSearch" placeholder="Search name or phone"></div>
     <button class="btn" id="custAdd">+ Add test customer</button>
     <div id="custDirectory" style="margin-top:10px"></div>
   </div>
-  <div class="staff-pass-profile">
+  <div class="staff-pass-profile" id="customerRecordView" style="display:none">
     <div id="custEmpty" class="muted">Choose a customer from the directory.</div>
     <div id="custProfileWrap" style="display:none">
+      <div class="pass-record-head">
+        <button class="btn alt small" id="customerBackToCards">← Customers</button>
+        <div><h2 style="margin:0">Customer record</h2><div class="muted">Profile, loyalty, forms and history</div></div>
+      </div>
       <div class="staff-profile-head">
         <div class="staff-avatar" id="custAvatar">CU</div>
         <div><h2 id="custProfileTitle" style="margin:0">Customer</h2><div id="custProfileMeta" class="muted"></div></div>
@@ -892,6 +917,14 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
         <div id="custDocuments"></div>
         <div class="field">Document type<select id="cuDocType"><option>Consent / preferences</option><option>Complaint outcome</option><option>Catering declaration</option><option>Refund / resolution record</option><option>Other</option></select></div>
         <div class="field">Document / notes<textarea id="cuDocNote" rows="4"></textarea></div>
+        <div class="field">
+          Customer acknowledgement / signature
+          <button type="button" id="cuSignatureBox" class="pass-sign-box">
+            <span id="cuSignatureEmpty"><b>Click to sign</b><small>Customer signs here</small></span>
+            <span id="cuSignaturePreview" style="display:none"><img id="cuSignatureImage" alt="Customer signature"><small id="cuSignatureMeta"></small></span>
+          </button>
+          <input id="cuDocSigned" type="checkbox" style="display:none">
+        </div>
         <button class="btn alt" id="custAddDocument">Add editable customer document</button>
       </div>
 
@@ -2823,9 +2856,42 @@ function custInitials(n){return String(n||'Customer').split(/\s+/).map(x=>x[0]||
 function renderCustDirectory(){
  const q=($('custSearch')?.value||'').trim().toLowerCase();
  const items=customerDb.customers.filter(x=>!q||String(x.name).toLowerCase().includes(q)||String(x.phone||'').toLowerCase().includes(q));
- $('custDirectory').innerHTML=items.map(x=>'<div class="pass-person-card '+(customerDb.selected===x.id?'selected':'')+'" onclick="selectCustomerRecord(&quot;'+x.id+'&quot;)"><div class="pass-avatar">'+custInitials(x.name)+'</div><div class="pass-person-copy"><b>'+x.name+'</b><span>'+(x.phone||'No phone')+'</span><small>'+(x.email||x.preferredContact||'No email')+'</small></div><span class="pass-status '+(x.status==='Active'?'active':'')+'">'+x.status+'</span></div>').join('')||'<span class="muted">No customers found.</span>';
+ $('custDirectory').innerHTML=items.map(x=>{
+ const loyalty=x.loyalty||{points:0,stamps:0},complaints=(x.complaints||[]).filter(c=>c.status!=='Resolved'&&c.status!=='Closed').length,catering=(x.catering||[]).length;
+ return '<button class="pass-customer-card" onclick="selectCustomerRecord(&quot;'+x.id+'&quot;)">'+
+  '<div class="pass-staff-card-top"><div class="pass-avatar large">'+custInitials(x.name)+'</div><span class="pass-status '+(x.status==='Active'?'active':'')+'">'+x.status+'</span></div>'+
+  '<h3>'+x.name+'</h3><div class="pass-staff-role">'+(x.preferredContact||'Customer')+'</div>'+
+  '<div class="pass-staff-contact">'+(x.phone||x.email||'No contact details')+'</div>'+
+  '<div class="pass-staff-metrics"><span><b>'+Number(loyalty.points||0)+'</b><small>points</small></span><span><b>'+complaints+'</b><small>complaints</small></span><span><b>'+catering+'</b><small>catering</small></span></div>'+
+  '<div class="pass-staff-open">Open customer record →</div></button>';
+}).join('')||'<span class="muted">No customers found.</span>';
 }
-window.selectCustomerRecord=id=>{customerDb.selected=id;localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));renderCustomerDb()};
+let CUSTOMER_RECORD_OPEN=false;
+window.selectCustomerRecord=id=>{customerDb.selected=id;CUSTOMER_RECORD_OPEN=true;localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));initCustomerSignaturePad();refreshCustomerSignatureBox();renderCustomerDb();window.scrollTo({top:0,behavior:'smooth'})};
+window.closeCustomerRecord=()=>{CUSTOMER_RECORD_OPEN=false;renderCustomerDb();window.scrollTo({top:0,behavior:'smooth'})};
+let CUSTOMER_SIGNATURE_DATA='',CUSTOMER_SIGNATURE_NAME='',CUSTOMER_SIGNATURE_AT='';
+function refreshCustomerSignatureBox(){
+ const signed=$('cuDocSigned'),empty=$('cuSignatureEmpty'),preview=$('cuSignaturePreview'),img=$('cuSignatureImage'),meta=$('cuSignatureMeta');
+ if(!signed||!empty||!preview||!img||!meta)return;
+ const has=!!CUSTOMER_SIGNATURE_DATA;signed.checked=has;empty.style.display=has?'none':'flex';preview.style.display=has?'flex':'none';
+ if(has){img.src=CUSTOMER_SIGNATURE_DATA;meta.textContent=(CUSTOMER_SIGNATURE_NAME||'Customer')+(CUSTOMER_SIGNATURE_AT?' · '+new Date(CUSTOMER_SIGNATURE_AT).toLocaleString():'');}
+ else{img.removeAttribute('src');meta.textContent='';}
+}
+function resetCustomerSignature(){CUSTOMER_SIGNATURE_DATA='';CUSTOMER_SIGNATURE_NAME='';CUSTOMER_SIGNATURE_AT='';refreshCustomerSignatureBox()}
+function initCustomerSignaturePad(){
+ const box=$('cuSignatureBox'),overlay=$('customerSignatureOverlay'),canvas=$('customerSignatureCanvas'),close=$('customerSignatureClose'),clear=$('customerSignatureClear'),save=$('customerSignatureSave'),name=$('customerSignatureName'),msg=$('customerSignatureMessage');
+ if(!box||!overlay||!canvas)return;const ctx=canvas.getContext('2d');let drawing=false,hasInk=false;
+ function prep(){ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#2d2730'}
+ function pos(e){const r=canvas.getBoundingClientRect(),p=e.touches?.[0]||e;return{x:(p.clientX-r.left)*(canvas.width/r.width),y:(p.clientY-r.top)*(canvas.height/r.height)}}
+ function start(e){e.preventDefault();drawing=true;hasInk=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)}
+ function move(e){if(!drawing)return;e.preventDefault();const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()}
+ function end(e){if(e)e.preventDefault();drawing=false}
+ prep();['pointerdown','mousedown','touchstart'].forEach(ev=>canvas.addEventListener(ev,start,{passive:false}));['pointermove','mousemove','touchmove'].forEach(ev=>canvas.addEventListener(ev,move,{passive:false}));['pointerup','pointercancel','mouseup','mouseleave','touchend'].forEach(ev=>canvas.addEventListener(ev,end,{passive:false}));
+ box.onclick=()=>{const cu=selectedCustomer();name.value=CUSTOMER_SIGNATURE_NAME||cu?.name||'';ctx.clearRect(0,0,canvas.width,canvas.height);prep();hasInk=false;if(CUSTOMER_SIGNATURE_DATA){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,canvas.width,canvas.height);im.src=CUSTOMER_SIGNATURE_DATA;hasInk=true}msg.textContent='';overlay.style.display='flex'};
+ close.onclick=()=>overlay.style.display='none';overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.style.display='none'});
+ clear.onclick=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);prep();hasInk=false;msg.textContent='Signature cleared.'};
+ save.onclick=()=>{const signer=name.value.trim();if(!signer)return msg.innerHTML='<span class="bad">Enter the customer name.</span>';if(!hasInk)return msg.innerHTML='<span class="bad">Add a signature in the box first.</span>';CUSTOMER_SIGNATURE_DATA=canvas.toDataURL('image/png');CUSTOMER_SIGNATURE_NAME=signer;CUSTOMER_SIGNATURE_AT=new Date().toISOString();refreshCustomerSignatureBox();overlay.style.display='none'};
+}
 function renderCustomerManagerOverview(){
  if(!$('custMgrTotal'))return;
  const list=customerDb.customers||[];
@@ -2845,7 +2911,10 @@ function renderCustomerManagerOverview(){
 function renderCustomerDb(){
  renderCustDirectory();renderCustomerManagerOverview();
  const cu=selectedCustomer(),show=!!cu;
- $('custEmpty').style.display=show?'none':'block';$('custProfileWrap').style.display=show?'block':'none';if(!cu)return;
+ const cardView=$('customerCardView'),recordView=$('customerRecordView');
+ if(cardView)cardView.style.display=CUSTOMER_RECORD_OPEN?'none':'block';
+ if(recordView)recordView.style.display=CUSTOMER_RECORD_OPEN?'block':'none';
+ $('custEmpty').style.display=(CUSTOMER_RECORD_OPEN&&show)?'none':'block';$('custProfileWrap').style.display=(CUSTOMER_RECORD_OPEN&&show)?'block':'none';if(!cu)return;
  $('custAvatar').textContent=custInitials(cu.name);$('custProfileTitle').textContent=cu.name;$('custProfileMeta').textContent=(cu.phone||'No phone')+' · '+cu.status;
  $('cuName').value=cu.name||'';$('cuPhone').value=cu.phone||'';$('cuEmail').value=cu.email||'';$('cuStatus').value=cu.status||'Active';$('cuJoined').value=cu.joined||'';$('cuContact').value=cu.preferredContact||'App';tagPicker('cuTags',cu.tags||[]);
  const l=cu.loyalty||{points:0,stamps:0,rewards:[]};
@@ -2855,17 +2924,18 @@ function renderCustomerDb(){
  $('custDeals').innerHTML=(cu.deals||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.status+'</span></div>').join('')||'<span class="muted">No linked deals.</span>';
  $('custChallenges').innerHTML=(cu.challenges||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.progress+'</span></div>').join('')||'<span class="muted">No linked challenge progress.</span>';
  $('custComplaints').innerHTML=(cu.complaints||[]).map((x,i)=>'<div class="summarybox"><b>Complaint / incident</b><br><span class="muted">'+x.text+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No complaints or incidents.</span>';
- $('custDocuments').innerHTML=(cu.documents||[]).map((x,i)=>'<div class="summarybox"><b>'+x.type+'</b><br><textarea id="cuDocEdit'+i+'" rows="3">'+String(x.note||'').replace(/</g,'&lt;')+'</textarea><div class="row"><button class="btn alt small" onclick="saveCustomerDocument('+i+')">Save changes</button><button class="btn alt small" onclick="removeCustomerDocument('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No customer documents.</span>';
+ $('custDocuments').innerHTML=(cu.documents||[]).map((x,i)=>'<div class="summarybox"><b>'+x.type+'</b>'+(x.signed?'<span class="badge">Signed</span>':'')+'<br><textarea id="cuDocEdit'+i+'" rows="3">'+String(x.note||'').replace(/</g,'&lt;')+'</textarea>'+(x.signatureData?'<div class="pass-saved-signature"><span>Signed by '+(x.signatureName||'customer')+(x.signedAt?' · '+new Date(x.signedAt).toLocaleString():'')+'</span><img src="'+x.signatureData+'" alt="Saved customer signature"></div>':'')+'<div class="row"><button class="btn alt small" onclick="saveCustomerDocument('+i+')">Save changes</button><button class="btn alt small" onclick="removeCustomerDocument('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No customer documents.</span>';
  $('custNotes').innerHTML=(cu.notes||[]).map(x=>'<div class="summarybox"><span class="muted">'+x.text+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No notes.</span>';
  renderCustomerWorkflow(cu);
  $('custAudit').innerHTML=(cu.audit||[]).map(x=>'<div class="tiny" style="padding:7px 0;border-bottom:1px solid #ffffff10"><b>'+new Date(x.at).toLocaleString()+'</b> — '+x.action+'</div>').join('')||'No audit history.';
 }
 document.querySelectorAll('[data-custtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-custtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('[id^="custPane-"]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=$('custPane-'+b.dataset.custtab);if(p)p.classList.add('active')});
+const customerBackBtn=$('customerBackToCards');if(customerBackBtn)customerBackBtn.onclick=closeCustomerRecord;
 $('custSearch').addEventListener('input',renderCustDirectory);
 $('custAdd').onclick=()=>{const name=prompt('Customer name');if(!name?.trim())return;const id='cust-'+Date.now();customerDb.customers.push({id,name:name.trim(),phone:'',email:'',status:'Active',joined:new Date().toISOString().slice(0,10),preferredContact:'App',loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],audit:[]});customerDb.selected=id;logCustomer(selectedCustomer(),'Customer record created');saveCustomerDb()};
 $('custSave').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.name=$('cuName').value.trim()||'Unnamed customer';cu.phone=$('cuPhone').value.trim();cu.email=$('cuEmail').value.trim();cu.status=$('cuStatus').value;cu.joined=$('cuJoined').value;cu.preferredContact=$('cuContact').value;cu.tags=pickedTags('cuTags');logCustomer(cu,'Customer profile updated');saveCustomerDb()};
 $('custAddComplaint').onclick=()=>{const cu=selectedCustomer(),text=$('cuComplaint').value.trim();if(!cu||!text)return;cu.complaints.unshift({text,owner:$('cuComplaintOwner').value,due:$('cuComplaintDue').value,resolution:$('cuComplaintResolution').value.trim(),status:'Open',at:new Date().toISOString()});dexManage.tasks.unshift({title:'Customer complaint · '+cu.name,assignee:$('cuComplaintOwner').value,type:'Task',priority:'High',due:$('cuComplaintDue').value,details:text,resolution:$('cuComplaintResolution').value.trim(),tags:['Follow-up'],status:'Open',at:new Date().toISOString()});logCustomer(cu,'Complaint workflow opened');addTimeline('Customer Complaint',cu.name+' complaint opened');$('cuComplaint').value='';saveCustomerDb();saveDexManage()};
-$('custAddDocument').onclick=()=>{const cu=selectedCustomer(),note=$('cuDocNote').value.trim();if(!cu||!note)return;cu.documents.unshift({type:$('cuDocType').value,note,at:new Date().toISOString()});logCustomer(cu,'Customer document added: '+$('cuDocType').value);$('cuDocNote').value='';saveCustomerDb()};
+$('custAddDocument').onclick=()=>{const cu=selectedCustomer(),note=$('cuDocNote').value.trim();if(!cu||!note)return;cu.documents.unshift({type:$('cuDocType').value,note,signed:!!CUSTOMER_SIGNATURE_DATA,signatureData:CUSTOMER_SIGNATURE_DATA||'',signatureName:CUSTOMER_SIGNATURE_NAME||'',signedAt:CUSTOMER_SIGNATURE_AT||'',at:new Date().toISOString()});resetCustomerSignature();logCustomer(cu,'Customer document added: '+$('cuDocType').value);$('cuDocNote').value='';saveCustomerDb()};
 window.saveCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;cu.documents[i].note=$('cuDocEdit'+i).value;cu.documents[i].updatedAt=new Date().toISOString();logCustomer(cu,'Customer document updated: '+cu.documents[i].type);saveCustomerDb()};
 window.removeCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const t=cu.documents[i].type;cu.documents.splice(i,1);logCustomer(cu,'Customer document removed: '+t);saveCustomerDb()};
 
