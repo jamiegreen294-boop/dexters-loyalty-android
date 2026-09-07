@@ -1144,7 +1144,7 @@ function renderRefresherAndFinal(){
   $('trainFinal').innerHTML='<b>Final certification locked</b><br><span class="muted">Complete all required modules for this role first.</span>';return;
  }
  if(trainState.certifiedAt){
-  $('trainFinal').innerHTML='<span class="ok"><b>Dexter\\'s Staff Training Certified ✓</b></span><br><span class="muted">Final score '+trainState.finalScore+'% · attempts '+trainState.finalAttempts+'</span><br><span class="tiny">Test certification record only. Refresher cycle: '+trainState.refreshDays+' days.</span>';return;
+  $('trainFinal').innerHTML='<span class="ok"><b>Dexter\'s Staff Training Certified ✓</b></span><br><span class="muted">Final score '+trainState.finalScore+'% · attempts '+trainState.finalAttempts+'</span><br><span class="tiny">Test certification record only. Refresher cycle: '+trainState.refreshDays+' days.</span>';return;
  }
  $('trainFinal').innerHTML='<b>Final certification test</b><p class="tiny">12 mixed questions. Pass mark 80%.</p>'+FINAL_QUESTIONS.map((q,i)=>'<div class="field"><b>'+(i+1)+'. '+q[0]+'</b><select id="finalAnswer'+i+'"><option value="">Choose an answer</option>'+q[1].map((a,ai)=>'<option value="'+ai+'">'+a+'</option>').join('')+'</select></div>').join('')+'<button class="btn" onclick="submitFinalTraining()">Submit final test</button><div id="finalTrainingFeedback" class="tiny"></div>';
 }
