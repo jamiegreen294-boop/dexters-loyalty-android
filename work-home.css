@@ -96,3 +96,9 @@ body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:1
 .work-deal-item h3{margin:9px 0 6px}
 .work-deal-old{text-decoration:line-through;color:var(--muted);margin-right:8px}
 .work-deal-price{font-size:26px;color:var(--green,#9ff3c5)}
+
+#homePage .work-top .work-small:not([hidden]){
+  display:inline-block!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
