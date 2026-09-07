@@ -48,3 +48,26 @@ body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #seasonBanner{w
 body:has(#appView:not(.hidden) #qrPage.work-rewards:not(.hidden)) .wrap{padding-bottom:100px}
 
 body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:100px}
+
+
+/* 2026-09-07 live home polish */
+#homePage .work-top .work-small{
+  background:transparent!important;
+  border:1px solid rgba(255,255,255,.28)!important;
+  color:var(--white)!important;
+  box-shadow:none!important;
+}
+#homePage .work-top .work-small:hover,
+#homePage .work-top .work-small:active{
+  background:rgba(255,255,255,.06)!important;
+}
+#homePage #collectionOrderLiveCard.work-collection-standalone{
+  margin:0 0 14px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#homePage #collectionOrderLiveCard.work-collection-standalone #collectionLiveBtn{
+  margin:0!important;
+}
