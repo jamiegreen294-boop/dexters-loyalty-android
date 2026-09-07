@@ -198,6 +198,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
 <h2>Staff-approved test deals</h2>
 <div id="dealApproved" class="muted">No deals approved in this test.</div>
+<p class="tiny">Approved deals are still not sent automatically. Staff must press Send to customer.</p>
 </div>
 </div>
 </section>
@@ -504,7 +505,10 @@ let dealApproved=[];try{dealApproved=JSON.parse(localStorage.getItem(DEALKEY)||'
 let dealCandidates=[];
 function dealExpiry(days=7){const d=new Date(Date.now()+days*86400000);return d.toISOString().slice(0,10)}
 function renderApprovedDeals(){
- $('dealApproved').innerHTML=dealApproved.map((d,i)=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.offer+'</span><br><span class="tiny">Customer: '+d.customer+' · Expires '+d.expiry+' · Test only</span><div class="row" style="margin-top:8px"><button class="btn alt small" onclick="removeApprovedDeal('+i+')">Remove</button></div></div>').join('')||'No deals approved in this test.';
+ $('dealApproved').innerHTML=dealApproved.map((d,i)=>{
+   const sent=d.status==='Sent to customer';
+   return '<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.offer+'</span><br><span class="tiny">Customer: '+d.customer+' · Expires '+d.expiry+' · '+d.status+'</span><div class="row" style="margin-top:8px">'+(!sent?'<button class="btn small" onclick="sendApprovedDeal('+i+')">Send to customer</button>':'<span class="ok">Sent</span>')+'<button class="btn alt small" onclick="removeApprovedDeal('+i+')">Remove</button></div></div>';
+ }).join('')||'No deals approved in this test.';
 }
 function renderDealCandidates(){
  $('dealOut').innerHTML=dealCandidates.map((d,i)=>'<div class="summarybox"><b>'+d.title+'</b><br>'+d.offer+'<br><span class="muted"><b>Why:</b> '+d.reason+'</span><br><span class="tiny">Suggested expiry: '+d.expiry+' · '+d.rule+'</span><div class="row" style="margin-top:8px"><button class="btn small" onclick="approveDeal('+i+')">Approve test deal</button><button class="btn alt small" onclick="rejectDeal('+i+')">Reject</button></div></div>').join('')||'<span class="muted">No deal rules matched this customer.</span>';
@@ -525,12 +529,13 @@ $('dealRun').onclick=()=>{
 };
 window.approveDeal=i=>{
  const d=dealCandidates[i]; if(!d)return;
- dealApproved.unshift({...d,approvedAt:new Date().toISOString()});
+ dealApproved.unshift({...d,status:'Approved — waiting to send',approvedAt:new Date().toISOString()});
  localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));
  dealCandidates.splice(i,1);
  renderDealCandidates();renderApprovedDeals();
 };
 window.rejectDeal=i=>{dealCandidates.splice(i,1);renderDealCandidates()};
+window.sendApprovedDeal=i=>{const d=dealApproved[i];if(!d)return;d.status='Sent to customer';d.sentAt=new Date().toISOString();localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));renderApprovedDeals()};
 window.removeApprovedDeal=i=>{dealApproved.splice(i,1);localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));renderApprovedDeals()};
 renderApprovedDeals();
 
