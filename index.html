@@ -55,11 +55,77 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div id="secureSignedOut">
 <div class="grid"><div class="field">Email<input id="secureLoginEmail" type="email" autocomplete="username"></div><div class="field">Password<input id="secureLoginPassword" type="password" autocomplete="current-password"></div></div>
 <div class="row"><button class="btn" id="secureLoginBtn">Sign in</button><button class="btn alt" id="secureForgotBtn">Forgot password</button></div>
-<p class="tiny">This standalone test still keeps its existing test-role selector for development. Secure staff account actions require a real signed-in Manager or Super User.</p>
+<p class="tiny">Secure staff access only. Your authenticated Dexter's role controls what you can see.</p>
 </div>
 <div id="secureSignedIn" style="display:none"><span class="ok"><b id="secureUserLabel">Signed in</b></span> <span class="badge" id="secureRoleLabel"></span><button class="btn alt small" id="secureLogoutBtn">Sign out</button></div>
+
 <div id="secureAuthMessage" class="tiny" style="margin-top:8px"></div>
 </div>
+<script>
+(function(){
+  function initStandaloneAuthButtons(){
+    const loginBtn=document.getElementById('secureLoginBtn');
+    const forgotBtn=document.getElementById('secureForgotBtn');
+    const emailEl=document.getElementById('secureLoginEmail');
+    const passEl=document.getElementById('secureLoginPassword');
+    const msg=document.getElementById('secureAuthMessage');
+    if(!loginBtn||!forgotBtn||!emailEl||!passEl||!msg)return;
+
+    if(!emailEl.value)emailEl.value='jgreen.25@hotmail.co.uk';
+
+    function getClient(){
+      if(!window.supabase){
+        msg.innerHTML='<span class="bad">Secure login library did not load. Refresh the page and try again.</span>';
+        return null;
+      }
+      if(!window.__DEXTERS_AUTH_CLIENT){
+        window.__DEXTERS_AUTH_CLIENT=window.supabase.createClient(
+          'https://bpnkouymdvcogeaqjmxl.supabase.co',
+          'sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa'
+        );
+      }
+      return window.__DEXTERS_AUTH_CLIENT;
+    }
+
+    loginBtn.onclick=async function(e){
+      e.preventDefault();
+      const email=emailEl.value.trim();
+      const password=passEl.value;
+      if(!email||!password){msg.innerHTML='<span class="bad">Enter your email and password.</span>';return;}
+      const client=getClient();if(!client)return;
+      loginBtn.disabled=true;msg.textContent='Signing in…';
+      try{
+        const {data,error}=await client.auth.signInWithPassword({email,password});
+        if(error)throw error;
+        msg.innerHTML='<span class="ok">Signed in securely. Loading Back Office…</span>';
+        setTimeout(()=>location.reload(),250);
+      }catch(err){
+        msg.innerHTML='<span class="bad">'+String(err&&err.message||err)+'</span>';
+      }finally{loginBtn.disabled=false;}
+    };
+
+    forgotBtn.onclick=async function(e){
+      e.preventDefault();
+      const email=emailEl.value.trim();
+      if(!email){msg.innerHTML='<span class="bad">Enter your email first.</span>';return;}
+      const client=getClient();if(!client)return;
+      forgotBtn.disabled=true;msg.textContent='Sending reset link…';
+      try{
+        const redirectTo=location.origin+location.pathname;
+        const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo});
+        if(error)throw error;
+        msg.innerHTML='<span class="ok">Password reset email requested. Check your inbox and junk folder.</span>';
+      }catch(err){
+        msg.innerHTML='<span class="bad">'+String(err&&err.message||err)+'</span>';
+      }finally{forgotBtn.disabled=false;}
+    };
+
+    passEl.addEventListener('keydown',function(e){if(e.key==='Enter')loginBtn.click();});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initStandaloneAuthButtons);
+  else initStandaloneAuthButtons();
+})();
+</script>
 
 <div id="firstPasswordOverlay" style="display:none;position:fixed;inset:0;z-index:1000;background:#09060df5;padding:24px;overflow:auto">
 <div class="card" style="max-width:520px;margin:8vh auto">
@@ -1078,7 +1144,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script>
 const SUPABASE_URL='https://bpnkouymdvcogeaqjmxl.supabase.co';
 const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
-const SB=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SB=window.__DEXTERS_AUTH_CLIENT||window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
 let SECURE_SESSION=null,SECURE_ACCOUNT=null;
 
 async function secureFunction(action,payload={}){
