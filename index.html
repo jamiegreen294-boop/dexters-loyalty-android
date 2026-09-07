@@ -56,6 +56,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </select></div>
 <div id="catMenuPreview" class="summarybox"><b>What's included</b><br><span class="muted">Choose a package to preview the buffet.</span></div>
 <div id="catRequiredChoices" class="summarybox"><b>Required buffet choices</b><br><span class="muted">Choose a package first.</span></div>
+<div id="catAllergenMatrix" class="summarybox"><b>Allergen information</b><br><span class="tiny">All Dexter's catering food is prepared in the same kitchen. Cross-contact with other allergens is possible.</span></div>
 <div id="catDipChoices" class="summarybox"><b>2oz Dip Tubs</b><br><span class="muted">Add any Dexter's sauces you want.</span></div>
 <div id="catExtrasChoices" class="summarybox"><b>Paid Buffet Extras</b><br><span class="muted">Add extra buffet items if required.</span></div>
 <div class="summarybox"><b>Test estimate: <span id="catEstimate">£78.00</span></b><br><span class="tiny">Illustrative test pricing only — final Dexter's catering prices can be set before launch.</span></div>
@@ -255,11 +256,28 @@ function updateAllocationStatus(){
  if(key==='Chinese'){el.innerHTML=total===2?'<span class="ok">2 mains selected correctly.</span>':'<span class="bad">Total must equal 2.</span>';return}
  el.innerHTML=total===target?'<span class="ok">Allocation matches '+target+' people.</span>':'<span class="bad">'+total+' allocated · must equal '+target+'.</span>'
 }
+const chineseAllergens={
+"Chicken Breast Curry":{contains:"Wheat/Gluten, Celery, Milk, Egg",may:"Mustard"},
+"Chicken Szechuan":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"},
+"Black Bean Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"},
+"Garlic Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"},
+"Sweet & Sour Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg, Celery",may:"Mustard"},
+"Salt & Chilli Chicken":{contains:"Wheat/Gluten, Soya, Molluscs, Sesame, Milk, Egg",may:"Celery, Mustard"}
+};
+function renderAllergenMatrix(){
+ const key=catKey(),box=$('catAllergenMatrix'); if(!box)return;
+ if(key!=='Chinese'){
+   box.innerHTML='<b>Allergen information</b><br><span class="tiny">All Dexter\'s catering food is prepared in the same kitchen. Cross-contact with other allergens is possible. Staff must confirm allergy suitability before approval.</span>';
+   return;
+ }
+ box.innerHTML='<b>Chinese buffet allergen information</b><br><span class="tiny">All Dexter\'s catering food is prepared in the same kitchen. Cross-contact with other allergens is possible.</span><div style="margin-top:8px">'+Object.entries(chineseAllergens).map(([name,a])=>'<div class="lesson"><b>'+name+'</b><br><span class="bad"><b>Contains:</b> '+a.contains+'</span><br><span class="muted"><b>May contain:</b> '+a.may+'</span></div>').join('')+'</div><p class="tiny">Customers with allergies must declare them in the allergy section. Dexter\'s staff must review suitability before approving the order.</p>';
+}
 function renderRequiredChoices(){
  const key=catKey(),rule=buffetRules[key];
  $('catRequiredChoices').innerHTML='<b>Required buffet choices</b><br><span class="tiny">'+rule.label+'</span><div style="margin-top:8px">'+rule.items.map((x,i)=>'<label style="display:flex;gap:8px;align-items:center;margin:7px 0"><input class="cat-choice" type="checkbox" value="'+x+'" style="width:auto;margin:0"><span>'+x+'</span></label>').join('')+'</div><div id="catChoiceCount" class="tiny">0 selected</div>';
  $('catRequiredChoices').querySelectorAll('.cat-choice').forEach(ch=>ch.onchange=()=>{const all=[...$('catRequiredChoices').querySelectorAll('.cat-choice')],n=all.filter(x=>x.checked).length;if(n>rule.max){ch.checked=false} $('catChoiceCount').textContent=all.filter(x=>x.checked).length+' selected · '+rule.label;renderAllocations()});
  renderAllocations();
+ renderAllergenMatrix();
 }
 function dipAllowance(){return Math.min(10,Math.ceil(Math.max(1,Number($('catPeople').value||1))/2))}
 function updateDipAllowance(){
@@ -286,7 +304,7 @@ function renderDipChoices(){
  updateDipAllowance();
 }
 function refreshCatTotal(){const people=Math.max(1,Number($('catPeople').value||1)),p=catPrice(),base=p?people*p:0,dips=paidDipTotal(),extras=extrasTotal(),added=dips+extras;$('catEstimate').textContent=p?('£'+(base+added).toFixed(2)):(added?('Staff quote + £'+added.toFixed(2)+' extras'):'Staff quote required')}
-function updateCatEstimate(){const key=catKey(); $('catMenuPreview').innerHTML='<b>What\'s included</b><br>'+buffetCopy[key].map(x=>'• '+x).join('<br>');renderRequiredChoices();renderDipChoices();renderExtras();refreshCatTotal()}
+function updateCatEstimate(){const key=catKey(); $('catMenuPreview').innerHTML='<b>What\'s included</b><br>'+buffetCopy[key].map(x=>'• '+x).join('<br>');renderRequiredChoices();renderDipChoices();renderExtras();renderAllergenMatrix();refreshCatTotal()}
 $('catPeople').addEventListener('input',()=>{renderDipChoices();refreshCatTotal()});
 $('catPack').addEventListener('change',updateCatEstimate);updateCatEstimate();
 $('catSubmit').onclick=()=>{
