@@ -151,11 +151,64 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 #customerRecordView{width:100%;background:#fff!important;border:1px solid #dedde3!important;padding:18px!important}
 @media(max-width:900px){#custDirectory{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){#custDirectory{grid-template-columns:1fr}.pass-customer-card{padding:14px}}
+
+/* PASS-style completion pass across the full Back Office */
+.dex-backoffice-nav{overflow:visible!important;white-space:nowrap}
+.pass-nav-home{min-width:max-content!important}
+.pass-nav-menu{position:relative;display:flex;align-self:stretch}
+.pass-nav-trigger{border:0;background:transparent;color:#eadff0;font:inherit;font-size:12px;font-weight:750;padding:0 13px;cursor:pointer}
+.pass-nav-menu:hover .pass-nav-trigger,.pass-nav-menu:focus-within .pass-nav-trigger{background:#ffffff14;color:#fff}
+.pass-nav-drop{display:none;position:absolute;top:100%;left:0;z-index:90;min-width:235px;background:#fff;border:1px solid #d9d5dc;border-radius:0 0 5px 5px;padding:6px;box-shadow:0 8px 24px #00000026}
+.pass-nav-menu:hover .pass-nav-drop,.pass-nav-menu:focus-within .pass-nav-drop,.pass-nav-menu.open .pass-nav-drop{display:block}
+.dex-backoffice-nav .pass-nav-drop .tab{display:block!important;width:100%!important;text-align:left!important;color:#4c4750!important;padding:10px 11px!important;border-radius:3px!important;font-size:12px!important}
+.dex-backoffice-nav .pass-nav-drop .tab:hover,.dex-backoffice-nav .pass-nav-drop .tab.active{background:#efe8f3!important;color:#560b76!important;box-shadow:none!important}
+.pass-nav-drop-wide{min-width:270px}
+.pass-nav-spacer{flex:1}
+.pass-nav-user{display:flex;align-items:center;color:#eadff0;font-size:11px;padding:0 10px;min-width:max-content}
+
+.dex-backoffice-main>.panel>.card.notice:first-child{border:0!important;border-left:4px solid var(--pass-purple)!important;border-radius:4px!important;box-shadow:0 1px 4px #0000000a!important;margin-bottom:16px!important;padding:15px 18px!important;background:#fff!important}
+.dex-backoffice-main>.panel>.card.notice:first-child>b{display:block;font-size:18px;color:#413b44;margin-bottom:4px}
+.dex-backoffice-main>.panel>.card.notice:first-child p{margin:3px 0 0}
+.dex-backoffice-main>.panel>.grid,.dex-backoffice-main>.panel>.bo-module-grid{gap:14px}
+.dex-backoffice-main>.panel>.card:not(.notice),.dex-backoffice-main>.panel>.grid>.card,.dex-backoffice-main>.panel>.staff-pass-grid .card{border-radius:4px!important}
+.dex-backoffice-main details.flowstep{background:#fff;border:1px solid #dfdce2;border-radius:4px;margin:9px 0;overflow:hidden}
+.dex-backoffice-main details.flowstep summary{padding:12px 14px;background:#faf9fb;color:#4c4750;font-weight:800;cursor:pointer}
+.dex-backoffice-main details.flowstep[open] summary{border-bottom:1px solid #e6e2e8;background:#f6f2f8;color:#5b0b7e}
+.dex-backoffice-main .flowbody{padding:14px}
+.dex-backoffice-main table{width:100%;border-collapse:collapse;background:#fff}
+.dex-backoffice-main th{background:#f2edf4;color:#504958;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.dex-backoffice-main th,.dex-backoffice-main td{padding:10px;border-bottom:1px solid #e8e5ea}
+.dex-backoffice-main hr{border-color:#e8e5ea!important}
+.dex-backoffice-main .summarybox{border-radius:4px!important}
+.dex-backoffice-main .metric{background:#fff;border:1px solid #e1dee4;border-radius:4px;padding:12px;margin:7px 0}
+.dex-backoffice-main .metric b{color:#5b0b7e}
+.dex-backoffice-main .scratch{border-radius:4px}
+.staff-pass-shell{background:transparent!important;border:0!important;min-height:0!important}
+.staff-pass-nav{display:none!important}
+.staff-pass-main{padding:0!important}
+.staff-pass-kpis{gap:12px}
+.staff-pass-kpi{background:#fff!important;border:1px solid #dedde3!important;border-radius:4px!important;color:#3e3941!important}
+.staff-pass-kpi b{color:#5b0b7e}
+.staff-subtabs,.staff-profile-tabs{display:flex;gap:4px;overflow:auto;border-bottom:1px solid #ddd8e0;padding:0 0 7px;margin:14px 0}
+.staff-subtabs button,.staff-profile-tabs button{border:0!important;border-radius:3px!important;background:#f1eef3!important;color:#5d5760!important;padding:9px 11px!important}
+.staff-subtabs button.active,.staff-profile-tabs button.active{background:#5b0b7e!important;color:#fff!important}
+.staff-tabpane{display:none}.staff-tabpane.active{display:block}
+.staff-profile-head{display:flex;gap:12px;align-items:center;margin:8px 0 12px}
+.staff-avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#eee5f2;color:#5b0b7e;font-weight:900}
+@media(max-width:980px){
+ .dex-backoffice-nav{overflow-x:auto!important;overflow-y:visible!important}
+ .pass-nav-drop{position:fixed;top:47px;left:10px;right:10px;min-width:0;max-height:70vh;overflow:auto}
+ .pass-nav-user{display:none}
+}
+@media(max-width:680px){
+ .pass-nav-trigger{padding:0 10px;font-size:11px}
+ .dex-backoffice-nav .pass-nav-home{padding:14px 9px!important}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-13-customer-card-signatures">
+<main class="wrap" data-build="2026-09-08-website-pass-14-full-backoffice-layout">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -224,7 +277,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
       if(signedOut)signedOut.style.display='none';
       if(signedIn)signedIn.style.display='block';
       if(userLabel)userLabel.textContent=session.user?.email||account.email||'Signed in';
-      if(roleLabel)roleLabel.textContent=account.role||'Authenticated';
+      if(roleLabel)roleLabel.textContent=account.role||'Authenticated';const passNavUser=document.getElementById('passNavUser');if(passNavUser)passNavUser.textContent=(account.role||'Staff')+' · '+(session.user?.email||account.email||'');
       if(account.must_change_password){
         sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
         const ov=document.getElementById('firstPasswordOverlay');
@@ -390,42 +443,63 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 
 <div class="dex-backoffice-shell" id="secureBackOfficeShell" style="display:none">
 <aside class="dex-backoffice-nav">
-<div class="dex-backoffice-logo">DEXTER'S</div><div class="navsub">Back Office · Test</div>
-<div class="navgroup">Overview</div>
-<button class="tab active" data-tab="dashboard" data-minrole="Staff">Dashboard</button>
-<div class="navgroup">People & Compliance</div>
-<button class="tab" data-tab="staffdb" data-minrole="Team Leader">Staff</button>
-<button class="tab" data-tab="training" data-minrole="Staff">Training</button>
-<button class="tab" data-tab="compliance" data-minrole="Team Leader">HR & Compliance</button>
-<button class="tab" data-tab="foodsafety" data-minrole="Staff">Food Safety Records</button>
-<button class="tab" data-tab="policies" data-minrole="Staff">Policies & Forms</button>
-<button class="tab" data-tab="recruitment" data-minrole="Manager">Recruitment</button>
-<button class="tab" data-tab="appraisals" data-minrole="Team Leader">Supervisions & Appraisals</button>
-<div class="navgroup">Operations</div>
-<button class="tab" data-tab="rota" data-minrole="Staff">Rota & Timekeeping</button>
-<button class="tab" data-tab="leave" data-minrole="Staff">Leave & Shift Swaps</button>
-<button class="tab" data-tab="inbox" data-minrole="Staff">Inbox & Announcements</button>
-<button class="tab" data-tab="handover" data-minrole="Staff">Tasks & Handover</button>
-<button class="tab" data-tab="orders" data-minrole="Staff">Orders & KDS</button>
-<button class="tab" data-tab="catering" data-minrole="Team Leader">Catering</button>
-<button class="tab" data-tab="customers" data-minrole="Team Leader">Customers & Loyalty</button>
-<button class="tab" data-tab="menuadmin" data-minrole="Manager">Menu & Admin</button>
-<button class="tab" data-tab="stock" data-minrole="Team Leader">Stock & Waste</button>
-<button class="tab" data-tab="suppliers" data-minrole="Manager">Suppliers & Purchasing</button>
-<div class="navgroup">Growth</div>
-<button class="tab" data-tab="deals" data-minrole="Team Leader">Deals Engine</button>
-<button class="tab" data-tab="challenges" data-minrole="Team Leader">Challenges</button>
-<div class="navgroup">Management</div>
-<button class="tab" data-tab="maintenance" data-minrole="Team Leader">Maintenance & Equipment</button>
-<button class="tab" data-tab="payroll" data-minrole="Manager">Payroll</button>
-<button class="tab" data-tab="financeops" data-minrole="Manager">Sales & Cash-up</button>
-<button class="tab" data-tab="allergens" data-minrole="Manager">Allergen & Recipe Master</button>
-<button class="tab" data-tab="controlcentre" data-minrole="Team Leader">Daily Control Centre</button>
-<button class="tab" data-tab="systemhealth" data-minrole="Manager">System Health</button>
-<button class="tab" data-tab="reports" data-minrole="Manager">Reports</button>
-<button class="tab" data-tab="archive" data-minrole="Manager">Archive</button>
-<button class="tab" data-tab="globalsearch" data-minrole="Staff">Global Search</button>
-<button class="tab" data-tab="settings" data-minrole="Super User">Settings & Permissions</button>
+<div class="dex-backoffice-logo">DEXTER'S</div>
+<button class="tab active pass-nav-home" data-tab="dashboard" data-minrole="Staff">Dashboard</button>
+
+<div class="pass-nav-menu">
+  <button type="button" class="pass-nav-trigger">People ▾</button>
+  <div class="pass-nav-drop">
+    <button class="tab" data-tab="staffdb" data-minrole="Team Leader">Staff</button>
+    <button class="tab" data-tab="training" data-minrole="Staff">Training</button>
+    <button class="tab" data-tab="compliance" data-minrole="Team Leader">HR & Compliance</button>
+    <button class="tab" data-tab="foodsafety" data-minrole="Staff">Food Safety Records</button>
+    <button class="tab" data-tab="policies" data-minrole="Staff">Policies & Forms</button>
+    <button class="tab" data-tab="recruitment" data-minrole="Manager">Recruitment</button>
+    <button class="tab" data-tab="appraisals" data-minrole="Team Leader">Supervisions & Appraisals</button>
+  </div>
+</div>
+
+<div class="pass-nav-menu">
+  <button type="button" class="pass-nav-trigger">Operations ▾</button>
+  <div class="pass-nav-drop">
+    <button class="tab" data-tab="rota" data-minrole="Staff">Rota & Timekeeping</button>
+    <button class="tab" data-tab="leave" data-minrole="Staff">Leave & Shift Swaps</button>
+    <button class="tab" data-tab="inbox" data-minrole="Staff">Inbox & Announcements</button>
+    <button class="tab" data-tab="handover" data-minrole="Staff">Tasks & Handover</button>
+    <button class="tab" data-tab="orders" data-minrole="Staff">Orders & KDS</button>
+    <button class="tab" data-tab="catering" data-minrole="Team Leader">Catering</button>
+    <button class="tab" data-tab="customers" data-minrole="Team Leader">Customers & Loyalty</button>
+    <button class="tab" data-tab="menuadmin" data-minrole="Manager">Menu & Admin</button>
+    <button class="tab" data-tab="stock" data-minrole="Team Leader">Stock & Waste</button>
+    <button class="tab" data-tab="suppliers" data-minrole="Manager">Suppliers & Purchasing</button>
+  </div>
+</div>
+
+<div class="pass-nav-menu">
+  <button type="button" class="pass-nav-trigger">Growth ▾</button>
+  <div class="pass-nav-drop">
+    <button class="tab" data-tab="deals" data-minrole="Team Leader">Deals Engine</button>
+    <button class="tab" data-tab="challenges" data-minrole="Team Leader">Challenges</button>
+  </div>
+</div>
+
+<div class="pass-nav-menu">
+  <button type="button" class="pass-nav-trigger">Management ▾</button>
+  <div class="pass-nav-drop pass-nav-drop-wide">
+    <button class="tab" data-tab="maintenance" data-minrole="Team Leader">Maintenance & Equipment</button>
+    <button class="tab" data-tab="payroll" data-minrole="Manager">Payroll</button>
+    <button class="tab" data-tab="financeops" data-minrole="Manager">Sales & Cash-up</button>
+    <button class="tab" data-tab="allergens" data-minrole="Manager">Allergen & Recipe Master</button>
+    <button class="tab" data-tab="controlcentre" data-minrole="Team Leader">Daily Control Centre</button>
+    <button class="tab" data-tab="systemhealth" data-minrole="Manager">System Health</button>
+    <button class="tab" data-tab="reports" data-minrole="Manager">Reports</button>
+    <button class="tab" data-tab="archive" data-minrole="Manager">Archive</button>
+    <button class="tab" data-tab="globalsearch" data-minrole="Staff">Global Search</button>
+    <button class="tab" data-tab="settings" data-minrole="Super User">Settings & Permissions</button>
+  </div>
+</div>
+<div class="pass-nav-spacer"></div>
+<div class="pass-nav-user"><span id="passNavUser">Back Office</span></div>
 </aside>
 
 <div class="dex-backoffice-main">
@@ -1878,12 +1952,14 @@ async function loadLiveReadOnly(){
 }
 
 const $=id=>document.getElementById(id);
+document.querySelectorAll('.pass-nav-trigger').forEach(t=>t.onclick=(e)=>{e.stopPropagation();const m=t.closest('.pass-nav-menu');document.querySelectorAll('.pass-nav-menu').forEach(x=>{if(x!==m)x.classList.remove('open')});m.classList.toggle('open')});
+document.addEventListener('click',()=>document.querySelectorAll('.pass-nav-menu').forEach(x=>x.classList.remove('open')));
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
  if(b.closest('.dex-backoffice-nav')){
    if(!SECURE_SESSION||!SECURE_ACCOUNT||!SECURE_ACCOUNT.active||SECURE_ACCOUNT.must_change_password)return;
    if(secureRoleRank(SECURE_ACCOUNT.role)<secureRoleRank(b.dataset.minrole||'Staff'))return alert('Your account does not have access to this section.');
  }
- document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')
+ document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active');document.querySelectorAll('.pass-nav-menu').forEach(x=>x.classList.remove('open'))
 });
 const today=new Date(), iso=d=>d.toISOString().slice(0,10);
 function cateringMinDateTime(){return new Date(Date.now()+48*60*60*1000)}
