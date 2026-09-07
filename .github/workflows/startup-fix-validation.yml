@@ -14,14 +14,14 @@ jobs:
           node-version: '20'
       - name: Build full app
         run: npm run build
-      - name: Check startup scripts are deferred
+      - name: Check startup scripts are non-blocking
         run: |
           node <<'NODE'
           const fs=require('fs');
           const s=fs.readFileSync('dist/index.html','utf8');
-          if(!s.includes('<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>')) throw new Error('Supabase script not deferred');
-          if(!s.includes('<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>')) throw new Error('QR script not deferred');
-          console.log('Deferred startup scripts verified');
+          if(!s.includes('<script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>')) throw new Error('Supabase script not async');
+          if(!s.includes('<script async src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>')) throw new Error('QR script not async');
+          console.log('Non-blocking startup scripts verified');
           NODE
       - name: Install Playwright
         run: |
