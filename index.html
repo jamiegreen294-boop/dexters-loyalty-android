@@ -47,7 +47,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-4-superuser-access">
+<main class="wrap" data-build="2026-09-08-website-pass-5-report-totals">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -2494,8 +2494,8 @@ function renderReports(){
  $('reportPeople').innerHTML='<div class="summarybox"><b>'+activeStaff+' active staff</b><br><span class="muted">'+trainingDone+' with recorded training progress · '+absent+' absence record(s)</span></div>';
  const shifts=(dexManage.rota||[]).length, announcements=(dexManage.announcements||[]).length;
  $('reportOps').innerHTML='<div class="summarybox"><b>'+shifts+' rota shift record(s)</b><br><span class="muted">'+openTasks+' open task(s) · '+announcements+' announcement(s) · '+cateringCount+' catering request(s)</span></div>';
- const sales=(dexManage.salesDays||[]).reduce((n,x)=>n+Number(x.total||x.sales||0),0);
- const waste=(dexManage.waste||[]).length, low=(dexManage.stock||[]).filter(x=>Number(x.quantity||x.qty||0)<=Number(x.reorderLevel||x.par||0)).length;
+ const sales=(dexManage.salesDays||[]).reduce((n,x)=>n+Number(x.till||0)+Number(x.app||0)+Number(x.catering||0)+Number(x.other||0),0);
+ const waste=(dexManage.waste||[]).length, low=(dexManage.stock||[]).filter(x=>x.out||Number(x.qty||0)<=Number(x.low||0)).length;
  $('reportFinance').innerHTML='<div class="summarybox"><b>£'+Number(sales).toFixed(2)+' recorded sales</b><br><span class="muted">'+low+' low-stock record(s) · '+waste+' wastage record(s)</span></div>';
  const faults=(dexManage.equipment||[]).filter(x=>x.status&&x.status!=='Operational').length;
  $('reportRisk').innerHTML='<div class="summarybox"><b>'+complianceDue+' compliance item(s) due/overdue</b><br><span class="muted">'+faults+' equipment item(s) needing attention</span></div>';
