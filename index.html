@@ -541,6 +541,10 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="field">Emergency contact<input id="sdEmergencyName"></div>
 <div class="field">Emergency phone<input id="sdEmergencyPhone" inputmode="tel"></div>
 <div class="field">Tags<div id="sdTags" class="tag-picker"></div></div>
+<div class="field">Payroll ID<input id="sdPayrollId" placeholder="Internal payroll ID"></div>
+<div class="field">National Insurance number<input id="sdNino" placeholder="e.g. QQ123456C"></div>
+<div class="grid"><div class="field">Tax code<input id="sdTaxCode" placeholder="e.g. 1257L"></div><div class="field">NI category<input id="sdNiCategory" placeholder="e.g. A"></div></div>
+<div class="field">Hourly rate (£)<input id="sdHourlyRate" type="number" min="0" step="0.01"></div>
 </div>
 </div>
 <button class="btn" id="staffSaveProfile">Save profile</button>
@@ -683,6 +687,58 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="card"><h2>Current payroll preview</h2><div id="payrollPreview" class="muted">Create a weekly payroll run to preview it.</div></div>
 <div class="card" style="margin-top:14px"><h2>Weekly payroll runs</h2><div id="payrollRuns"></div></div>
 <div class="card" style="margin-top:14px"><h2>Payroll audit trail</h2><div id="payrollAudit"></div></div>
+</section>
+
+<section class="panel" id="payroll">
+<div class="card notice"><b>Dexter's Weekly Payroll & HMRC</b><p class="muted">Weekly payroll from recorded clock-in/out times. Manager approval is required first, then Super User verification. Verified payroll moves to the HMRC submission queue. Test build only — no live HMRC submission is made here yet.</p></div>
+
+<div class="grid">
+<div class="card">
+<h2>Employer PAYE setup</h2>
+<div class="grid"><div class="field">HMRC office number<input id="hmrcOffice" placeholder="3 digits"></div><div class="field">PAYE reference<input id="hmrcPayeRef"></div></div>
+<div class="field">Accounts Office reference<input id="hmrcAccountsRef"></div>
+<div class="grid"><div class="field">Regular payday<select id="hmrcPayday"><option>Friday</option><option>Thursday</option><option>Wednesday</option><option>Tuesday</option><option>Monday</option></select></div><div class="field">Pay frequency<input value="Weekly" disabled></div></div>
+<div class="field">Employer / trading name<input id="hmrcEmployerName" value="Dexter's"></div>
+<button class="btn alt" id="saveHmrcSettings">Save PAYE settings</button>
+<div id="hmrcSettingsStatus" class="tiny" style="margin-top:8px"></div>
+</div>
+
+<div class="card">
+<h2>Create weekly payroll</h2>
+<div class="grid"><div class="field">Week start<input id="payWeekStart" type="date"></div><div class="field">Week end<input id="payWeekEnd" type="date"></div></div>
+<div class="field">Pay date<input id="payDate" type="date"></div>
+<div class="summarybox"><b>Source</b><br><span class="tiny">Completed Start Shift / End Shift records in Rota & Timekeeping.</span></div>
+<button class="btn" id="buildWeeklyPayroll">Build payroll draft</button>
+</div>
+</div>
+
+<div class="bo-kpis">
+<div class="bo-kpi"><span class="muted">Draft</span><b id="payDraftCount">0</b></div>
+<div class="bo-kpi"><span class="muted">Manager approved</span><b id="payManagerCount">0</b></div>
+<div class="bo-kpi"><span class="muted">Awaiting Super User</span><b id="payVerifyCount">0</b></div>
+<div class="bo-kpi"><span class="muted">HMRC queue</span><b id="payHmrcCount">0</b></div>
+</div>
+
+<div class="card">
+<h2>Weekly payroll runs</h2>
+<div id="weeklyPayrollRuns"></div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<h2>Payroll review</h2>
+<div id="payrollReview" class="muted">Open a payroll run to review staff pay and RTI fields.</div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<h2>HMRC submission queue</h2>
+<p class="tiny">Verified runs appear here with the FPS information required for a future authorised RTI connection.</p>
+<div id="hmrcQueue"></div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<h2>Payroll audit trail</h2>
+<div id="payrollAuditLog"></div>
+</div>
 </section>
 
 <section class="panel" id="reports">
@@ -979,7 +1035,7 @@ let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing no
 const DEX_MANAGEMENT_KEY='dexters_backoffice_management_test_v2';
 let dexManage={
  tags:[{name:'Kitchen',system:true},{name:'Front of House',system:true},{name:'Training Due',system:true},{name:'Compliance',system:true},{name:'Incident',system:true},{name:'Allergen',system:true},{name:'Follow-up',system:true},{name:'New Starter',system:true},{name:'High Priority',system:true}],
- recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],paySettings:{},payrollRuns:[],payrollAudit:[]
+ recruitment:[],appraisals:[],rota:[],tasks:[],equipment:[],masterCompliance:[],hmrcSettings:{employerName:"Dexter's",office:"",payeRef:"",accountsRef:"",payday:"Friday"},payrollRuns:[],payrollAudit:[],paySettings:{},payrollRuns:[],payrollAudit:[]
 };
 try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
 function saveDexManage(){localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));renderDexManagement()}
@@ -1111,9 +1167,86 @@ window.superVerifyPayroll=i=>{
  payrollAudit('Super User verified payroll — ready to send',r.id);
  saveDexManage();
 };
+
+function payMoney(v){return '£'+Number(v||0).toFixed(2)}
+function payAudit(action,runId=''){
+ dexManage.payrollAudit=dexManage.payrollAudit||[];
+ dexManage.payrollAudit.unshift({at:new Date().toISOString(),role:CURRENT_STAFF_ROLE,action,runId});
+ dexManage.payrollAudit=dexManage.payrollAudit.slice(0,250);
+}
+function payrollRowsForWeek(start,end){
+ if(typeof staffDb==='undefined')return [];
+ return staffDb.staff.filter(s=>s.status!=='Inactive').map(s=>{
+  const shifts=dexManage.rota.filter(r=>r.staffId===s.id&&r.date>=start&&r.date<=end&&r.clockInAt&&r.clockOutAt);
+  const minutes=shifts.reduce((n,r)=>n+(shiftWorkedMinutes(r)||0),0);
+  const hours=minutes/60,rate=Number(s.hourlyRate||0),gross=hours*rate;
+  return {
+   staffId:s.id,name:s.name,payrollId:s.payrollId||'',nino:s.nino||'',taxCode:s.taxCode||'',niCategory:s.niCategory||'A',
+   shifts:shifts.length,minutes,hours,rate,gross,
+   taxablePay:gross,taxDeducted:0,employeeNI:0,employerNI:0,pensionEmployee:0,pensionEmployer:0,studentLoan:0,otherDeductions:0,netPay:gross,
+   notes:''
+  };
+ });
+}
+function recalcPayrollRow(r){
+ r.netPay=Number(r.gross||0)-Number(r.taxDeducted||0)-Number(r.employeeNI||0)-Number(r.pensionEmployee||0)-Number(r.studentLoan||0)-Number(r.otherDeductions||0);
+}
+function renderHmrcSettings(){
+ const h=dexManage.hmrcSettings||{};
+ if($('hmrcOffice')){$('hmrcOffice').value=h.office||'';$('hmrcPayeRef').value=h.payeRef||'';$('hmrcAccountsRef').value=h.accountsRef||'';$('hmrcPayday').value=h.payday||'Friday';$('hmrcEmployerName').value=h.employerName||"Dexter's";}
+ if($('hmrcSettingsStatus'))$('hmrcSettingsStatus').innerHTML=(h.office&&h.payeRef&&h.accountsRef)?'<span class="ok">PAYE identifiers entered for this test.</span>':'<span class="muted">Add employer PAYE identifiers before an HMRC submission can be prepared.</span>';
+}
+function renderPayroll(){
+ if(!$('weeklyPayrollRuns'))return;
+ renderHmrcSettings();
+ const runs=dexManage.payrollRuns||[];
+ $('payDraftCount').textContent=runs.filter(r=>r.status==='Draft').length;
+ $('payManagerCount').textContent=runs.filter(r=>r.status==='Manager Approved').length;
+ $('payVerifyCount').textContent=runs.filter(r=>r.status==='Awaiting Super User Verification').length;
+ $('payHmrcCount').textContent=runs.filter(r=>r.status==='Ready for HMRC Submission').length;
+ $('weeklyPayrollRuns').innerHTML=runs.map((r,i)=>{
+   const gross=r.rows.reduce((n,x)=>n+Number(x.gross||0),0);
+   let action='<button class="btn alt small" onclick="viewPayroll('+i+')">Review</button>';
+   if(r.status==='Draft'&&CURRENT_STAFF_ROLE==='Manager')action+=' <button class="btn alt small" onclick="managerApprovePay('+i+')">Manager Approve</button>';
+   if(r.status==='Awaiting Super User Verification'&&CURRENT_STAFF_ROLE==='Super User')action+=' <button class="btn alt small" onclick="superVerifyPay('+i+')">Super User Verify</button>';
+   return '<div class="summarybox"><b>Week '+r.weekStart+' → '+r.weekEnd+'</b><br><span class="badge">'+r.status+'</span><span class="badge">Pay '+r.payDate+'</span><br><span class="muted">'+r.rows.length+' staff · '+payMoney(gross)+' gross</span><div class="row" style="margin-top:8px">'+action+'</div></div>';
+ }).join('')||'<span class="muted">No weekly payroll runs.</span>';
+
+ $('hmrcQueue').innerHTML=runs.filter(r=>r.status==='Ready for HMRC Submission').map((r,i)=>{
+   const totalTax=r.rows.reduce((n,x)=>n+Number(x.taxDeducted||0),0),eni=r.rows.reduce((n,x)=>n+Number(x.employeeNI||0),0),erni=r.rows.reduce((n,x)=>n+Number(x.employerNI||0),0);
+   return '<div class="summarybox"><b>FPS-ready dataset · '+r.payDate+'</b><br><span class="ok">Super User verified</span><br><span class="muted">'+r.rows.length+' employees · tax '+payMoney(totalTax)+' · employee NI '+payMoney(eni)+' · employer NI '+payMoney(erni)+'</span><br><span class="tiny">Awaiting authorised HMRC RTI connection. This test does not transmit data.</span></div>';
+ }).join('')||'<span class="muted">No verified payroll waiting for HMRC.</span>';
+
+ $('payrollAuditLog').innerHTML=(dexManage.payrollAudit||[]).map(a=>'<div class="tiny" style="padding:7px 0;border-bottom:1px solid #ffffff10"><b>'+new Date(a.at).toLocaleString()+'</b> · '+a.role+' — '+a.action+'</div>').join('')||'<span class="muted">No payroll audit entries.</span>';
+}
+window.viewPayroll=i=>{
+ const r=dexManage.payrollRuns[i];if(!r)return;
+ const editable=r.status==='Draft'&&CURRENT_STAFF_ROLE==='Manager';
+ $('payrollReview').innerHTML='<div class="summarybox"><b>'+r.weekStart+' → '+r.weekEnd+' · Pay date '+r.payDate+'</b><br><span class="badge">'+r.status+'</span></div>'+r.rows.map((x,ri)=>'<div class="summarybox"><b>'+x.name+'</b><br><span class="muted">'+x.shifts+' shift(s) · '+x.hours.toFixed(2)+'h × '+payMoney(x.rate)+' = '+payMoney(x.gross)+'</span><div class="grid"><div class="field">Tax deducted<input id="prTax'+ri+'" type="number" step="0.01" value="'+Number(x.taxDeducted||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div><div class="field">Employee NI<input id="prEni'+ri+'" type="number" step="0.01" value="'+Number(x.employeeNI||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div></div><div class="grid"><div class="field">Employer NI<input id="prErni'+ri+'" type="number" step="0.01" value="'+Number(x.employerNI||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div><div class="field">Employee pension<input id="prPen'+ri+'" type="number" step="0.01" value="'+Number(x.pensionEmployee||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div></div><div class="grid"><div class="field">Student loan<input id="prLoan'+ri+'" type="number" step="0.01" value="'+Number(x.studentLoan||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div><div class="field">Other deductions<input id="prOther'+ri+'" type="number" step="0.01" value="'+Number(x.otherDeductions||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div></div><div class="field">Payroll notes<input id="prNotes'+ri+'" value="'+String(x.notes||'').replace(/"/g,'&quot;')+'" '+(editable?'':'disabled')+'></div><span class="tiny">Payroll ID '+(x.payrollId||'missing')+' · NINO '+(x.nino||'missing')+' · Tax code '+(x.taxCode||'missing')+' · NI category '+(x.niCategory||'missing')+'</span></div>').join('')+(editable?'<button class="btn" onclick="savePayrollReview('+i+')">Save Manager Review</button>':'');
+};
+window.savePayrollReview=i=>{
+ if(CURRENT_STAFF_ROLE!=='Manager')return alert('Manager access required.');
+ const r=dexManage.payrollRuns[i];if(!r||r.status!=='Draft')return;
+ r.rows.forEach((x,ri)=>{x.taxDeducted=Number($('prTax'+ri).value||0);x.employeeNI=Number($('prEni'+ri).value||0);x.employerNI=Number($('prErni'+ri).value||0);x.pensionEmployee=Number($('prPen'+ri).value||0);x.studentLoan=Number($('prLoan'+ri).value||0);x.otherDeductions=Number($('prOther'+ri).value||0);x.notes=$('prNotes'+ri).value.trim();recalcPayrollRow(x)});
+ r.managerReviewedAt=new Date().toISOString();payAudit('Manager saved payroll review',r.id);saveDexManage();viewPayroll(i);
+};
+window.managerApprovePay=i=>{
+ if(CURRENT_STAFF_ROLE!=='Manager')return alert('Only Manager can approve the weekly payroll before Super User verification.');
+ const r=dexManage.payrollRuns[i];if(!r||r.status!=='Draft')return;
+ const missing=r.rows.filter(x=>!x.payrollId||!x.taxCode||!x.niCategory);
+ if(missing.length)return alert('Complete payroll ID, tax code and NI category on all staff files before approval.');
+ r.status='Awaiting Super User Verification';r.managerApprovedAt=new Date().toISOString();payAudit('Manager approved weekly payroll',r.id);saveDexManage();
+};
+window.superVerifyPay=i=>{
+ if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can perform final payroll verification.');
+ const r=dexManage.payrollRuns[i];if(!r||r.status!=='Awaiting Super User Verification')return;
+ const h=dexManage.hmrcSettings||{};
+ if(!h.office||!h.payeRef||!h.accountsRef)return alert('Enter the employer PAYE and Accounts Office references first.');
+ r.status='Ready for HMRC Submission';r.superVerifiedAt=new Date().toISOString();payAudit('Super User verified payroll for HMRC submission queue',r.id);saveDexManage();
+};
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
- staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');renderMyShiftStaff();renderPayroll();
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');renderMyShiftStaff();renderPayroll();renderPayroll();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+'</span><br><span class="tiny">'+(r.interview||'')+'</span></div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
@@ -1146,6 +1279,20 @@ if($('rotaAdd'))$('rotaAdd').onclick=()=>{if(!$('rotaStaff').value||!$('rotaDate
 if($('taskAdd'))$('taskAdd').onclick=()=>{const title=$('taskTitle').value.trim();if(!title)return;dexManage.tasks.unshift({title,assignee:$('taskAssignee').value,type:$('taskType').value,priority:$('taskPriority').value,due:$('taskDue').value,details:$('taskDetails').value.trim(),resolution:$('taskResolution').value.trim(),tags:pickedTags('taskTags'),status:'Open',at:new Date().toISOString()});saveDexManage()};
 if($('eqAdd'))$('eqAdd').onclick=()=>{const name=$('eqName').value.trim();if(!name)return;dexManage.equipment.unshift({name,asset:$('eqAsset').value.trim(),location:$('eqLocation').value.trim(),status:$('eqStatus').value,last:$('eqLast').value,due:$('eqDue').value,fault:$('eqFault').value.trim(),action:$('eqAction').value.trim(),assignee:$('eqAssignee').value,engineer:$('eqEngineer').value.trim(),tags:pickedTags('eqTags'),at:new Date().toISOString()});saveDexManage()};
 if($('masterCompAdd'))$('masterCompAdd').onclick=()=>{const title=$('masterCompTitle').value.trim();if(!title)return;dexManage.masterCompliance.unshift({type:$('masterCompType').value,title,date:$('masterCompDate').value,review:$('masterCompReview').value,owner:$('masterCompOwner').value.trim(),hazard:$('masterCompHazard').value.trim(),scope:$('masterCompScope').value.trim(),controls:$('masterCompControls').value.trim(),actions:$('masterCompActions').value.trim(),tags:pickedTags('masterCompTags'),at:new Date().toISOString()});saveDexManage()};
+
+if($('saveHmrcSettings'))$('saveHmrcSettings').onclick=()=>{
+ if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can change HMRC/PAYE settings.');
+ dexManage.hmrcSettings={employerName:$('hmrcEmployerName').value.trim(),office:$('hmrcOffice').value.trim(),payeRef:$('hmrcPayeRef').value.trim(),accountsRef:$('hmrcAccountsRef').value.trim(),payday:$('hmrcPayday').value};
+ payAudit('Employer PAYE settings updated');saveDexManage();
+};
+if($('buildWeeklyPayroll'))$('buildWeeklyPayroll').onclick=()=>{
+ if(!['Manager','Super User'].includes(CURRENT_STAFF_ROLE))return alert('Manager or Super User access required.');
+ const weekStart=$('payWeekStart').value,weekEnd=$('payWeekEnd').value,payDate=$('payDate').value;
+ if(!weekStart||!weekEnd||!payDate)return alert('Add the week start, week end and pay date.');
+ const rows=payrollRowsForWeek(weekStart,weekEnd);
+ const run={id:'pay-'+Date.now(),weekStart,weekEnd,payDate,rows,status:'Draft',createdAt:new Date().toISOString(),createdBy:CURRENT_STAFF_ROLE};
+ dexManage.payrollRuns=dexManage.payrollRuns||[];dexManage.payrollRuns.unshift(run);payAudit('Weekly payroll draft created',run.id);saveDexManage();viewPayroll(0);
+};
 const myShiftStaffSel=$('myShiftStaff');if(myShiftStaffSel)myShiftStaffSel.onchange=()=>{CURRENT_SHIFT_STAFF_ID=myShiftStaffSel.value;localStorage.setItem('dexters_test_current_shift_staff',CURRENT_SHIFT_STAFF_ID);renderMyShifts()};
 
 if($('payStaff'))$('payStaff').onchange=loadPaySetting;
@@ -1499,7 +1646,7 @@ function renderStaffDb(){
   $('staffPermissions').innerHTML=$('staffTrainingSummary').innerHTML=$('staffDocs').innerHTML=$('staffAbsence').innerHTML=$('staffIncidents').innerHTML=$('staffNotes').innerHTML=$('staffAudit').innerHTML='Choose a staff member first.';return;
  }
  $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdRole').disabled=CURRENT_STAFF_ROLE!=='Super User';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';
- $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';tagPicker('sdTags',s.tags||[]);
+ $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';tagPicker('sdTags',s.tags||[]);$('sdPayrollId').value=s.payrollId||'';$('sdNino').value=s.nino||'';$('sdTaxCode').value=s.taxCode||'';$('sdNiCategory').value=s.niCategory||'A';$('sdHourlyRate').value=s.hourlyRate||'';
  $('staffPermissions').innerHTML=STAFF_PERMS.map(p=>'<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input class="sd-perm" type="checkbox" value="'+p+'" '+((s.permissions||[]).includes(p)?'checked':'')+(CURRENT_STAFF_ROLE==='Super User'?'':' disabled')+' style="width:auto;margin:0">'+p+'</label>').join('')+(CURRENT_STAFF_ROLE==='Super User'?'<button class="btn alt small" onclick="saveStaffPermissions()">Save permissions</button><button class="btn alt small" onclick="resetStaffPermissions()">Use role defaults</button>':'<div class="summarybox muted">Permission editing is restricted to Super User.</div>');
  const t=s.training||{};
  const cert=t.certifiedAt?'<span class="ok"><b>Certified</b></span> · '+fmtDate(t.certifiedAt):'<span class="muted">Not certified yet</span>';
@@ -1521,7 +1668,7 @@ $('staffSaveProfile').onclick=()=>{
  const s=selectedStaff();if(!s)return;const oldRole=s.role;
  s.name=$('sdName').value.trim()||'Unnamed staff';
  if(CURRENT_STAFF_ROLE==='Super User'){s.role=$('sdRole').value}else{$('sdRole').value=s.role}
- s.status=$('sdStatus').value;s.start=$('sdStart').value;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');
+ s.status=$('sdStatus').value;s.start=$('sdStart').value;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');s.payrollId=$('sdPayrollId').value.trim();s.nino=$('sdNino').value.trim().toUpperCase();s.taxCode=$('sdTaxCode').value.trim().toUpperCase();s.niCategory=$('sdNiCategory').value.trim().toUpperCase()||'A';s.hourlyRate=Number($('sdHourlyRate').value||0);
  if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else logStaff(s,'Staff profile updated');
  saveStaffDb();
 };
