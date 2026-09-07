@@ -65,3 +65,5 @@ const bootstrap=`
 s=s.replace('</body>',bootstrap+'</body>');
 fs.writeFileSync(file,s);
 console.log('Startup-unblock applied: ordered post-parse script queue',index);
+
+// trace-trigger
