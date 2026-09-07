@@ -46,14 +46,31 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <div class="field">People<input id="catPeople" type="number" min="1" value="12"></div>
 <div class="field">Date<input id="catDate" type="date"></div>
 <div class="field">Collection time<input id="catTime" type="time" value="12:30"></div>
-<div class="field">Package<select id="catPack"><option data-price="6.50">Breakfast rolls buffet</option><option data-price="7.50">Sandwich & wrap platters</option><option data-price="10.00">Hot lunch buffet</option><option data-price="0">Custom Dexter's menu order</option></select></div>
+<div class="field">Buffet package<select id="catPack">
+<option data-price="4.25">Dexter's Breakfast Rolls — £4.25pp</option>
+<option data-price="6.95">Dexter's Lunch Platter — £6.95pp</option>
+<option data-price="9.95">Dexter's Classic Glasgow Buffet — £9.95pp</option>
+<option data-price="12.95">Dexter's Street Feast — £12.95pp</option>
+<option data-price="12.95">Dexter's Hot Chinese Buffet — £12.95pp</option>
+<option data-price="0">Build Your Own — staff quote</option>
+</select></div>
+<div id="catMenuPreview" class="summarybox"><b>What's included</b><br><span class="muted">Choose a package to preview the buffet.</span></div>
 <div class="summarybox"><b>Test estimate: <span id="catEstimate">£78.00</span></b><br><span class="tiny">Illustrative test pricing only — final Dexter's catering prices can be set before launch.</span></div>
 <div class="field">Dietary / allergy notes<textarea id="catNotes" rows="3" placeholder="List allergies or dietary requirements here"></textarea></div>
 <label class="field"><input id="catConfirm" type="checkbox" style="width:auto;margin-right:8px"> I confirm the details above are correct</label>
 <button class="btn" id="catSubmit">Send catering request</button>
 <div id="catCustomerStatus" class="summarybox muted">No request submitted yet.</div>
 </div>
-<div class="card"><h2>Staff approval queue</h2><div id="catQueue" class="muted">No test requests yet.</div></div>
+<div class="card"><h2>Dexter's Buffet Menu</h2>
+<div class="lesson"><b>Breakfast Rolls — £4.25pp</b><p class="muted">One hot roll per person. Choose a mix of Square Sausage, Bacon, Links x2, Potato Scone x2, Fried Egg or Scrambled Egg. Brown and tomato sauce supplied.</p></div>
+<div class="lesson"><b>Lunch Platter — £6.95pp</b><p class="muted">Mixed Dexter's cold rolls and wraps, cut for sharing. Fillings can include Ham Salad, Turkey Salad, Chopped Pork & Ham, Cheese & Ham, Cheese & Tomato, Cheese & Onion, Chicken Tikka and Tandoori Chicken.</p></div>
+<div class="lesson"><b>Classic Glasgow Buffet — £9.95pp</b><p class="muted">Mixed sandwiches & wraps, mini sausage rolls, mini pizza slices, southern fried chicken strips, vegetable pakora/samosas, mini spring rolls, cocktail sausages, crisps and Dexter's dips.</p></div>
+<div class="lesson"><b>Street Feast — £12.95pp</b><p class="muted">Dexter's Street Sub pieces, pizza slices, Chicken Tenders, Garlic Bread, Onion Rings, mini sausage rolls, pakora/samosas and dips. Sub choices can include Chicken Mayo Melt, Southern Fried Chicken, Chicken Tikka, Pepperoni & Cheese, Philly Steak and Chicken & Bacon.</p></div>
+<div class="lesson"><b>Hot Chinese Buffet — £12.95pp</b><p class="muted">Choose two mains from Chicken Breast Curry, Chicken Szechuan, Black Bean Chicken, Garlic Chicken, Sweet & Sour Chicken or Salt & Chilli Chicken. Served with Boiled Rice, Chips, mini spring rolls and Prawn Crackers.</p></div>
+<div class="lesson"><b>Buffet Extras</b><p class="muted">Mini quiche · sausage rolls · cocktail sausages · mini pizzas · vegetable pakora/samosas · mini spring rolls · chicken strips · fruit platter · cakes/traybakes · crisps · salad/coleslaw · dips.</p></div>
+<p class="tiny">Set buffet prices are designed for 10+ people. Buffet-only items do not get added to Dexter's normal takeaway menu. Allergy and dietary requirements must be confirmed before staff approval.</p>
+<hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
+<h2>Staff approval queue</h2><div id="catQueue" class="muted">No test requests yet.</div></div>
 </div>
 </section>
 
@@ -141,8 +158,16 @@ const today=new Date(), iso=d=>d.toISOString().slice(0,10);$('catDate').value=is
 
 const CATKEY='dexters_growth_catering_test_v2';
 let cat=[];try{cat=JSON.parse(localStorage.getItem(CATKEY)||'[]')}catch(e){cat=[]}
+const buffetCopy={
+"Breakfast":["1 hot roll per person","Square Sausage / Bacon / Links / Potato Scone / Egg","Brown & tomato sauce"],
+"Lunch":["Mixed cold rolls & wraps cut for sharing","Ham Salad / Turkey Salad / Chopped Pork & Ham","Cheese & Ham / Cheese & Tomato / Chicken Tikka / Tandoori Chicken"],
+"Classic":["Mixed sandwiches & wraps","Mini sausage rolls","Mini pizza slices","Southern fried chicken strips","Vegetable pakora / samosas","Mini spring rolls","Cocktail sausages","Crisps & Dexter's dips"],
+"Street":["Street Sub pieces","Pizza slices","Chicken Tenders","Garlic Bread & Onion Rings","Mini sausage rolls","Pakora / samosas","Dexter's dips"],
+"Chinese":["Choose 2 hot Chinese mains","Boiled Rice","Chips","Mini spring rolls","Prawn Crackers"],
+"Build":["Choose from Dexter's buffet range","Staff prices the final mix"]
+};
 function catPrice(){const opt=$('catPack').selectedOptions[0];return Number(opt?.dataset.price||0)}
-function updateCatEstimate(){const people=Math.max(1,Number($('catPeople').value||1)),p=catPrice();$('catEstimate').textContent=p?('£'+(people*p).toFixed(2)):'Staff quote required'}
+function updateCatEstimate(){const people=Math.max(1,Number($('catPeople').value||1)),p=catPrice(),txt=$('catPack').value; $('catEstimate').textContent=p?('£'+(people*p).toFixed(2)):'Staff quote required'; const key=txt.includes('Breakfast')?'Breakfast':txt.includes('Lunch')?'Lunch':txt.includes('Classic')?'Classic':txt.includes('Street')?'Street':txt.includes('Chinese')?'Chinese':'Build'; $('catMenuPreview').innerHTML='<b>What\'s included</b><br>'+buffetCopy[key].map(x=>'• '+x).join('<br>')}
 $('catPeople').addEventListener('input',updateCatEstimate);$('catPack').addEventListener('change',updateCatEstimate);updateCatEstimate();
 $('catSubmit').onclick=()=>{
  const name=$('catName').value.trim(),contact=$('catContact').value.trim(),phone=$('catPhone').value.trim(),people=Math.max(1,Number($('catPeople').value||1)),date=$('catDate').value,time=$('catTime').value,pack=$('catPack').value,notes=$('catNotes').value.trim();
