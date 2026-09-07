@@ -176,16 +176,29 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </section>
 
 <section class="panel" id="deals">
-<div class="card notice"><b>Dexter's Deals Engine</b><p class="muted">Test personalised triggers against sample customer behaviour. Staff can preview why an offer is being shown.</p></div>
+<div class="card notice"><b>Dexter's Deals Engine</b><p class="muted">Build short-term personalised test offers around Dexter's existing 12-month automatic deal. Nothing here replaces or duplicates that long-term deal.</p></div>
 <div class="grid">
 <div class="card"><h2>Customer signals</h2>
-<label class="field">Days since last order<input id="dealDays" type="number" value="16"></label>
-<label class="field">Favourite category<select id="dealFav"><option>Breakfast</option><option>Street Subs</option><option>Smash Burgers</option><option>Chinese Style</option></select></label>
-<label class="field">Visits this month<input id="dealVisits" type="number" value="2"></label>
+<div class="field">Customer name<input id="dealName" value="Test Customer"></div>
+<label class="field">Days since last order<input id="dealDays" type="number" min="0" value="16"></label>
+<label class="field">Visits in last 30 days<input id="dealVisits" type="number" min="0" value="2"></label>
+<label class="field">Average order spend (£)<input id="dealSpend" inputmode="decimal" value="9.50"></label>
+<label class="field">Favourite category<select id="dealFav">
+<option>Breakfast</option><option>Hot Rolls</option><option>Wraps</option><option>Street Subs</option><option>Chinese Style</option><option>Smash Burgers</option><option>Chicken Tenders</option><option>Pizzas</option><option>Dirty Sodas</option>
+</select></label>
 <label class="field">Birthday this week?<select id="dealBirthday"><option>No</option><option>Yes</option></select></label>
-<button class="btn" id="dealRun">Generate test offers</button>
+<label class="field">Has unused reward?<select id="dealUnused"><option>No</option><option>Yes</option></select></label>
+<label class="field">Covered by 12-month auto deal?<select id="dealAnnual"><option selected>Yes</option><option>No</option></select></label>
+<button class="btn" id="dealRun">Generate recommended deals</button>
+<div class="summarybox tiny">Staff must approve every test deal. The 12-month automatic deal is protected from duplication and discount stacking.</div>
 </div>
-<div class="card"><h2>Recommended offers</h2><div id="dealOut" class="muted">Run the test engine to preview offers.</div></div>
+
+<div class="card"><h2>Recommended deals</h2>
+<div id="dealOut" class="muted">Run the engine to preview personalised offers.</div>
+<hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
+<h2>Staff-approved test deals</h2>
+<div id="dealApproved" class="muted">No deals approved in this test.</div>
+</div>
 </div>
 </section>
 
@@ -486,7 +499,40 @@ $('bizCreate').onclick=()=>{const n=$('bizName').value||'Test Business',l=Number
 
 let track=0;const labels=['Order received','Accepted by Dexter\'s','Preparing now','Almost ready','Ready for collection'];$('trackNext').onclick=()=>{track=Math.min(track+1,4);document.querySelectorAll('#trackSteps .dot').forEach((d,i)=>d.classList.toggle('on',i<=track));$('trackMsg').textContent='Order #TEST-1042 — '+labels[track]+(track===4?' ✅':'')};
 
-$('dealRun').onclick=()=>{const days=+$('dealDays').value||0,visits=+$('dealVisits').value||0,fav=$('dealFav').value,bday=$('dealBirthday').value==='Yes',out=[];if(days>=14)out.push('<div class="summarybox"><b>Come back offer</b><br>£2 off a collection order<br><span class="muted">Trigger: no order for '+days+' days</span></div>');if(fav)out.push('<div class="summarybox"><b>'+fav+' personal deal</b><br>Show a targeted '+fav+' reward<br><span class="muted">Trigger: favourite category</span></div>');if(visits>=3)out.push('<div class="summarybox"><b>Regular customer bonus</b><br>Bonus points this week<br><span class="muted">Trigger: '+visits+' visits this month</span></div>');if(bday)out.push('<div class="summarybox"><b>Birthday reward 🎂</b><br>Birthday-only Dexter\'s reward<br><span class="muted">Trigger: birthday this week</span></div>');$('dealOut').innerHTML=out.join('')||'<span class="muted">No offer rules matched.</span>'};
+const DEALKEY='dexters_growth_deals_test_v2';
+let dealApproved=[];try{dealApproved=JSON.parse(localStorage.getItem(DEALKEY)||'[]')}catch(e){dealApproved=[]}
+let dealCandidates=[];
+function dealExpiry(days=7){const d=new Date(Date.now()+days*86400000);return d.toISOString().slice(0,10)}
+function renderApprovedDeals(){
+ $('dealApproved').innerHTML=dealApproved.map((d,i)=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.offer+'</span><br><span class="tiny">Customer: '+d.customer+' · Expires '+d.expiry+' · Test only</span><div class="row" style="margin-top:8px"><button class="btn alt small" onclick="removeApprovedDeal('+i+')">Remove</button></div></div>').join('')||'No deals approved in this test.';
+}
+function renderDealCandidates(){
+ $('dealOut').innerHTML=dealCandidates.map((d,i)=>'<div class="summarybox"><b>'+d.title+'</b><br>'+d.offer+'<br><span class="muted"><b>Why:</b> '+d.reason+'</span><br><span class="tiny">Suggested expiry: '+d.expiry+' · '+d.rule+'</span><div class="row" style="margin-top:8px"><button class="btn small" onclick="approveDeal('+i+')">Approve test deal</button><button class="btn alt small" onclick="rejectDeal('+i+')">Reject</button></div></div>').join('')||'<span class="muted">No deal rules matched this customer.</span>';
+}
+$('dealRun').onclick=()=>{
+ const customer=$('dealName').value.trim()||'Test Customer',days=Math.max(0,Number($('dealDays').value||0)),visits=Math.max(0,Number($('dealVisits').value||0)),spend=Math.max(0,Number($('dealSpend').value||0)),fav=$('dealFav').value,bday=$('dealBirthday').value==='Yes',unused=$('dealUnused').value==='Yes',annual=$('dealAnnual').value==='Yes';
+ const out=[];
+ if(days>=21) out.push({title:'We miss you 👋',offer:'£2.00 off a collection order over £10',reason:'No order for '+days+' days',rule:'Win-back · one use'+(annual?' · does not stack with 12-month auto deal':''),expiry:dealExpiry(7),customer});
+ else if(days>=14) out.push({title:'Come back to Dexter\'s',offer:'£1.50 off a collection order over £8',reason:'No order for '+days+' days',rule:'Win-back · one use'+(annual?' · does not stack with 12-month auto deal':''),expiry:dealExpiry(7),customer});
+ if(visits>=6) out.push({title:'Dexter\'s Regular Bonus',offer:'150 bonus loyalty points on the next collected order',reason:visits+' visits in the last 30 days',rule:'Regular customer · points only · no 12-month deal duplication',expiry:dealExpiry(7),customer});
+ else if(visits>=4) out.push({title:'Regular Customer Bonus',offer:'100 bonus loyalty points on the next collected order',reason:visits+' visits in the last 30 days',rule:'Regular customer · points only',expiry:dealExpiry(7),customer});
+ if(spend>=15) out.push({title:'Big Order Thank You',offer:'Free 2oz Dexter\'s sauce with the next collection order',reason:'Average order spend is £'+spend.toFixed(2),rule:'High-spend thank-you · does not replace annual deal',expiry:dealExpiry(14),customer});
+ if(fav) out.push({title:fav+' Favourite Deal',offer:'A staff-selected '+fav+' reward for this customer',reason:fav+' is their favourite category',rule:'Category-targeted · staff chooses final item · no annual-deal stacking',expiry:dealExpiry(7),customer});
+ if(bday) out.push({title:'Birthday Treat 🎂',offer:'Birthday-only Dexter\'s reward',reason:'Birthday is this week',rule:'Birthday · one use · separate from 12-month auto deal',expiry:dealExpiry(7),customer});
+ if(unused) out.push({title:'Reward Reminder',offer:'Remind customer about their unused reward — no extra discount added',reason:'An existing reward is unused',rule:'Reminder only · prevents unnecessary stacking',expiry:dealExpiry(3),customer});
+ dealCandidates=out.slice(0,4);
+ renderDealCandidates();
+};
+window.approveDeal=i=>{
+ const d=dealCandidates[i]; if(!d)return;
+ dealApproved.unshift({...d,approvedAt:new Date().toISOString()});
+ localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));
+ dealCandidates.splice(i,1);
+ renderDealCandidates();renderApprovedDeals();
+};
+window.rejectDeal=i=>{dealCandidates.splice(i,1);renderDealCandidates()};
+window.removeApprovedDeal=i=>{dealApproved.splice(i,1);localStorage.setItem(DEALKEY,JSON.stringify(dealApproved));renderApprovedDeals()};
+renderApprovedDeals();
 
 $('scratch').onclick=()=>{$('scratch').classList.add('revealed');$('scratch').textContent='YOU WON: BONUS 100 POINTS 🎉'};
 
