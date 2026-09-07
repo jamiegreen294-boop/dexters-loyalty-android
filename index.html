@@ -910,6 +910,39 @@ lessons.push(
   ["What should a new worker do if unsure?",["Guess","Ask/speak up","Copy any shortcut"],1]
  ]}
 );
+lessons.push(
+ {group:"Health & Safety",title:"Personal hygiene & illness reporting",icon:"🤒",scenes:[
+  ["Personal hygiene protects food","Clean clothing, tied-back hair and good hygiene reduce contamination risk."],
+  ["Report illness before handling food","Vomiting, diarrhoea and other food-transmissible illness symptoms must be reported to management."],
+  ["48-hour symptom-free rule","After vomiting or diarrhoea, staff should not return to food handling until they have been symptom-free for at least 48 hours."],
+  ["Cover cuts correctly","Cuts and sores should be covered with a waterproof, preferably highly visible, dressing."]
+ ],questions:[
+  ["What should staff do if they have vomiting or diarrhoea?",["Report it and stay away from food handling","Hide it","Work as normal"],0],
+  ["How long symptom-free before returning after vomiting/diarrhoea?",["12 hours","24 hours","At least 48 hours"],2],
+  ["How should cuts be covered?",["Waterproof visible dressing","Tissue","Nothing"],0]
+ ]},
+ {group:"Health & Safety",title:"Effective handwashing",icon:"👐",scenes:[
+  ["Wash at the right times","Wash before work/food handling and after toilet use, raw food, waste, breaks, eating/drinking, cleaning or blowing your nose."],
+  ["Use liquid soap and water","Wet hands thoroughly, apply liquid soap and build a lather."],
+  ["Clean every surface","Rub palms, backs of hands, between fingers, backs of fingers, thumbs and fingertips."],
+  ["Rinse and dry hygienically","Rinse with clean water, dry with a single-use towel and avoid re-contaminating hands on taps."],
+  ["Hand rub is not a substitute","Hygienic hand rub should not replace proper handwashing."]
+ ],questions:[
+  ["When should hands be washed after handling raw food?",["Immediately before touching ready-to-eat food","At closing","Only if dirty"],0],
+  ["Can alcohol hand rub replace handwashing?",["Yes","No","Always"],1],
+  ["Which areas need rubbing?",["Palms only","Palms, backs, between fingers, thumbs and fingertips","Wrists only"],1]
+ ]},
+ {group:"Health & Safety",title:"Temperature control & food storage",icon:"🌡️",scenes:[
+  ["Cold food must stay cold","CookSafe recommends refrigerated food at 8°C or below and operating fridges/chills at 5°C or below."],
+  ["Cooking must be thorough","Food Standards Scotland guidance says food should be cooked completely and reach 75°C or above in the thickest part."],
+  ["Separate raw and ready-to-eat food","Use separate shelves/containers and equipment controls to prevent cross-contamination."],
+  ["Act on unsafe temperatures","If a fridge, hot-holding unit or food temperature is outside Dexter's safe limits, follow the food-safety procedure and escalate."]
+ ],questions:[
+  ["Recommended fridge/chill operating temperature?",["5°C or below","15°C","Room temperature"],0],
+  ["What cooking temperature does FSS guidance give for thorough cooking?",["50°C","75°C or above in the thickest part","60°C"],1],
+  ["What if food storage temperature is outside the safe limit?",["Ignore it","Follow procedure and escalate","Serve it quickly"],1]
+ ]}
+);
 const TRAIN_GROUPS={"Core":0,"Operational":1,"Health & Safety":2};
 lessons.forEach((l,i)=>{if(!l.group)l.group="Core"});
 let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{}};
