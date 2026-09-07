@@ -24,6 +24,7 @@ function ensureTop(){
  document.getElementById('dextersTopAdmin').onclick=()=>go('staffPage');
 }
 function ensureBottom(){
+ if(document.getElementById('workHomeNav')){document.getElementById('dextersRecoveryBottom')?.remove();return}
  if(document.getElementById('dextersRecoveryBottom'))return;
  const n=document.createElement('nav');n.id='dextersRecoveryBottom';n.innerHTML='<div class="inner"><button data-go="homePage" class="active">🏠<span>Home</span></button><button data-go="qrPage">🎁<span>Rewards</span></button><button data-go="menuPage">🍔<span>Order</span></button><button id="dextersNavLiveOrder">🧾<span>Live Order</span></button><button data-go="accountPage">👤<span>Account</span></button></div>';
  document.body.appendChild(n);
@@ -55,7 +56,7 @@ async function liveOrders(){
   box.innerHTML=active.map(o=>{const st=String(o.status||'').toLowerCase(),idx=stageIndex(st),steps=['Accepted','Preparing','Ready','Collected'];return '<div class="order-row"><b>Order #'+esc(o.order_number)+'</b><div style="margin-top:5px">Status: <b>'+esc(label(st))+'</b></div>'+(o.collection_time?'<div class="tiny muted">Collection: '+esc(o.collection_time)+'</div>':'')+(st==='amendment_required'?'<div class="status err" style="margin-top:9px">One or more items are unavailable. Open your order to amend it.</div>':'')+'<div class="order-steps">'+steps.map((x,i)=>'<div class="order-step '+(idx>i?'on':idx===i+1?'on current':'')+'">'+x+'</div>').join('')+'</div></div>'}).join('');
  }catch(e){box.textContent='Order updates are temporarily unavailable.'}
 }
-function boot(){style();ensureTop();ensureBottom();role();ensureOrderCard();liveOrders()}
+function boot(){style();ensureTop();ensureBottom();role();ensureOrderCard();liveOrders();setTimeout(()=>{if(document.getElementById('workHomeNav'))document.getElementById('dextersRecoveryBottom')?.remove()},250)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 setTimeout(boot,500);setTimeout(boot,1500);setInterval(()=>{role();liveOrders()},5000);
 })();
