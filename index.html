@@ -1144,7 +1144,7 @@ async function initSecureAuth(){
  const {data}=await SB.auth.getSession();SECURE_SESSION=data.session||null;
  if(SECURE_SESSION){try{await loadSecureAccount()}catch(e){}}
  renderSecureAuth();
- SB.auth.onAuthStateChange(async(_event,session)=>{SECURE_SESSION=session||null;SECURE_ACCOUNT=null;if(session){try{await loadSecureAccount()}catch(e){}}CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';renderSecureAuth();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();loadLiveReadOnly()});
+ SB.auth.onAuthStateChange(async(_event,session)=>{SECURE_SESSION=session||null;SECURE_ACCOUNT=null;if(session){try{await loadSecureAccount()}catch(e){}}CURRENT_STAFF_ROLE=SECURE_ACCOUNT?.role||'Staff';renderSecureAuth();await loadSecureCoreData();if(typeof renderStaffDb==='function')renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();loadLiveReadOnly()});
 }
 async function refreshStaffLoginStatus(){
  const box=$('staffLoginStatus'),s=typeof selectedStaff==='function'?selectedStaff():null;
@@ -1154,6 +1154,149 @@ async function refreshStaffLoginStatus(){
  box.innerHTML=s.email?'<span class="muted">Secure login can use '+s.email+'.</span>':'<span class="bad">Add the staff member’s email before creating their login.</span>';
 }
 
+
+let CORE_DB_CONNECTED=false;
+
+function mapDbStaff(row){
+ const pd=row.profile_data||{};
+ return {
+  ...pd,
+  id:row.staff_record_id,
+  authUserId:row.auth_user_id||pd.authUserId||null,
+  name:row.full_name||pd.name||'Unnamed staff',
+  email:row.email||pd.email||'',
+  phone:row.phone||pd.phone||'',
+  role:row.role||pd.role||'Staff',
+  status:row.employment_status||pd.status||'Active',
+  start:row.start_date||pd.start||'',
+  leavingDate:row.leaving_date||pd.leavingDate||'',
+  contractType:row.contract_type||pd.contractType||'Regular hours',
+  contractDays:Number(row.contract_days??pd.contractDays??0),
+  contractHours:Number(row.contract_hours??pd.contractHours??0),
+  leaveYearStart:row.leave_year_start||pd.leaveYearStart||'',
+  holidayWeeks:Number(row.holiday_weeks??pd.holidayWeeks??5.6),
+  bankHolidaysIncluded:row.bank_holidays_included!==false,
+  payrollId:row.payroll_id||pd.payrollId||'',
+  taxCode:row.tax_code||pd.taxCode||'',
+  niCategory:row.ni_category||pd.niCategory||'A',
+  hourlyRate:Number(row.hourly_rate??pd.hourlyRate??0),
+  pensionEmployeePct:Number(row.pension_employee_pct??pd.pensionEmployeePct??0),
+  pensionEmployerPct:Number(row.pension_employer_pct??pd.pensionEmployerPct??0),
+  tags:Array.isArray(row.tags)?row.tags:(pd.tags||[]),
+  permissions:pd.permissions||roleDefaultPerms(row.role||'Staff'),
+  docs:[],
+  absences:pd.absences||[],
+  incidents:pd.incidents||[],
+  notes:pd.notes||[],
+  checklists:pd.checklists||[],
+  training:pd.training||{completed:0,total:0,finalScore:null,certifiedAt:null,refresherDue:null},
+  audit:pd.audit||[]
+ };
+}
+function mapDbShift(r){
+ return {
+  dbId:r.id,staffId:r.staff_record_id,date:r.shift_date,start:r.scheduled_start?.slice?.(0,5)||r.scheduled_start||'',
+  end:r.scheduled_end?.slice?.(0,5)||r.scheduled_end||'',area:r.area||'',status:r.status||'Scheduled',
+  published:!!r.published,clockInAt:r.clock_in_at||null,clockOutAt:r.clock_out_at||null,notes:r.notes||'',
+  tags:Array.isArray(r.tags)?r.tags:[],timeAudit:r.shift_data?.timeAudit||[],createdAt:r.created_at
+ };
+}
+function mapDbLeave(r){
+ return {
+  dbId:r.id,id:r.id,staffId:r.staff_record_id,type:r.leave_type,from:r.leave_from,to:r.leave_to,note:r.note||'',
+  status:r.status||'Pending',decidedAt:r.decided_at||null,at:r.created_at
+ };
+}
+function mapDbPayroll(r){
+ const p=r.payroll_data||{};
+ return {
+  ...p,dbId:r.id,id:r.id,weekStart:r.week_start,weekEnd:r.week_end,payDate:r.pay_date,
+  start:p.start||r.week_start,end:p.end||r.week_end,status:r.status||p.status||'Draft',
+  lockedAt:r.locked_at||p.lockedAt||null,managerApprovedAt:r.manager_approved_at||p.managerApprovedAt||null,
+  superVerifiedAt:r.super_verified_at||p.superVerifiedAt||null,createdAt:r.created_at
+ };
+}
+function mapDbHoliday(r){
+ return {
+  dbId:r.id,staffId:r.staff_id,kind:r.entry_kind,status:r.status||'',unit:r.unit||'',amount:Number(r.amount||0),
+  description:r.description||'',reason:r.reason||'',effectiveDate:r.effective_date,at:r.created_at,
+  by:r.actor_role||'System'
+ };
+}
+async function loadSecureCoreData(){
+ if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.active||SECURE_ACCOUNT.must_change_password)return;
+ const role=SECURE_ACCOUNT.role;
+ const jobs=[
+  SB.from('backoffice_staff_profiles').select('*').order('full_name'),
+  SB.from('backoffice_rota_shifts').select('*').order('shift_date',{ascending:false}),
+  SB.from('backoffice_leave_requests').select('*').order('created_at',{ascending:false}),
+  SB.from('backoffice_holiday_ledger').select('*').order('created_at',{ascending:false})
+ ];
+ if(secureRoleRank(role)>=3) jobs.push(SB.from('backoffice_payroll_runs').select('*').order('week_start',{ascending:false}));
+ else jobs.push(Promise.resolve({data:[],error:null}));
+ if(secureRoleRank(role)>=3) jobs.push(SB.from('backoffice_staff_documents').select('*').order('created_at',{ascending:false}));
+ else jobs.push(SB.from('backoffice_staff_documents').select('*').eq('staff_record_id',SECURE_ACCOUNT.staff_record_id||'__none__'));
+ if(secureRoleRank(role)>=2) jobs.push(SB.from('backoffice_tasks').select('*').order('created_at',{ascending:false}));
+ else jobs.push(SB.from('backoffice_tasks').select('*').eq('assigned_staff_record_id',SECURE_ACCOUNT.staff_record_id||'__none__'));
+
+ const res=await Promise.all(jobs);
+ const err=res.find(x=>x?.error)?.error;if(err)throw err;
+
+ const [staffR,rotaR,leaveR,holidayR,payR,docsR,tasksR]=res;
+ const staff=(staffR.data||[]).map(mapDbStaff);
+ const docs=docsR.data||[];
+ staff.forEach(s=>{
+   s.docs=docs.filter(d=>d.staff_record_id===s.id).map(d=>({
+     dbId:d.id,category:d.category||'',type:d.document_type,documentDate:d.document_date||'',
+     expiry:d.review_expiry_date||'',completedBy:d.completed_by||'',signed:!!d.acknowledged,note:d.details||'',
+     createdAt:d.created_at,updatedAt:d.updated_at
+   }));
+ });
+ if(staff.length){
+   staffDb.staff=staff;
+   if(!staff.some(s=>s.id===staffDb.selected))staffDb.selected=SECURE_ACCOUNT.staff_record_id||staff[0].id;
+   localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));
+ }
+ dexManage.rota=(rotaR.data||[]).map(mapDbShift);
+ dexManage.leaveRequests=(leaveR.data||[]).map(mapDbLeave);
+ dexManage.holidayLedger=(holidayR.data||[]).map(mapDbHoliday);
+ dexManage.payrollRuns=(payR.data||[]).map(mapDbPayroll);
+ dexManage.tasks=(tasksR.data||[]).map(t=>({
+   dbId:t.id,title:t.title,assignee:t.assigned_staff_record_id||'',type:t.task_type||'Task',priority:t.priority||'Normal',
+   due:t.due_date||'',details:t.details||'',resolution:t.resolution||'',status:t.status||'Open',
+   tags:Array.isArray(t.tags)?t.tags:[],at:t.created_at
+ }));
+ localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));
+ CORE_DB_CONNECTED=true;
+ renderStaffDb();renderDexManagement();
+ const msg=$('secureAuthMessage');if(msg)msg.innerHTML='<span class="ok">Secure database connected.</span>';
+}
+async function persistStaffProfileDb(s){
+ if(!CORE_DB_CONNECTED||!SECURE_SESSION||!s)return;
+ const profileData={
+  emergencyName:s.emergencyName||'',emergencyPhone:s.emergencyPhone||'',leavingReason:s.leavingReason||'',
+  permissions:s.permissions||[],absences:s.absences||[],incidents:s.incidents||[],notes:s.notes||[],
+  checklists:s.checklists||[],training:s.training||{},audit:(s.audit||[]).slice(0,100),payrollDeductionNote:s.payrollDeductionNote||''
+ };
+ const row={
+  staff_record_id:s.id,auth_user_id:s.authUserId||null,full_name:s.name,email:s.email||null,phone:s.phone||null,
+  role:s.role,employment_status:s.status||'Active',start_date:s.start||null,leaving_date:s.leavingDate||null,
+  contract_type:s.contractType||'Regular hours',contract_days:Number(s.contractDays||0),contract_hours:Number(s.contractHours||0),
+  leave_year_start:s.leaveYearStart||null,holiday_weeks:Number(s.holidayWeeks||5.6),bank_holidays_included:s.bankHolidaysIncluded!==false,
+  payroll_id:s.payrollId||null,tax_code:s.taxCode||null,ni_category:s.niCategory||'A',hourly_rate:Number(s.hourlyRate||0),
+  pension_employee_pct:Number(s.pensionEmployeePct||0),pension_employer_pct:Number(s.pensionEmployerPct||0),
+  tags:s.tags||[],profile_data:profileData,updated_at:new Date().toISOString()
+ };
+ const {error}=await SB.from('backoffice_staff_profiles').upsert(row,{onConflict:'staff_record_id'});
+ if(error)throw error;
+}
+async function appendAuditDb(entityType,entityId,action,beforeData=null,afterData=null){
+ if(!CORE_DB_CONNECTED||!SECURE_SESSION)return;
+ await SB.from('backoffice_audit_log').insert({
+  actor_user_id:SECURE_SESSION.user.id,actor_role:SECURE_ACCOUNT?.role||CURRENT_STAFF_ROLE,
+  entity_type:entityType,entity_id:String(entityId||''),action,before_data:beforeData,after_data:afterData
+ });
+}
 async function liveRpc(name,args={}){
  if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.active)throw new Error('Secure sign-in required.');
  const {data,error}=await SB.rpc(name,args);
@@ -2022,7 +2165,14 @@ window.closeDexTask=i=>{if(!dexManage.tasks[i])return;dexManage.tasks[i].status=
 if($('addTagBtn'))$('addTagBtn').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');const name=$('newTagName').value.trim();if(!name||dexManage.tags.some(t=>t.name.toLowerCase()===name.toLowerCase()))return;dexManage.tags.push({name,system:false});$('newTagName').value='';saveDexManage()};
 if($('recAdd'))$('recAdd').onclick=()=>{const name=$('recName').value.trim();if(!name)return;dexManage.recruitment.unshift({name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value.trim(),applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interview:$('recInterview').value.trim(),rtw:$('recRTW').value,onboarding:$('recOnboarding').value.trim(),tags:pickedTags('recTags'),at:new Date().toISOString()});saveDexManage()};
 if($('appAdd'))$('appAdd').onclick=()=>{if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
-if($('rotaAdd'))$('rotaAdd').onclick=()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return;dexManage.rota.unshift({staffId:$('rotaStaff').value,date:$('rotaDate').value,area:$('rotaArea').value.trim(),start:$('rotaStart').value,end:$('rotaEnd').value,status:$('rotaStatus').value,notes:$('rotaNotes').value.trim(),tags:pickedTags('rotaTags'),clockInAt:null,clockOutAt:null,timeAudit:[],createdAt:new Date().toISOString()});saveDexManage()};
+if($('rotaAdd'))$('rotaAdd').onclick=async()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return;
+ const item={staffId:$('rotaStaff').value,date:$('rotaDate').value,area:$('rotaArea').value.trim(),start:$('rotaStart').value,end:$('rotaEnd').value,status:$('rotaStatus').value,notes:$('rotaNotes').value.trim(),tags:pickedTags('rotaTags'),clockInAt:null,clockOutAt:null,timeAudit:[],createdAt:new Date().toISOString()};
+ if(CORE_DB_CONNECTED){
+  const {data,error}=await SB.from('backoffice_rota_shifts').insert({staff_record_id:item.staffId,shift_date:item.date,scheduled_start:item.start||null,scheduled_end:item.end||null,area:item.area||null,status:item.status,notes:item.notes||null,tags:item.tags,shift_data:{timeAudit:[]},created_by:SECURE_SESSION.user.id}).select().single();
+  if(error)return alert('Secure rota save failed: '+error.message);dexManage.rota.unshift(mapDbShift(data));await appendAuditDb('rota_shift',data.id,'Shift created',null,data);
+ }else dexManage.rota.unshift(item);
+ saveDexManage()
+};
 if($('taskAdd'))$('taskAdd').onclick=()=>{const title=$('taskTitle').value.trim();if(!title)return;dexManage.tasks.unshift({title,assignee:$('taskAssignee').value,type:$('taskType').value,priority:$('taskPriority').value,due:$('taskDue').value,details:$('taskDetails').value.trim(),resolution:$('taskResolution').value.trim(),tags:pickedTags('taskTags'),status:'Open',at:new Date().toISOString()});saveDexManage()};
 if($('eqAdd'))$('eqAdd').onclick=()=>{const name=$('eqName').value.trim();if(!name)return;dexManage.equipment.unshift({name,asset:$('eqAsset').value.trim(),location:$('eqLocation').value.trim(),status:$('eqStatus').value,last:$('eqLast').value,due:$('eqDue').value,fault:$('eqFault').value.trim(),action:$('eqAction').value.trim(),assignee:$('eqAssignee').value,engineer:$('eqEngineer').value.trim(),tags:pickedTags('eqTags'),at:new Date().toISOString()});saveDexManage()};
 if($('masterCompAdd'))$('masterCompAdd').onclick=()=>{const title=$('masterCompTitle').value.trim();if(!title)return;dexManage.masterCompliance.unshift({type:$('masterCompType').value,title,date:$('masterCompDate').value,review:$('masterCompReview').value,owner:$('masterCompOwner').value.trim(),hazard:$('masterCompHazard').value.trim(),scope:$('masterCompScope').value.trim(),controls:$('masterCompControls').value.trim(),actions:$('masterCompActions').value.trim(),tags:pickedTags('masterCompTags'),at:new Date().toISOString()});saveDexManage()};
@@ -2032,17 +2182,30 @@ if($('saveHmrcSettings'))$('saveHmrcSettings').onclick=()=>{
  dexManage.hmrcSettings={employerName:$('hmrcEmployerName').value.trim(),office:$('hmrcOffice').value.trim(),payeRef:$('hmrcPayeRef').value.trim(),accountsRef:$('hmrcAccountsRef').value.trim(),payday:$('hmrcPayday').value};
  payAudit('Employer PAYE settings updated');saveDexManage();
 };
-if($('buildWeeklyPayroll'))$('buildWeeklyPayroll').onclick=()=>{
+if($('buildWeeklyPayroll'))$('buildWeeklyPayroll').onclick=async()=>{
  if(!['Manager','Super User'].includes(CURRENT_STAFF_ROLE))return alert('Manager or Super User access required.');
  const weekStart=$('payWeekStart').value,weekEnd=$('payWeekEnd').value,payDate=$('payDate').value;
  if(!weekStart||!weekEnd||!payDate)return alert('Add the week start, week end and pay date.');
  const rows=payrollRowsForWeek(weekStart,weekEnd);
  const run={id:'pay-'+Date.now(),weekStart,weekEnd,payDate,rows,status:'Draft',createdAt:new Date().toISOString(),createdBy:CURRENT_STAFF_ROLE};
+ if(CORE_DB_CONNECTED){
+   const {data,error}=await SB.from('backoffice_payroll_runs').insert({week_start:weekStart,week_end:weekEnd,pay_date:payDate,status:'Draft',payroll_data:run,created_by:SECURE_SESSION.user.id}).select().single();
+   if(error)return alert('Secure payroll save failed: '+error.message);run.dbId=data.id;run.id=data.id;
+ }
  dexManage.payrollRuns=dexManage.payrollRuns||[];dexManage.payrollRuns.unshift(run);payAudit('Weekly payroll draft created',run.id);saveDexManage();viewPayroll(0);
 };
 
 if($('buildTimesheets'))$('buildTimesheets').onclick=()=>{const start=$('timesheetStart').value,end=$('timesheetEnd').value;if(!start||!end)return alert('Choose a week start and end.');dexManage.timesheets.unshift({id:'ts-'+Date.now(),start,end,rows:buildTimesheetRows(start,end),createdAt:new Date().toISOString()});addTimeline('Timesheet','Weekly timesheets built '+start+' → '+end);saveDexManage()};
-if($('leaveRequest'))$('leaveRequest').onclick=()=>{const staffId=$('leaveStaff').value,from=$('leaveFrom').value,to=$('leaveTo').value;if(!staffId||!from||!to)return alert('Choose staff and dates.');dexManage.leaveRequests.unshift({id:'lv-'+Date.now(),staffId,from,to,type:$('leaveType').value,note:$('leaveNote').value.trim(),status:'Pending',at:new Date().toISOString()});addHolidayLedger({staffId,kind:'Leave request',status:'Pending',unit:'',amount:0,description:$('leaveType').value+' '+from+' → '+to,reason:$('leaveNote').value.trim(),by:CURRENT_STAFF_ROLE,effectiveDate:from});notifyRole('Manager','Leave request',staffNameById(staffId)+' requested '+from+' to '+to,'Leave');addTimeline('Leave',staffNameById(staffId)+' submitted leave request');saveDexManage()};
+if($('leaveRequest'))$('leaveRequest').onclick=async()=>{const staffId=$('leaveStaff').value,from=$('leaveFrom').value,to=$('leaveTo').value;if(!staffId||!from||!to)return alert('Choose staff and dates.');
+ const item={id:'lv-'+Date.now(),staffId,from,to,type:$('leaveType').value,note:$('leaveNote').value.trim(),status:'Pending',at:new Date().toISOString()};
+ if(CORE_DB_CONNECTED){
+  const {data,error}=await SB.from('backoffice_leave_requests').insert({staff_record_id:staffId,leave_type:item.type,leave_from:from,leave_to:to,note:item.note,status:'Pending',created_by:SECURE_SESSION.user.id}).select().single();
+  if(error)return alert('Secure leave request failed: '+error.message);item.dbId=data.id;item.id=data.id;item.at=data.created_at;
+  const h=holidayBalanceForStaff(staffDb.staff.find(x=>x.id===staffId)||{});
+  await SB.from('backoffice_holiday_ledger').insert({staff_id:staffId,entry_kind:'Leave request',status:'Pending',unit:h.unit||null,amount:0,description:item.type+' '+from+' → '+to,reason:item.note||null,effective_date:from,leave_from:from,leave_to:to,actor_user_id:SECURE_SESSION.user.id,actor_role:SECURE_ACCOUNT.role});
+ }
+ dexManage.leaveRequests.unshift(item);addHolidayLedger({staffId,kind:'Leave request',status:'Pending',unit:'',amount:0,description:item.type+' '+from+' → '+to,reason:item.note,by:CURRENT_STAFF_ROLE,effectiveDate:from});notifyRole('Manager','Leave request',staffNameById(staffId)+' requested '+from+' to '+to,'Leave');addTimeline('Leave',staffNameById(staffId)+' submitted leave request');saveDexManage()
+};
 const AVAIL_DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 if($('availabilityDays'))$('availabilityDays').innerHTML=AVAIL_DAYS.map(d=>'<label><input type="checkbox" value="'+d+'">'+d+'</label>').join('');
 if($('availabilitySave'))$('availabilitySave').onclick=()=>{const id=$('availabilityStaff').value;if(!id)return;dexManage.availability[id]={days:[...$('availabilityDays').querySelectorAll('input:checked')].map(x=>x.value),hours:$('availabilityHours').value.trim(),note:$('availabilityNote').value.trim(),updatedAt:new Date().toISOString()};addTimeline('Availability',staffNameById(id)+' availability updated');saveDexManage()};
@@ -2489,6 +2652,7 @@ $('staffAdd').onclick=async()=>{
    $('tempPasswordStaff').textContent=name.trim()+' · '+email.trim();
    $('tempPasswordValue').textContent=data.temporary_password;
    $('tempPasswordOverlay').style.display='block';
+   if(CORE_DB_CONNECTED)await loadSecureCoreData();
   }catch(e){alert('Staff record was created, but secure login could not be created: '+e.message)}
  }else{
   alert('Staff record created. Sign in securely as Manager/Super User to create the login and temporary password.');
@@ -2503,7 +2667,7 @@ $('staffCreateLogin').onclick=async()=>{
  try{
   const data=await secureFunction('create_staff',{staff_record_id:s.id,name:s.name,email:s.email,role:s.role});
   s.authUserId=data.auth_user_id;s.secureLogin=true;logStaff(s,'Secure login created; temporary password issued');saveStaffDb();
-  $('tempPasswordStaff').textContent=s.name+' · '+s.email;$('tempPasswordValue').textContent=data.temporary_password;$('tempPasswordOverlay').style.display='block';
+  $('tempPasswordStaff').textContent=s.name+' · '+s.email;$('tempPasswordValue').textContent=data.temporary_password;$('tempPasswordOverlay').style.display='block';if(CORE_DB_CONNECTED)await loadSecureCoreData();
  }catch(e){alert(e.message)}
 };
 $('staffResetPassword').onclick=async()=>{
@@ -2522,10 +2686,15 @@ $('staffSaveProfile').onclick=()=>{
  s.status=$('sdStatus').value;s.start=$('sdStart').value;s.leavingDate=s.status==='No Longer Employed'?$('sdLeavingDate').value:'';s.leavingReason=s.status==='No Longer Employed'?$('sdLeavingReason').value:'';s.contractType=$('sdContractType').value;s.contractDays=Number($('sdContractDays').value||0);s.contractHours=Number($('sdContractHours').value||0);s.leaveYearStart=$('sdLeaveYearStart').value;s.holidayWeeks=Math.max(5.6,Number($('sdHolidayWeeks').value||5.6));s.bankHolidaysIncluded=$('sdBankHolidaysIncluded').checked;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();s.tags=pickedTags('sdTags');s.payrollId=$('sdPayrollId').value.trim();s.nino=$('sdNino').value.trim().toUpperCase();s.taxCode=$('sdTaxCode').value.trim().toUpperCase();s.niCategory=$('sdNiCategory').value.trim().toUpperCase()||'A';s.hourlyRate=Number($('sdHourlyRate').value||0);s.pensionEmployeePct=Number($('sdPensionEmployeePct').value||0);s.pensionEmployerPct=Number($('sdPensionEmployerPct').value||0);s.payrollDeductionNote=$('sdPayrollDeductionNote').value.trim();
  if(CURRENT_STAFF_ROLE==='Super User'&&oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' by Super User and role-default permissions applied')}else if(s.status==='No Longer Employed'){logStaff(s,'Employment status changed to No Longer Employed'+(s.leavingDate?' · leaving date '+s.leavingDate:'')+(s.leavingReason?' · '+s.leavingReason:''))}else logStaff(s,'Staff profile updated');addHolidayLedger({staffId:s.id,kind:'Entitlement snapshot',status:'Calculated',unit:holidayBalanceForStaff(s).unit,amount:holidayBalanceForStaff(s).accrued,description:'Contract / entitlement recalculated',reason:s.contractType+' · '+s.contractDays+' days/week · '+s.contractHours+' hours/week · '+s.holidayWeeks+' holiday weeks',by:CURRENT_STAFF_ROLE,effectiveDate:new Date().toISOString().slice(0,10)});
  saveStaffDb();
+ if(CORE_DB_CONNECTED){persistStaffProfileDb(s).then(()=>appendAuditDb('staff_profile',s.id,'Staff profile saved',null,{name:s.name,role:s.role,status:s.status})).catch(e=>alert('Secure staff save failed: '+e.message))}
 };
 window.saveStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated by Super User');saveStaffDb()};
 window.resetStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=roleDefaultPerms(s.role);logStaff(s,'Permissions reset to '+s.role+' defaults by Super User');saveStaffDb()};
-$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}clearStaffDocForm();saveStaffDb();renderComplianceDashboard()};
+$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}clearStaffDocForm();saveStaffDb();renderComplianceDashboard();
+ if(CORE_DB_CONNECTED&&editingStaffDocIndex===null){
+   SB.from('backoffice_staff_documents').insert({staff_record_id:s.id,category:rec.category,document_type:rec.type,document_date:rec.documentDate||null,review_expiry_date:rec.expiry||null,completed_by:rec.completedBy||null,acknowledged:!!rec.signed,details:rec.note||null,created_by:SECURE_SESSION.user.id}).then(({error})=>{if(error)alert('Secure document save failed: '+error.message);else loadSecureCoreData()});
+ }
+};
 window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo()}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';$('sdDocSigned').checked=!!d.signed;$('staffAddDoc').textContent='Save document changes'};
 window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb()};
 
@@ -3021,7 +3190,7 @@ if($('secureLoginBtn'))$('secureLoginBtn').onclick=async()=>{
  $('secureAuthMessage').textContent='Signing in…';
  const {data,error}=await SB.auth.signInWithPassword({email,password});
  if(error){$('secureAuthMessage').innerHTML='<span class="bad">'+error.message+'</span>';return}
- SECURE_SESSION=data.session;await loadSecureAccount();renderSecureAuth();renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();if(SECURE_ACCOUNT?.active&&!SECURE_ACCOUNT.must_change_password)loadLiveReadOnly();
+ SECURE_SESSION=data.session;await loadSecureAccount();renderSecureAuth();renderStaffDb();if(typeof renderDexManagement==='function')renderDexManagement();if(SECURE_ACCOUNT?.active&&!SECURE_ACCOUNT.must_change_password){await loadSecureCoreData();loadLiveReadOnly();}
 };
 if($('secureForgotBtn'))$('secureForgotBtn').onclick=async()=>{
  const email=$('secureLoginEmail').value.trim();if(!email)return alert('Enter your email first.');
