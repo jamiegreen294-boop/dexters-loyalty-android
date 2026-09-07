@@ -103,11 +103,33 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 .pass-pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px}.pass-pagehead h2{margin:0;color:#3f3b42;font-size:22px}.pass-period{max-width:160px;margin:0}.pass-dashboard-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}.pass-dash-card{min-height:210px}.pass-dash-card h3{font-size:15px;margin:0 0 14px;color:#57515a}.pass-ring{width:150px;height:150px;margin:8px auto 16px;border-radius:50%;background:conic-gradient(#24a23e 0 84%,#e34b63 84% 100%);display:grid;place-items:center}.pass-ring:before{content:"";position:absolute}.pass-ring>div{width:118px;height:118px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.pass-ring b{font-size:30px;color:#4a4450}.pass-ring span{font-size:11px;color:#777}.pass-statline{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #ece9ee}.pass-statline span{color:#69646d;font-size:13px}.pass-statline b{color:#454047;font-size:13px}.pass-alert-card .alert-item{border:0!important;border-left:4px solid #e43c63!important;border-radius:0!important;background:#fff!important;margin:0 0 10px;padding:10px 12px}.staff-pass-list{background:#f7f7f8!important}.staff-pass-list #staffDirectory{display:grid;grid-template-columns:1fr;gap:9px}.pass-person-card{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:11px;background:#fff;border:1px solid #dfdce2;border-radius:4px;padding:11px;cursor:pointer;box-shadow:0 1px 3px #00000008}.pass-person-card:hover,.pass-person-card.selected{border-color:#8a58a0;box-shadow:0 0 0 2px #e8dced}.pass-avatar{width:44px;height:44px;border-radius:50%;background:#ece4f0;color:#5b0b7e;display:grid;place-items:center;font-weight:900}.pass-person-copy{min-width:0;display:flex;flex-direction:column}.pass-person-copy b{color:#3e3941}.pass-person-copy span,.pass-person-copy small{color:#77717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pass-person-copy span{font-size:12px}.pass-person-copy small{font-size:11px}.pass-status{font-size:9px;font-weight:900;text-transform:uppercase;padding:4px 6px;border-radius:3px;background:#eee;color:#666}.pass-status.active{background:#2b9a41;color:#fff}@media(max-width:900px){.pass-dashboard-grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.pass-pagehead{align-items:flex-start}.pass-dashboard-grid{grid-template-columns:1fr}.pass-period{max-width:130px}.pass-ring{width:128px;height:128px}.pass-ring>div{width:98px;height:98px}}
 
 .pass-manager-overview{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}.pass-manager-kpi{background:#fff;border:1px solid #dedde3;border-radius:4px;padding:14px;box-shadow:0 1px 4px #0000000a}.pass-manager-kpi span{display:block;color:#6f6972;font-size:12px}.pass-manager-kpi b{display:block;color:#4f0b70;font-size:27px;margin:4px 0}.pass-manager-kpi small{color:#8a858d}.pass-manager-alerts{margin:0 0 14px}.pass-manager-alerts h3{margin:0 0 10px}.pass-manager-alert{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;margin:6px 0;background:#fff;border-left:4px solid #c8c4cb}.pass-manager-alert b{color:#443f46}.pass-manager-alert span{color:#77717a;font-size:12px;text-align:right}.pass-manager-alert.danger{border-left-color:#e33c61}.pass-manager-alert.warning{border-left-color:#e2a726}.pass-manager-alert.good{border-left-color:#31a44b}@media(max-width:800px){.pass-manager-overview{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.pass-manager-overview{grid-template-columns:1fr 1fr}.pass-manager-alert{align-items:flex-start;flex-direction:column}.pass-manager-alert span{text-align:left}}
+
+/* PASS-style staff-card manager flow: cards first, record second */
+#staffdb .staff-pass-grid{display:block!important}
+#staffCardView{width:100%;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+#staffDirectory{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px!important;margin-top:12px}
+.pass-staff-card{appearance:none;width:100%;text-align:left;background:#fff;border:1px solid #dedde3;border-radius:5px;padding:16px;color:#3e3941;cursor:pointer;box-shadow:0 1px 4px #0000000a;transition:.15s}
+.pass-staff-card:hover{border-color:#9b6fad;box-shadow:0 4px 12px #00000012;transform:translateY(-1px)}
+.pass-staff-card-top{display:flex;justify-content:space-between;align-items:flex-start}
+.pass-avatar.large{width:54px;height:54px;font-size:16px}
+.pass-staff-card h3{margin:12px 0 2px;font-size:17px;color:#3d3840}
+.pass-staff-role{font-size:12px;font-weight:800;color:#6a476f}
+.pass-staff-contact{font-size:11px;color:#817b84;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pass-staff-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 10px}
+.pass-staff-metrics span{background:#f6f4f7;border:1px solid #e7e3e9;border-radius:4px;padding:8px;text-align:center}
+.pass-staff-metrics b{display:block;font-size:17px;color:#4f0b70}
+.pass-staff-metrics small{font-size:9px;color:#7d7780;text-transform:uppercase}
+.pass-staff-open{border-top:1px solid #ece8ee;padding-top:10px;color:#5b0b7e;font-size:12px;font-weight:800}
+#staffRecordView{width:100%;background:#fff!important;border:1px solid #dedde3!important;padding:18px!important}
+.pass-record-head{display:flex;align-items:center;gap:14px;border-bottom:1px solid #e8e5ea;padding-bottom:14px;margin-bottom:14px}
+#staffRecordView .staff-profile-tabs{border-bottom:1px solid #e4e0e6;padding-bottom:8px}
+@media(max-width:900px){#staffDirectory{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){#staffDirectory{grid-template-columns:1fr}.pass-staff-card{padding:14px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-10-manager-staff-customers">
+<main class="wrap" data-build="2026-09-08-website-pass-11-staff-card-flow">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -990,16 +1012,19 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 <div class="card pass-manager-alerts"><h3>Staff manager alerts</h3><div id="staffMgrAlerts"></div></div>
 
 <div class="staff-pass-grid">
-<div class="staff-pass-list">
-<h2>Staff directory</h2>
+<div class="staff-pass-list" id="staffCardView">
+<h2>Staff</h2><p class="muted">Choose a staff card to open the full record, forms and history.</p>
 <div class="field">Search<input id="staffSearch" placeholder="Search name or role"></div>
 <div id="staffDirectory"></div>
 </div>
 
-<div class="staff-pass-profile">
+<div class="staff-pass-profile" id="staffRecordView" style="display:none">
 <div id="staffEmpty" class="muted">Choose a staff member from the directory.</div>
 <div id="staffProfile" style="display:none">
-<h2>Staff record</h2>
+<div class="pass-record-head">
+  <button class="btn alt small" id="staffBackToCards">← Staff</button>
+  <div><h2 style="margin:0">Staff record</h2><div class="muted" id="staffRecordSubtitle">Profile, forms and history</div></div>
+</div>
 <div class="staff-profile-tabs">
 <button class="active" data-sdtab="profile">Profile</button>
 <button data-sdtab="training">Training</button>
@@ -3178,9 +3203,21 @@ function roleDefaultPerms(role){
 function renderStaffDirectory(){
  const q=($('staffSearch').value||'').trim().toLowerCase();
  const items=staffDb.staff.filter(s=>!q||String(s.name).toLowerCase().includes(q)||String(s.role).toLowerCase().includes(q));
- $('staffDirectory').innerHTML=items.map(s=>'<div class="pass-person-card '+(staffDb.selected===s.id?'selected':'')+'" onclick="selectStaffRecord(&quot;'+s.id+'&quot;)"><div class="pass-avatar">'+custInitials(s.name)+'</div><div class="pass-person-copy"><b>'+s.name+'</b><span>'+s.role+'</span><small>'+(s.email||s.phone||'No contact details')+'</small></div><span class="pass-status '+(s.status==='Active'?'active':'')+'">'+s.status+'</span></div>').join('')||'<span class="muted">No staff match your search.</span>';
+ $('staffDirectory').innerHTML=items.map(s=>{
+  const due=(s.docs||[]).filter(d=>d.expiry&&new Date(d.expiry+'T12:00:00')<=new Date(Date.now()+30*86400000)).length;
+  const abs=(s.absences||[]).length;
+  const tr=s.training||{};
+  return '<button class="pass-staff-card" onclick="selectStaffRecord(&quot;'+s.id+'&quot;)">'+
+    '<div class="pass-staff-card-top"><div class="pass-avatar large">'+custInitials(s.name)+'</div><span class="pass-status '+(s.status==='Active'?'active':'')+'">'+s.status+'</span></div>'+
+    '<h3>'+s.name+'</h3><div class="pass-staff-role">'+s.role+'</div>'+
+    '<div class="pass-staff-contact">'+(s.email||s.phone||'No contact details')+'</div>'+
+    '<div class="pass-staff-metrics"><span><b>'+Number(tr.completed||0)+'</b><small>training</small></span><span><b>'+due+'</b><small>docs due</small></span><span><b>'+abs+'</b><small>absence</small></span></div>'+
+    '<div class="pass-staff-open">Open staff record →</div></button>';
+ }).join('')||'<span class="muted">No staff match your search.</span>';
 }
-window.selectStaffRecord=id=>{staffDb.selected=id;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb()};
+let STAFF_RECORD_OPEN=false;
+window.selectStaffRecord=id=>{staffDb.selected=id;STAFF_RECORD_OPEN=true;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb();window.scrollTo({top:0,behavior:'smooth'})};
+window.closeStaffRecord=()=>{STAFF_RECORD_OPEN=false;renderStaffDb();window.scrollTo({top:0,behavior:'smooth'})};
 function fmtDate(d){if(!d)return '—';const x=new Date(d);return Number.isNaN(x.getTime())?d:x.toLocaleDateString()}
 function toggleLeavingFields(){
  const leave=$('sdStatus')?.value==='No Longer Employed';
@@ -3206,8 +3243,11 @@ function renderStaffManagerOverview(){
 function renderStaffDb(){
  renderStaffDirectory();renderComplianceDashboard();renderStaffManagerOverview();
  const s=selectedStaff(),show=!!s;
- $('staffEmpty').style.display=show?'none':'block';
- $('staffProfile').style.display=show?'block':'none';
+ const cardView=$('staffCardView'),recordView=$('staffRecordView');
+ if(cardView)cardView.style.display=STAFF_RECORD_OPEN?'none':'block';
+ if(recordView)recordView.style.display=STAFF_RECORD_OPEN?'block':'none';
+ $('staffEmpty').style.display=(STAFF_RECORD_OPEN&&show)?'none':'block';
+ $('staffProfile').style.display=(STAFF_RECORD_OPEN&&show)?'block':'none';
  ['staffDocForm','staffAbsenceForm','staffIncidentForm','staffNotesForm'].forEach(id=>$(id).style.display=show?'block':'none');
  if(!s){
   $('staffPermissions').innerHTML=$('staffTrainingSummary').innerHTML=$('staffDocs').innerHTML=$('staffAbsence').innerHTML=$('staffIncidents').innerHTML=$('staffNotes').innerHTML=$('staffAudit').innerHTML='Choose a staff member first.';return;
@@ -3225,6 +3265,7 @@ function renderStaffDb(){
  $('staffNotes').innerHTML=(s.notes||[]).map(n=>'<div class="summarybox"><span class="muted">'+n.text+'</span><br><span class="tiny">'+new Date(n.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager notes.</span>';
  $('staffAudit').innerHTML=(s.audit||[]).map(a=>'<div class="tiny" style="padding:7px 0;border-bottom:1px solid #ffffff10"><b>'+new Date(a.at).toLocaleString()+'</b> — '+a.action+'</div>').join('')||'<span class="muted">No audit history.</span>';
 }
+const staffBackBtn=$('staffBackToCards');if(staffBackBtn)staffBackBtn.onclick=closeStaffRecord;
 $('staffSearch').addEventListener('input',renderStaffDirectory);$('sdStatus').addEventListener('change',toggleLeavingFields);['sdContractType','sdContractDays','sdContractHours','sdLeaveYearStart','sdHolidayWeeks'].forEach(id=>$(id).addEventListener('change',()=>{const s=selectedStaff();if(s){s.contractType=$('sdContractType').value;s.contractDays=Number($('sdContractDays').value||0);s.contractHours=Number($('sdContractHours').value||0);s.leaveYearStart=$('sdLeaveYearStart').value;s.holidayWeeks=Math.max(5.6,Number($('sdHolidayWeeks').value||5.6));renderStaffHolidaySummary(s)}}));
 $('staffAdd').onclick=async()=>{
  if(!SECURE_SESSION||!['Manager','Super User'].includes(SECURE_ACCOUNT?.role||''))return alert('Secure Manager or Super User sign-in required to add staff.');
