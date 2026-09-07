@@ -39,6 +39,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 <button class="tab active" data-tab="catering">Catering</button>
 <button class="tab" data-tab="deals">Deals Engine</button>
 <button class="tab" data-tab="challenges">Scratch & Challenges</button>
+<button class="tab" data-tab="staffdb">Staff Database</button>
 <button class="tab" data-tab="training">Staff Training</button>
 </div>
 
@@ -250,6 +251,92 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 </div>
 <div><div id="challengeRules" class="muted"></div><p class="tiny">Test only. No live points, prizes or customer rewards are changed.</p></div>
 </div>
+</div>
+</section>
+
+<section class="panel" id="staffdb">
+<div class="card notice"><b>Dexter's Staff Hub</b><p class="muted">One joined-up staff record for contact details, role access, training, documents, absence, incidents, notes and audit history. Test-only — no live staff records are changed.</p></div>
+
+<div class="grid">
+<div class="card">
+<h2>Staff directory</h2>
+<div class="field">Find staff<input id="staffSearch" placeholder="Search name or role"></div>
+<button class="btn" id="staffAdd">+ Add test staff member</button>
+<div id="staffDirectory" style="margin-top:12px"></div>
+</div>
+
+<div class="card">
+<h2>Staff profile</h2>
+<div id="staffEmpty" class="muted">Choose a staff member from the directory.</div>
+<div id="staffProfile" style="display:none">
+<div class="field">Full name<input id="sdName"></div>
+<div class="field">Role<select id="sdRole"><option>Staff</option><option>Supervisor</option><option>Manager</option><option>Owner/Admin</option></select></div>
+<div class="field">Status<select id="sdStatus"><option>Active</option><option>On leave</option><option>Sick</option><option>Inactive</option></select></div>
+<div class="field">Start date<input id="sdStart" type="date"></div>
+<div class="field">Phone<input id="sdPhone" inputmode="tel"></div>
+<div class="field">Email<input id="sdEmail" type="email"></div>
+<div class="field">Emergency contact name<input id="sdEmergencyName"></div>
+<div class="field">Emergency contact phone<input id="sdEmergencyPhone" inputmode="tel"></div>
+<button class="btn" id="staffSaveProfile">Save profile</button>
+</div>
+</div>
+</div>
+
+<div class="grid" style="margin-top:14px">
+<div class="card"><h2>Role & system permissions</h2>
+<div id="staffPermissions" class="muted">Choose a staff member first.</div></div>
+
+<div class="card"><h2>Training & certification</h2>
+<div id="staffTrainingSummary" class="muted">Choose a staff member first.</div></div>
+</div>
+
+<div class="grid" style="margin-top:14px">
+<div class="card"><h2>Documents</h2>
+<div id="staffDocs" class="muted">Choose a staff member first.</div>
+<div id="staffDocForm" style="display:none">
+<div class="field">Document type<select id="sdDocType"><option>Right to work</option><option>Food hygiene certificate</option><option>Training certificate</option><option>Contract</option><option>Policy acknowledgement</option><option>Other</option></select></div>
+<div class="field">Expiry date (optional)<input id="sdDocExpiry" type="date"></div>
+<div class="field">Reference / note<input id="sdDocNote" placeholder="Document reference or note"></div>
+<button class="btn alt" id="staffAddDoc">Add document record</button>
+</div>
+</div>
+
+<div class="card"><h2>Absence & holiday</h2>
+<div id="staffAbsence" class="muted">Choose a staff member first.</div>
+<div id="staffAbsenceForm" style="display:none">
+<div class="field">Type<select id="sdAbsType"><option>Holiday</option><option>Sickness</option><option>Authorised absence</option><option>Other</option></select></div>
+<div class="field">From<input id="sdAbsFrom" type="date"></div>
+<div class="field">To<input id="sdAbsTo" type="date"></div>
+<div class="field">Manager note<input id="sdAbsNote"></div>
+<button class="btn alt" id="staffAddAbsence">Add absence</button>
+</div>
+</div>
+</div>
+
+<div class="grid" style="margin-top:14px">
+<div class="card"><h2>Incidents & near misses</h2>
+<div id="staffIncidents" class="muted">Choose a staff member first.</div>
+<div id="staffIncidentForm" style="display:none">
+<div class="field">Type<select id="sdIncidentType"><option>Accident</option><option>Near miss</option><option>Customer complaint</option><option>Food safety</option><option>Equipment fault</option><option>Data/privacy</option><option>Other</option></select></div>
+<div class="field">Date<input id="sdIncidentDate" type="date"></div>
+<div class="field">Details<textarea id="sdIncidentDetails" rows="3"></textarea></div>
+<div class="field">Action / follow-up<textarea id="sdIncidentAction" rows="2"></textarea></div>
+<button class="btn alt" id="staffAddIncident">Record incident</button>
+</div>
+</div>
+
+<div class="card"><h2>Manager notes</h2>
+<div id="staffNotes" class="muted">Choose a staff member first.</div>
+<div id="staffNotesForm" style="display:none">
+<div class="field">New note<textarea id="sdNote" rows="3" placeholder="Private manager note for this test record"></textarea></div>
+<button class="btn alt" id="staffAddNote">Add note</button>
+</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:14px"><h2>Audit history</h2>
+<p class="tiny">Every profile change made in this test is logged with a timestamp.</p>
+<div id="staffAudit" class="muted">Choose a staff member first.</div>
 </div>
 </section>
 
@@ -697,6 +784,94 @@ $('challengeSave').onclick=()=>{
 const initialCounts=challengeCounts();
 $('challengeSyncStatus').innerHTML='<b>'+initialCounts.orders+' qualifying collected order(s) counted.</b><br><span class="tiny">Standalone test feed. Live integration will use the signed-in customer\'s collection_orders history.</span>';
 renderChallenges();maybeEarnScratch();saveChallenges();
+
+
+const STAFFDBKEY='dexters_growth_staff_database_test_v1';
+const STAFF_PERMS=['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports'];
+let staffDb={selected:null,staff:[]};
+try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
+if(!Array.isArray(staffDb.staff)||!staffDb.staff.length){
+ staffDb={selected:'staff-demo-1',staff:[{
+  id:'staff-demo-1',name:'Test Staff',role:'Staff',status:'Active',start:new Date().toISOString().slice(0,10),
+  phone:'',email:'',emergencyName:'',emergencyPhone:'',
+  permissions:['KDS','Collection orders','Loyalty scanner'],
+  docs:[],absences:[],incidents:[],notes:[],
+  training:{completed:0,total:0,finalScore:null,certifiedAt:null,refresherDue:null},
+  audit:[{at:new Date().toISOString(),action:'Test staff record created'}]
+ }]}
+ localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));
+}
+function saveStaffDb(){localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb()}
+function selectedStaff(){return staffDb.staff.find(s=>s.id===staffDb.selected)||null}
+function logStaff(s,action){s.audit=s.audit||[];s.audit.unshift({at:new Date().toISOString(),action});if(s.audit.length>100)s.audit=s.audit.slice(0,100)}
+function roleDefaultPerms(role){
+ if(role==='Owner/Admin')return [...STAFF_PERMS];
+ if(role==='Manager')return ['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Menu editor','Staff admin','Reports'];
+ if(role==='Supervisor')return ['KDS','Collection orders','Loyalty scanner','Rewards approval','Deals approval','Catering','Reports'];
+ return ['KDS','Collection orders','Loyalty scanner'];
+}
+function renderStaffDirectory(){
+ const q=($('staffSearch').value||'').trim().toLowerCase();
+ const items=staffDb.staff.filter(s=>!q||String(s.name).toLowerCase().includes(q)||String(s.role).toLowerCase().includes(q));
+ $('staffDirectory').innerHTML=items.map(s=>'<div class="summarybox" style="cursor:pointer" onclick="selectStaffRecord(\\''+s.id+'\\')"><b>'+s.name+'</b><br><span class="badge">'+s.role+'</span><span class="badge">'+s.status+'</span>'+(staffDb.selected===s.id?'<br><span class="ok">Selected</span>':'')+'</div>').join('')||'<span class="muted">No staff match your search.</span>';
+}
+window.selectStaffRecord=id=>{staffDb.selected=id;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb()};
+function fmtDate(d){if(!d)return '—';const x=new Date(d);return Number.isNaN(x.getTime())?d:x.toLocaleDateString()}
+function renderStaffDb(){
+ renderStaffDirectory();
+ const s=selectedStaff(),show=!!s;
+ $('staffEmpty').style.display=show?'none':'block';
+ $('staffProfile').style.display=show?'block':'none';
+ ['staffDocForm','staffAbsenceForm','staffIncidentForm','staffNotesForm'].forEach(id=>$(id).style.display=show?'block':'none');
+ if(!s){
+  $('staffPermissions').innerHTML=$('staffTrainingSummary').innerHTML=$('staffDocs').innerHTML=$('staffAbsence').innerHTML=$('staffIncidents').innerHTML=$('staffNotes').innerHTML=$('staffAudit').innerHTML='Choose a staff member first.';return;
+ }
+ $('sdName').value=s.name||'';$('sdRole').value=s.role||'Staff';$('sdStatus').value=s.status||'Active';$('sdStart').value=s.start||'';
+ $('sdPhone').value=s.phone||'';$('sdEmail').value=s.email||'';$('sdEmergencyName').value=s.emergencyName||'';$('sdEmergencyPhone').value=s.emergencyPhone||'';
+ $('staffPermissions').innerHTML=STAFF_PERMS.map(p=>'<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input class="sd-perm" type="checkbox" value="'+p+'" '+((s.permissions||[]).includes(p)?'checked':'')+' style="width:auto;margin:0">'+p+'</label>').join('')+'<button class="btn alt small" onclick="saveStaffPermissions()">Save permissions</button><button class="btn alt small" onclick="resetStaffPermissions()">Use role defaults</button>';
+ const t=s.training||{};
+ const cert=t.certifiedAt?'<span class="ok"><b>Certified</b></span> · '+fmtDate(t.certifiedAt):'<span class="muted">Not certified yet</span>';
+ $('staffTrainingSummary').innerHTML='<div class="summarybox"><b>'+Number(t.completed||0)+' / '+Number(t.total||0)+' modules complete</b><br>'+cert+(t.finalScore!=null?'<br>Final score: '+t.finalScore+'%':'')+(t.refresherDue?'<br>Refresher due: '+fmtDate(t.refresherDue):'')+'<br><span class="tiny">Training results can be synced from Dexter\\'s Staff Training profile when integrated.</span></div><button class="btn alt small" onclick="syncSelectedTraining()">Sync current test training</button>';
+ $('staffDocs').innerHTML=(s.docs||[]).map((d,i)=>'<div class="summarybox"><b>'+d.type+'</b><br><span class="muted">'+(d.expiry?'Expires '+fmtDate(d.expiry):'No expiry')+(d.note?' · '+d.note:'')+'</span><button class="btn alt small" onclick="removeStaffDoc('+i+')">Remove</button></div>').join('')||'<span class="muted">No document records.</span>';
+ $('staffAbsence').innerHTML=(s.absences||[]).map(a=>'<div class="summarybox"><b>'+a.type+'</b><br><span class="muted">'+fmtDate(a.from)+' → '+fmtDate(a.to)+(a.note?' · '+a.note:'')+'</span></div>').join('')||'<span class="muted">No absence records.</span>';
+ $('staffIncidents').innerHTML=(s.incidents||[]).map(i=>'<div class="summarybox"><b>'+i.type+' · '+fmtDate(i.date)+'</b><br><span class="muted">'+i.details+'</span>'+(i.action?'<br><span class="tiny">Action: '+i.action+'</span>':'')+'</div>').join('')||'<span class="muted">No incidents or near misses recorded.</span>';
+ $('staffNotes').innerHTML=(s.notes||[]).map(n=>'<div class="summarybox"><span class="muted">'+n.text+'</span><br><span class="tiny">'+new Date(n.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No manager notes.</span>';
+ $('staffAudit').innerHTML=(s.audit||[]).map(a=>'<div class="tiny" style="padding:7px 0;border-bottom:1px solid #ffffff10"><b>'+new Date(a.at).toLocaleString()+'</b> — '+a.action+'</div>').join('')||'<span class="muted">No audit history.</span>';
+}
+$('staffSearch').addEventListener('input',renderStaffDirectory);
+$('staffAdd').onclick=()=>{
+ const name=prompt('Test staff name');if(!name||!name.trim())return;
+ const id='staff-'+Date.now();
+ staffDb.staff.push({id,name:name.trim(),role:'Staff',status:'Active',start:new Date().toISOString().slice(0,10),phone:'',email:'',emergencyName:'',emergencyPhone:'',permissions:roleDefaultPerms('Staff'),docs:[],absences:[],incidents:[],notes:[],training:{completed:0,total:0,finalScore:null,certifiedAt:null,refresherDue:null},audit:[]});
+ staffDb.selected=id;logStaff(selectedStaff(),'Test staff record created');saveStaffDb();
+};
+$('staffSaveProfile').onclick=()=>{
+ const s=selectedStaff();if(!s)return;const oldRole=s.role;
+ s.name=$('sdName').value.trim()||'Unnamed staff';s.role=$('sdRole').value;s.status=$('sdStatus').value;s.start=$('sdStart').value;s.phone=$('sdPhone').value.trim();s.email=$('sdEmail').value.trim();s.emergencyName=$('sdEmergencyName').value.trim();s.emergencyPhone=$('sdEmergencyPhone').value.trim();
+ if(oldRole!==s.role){s.permissions=roleDefaultPerms(s.role);logStaff(s,'Role changed to '+s.role+' and role-default permissions applied')}else logStaff(s,'Staff profile updated');
+ saveStaffDb();
+};
+window.saveStaffPermissions=()=>{const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated');saveStaffDb()};
+window.resetStaffPermissions=()=>{const s=selectedStaff();if(!s)return;s.permissions=roleDefaultPerms(s.role);logStaff(s,'Permissions reset to '+s.role+' defaults');saveStaffDb()};
+$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;s.docs=s.docs||[];s.docs.unshift({type:$('sdDocType').value,expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),at:new Date().toISOString()});logStaff(s,'Document record added: '+$('sdDocType').value);$('sdDocExpiry').value='';$('sdDocNote').value='';saveStaffDb()};
+window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb()};
+$('staffAddAbsence').onclick=()=>{const s=selectedStaff();if(!s)return;const from=$('sdAbsFrom').value,to=$('sdAbsTo').value;if(!from||!to){alert('Add both dates.');return}s.absences=s.absences||[];s.absences.unshift({type:$('sdAbsType').value,from,to,note:$('sdAbsNote').value.trim(),at:new Date().toISOString()});logStaff(s,'Absence added: '+$('sdAbsType').value+' '+from+' to '+to);$('sdAbsNote').value='';saveStaffDb()};
+$('staffAddIncident').onclick=()=>{const s=selectedStaff();if(!s)return;const details=$('sdIncidentDetails').value.trim(),date=$('sdIncidentDate').value||new Date().toISOString().slice(0,10);if(!details){alert('Add incident details.');return}s.incidents=s.incidents||[];s.incidents.unshift({type:$('sdIncidentType').value,date,details,action:$('sdIncidentAction').value.trim(),at:new Date().toISOString()});logStaff(s,'Incident recorded: '+$('sdIncidentType').value);$('sdIncidentDetails').value='';$('sdIncidentAction').value='';saveStaffDb()};
+$('staffAddNote').onclick=()=>{const s=selectedStaff();if(!s)return;const text=$('sdNote').value.trim();if(!text)return;s.notes=s.notes||[];s.notes.unshift({text,at:new Date().toISOString()});logStaff(s,'Manager note added');$('sdNote').value='';saveStaffDb()};
+window.syncSelectedTraining=()=>{
+ const s=selectedStaff();if(!s)return;
+ try{
+  const ts=JSON.parse(localStorage.getItem('dexters_growth_staff_training_test_v3')||'null');
+  if(!ts){alert('No training progress found in this browser.');return}
+  const total=Object.keys(ts.completed||{}).length?Math.max(...Object.keys(ts.completed||{}).map(Number))+1:0;
+  const completed=Object.values(ts.completed||{}).filter(Boolean).length;
+  const certifiedAt=ts.certifiedAt||null;
+  const refresherDue=certifiedAt?new Date(new Date(certifiedAt).getTime()+Number(ts.refreshDays||180)*86400000).toISOString():null;
+  s.training={completed,total,finalScore:ts.finalScore??null,certifiedAt,refresherDue};
+  logStaff(s,'Training summary synced from Staff Training test');saveStaffDb();
+ }catch(e){alert('Could not read training progress.')}
+};
+renderStaffDb();
 
 const TRAINKEY='dexters_growth_staff_training_test_v3';
 const lessons=[
