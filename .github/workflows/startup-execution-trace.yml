@@ -1,0 +1,37 @@
+name: Startup execution trace
+on:
+  push:
+    paths:
+      - 'postprocess-startup-unblock.cjs'
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm run build
+      - run: |
+          npm install playwright@1.55.0 >/dev/null 2>&1
+          npx playwright install chromium >/dev/null 2>&1
+      - name: Trace startup
+        run: |
+          python3 -m http.server 4173 -d dist >/tmp/http.log 2>&1 &
+          timeout 20s node <<'NODE' || true
+          const {chromium}=require('playwright');
+          (async()=>{
+            const b=await chromium.launch({headless:true});
+            const p=await b.newPage();
+            p.on('console',m=>console.log('BROWSER',m.type(),m.text()));
+            p.on('pageerror',e=>console.log('PAGEERROR',String(e)));
+            try{
+              const r=await p.goto('http://127.0.0.1:4173/',{waitUntil:'domcontentloaded',timeout:8000});
+              console.log('DCL_STATUS',r.status());
+            }catch(e){console.log('NAVERR',e.name,e.message)}
+            await new Promise(r=>setTimeout(r,9000));
+            console.log('NODE_DONE');
+            process.exit(0);
+          })().catch(e=>{console.log('TRACEERR',e);process.exit(0)});
+          NODE
