@@ -276,13 +276,24 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
     var(--pride-violet) 83% 100%)!important
 }
 .pass-sign-box:hover{border-color:var(--pride-violet)!important}
+
+/* Hard Pride theme overrides */
+body.pride-theme{background:#f7f3f8!important}
+.pride-top{border-top:7px solid transparent!important;border-image:linear-gradient(90deg,#e40303,#ff8c00,#ffed00,#008026,#004dff,#750787) 1!important}
+.pride-nav{background:linear-gradient(90deg,#e40303 0%,#ff8c00 18%,#ffed00 36%,#008026 54%,#004dff 72%,#750787 100%)!important}
+.pride-nav .dex-backoffice-logo,.pride-nav .tab,.pride-nav .pass-nav-trigger{color:#fff!important;text-shadow:0 1px 3px #000!important}
+.pride-nav .tab.active,.pride-nav .pass-nav-menu.open>.pass-nav-trigger{background:#00000035!important}
+.pride-theme .btn:not(.alt){background:linear-gradient(90deg,#e40303,#ff8c00,#ffed00,#008026,#004dff,#750787)!important;color:#fff!important}
+.pride-theme .card.notice{border-left:0!important;border-top:5px solid transparent!important;border-image:linear-gradient(90deg,#e40303,#ff8c00,#ffed00,#008026,#004dff,#750787) 1!important}
+.pride-theme .pass-avatar,.pride-theme .staff-avatar{background:linear-gradient(135deg,#ffdede,#fff0d6,#fffbd6,#e2f5e6,#dfe8ff,#f0def6)!important;color:#6b167f!important}
+.pride-theme .bo-kpi b,.pride-theme .staff-pass-kpi b,.pride-theme .pass-manager-kpi b,.pride-theme .pass-staff-metrics b{color:#750787!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-<main class="wrap" data-build="2026-09-08-website-pass-19-pride-theme">
+<body class="pride-theme">
+<main class="wrap" data-build="2026-09-08-website-pass-20-pride-hard-theme">
 <a class="home" href="/">← Home</a>
-<header class="top">
+<header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
 <span class="pill">DEXTER'S TEST</span>
 </header>
@@ -514,7 +525,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 </div>
 
 <div class="dex-backoffice-shell" id="secureBackOfficeShell" style="display:none">
-<aside class="dex-backoffice-nav">
+<aside class="dex-backoffice-nav pride-nav" style="background:linear-gradient(90deg,#e40303 0%,#ff8c00 18%,#ffed00 36%,#008026 54%,#004dff 72%,#750787 100%)!important">
 <div class="dex-backoffice-logo">DEXTER'S</div>
 <button class="tab active pass-nav-home" data-tab="dashboard" data-minrole="Staff">Dashboard</button>
 
