@@ -165,6 +165,7 @@ async function loadAll(){
   sb.from('backoffice_staff_notifications').select('*').eq('staff_record_id',sid).order('created_at',{ascending:false})
  ]);
  shifts=s.error?[]:(s.data||[]);leaveRows=l.error?[]:(l.data||[]);modules=m.error?[]:(m.data||[]);trainingRows=t.error?[]:(t.data||[]);documents=d.error?[]:(d.data||[]);notifications=n.error?[]:(n.data||[]);
+ if(m.error)throw new Error('Training modules could not load: '+m.error.message);
 }
 function renderAll(){renderProfile();renderRota();renderLeave();renderTraining();renderForms();renderNotifications();renderHome()}
 function renderProfile(){
