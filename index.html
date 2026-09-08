@@ -1166,36 +1166,36 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="menuadmin">
-<div class="card notice"><b>Menu Planning</b><p class="muted">Record proposed menu changes here. Live customer-menu changes must be completed through the authorised Loyalty App menu service.</p></div>
+<div class="card notice"><b>Live Loyalty App Menu</b><p class="muted">This section reads and updates the menu used by apps.dextersspot.co.uk.</p></div>
 <div class="grid">
   <div class="card">
-    <h2>Menu change request</h2>
+    <h2>Apply live menu change</h2>
     <div class="field">Item / category<input id="menuChangeItem" placeholder="e.g. Street Subs"></div>
-    <div class="field">Change type<select id="menuChangeType"><option>Price</option><option>Description</option><option>Modifier</option><option>Availability</option><option>Allergen note</option><option>Other</option></select></div>
-    <div class="field">Requested change<textarea id="menuChangeNote" rows="4" placeholder="Describe the proposed change"></textarea></div>
-    <div class="field">Priority<select id="menuChangePriority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>
-    <button class="btn" id="menuChangeAdd">Add change request</button>
+    <div class="field">Change type<select id="menuChangeType"><option>Price</option><option>Description</option><option>Availability</option></select></div>
+    <div class="field">New live value<textarea id="menuChangeNote" rows="4" placeholder="New price, description, or in stock / out of stock"></textarea></div>
+    <div class="field" style="display:none">Priority<select id="menuChangePriority"><option>Normal</option></select></div>
+    <button class="btn" id="menuChangeAdd">Apply to Loyalty App</button>
   </div>
   <div class="card">
-    <h2>Availability planning</h2>
-    <p class="muted">This records an internal planning status. It does not alter live ordering.</p>
+    <h2>Live availability</h2>
+    <p class="muted">Use the live menu list below to mark items in or out of stock.</p>
     <div class="field">Item<input id="menuAvailItem" placeholder="Item name"></div>
     <div class="field">Planning status<select id="menuAvailStatus"><option>Available</option><option>Low stock</option><option>Out of stock</option><option>Hidden for review</option></select></div>
     <div class="field">Reason<input id="menuAvailReason" placeholder="Optional reason"></div>
-    <button class="btn alt" id="menuAvailAdd">Save planning status</button>
+    <button class="btn alt" id="menuAvailAdd">Find live item</button>
   </div>
 </div>
 <div class="grid" style="margin-top:14px">
-  <div class="card"><h2>Change request queue</h2><div id="menuChangeList"></div></div>
-  <div class="card"><h2>Availability planning list</h2><div id="menuAvailList"></div></div>
+  <div class="card"><h2>Live menu update status</h2><div id="menuChangeList" class="muted">No live change made in this session.</div></div>
+  <div class="card"><h2>Live Loyalty App menu</h2><div id="menuAvailList"></div></div>
 </div>
 </section>
 
 <section class="panel" id="deals">
-<div class="card notice"><b>Dexter's Deals Planner</b><p class="muted">Prepare suggested short-term offers around Dexter's existing automatic deal. Suggestions are not issued to customers until they are created through the live Loyalty App reward service.</p></div>
+<div class="card notice"><b>Live Loyalty App Deals</b><p class="muted">Create personalised offers in the same live service used by apps.dextersspot.co.uk. Enter the customer's email or 6-digit loyalty code below.</p></div>
 <div class="grid">
 <div class="card"><h2>Customer signals</h2>
-<div class="field">Customer name<input id="dealName" value="Test Customer"></div>
+<div class="field">Customer email or loyalty code<input id="dealName" placeholder="customer@email.com or 123456"></div>
 <label class="field">Days since last order<input id="dealDays" type="number" min="0" value="16"></label>
 <label class="field">Visits in last 30 days<input id="dealVisits" type="number" min="0" value="2"></label>
 <label class="field">Average order spend (£)<input id="dealSpend" inputmode="decimal" value="9.50"></label>
@@ -1212,21 +1212,21 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="card"><h2>Recommended deals</h2>
 <div id="dealOut" class="muted">Run the engine to preview personalised offers.</div>
 <hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
-<h2>Staff-approved deal drafts</h2>
-<div id="dealApproved" class="muted">No deal drafts approved.</div>
-<p class="tiny">Approved deals are still not sent automatically. Staff must press Send to customer.</p>
+<h2>Live issued deals</h2>
+<div id="dealApproved" class="muted">Loading live deals…</div>
+<p class="tiny">Creating a deal makes it available to that customer in the Loyalty App until its expiry date.</p>
 </div>
 </div>
 </section>
 
 <section class="panel" id="challenges">
-<div class="card notice"><b>Digital Scratch Cards + Challenges</b><p class="muted">This planning area does not issue live customer rewards. Live rewards must be issued through the Loyalty App reward service.</p></div>
+<div class="card notice"><b>Live Digital Scratch Cards + Challenges</b><p class="muted">Challenge rules and revealed rewards below are linked to the live Loyalty App service.</p></div>
 <div class="grid">
 <div class="card"><h2>Customer challenge progress</h2>
-<div class="field">Customer name<input id="challengeName" value="Test Customer"></div>
+<div class="field">Live service status<input id="challengeName" value="All Loyalty App customers" readonly></div>
 <div class="summarybox"><b>Automatic order counting</b><br><span class="muted">Progress is calculated from collected customer orders. Cancelled, rejected, uncollected and system/test orders are ignored.</span></div>
 <button class="btn" id="challengeRefresh">Recalculate from order history</button>
-<div id="challengeSyncStatus" class="summarybox muted">Using test order-history feed in this standalone build.</div>
+<div id="challengeSyncStatus" class="summarybox muted">Loading live challenge data…</div>
 <div id="challengeList" style="margin-top:12px"></div>
 </div>
 
@@ -1255,9 +1255,9 @@ body.pride-theme{background:#f7f3f8!important}
 <option value="Free 2oz Dexter's sauce">Free 2oz Dexter's sauce</option>
 <option value="Staff-selected reward">Staff-selected reward</option>
 </select></div>
-<button class="btn alt" id="challengeSave">Save draft challenge rule</button>
+<button class="btn alt" id="challengeSave">Save live challenge rule</button>
 </div>
-<div><div id="challengeRules" class="muted"></div><p class="tiny">Draft rules are kept separate from live points, prizes and customer rewards.</p></div>
+<div><div id="challengeRules" class="muted"></div><p class="tiny">Manager changes apply to Loyalty App customers immediately.</p></div>
 </div>
 </div>
 </section>
@@ -3501,7 +3501,7 @@ $('dealRun').onclick=()=>{
  if(bday) out.push({title:'Birthday Treat 🎂',offer:'Birthday-only Dexter\'s reward',reason:'Birthday is this week',rule:'Birthday · one use · separate from 12-month auto deal',expiry:dealExpiry(7),customer});
  if(unused) out.push({title:'Reward Reminder',offer:'Remind customer about their unused reward — no extra discount added',reason:'An existing reward is unused',rule:'Reminder only · prevents unnecessary stacking',expiry:dealExpiry(3),customer});
  dealCandidates=out.slice(0,4);
- 
+ renderDealCandidates();
 };
 window.approveDeal=i=>{
  const d=dealCandidates[i]; if(!d)return;
@@ -4572,6 +4572,112 @@ if($('refreshLiveOrders'))$('refreshLiveOrders').onclick=loadLiveOrders;
 if($('refreshLiveLoyalty'))$('refreshLiveLoyalty').onclick=()=>{loadLiveLoyalty();syncLiveCustomers()};
 if($('refreshLiveFoodSafety'))$('refreshLiveFoodSafety').onclick=loadLiveFoodSafety;
 if($('refreshLiveDevices'))$('refreshLiveDevices').onclick=loadLiveDevices;
+
+// Live Loyalty App administration. These controls use the same production
+// services and records as apps.dextersspot.co.uk; no browser-only copies.
+const LOYALTY_GROWTH_API=SUPABASE_URL+'/functions/v1/loyalty-growth-api';
+const COLLECTION_ORDERS_API=SUPABASE_URL+'/functions/v1/collection-orders-api';
+const LOYALTY_MENU_API=SUPABASE_URL+'/functions/v1/loyalty-menu-admin';
+let LIVE_GROWTH={settings:{},catering:[],rules:[],challenge_rewards:[],deals:[]};
+let LIVE_MENU=[];
+async function loyaltyLiveApi(url,payload){
+ if(!SECURE_SESSION)throw new Error('Sign in securely first.');
+ const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SECURE_SESSION.access_token,'apikey':SUPABASE_KEY},body:JSON.stringify(payload||{})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||data.error)throw new Error(data.error||('Live service error '+response.status));
+ return data;
+}
+const growthLive=(action,payload={})=>loyaltyLiveApi(LOYALTY_GROWTH_API,{action,...payload});
+const collectionLive=(action,payload={})=>loyaltyLiveApi(COLLECTION_ORDERS_API,{action,...payload});
+const menuLive=(action,payload={})=>loyaltyLiveApi(LOYALTY_MENU_API,{action,...payload});
+
+function liveCateringStatus(v){return String(v||'pending').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())}
+renderCat=function(){
+ const box=$('catQueue');if(!box)return;
+ const rows=LIVE_GROWTH.catering||[];
+ box.innerHTML=rows.map((x,i)=>{
+  const request=x.request_data||{},allergies=x.allergy_declaration||request.allergies||'Not recorded',choices=request.choices||[],allocations=request.allocations||[],status=liveCateringStatus(x.status);
+  return '<div class="summarybox"><b>'+escLive(x.event_name||x.package_name||'Catering request')+'</b><br>'+escLive(x.customer_name||'Customer')+' · '+escLive(x.customer_phone||'No phone')+'<br>'+Number(x.people||0)+' people · '+new Date(x.collection_at).toLocaleString()+'<br><span class="muted">'+escLive(x.package_name||'Package not recorded')+'</span><br><span class="muted"><b>Allergy/dietary:</b> '+escLive(Array.isArray(allergies)?allergies.join(', '):allergies)+'</span><br><span class="muted"><b>Choices:</b> '+escLive(Array.isArray(choices)?choices.join(', '):String(choices||'None'))+'</span><br><span class="muted"><b>Quantities:</b> '+escLive(Array.isArray(allocations)?allocations.map(a=>a.qty+' × '+a.name).join(', '):'None')+'</span><br><b>'+(x.quoted_total!=null?'Quoted £'+Number(x.quoted_total).toFixed(2):(x.estimated_total!=null?'Estimate £'+Number(x.estimated_total).toFixed(2):'Quote required'))+'</b><br>'+(x.staff_note?'<span class="muted"><b>Staff note:</b> '+escLive(x.staff_note)+'</span><br>':'')+'<span class="'+(x.status==='approved'?'ok':x.status==='rejected'?'bad':'')+'">'+escLive(status)+'</span><details style="margin-top:10px"><summary><b>Staff decision</b></summary><div class="field">Quote (£)<input id="liveCatQuote'+i+'" inputmode="decimal" value="'+(x.quoted_total!=null?Number(x.quoted_total).toFixed(2):'')+'"></div><div class="field">Customer note<textarea id="liveCatNote'+i+'" rows="2">'+escLive(x.staff_note||'')+'</textarea></div><div class="row"><button class="btn small" onclick="decideLiveCatering('+i+',\'approved\')">Approve</button><button class="btn alt small" onclick="decideLiveCatering('+i+',\'amendment_required\')">Request amendment</button><button class="btn alt small" onclick="decideLiveCatering('+i+',\'rejected\')">Reject</button>'+(x.status==='approved'?'<button class="btn alt small" onclick="decideLiveCatering('+i+',\'collected\')">Mark collected</button>':'')+'</div></details></div>';
+ }).join('')||'<span class="muted">No live catering requests.</span>';
+};
+window.decideLiveCatering=async(i,status)=>{
+ const row=LIVE_GROWTH.catering[i];if(!row)return;
+ const quoted=$('liveCatQuote'+i)?.value,staff_note=$('liveCatNote'+i)?.value||'';
+ try{await growthLive('catering_decide',{id:row.id,status,quoted_total:quoted===''?undefined:Number(quoted),staff_note});await loadLiveGrowth()}catch(e){alert(e.message)}
+};
+$('catSubmit').onclick=()=>{$('catCustomerStatus').innerHTML='<span class="ok"><b>Back Office is linked to live catering.</b></span><br><span class="muted">Customer requests are submitted in apps.dextersspot.co.uk and appear in the live staff queue on the right.</span>'};
+
+function renderLiveDeals(){
+ const box=$('dealApproved');if(!box)return;
+ box.innerHTML=(LIVE_GROWTH.deals||[]).map(d=>'<div class="summarybox"><b>'+escLive(d.title)+'</b><br><span class="muted">'+escLive(d.offer_text)+'</span><br><span class="tiny">Status: '+escLive(d.status)+' · Expires '+new Date(d.expires_at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No live personal deals have been issued.</span>';
+}
+renderApprovedDeals=renderLiveDeals;
+window.approveDeal=async i=>{
+ const d=dealCandidates[i],query=$('dealName').value.trim();if(!d)return;if(!query)return alert('Enter the customer email or 6-digit loyalty code.');
+ try{
+  const found=await growthLive('customer_lookup',{query});
+  if(!found.customers?.length)throw new Error('No Loyalty App customer matched that email or code.');
+  if(found.customers.length>1)throw new Error('More than one customer matched. Use the exact email or 6-digit loyalty code.');
+  await growthLive('create_personal_deal',{customer_id:found.customers[0].id,title:d.title,offer_text:d.offer,reason:d.reason,deal_type:'staff_offer',bonus_points:Number((d.offer.match(/\d+(?= bonus loyalty points)/i)||[])[0]||0),expires_at:new Date(d.expiry+'T23:59:59').toISOString()});
+  dealCandidates.splice(i,1);renderDealCandidates();await loadLiveGrowth();alert('Live deal issued to '+(found.customers[0].full_name||query)+'.');
+ }catch(e){alert(e.message)}
+};
+renderDealCandidates=function(){
+ $('dealOut').innerHTML=dealCandidates.map((d,i)=>'<div class="summarybox"><b>'+escLive(d.title)+'</b><br>'+escLive(d.offer)+'<br><span class="muted"><b>Why:</b> '+escLive(d.reason)+'</span><br><span class="tiny">Expiry: '+escLive(d.expiry)+' · '+escLive(d.rule)+'</span><div class="row" style="margin-top:8px"><button class="btn small" onclick="approveDeal('+i+')">Issue live deal</button><button class="btn alt small" onclick="rejectDeal('+i+')">Discard</button></div></div>').join('')||'<span class="muted">No deal rules matched this customer.</span>';
+};
+
+function liveRuleReward(r){return r.reward_points?Number(r.reward_points)+' bonus points':(r.reward_text||'Staff-selected reward')}
+function renderLiveChallenges(){
+ const rules=LIVE_GROWTH.rules||[],rewards=LIVE_GROWTH.challenge_rewards||[];
+ challengeRules={};rules.forEach(r=>{challengeRules[r.challenge_key]={title:r.title||r.challenge_key,target:Number(r.target||1),reward:liveRuleReward(r),label:r.description||r.challenge_key}});
+ $('challengeList').innerHTML=rules.map(r=>'<div class="challenge"><div><b>'+escLive(r.title||r.challenge_key)+'</b><div class="muted">'+escLive(r.description||'Progress is calculated from qualifying collected orders.')+'</div><div class="tiny">Live target: '+Number(r.target||1)+' · Reward: '+escLive(liveRuleReward(r))+'</div></div><span class="badge">'+(r.active?'Live':'Paused')+'</span></div>').join('')||'<span class="muted">No live challenge rules.</span>';
+ $('challengeRules').innerHTML=rules.map(r=>'<div class="summarybox"><b>'+escLive(r.title||r.challenge_key)+'</b><br><span class="muted">Target: '+Number(r.target||1)+' · Reward: '+escLive(liveRuleReward(r))+'</span></div>').join('')||'<span class="muted">No live rules.</span>';
+ $('scratch').textContent='CUSTOMERS REVEAL REWARDS IN THE LOYALTY APP';$('scratch').classList.add('revealed');
+ $('scratchStatus').innerHTML='<span class="ok"><b>Live challenge service connected.</b></span><br><span class="muted">Progress comes from qualifying collected orders in each customer account.</span>';
+ $('scratchStaff').innerHTML=rewards.map((r,i)=>'<div class="summarybox"><b>'+escLive(r.reward_text||r.challenge_key)+'</b><br><span class="muted">'+escLive(r.challenge_key)+' · '+escLive(liveCateringStatus(r.status))+'</span>'+(r.status==='revealed'?'<div class="row" style="margin-top:8px"><button class="btn small" onclick="decideLiveChallenge('+i+',true)">Approve</button><button class="btn alt small" onclick="decideLiveChallenge('+i+',false)">Reject</button></div>':'')+'</div>').join('')||'<span class="muted">No revealed live rewards awaiting approval.</span>';
+ $('challengeSyncStatus').innerHTML='<span class="ok"><b>'+rules.filter(r=>r.active).length+' live challenge rule(s) · '+rewards.filter(r=>r.status==='revealed').length+' awaiting approval.</b></span>';
+ const selected=$('challengeAdminSelect').value,row=rules.find(r=>r.challenge_key===selected);if(row){$('challengeTarget').value=row.target;$('challengeReward').value=liveRuleReward(row)}
+}
+renderChallenges=renderLiveChallenges;renderChallengeRules=renderLiveChallenges;renderScratch=renderLiveChallenges;
+saveChallenges=renderLiveChallenges;
+$('scratch').onclick=()=>{};
+window.decideLiveChallenge=async(i,approve)=>{const r=LIVE_GROWTH.challenge_rewards[i];if(!r)return;try{await growthLive('challenge_decide',{id:r.id,approve});await loadLiveGrowth()}catch(e){alert(e.message)}};
+$('challengeRefresh').onclick=()=>loadLiveGrowth().catch(e=>alert(e.message));
+$('challengeSave').onclick=async()=>{
+ const challenge_key=$('challengeAdminSelect').value,target=Math.max(1,Number($('challengeTarget').value||1)),reward_text=$('challengeReward').value,reward_points=Number((reward_text.match(/^\d+/)||[])[0]||0);
+ try{await growthLive('save_challenge_rule',{challenge_key,target,reward_text,reward_points,active:true});await loadLiveGrowth();alert('Live challenge rule saved.')}catch(e){alert(e.message)}
+};
+
+function renderLiveMenu(){
+ const box=$('menuAvailList');if(!box)return;
+ box.innerHTML=LIVE_MENU.map(c=>'<details class="summarybox" open><summary><b>'+escLive(c.name)+'</b> <span class="badge">'+(c.loyalty_menu_items||[]).length+' items</span></summary><div style="margin-top:8px">'+(c.loyalty_menu_items||[]).map(i=>'<div class="row" style="justify-content:space-between;gap:10px;border-top:1px solid #ffffff17;padding:9px 0"><span><b>'+escLive(i.name)+'</b><br><span class="tiny">'+escLive(i.price_text||'')+'</span></span><button class="btn '+(i.in_stock?'alt ':'')+'small" onclick="setLiveMenuStock(\''+i.id+'\','+(!i.in_stock)+')">'+(i.in_stock?'Mark out of stock':'Mark in stock')+'</button></div>').join('')+'</div></details>').join('')||'<span class="muted">No live menu items loaded.</span>';
+}
+renderMenuAdmin=function(){renderLiveMenu()};
+window.setLiveMenuStock=async(id,in_stock)=>{try{await collectionLive('set_stock',{id,in_stock});await loadLiveMenu()}catch(e){alert(e.message)}};
+$('menuChangeAdd').onclick=async()=>{
+ const wanted=$('menuChangeItem').value.trim().toLowerCase(),type=$('menuChangeType').value,value=$('menuChangeNote').value.trim(),status=$('menuChangeList');
+ if(!wanted||!value)return alert('Enter the exact live item name and new value.');
+ const matches=[];LIVE_MENU.forEach(c=>(c.loyalty_menu_items||[]).forEach(i=>{if(String(i.name||'').trim().toLowerCase()===wanted)matches.push({category:c,item:i})}));
+ if(matches.length!==1)return alert(matches.length?'More than one live item matched. Include a unique item name.':'No exact live menu item matched that name.');
+ const {category,item}=matches[0];
+ try{
+  if(type==='Availability')await collectionLive('set_stock',{id:item.id,in_stock:!/^(out|out of stock|unavailable|no)$/i.test(value)});
+  else await menuLive('item_update',{id:item.id,category_id:category.id,name:item.name,price_text:type==='Price'?value:item.price_text,description:type==='Description'?value:(item.description||''),active:true});
+  status.innerHTML='<span class="ok"><b>Live '+escLive(type.toLowerCase())+' updated for '+escLive(item.name)+'.</b></span><br><span class="tiny">The Loyalty App now uses the new value.</span>';
+  $('menuChangeNote').value='';await loadLiveMenu();
+ }catch(e){status.innerHTML='<span class="bad">Live update failed: '+escLive(e.message)+'</span>'}
+};
+$('menuAvailAdd').onclick=()=>{const q=$('menuAvailItem').value.trim().toLowerCase();document.querySelectorAll('#menuAvailList details').forEach(d=>d.open=!q||d.textContent.toLowerCase().includes(q));$('menuAvailList').scrollIntoView({behavior:'smooth',block:'start'})};
+async function loadLiveMenu(){const data=await collectionLive('stock_list');LIVE_MENU=data.categories||[];renderLiveMenu()}
+async function loadLiveGrowth(){
+ if(!SECURE_SESSION||!SECURE_ACCOUNT?.active||SECURE_ACCOUNT.must_change_password)return;
+ const [growthResult,menuResult]=await Promise.allSettled([growthLive('staff_growth_data'),loadLiveMenu()]);
+ if(growthResult.status==='fulfilled'){LIVE_GROWTH=growthResult.value;cat=LIVE_GROWTH.catering||[];renderCat();renderLiveDeals();renderLiveChallenges();if(typeof renderReports==='function')renderReports()}
+ else throw growthResult.reason;
+ if(menuResult.status==='rejected')$('menuAvailList').innerHTML='<span class="bad">Live menu could not load: '+escLive(menuResult.reason.message)+'</span>';
+}
+const completeSecureLoginWithLive=window.dextersCompleteSecureLogin;
+window.dextersCompleteSecureLogin=async function(session,account){await completeSecureLoginWithLive(session,account);try{await loadLiveGrowth()}catch(e){console.error('Live Loyalty App link failed',e)}};
 
 // Run initial UI rendering only after every Back Office declaration is ready.
 try{renderCat()}catch(e){}
