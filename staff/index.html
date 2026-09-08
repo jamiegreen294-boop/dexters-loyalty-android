@@ -23,9 +23,9 @@ nav button{border:0;background:#fff;padding:11px 3px 9px;font-size:11px;font-wei
 .panel{display:none}.panel.active{display:block}.metric{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee}.metric:last-child{border:0}
 .shift{border:1px solid var(--line);border-radius:13px;padding:13px;margin:9px 0}.shift.today{border:2px solid var(--p);background:#faf6fc}
 .lesson{border:1px solid var(--line);border-radius:13px;padding:13px;margin:9px 0}.progress{height:7px;border-radius:999px;background:#e8e3eb;overflow:hidden}.progress i{display:block;height:100%;background:var(--p)}
-.overlay{position:fixed;inset:0;background:#0008;display:none;align-items:flex-end;z-index:50}.sheet{background:#fff;border-radius:20px 20px 0 0;padding:18px;width:100%;max-height:92vh;overflow:auto}.scene{min-height:210px;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(145deg,#24122f,#5b0b7e);color:#fff;border-radius:15px;padding:22px;margin:12px 0}.scene h2{font-size:25px}.quizq{padding:10px 0;border-bottom:1px solid #eee}
+.overlay{position:fixed;inset:0;background:#160d1dcc;display:none;align-items:flex-end;z-index:50}.sheet{background:#fff;border-radius:20px 20px 0 0;padding:18px;width:100%;max-height:94vh;overflow:auto}.scene{min-height:300px;display:flex;align-items:center;background:linear-gradient(145deg,#24122f,#5b0b7e 62%,#7c3aed);color:#fff;border-radius:18px;padding:24px;margin:12px 0;position:relative;overflow:hidden;box-shadow:0 18px 45px #2d113340}.scene:after{content:"";position:absolute;width:210px;height:210px;border-radius:50%;right:-70px;top:-75px;background:#ffffff12}.scene-inner{position:relative;z-index:1;width:100%}.scene-kicker{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#e7d3f0}.scene-icon{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#ffffff18;border:1px solid #ffffff2b;font-size:30px;margin:13px 0}.scene h2{font-size:clamp(24px,6vw,32px);line-height:1.08}.scene p{font-size:16px;line-height:1.6;max-width:620px;margin:10px 0 16px}.scene-takeaway{background:#ffffff14;border-left:4px solid #ffd43b;border-radius:8px;padding:11px 13px;font-weight:800;line-height:1.45}.scene-source{margin-top:14px;font-size:12px;color:#eadff0}.course-progress{display:flex;gap:5px;margin:12px 0}.course-progress i{height:6px;flex:1;border-radius:99px;background:#ddd5e2}.course-progress i.done{background:var(--p)}.course-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.course-tools .tiny{font-size:13px}.quizq{padding:12px 0;border-bottom:1px solid #eee}.quizq select{width:100%;margin-top:8px;padding:11px;border:1px solid #cfc8d6;border-radius:10px;background:#fff}.listen-active{background:#d9c6e4!important}
 #loginWrap{max-width:520px;margin:25px auto}.hidden{display:none!important}
-@media(max-width:560px){.grid{grid-template-columns:1fr}.brand{font-size:20px}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.brand{font-size:20px}.scene{min-height:340px;padding:20px}.sheet{padding:14px}.scene-takeaway{font-size:14px}}
 </style>
 </head>
 <body>
@@ -266,6 +266,31 @@ function renderTraining(){
  $('trainingList').innerHTML=modules.map(m=>{const r=recFor(m.module_key),st=statusOf(r),sc=Array.isArray(m.content?.scenes)?m.content.scenes:[],done=Math.min(Number(r?.training_data?.current_scene||0),sc.length),pc=sc.length?Math.round(done/sc.length*100):0;return '<div class="card lesson"><div class="row space"><b>'+esc(m.title)+'</b><span class="badge">'+esc(st)+'</span></div><div class="tiny muted">'+esc(m.authority_name||'Dexter\'s')+' · '+Number(m.duration_minutes||10)+' mins</div><div class="progress" style="margin:9px 0"><i style="width:'+pc+'%"></i></div><div class="tiny">'+done+'/'+sc.length+' scenes'+(r?.score!=null?' · '+Number(r.score)+'%':'')+'</div><button class="btn" style="margin-top:9px" data-course="'+esc(m.module_key)+'">'+(st==='Not Started'?'Start':'Open')+'</button></div>'}).join('');
  $('trainingList').querySelectorAll('[data-course]').forEach(b=>b.onclick=()=>openCourse(b.dataset.course));
 }
+function courseVisual(m){
+ const key=String(m?.module_key||'').toLowerCase();
+ if(/allergen|food|handwash|hygiene|temperature/.test(key))return {icon:'🧑‍🍳',label:'Food & customer safety'};
+ if(/fire|emergency/.test(key))return {icon:'🚨',label:'Emergency readiness'};
+ if(/coshh|chemical/.test(key))return {icon:'🧴',label:'Chemical safety'};
+ if(/manual|slip|hot|equipment|young/.test(key))return {icon:'🦺',label:'Workplace safety'};
+ if(/equality|harass|whistle|working|fatigue/.test(key))return {icon:'🤝',label:'People & workplace standards'};
+ return {icon:'🎓',label:'Dexter\'s staff standard'};
+}
+function sceneTakeaway(scene){
+ const n=String(scene?.narration||'').trim();
+ const first=n.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim();
+ return first||n||'Follow the approved Dexter\'s procedure and ask a manager if anything is unclear.';
+}
+function speakCourseScene(){
+ try{
+  speechSynthesis.cancel();
+  const scene=activeCourse?.content?.scenes?.[activeScene]||{};
+  const u=new SpeechSynthesisUtterance((scene.title||'')+'. '+(scene.narration||''));
+  u.lang='en-GB';u.rate=.92;u.pitch=1;
+  const voices=speechSynthesis.getVoices();u.voice=voices.find(v=>/en-GB/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang))||null;
+  u.onstart=()=>$('listenScene')?.classList.add('listen-active');u.onend=()=>$('listenScene')?.classList.remove('listen-active');
+  speechSynthesis.speak(u);
+ }catch(e){}
+}
 async function openCourse(key){
  activeCourse=modules.find(m=>m.module_key===key);if(!activeCourse)return;
  let r=recFor(key);const st=statusOf(r);
@@ -274,18 +299,20 @@ async function openCourse(key){
 }
 function renderCourse(){
  const m=activeCourse,r=recFor(m.module_key),scenes=m.content?.scenes||[],scene=scenes[activeScene]||{},done=Math.min(Number(r?.training_data?.current_scene||0),scenes.length),allDone=done>=scenes.length;
+ const visual=courseVisual(m),source=m.authority_name||'Dexter\'s approved procedure';
  $('courseTitle').textContent=m.title;
- $('courseBody').innerHTML='<div class="tiny muted">'+esc(m.authority_name||'')+' · Pass '+Number(m.pass_score||80)+'%</div><div class="scene"><div><h2>'+esc(scene.title||('Scene '+(activeScene+1)))+'</h2><p>'+esc(scene.narration||'')+'</p></div></div><div class="row space"><button class="btn alt" id="prevScene" '+(activeScene===0?'disabled':'')+'>← Previous</button>'+(activeScene<scenes.length-1?'<button class="btn" id="nextScene">'+(activeScene<done?'Next →':'Complete scene →')+'</button>':(!allDone?'<button class="btn" id="nextScene">Complete final scene</button>':'<button class="btn" id="quizBtn">Take quiz</button>'))+'</div><div id="quizArea"></div>';
+ $('courseBody').innerHTML='<div class="course-tools"><span class="tiny muted">'+esc(source)+' · '+Number(m.duration_minutes||10)+' mins · Pass '+Number(m.pass_score||80)+'%</span><button class="btn alt" id="listenScene">🔊 Listen</button></div><div class="course-progress">'+scenes.map((_,i)=>'<i class="'+(i<=activeScene?'done':'')+'"></i>').join('')+'</div><div class="scene"><div class="scene-inner"><div class="scene-kicker">'+esc(visual.label)+' · Scene '+(activeScene+1)+' of '+scenes.length+'</div><div class="scene-icon">'+visual.icon+'</div><h2>'+esc(scene.title||('Scene '+(activeScene+1)))+'</h2><p>'+esc(scene.narration||'')+'</p><div class="scene-takeaway">Key point: '+esc(sceneTakeaway(scene))+'</div><div class="scene-source">Source: '+esc(source)+'</div></div></div><div class="row space"><button class="btn alt" id="prevScene" '+(activeScene===0?'disabled':'')+'>← Previous</button>'+(activeScene<scenes.length-1?'<button class="btn" id="nextScene">'+(activeScene<done?'Next scene →':'Mark complete →')+'</button>':(!allDone?'<button class="btn" id="nextScene">Complete final scene</button>':'<button class="btn" id="quizBtn">Start knowledge check</button>'))+'</div><div id="quizArea"></div>';
+ if($('listenScene'))$('listenScene').onclick=speakCourseScene;
  if($('prevScene'))$('prevScene').onclick=()=>{activeScene--;renderCourse()};
  if($('nextScene'))$('nextScene').onclick=completeScene;
  if($('quizBtn'))$('quizBtn').onclick=renderQuiz;
 }
 async function completeScene(){const {error}=await sb.rpc('backoffice_training_complete_scene',{p_module_key:activeCourse.module_key,p_scene:activeScene+1});if(error)return alert(error.message);await loadAll();const sc=activeCourse.content?.scenes||[];if(activeScene<sc.length-1)activeScene++;renderCourse();renderTraining();renderHome()}
 function renderQuiz(){
- const qs=Array.isArray(activeCourse.quiz)?activeCourse.quiz:[];$('quizArea').innerHTML='<div class="card"><h3>Knowledge check</h3>'+qs.map((q,i)=>'<div class="quizq"><b>'+(i+1)+'. '+esc(q.question)+'</b><select id="q'+i+'"><option value="">Choose an answer</option>'+q.options.map((o,j)=>'<option value="'+j+'">'+esc(o)+'</option>').join('')+'</select></div>').join('')+'<button class="btn" id="submitQuiz" style="margin-top:10px">Submit quiz</button><div id="quizMsg" class="tiny" style="margin-top:8px"></div></div>';$('submitQuiz').onclick=submitQuiz;
+ const qs=Array.isArray(activeCourse.quiz)?activeCourse.quiz:[];$('quizArea').innerHTML='<div class="card"><h3>Scenario assessment</h3><p class="tiny muted"><b>'+qs.length+' questions · Pass mark '+Number(activeCourse.pass_score||80)+'%</b><br>Choose the safest, most complete response to each workplace scenario. Answer every question; if you do not pass, review the lesson before trying again.</p>'+qs.map((q,i)=>'<div class="quizq"><b>Question '+(i+1)+' of '+qs.length+': '+esc(q.question)+'</b><select id="q'+i+'"><option value="">Choose the best answer</option>'+q.options.map((o,j)=>'<option value="'+j+'">'+esc(o)+'</option>').join('')+'</select></div>').join('')+'<button class="btn" id="submitQuiz" style="margin-top:10px">Submit assessment</button><div id="quizMsg" class="tiny" style="margin-top:8px" aria-live="polite"></div></div>';$('submitQuiz').onclick=submitQuiz;
 }
 async function submitQuiz(){const qs=activeCourse.quiz||[],answers=[];for(let i=0;i<qs.length;i++){const e=$('q'+i);if(!e||e.value==='')return $('quizMsg').innerHTML='<span class="bad">Answer every question.</span>';answers.push(Number(e.value))}const {data,error}=await sb.rpc('backoffice_training_submit_quiz',{p_module_key:activeCourse.module_key,p_answers:answers});if(error)return $('quizMsg').innerHTML='<span class="bad">'+esc(error.message)+'</span>';const result=Array.isArray(data)?data[0]:data;await loadAll();if(result?.passed){$('quizMsg').innerHTML='<span class="ok"><b>Passed — '+Number(result.score)+'%</b></span>';renderTraining();renderHome()}else $('quizMsg').innerHTML='<span class="bad"><b>Score '+Number(result?.score||0)+'%. Review the course and try again.</b></span>'}
-$('courseClose').onclick=()=>{$('trainingOverlay').style.display='none';activeCourse=null;renderTraining()};
+$('courseClose').onclick=()=>{try{speechSynthesis.cancel()}catch(e){};$('trainingOverlay').style.display='none';activeCourse=null;renderTraining()};
 
 function renderForms(){
  const pending=documents.filter(d=>!d.acknowledged).length;
