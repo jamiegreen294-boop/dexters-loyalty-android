@@ -313,7 +313,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-36-forced-customer-password-change">
+<main class="wrap" data-build="2026-09-08-website-pass-37-secure-customer-records">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -3243,7 +3243,39 @@ if(!Array.isArray(customerDb.customers)||!customerDb.customers.length){
 }
 function saveCustomerDb(){localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));renderCustomerDb()}
 function selectedCustomer(){return customerDb.customers.find(x=>x.id===customerDb.selected)||null}
-function logCustomer(cu,action){cu.audit=cu.audit||[];cu.audit.unshift({at:new Date().toISOString(),action});cu.audit=cu.audit.slice(0,100)}
+function logCustomer(cu,action){cu.audit=cu.audit||[];cu.audit.unshift({at:new Date().toISOString(),action,by:currentActorName()});cu.audit=cu.audit.slice(0,100)}
+function customerSecurePayload(cu){
+ return {
+  status:cu.status||'Active',preferredContact:cu.preferredContact||'App',tags:cu.tags||[],
+  complaints:cu.complaints||[],documents:cu.documents||[],notes:cu.notes||[],
+  communications:cu.communications||[],audit:(cu.audit||[]).slice(0,200),
+  catering:cu.catering||[],challenges:cu.challenges||[],
+  consentNote:cu.consent?.note||''
+ };
+}
+async function persistCustomerRecordDb(cu){
+ if(!CORE_DB_CONNECTED||!SECURE_SESSION||secureRoleRank(SECURE_ACCOUNT?.role)<2||!cu)return;
+ const row={
+  record_id:String(cu.id),customer_id:cu.liveId||null,customer_name:cu.name||'Customer',
+  record_data:customerSecurePayload(cu),updated_by:SECURE_SESSION.user.id,updated_at:new Date().toISOString()
+ };
+ const {data:existing,error:readErr}=await SB.from('backoffice_customer_records').select('record_id').eq('record_id',row.record_id).maybeSingle();
+ if(readErr)throw readErr;
+ const q=existing
+  ?SB.from('backoffice_customer_records').update(row).eq('record_id',row.record_id)
+  :SB.from('backoffice_customer_records').insert({...row,created_by:SECURE_SESSION.user.id});
+ const {error}=await q;if(error)throw error;cu.secureRecord=true;
+}
+function mergeSecureCustomerRecord(cu,row){
+ const d=row?.record_data||{};
+ cu.status=d.status||cu.status||'Active';cu.preferredContact=d.preferredContact||cu.preferredContact||'App';
+ cu.tags=Array.isArray(d.tags)?d.tags:(cu.tags||[]);
+ ['complaints','documents','notes','communications','audit','catering','challenges'].forEach(k=>{
+   if(Array.isArray(d[k]))cu[k]=d[k];
+ });
+ cu.consent={...(cu.consent||{}),note:d.consentNote??cu.consent?.note??''};
+ cu.secureRecord=true;cu.secureUpdatedAt=row.updated_at||null;
+}
 function custInitials(n){return String(n||'Customer').split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase()}
 function renderCustDirectory(){
  const q=($('custSearch')?.value||'').trim().toLowerCase();
@@ -3252,7 +3284,7 @@ function renderCustDirectory(){
  const loyalty=x.loyalty||{points:0,stamps:0},complaints=(x.complaints||[]).filter(c=>c.status!=='Resolved'&&c.status!=='Closed').length,catering=(x.catering||[]).length;
  return '<button class="pass-customer-card" onclick="selectCustomerRecord(&quot;'+x.id+'&quot;)">'+
   '<div class="pass-staff-card-top"><div class="pass-avatar large">'+custInitials(x.name)+'</div><span class="pass-status '+(x.status==='Active'?'active':'')+'">'+x.status+'</span></div>'+
-  '<h3>'+x.name+'</h3><div class="pass-staff-role">'+(x.source==='Live Loyalty'?'<span class="badge">LIVE LOYALTY</span> ':'')+(x.preferredContact||'Customer')+'</div>'+
+  '<h3>'+x.name+'</h3><div class="pass-staff-role">'+(x.source==='Live Loyalty'?'<span class="badge">LIVE LOYALTY</span> ':'')+(x.secureRecord?'<span class="badge">SECURE RECORD</span> ':'')+(x.preferredContact||'Customer')+'</div>'+
   '<div class="pass-staff-contact">'+(x.phone||x.email||'No contact details')+'</div>'+
   '<div class="pass-staff-metrics"><span><b>'+Number(loyalty.points||0)+'</b><small>points</small></span><span><b>'+complaints+'</b><small>complaints</small></span><span><b>'+catering+'</b><small>catering</small></span></div>'+
   '<div class="pass-staff-open">Open customer record →</div></button>';
@@ -3290,6 +3322,9 @@ async function syncLiveCustomers(){
  try{
    const rows=await liveRpc('backoffice_live_customer_feed');
    const list=Array.isArray(rows)?rows:[];
+   const {data:secureRows,error:secureErr}=await SB.from('backoffice_customer_records').select('*');
+   if(secureErr)throw secureErr;
+   const secureById=new Map((secureRows||[]).map(x=>[String(x.record_id),x]));
    const byLive=new Map((customerDb.customers||[]).filter(x=>x.liveId).map(x=>[x.liveId,x]));
    const liveIds=new Set(list.map(r=>r.id));
    list.forEach(r=>{
@@ -3306,6 +3341,11 @@ async function syncLiveCustomers(){
      cu.rewards=(Array.isArray(r.bonus_rewards)?r.bonus_rewards:[]).map(x=>({title:x.prize_name||'Reward',status:x.status||'active',createdAt:x.created_at||null,redeemedAt:x.redeemed_at||null,source:'Live Loyalty'}));
      cu.consent={...(cu.consent||{}),marketing:!!r.marketing_consent,sms:!!r.sms_consent,email:!!r.email_consent,termsAccepted:!!r.terms_accepted,privacyAccepted:!!r.privacy_accepted,recorded:!!r.consent_recorded,version:r.consent_version||'',source:r.consent_source||'',updatedAt:r.consent_at||null,note:(cu.consent||{}).note||''};
      cu.lastLiveSync=new Date().toISOString();
+     const sr=secureById.get(String(cu.id));if(sr)mergeSecureCustomerRecord(cu,sr);
+   });
+   (secureRows||[]).filter(r=>!customerDb.customers.some(cu=>String(cu.id)===String(r.record_id))).forEach(r=>{
+     const d=r.record_data||{},cu={id:String(r.record_id),source:'Back Office',name:r.customer_name||'Customer',phone:'',email:'',status:d.status||'Active',joined:'',preferredContact:d.preferredContact||'App',tags:[],loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],communications:[],audit:[]};
+     mergeSecureCustomerRecord(cu,r);customerDb.customers.push(cu);
    });
    const removed=customerDb.customers.filter(x=>x.source==='Live Loyalty'&&x.liveId&&!liveIds.has(x.liveId));
    if(removed.length){
@@ -3393,16 +3433,16 @@ window.copyCustomerInvite=async()=>{if(!LAST_CUSTOMER_INVITE_TEXT)return;try{awa
 window.shareCustomerInvite=async()=>{if(!LAST_CUSTOMER_INVITE_TEXT)return;try{if(navigator.share)await navigator.share({title:"Dexter's App Login",text:LAST_CUSTOMER_INVITE_TEXT});else await navigator.clipboard.writeText(LAST_CUSTOMER_INVITE_TEXT)}catch(e){}};
 if($('boCreateCustomerLogin'))$('boCreateCustomerLogin').onclick=createBackOfficeCustomerLogin;
 
-$('custAdd').onclick=()=>{const name=prompt('Customer name');if(!name?.trim())return;const id='cust-'+Date.now();customerDb.customers.push({id,name:name.trim(),phone:'',email:'',status:'Active',joined:new Date().toISOString().slice(0,10),preferredContact:'App',loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],audit:[]});customerDb.selected=id;logCustomer(selectedCustomer(),'Customer record created');saveCustomerDb()};
-$('custSave').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.name=$('cuName').value.trim()||'Unnamed customer';cu.phone=$('cuPhone').value.trim();cu.email=$('cuEmail').value.trim();cu.status=$('cuStatus').value;cu.joined=$('cuJoined').value;cu.preferredContact=$('cuContact').value;cu.tags=pickedTags('cuTags');logCustomer(cu,'Customer profile updated');saveCustomerDb()};
-$('custAddComplaint').onclick=()=>{const cu=selectedCustomer(),text=$('cuComplaint').value.trim();if(!cu||!text)return;cu.complaints.unshift({text,owner:$('cuComplaintOwner').value,due:$('cuComplaintDue').value,resolution:$('cuComplaintResolution').value.trim(),status:'Open',at:new Date().toISOString()});dexManage.tasks.unshift({title:'Customer complaint · '+cu.name,assignee:$('cuComplaintOwner').value,type:'Task',priority:'High',due:$('cuComplaintDue').value,details:text,resolution:$('cuComplaintResolution').value.trim(),tags:['Follow-up'],status:'Open',at:new Date().toISOString()});logCustomer(cu,'Complaint workflow opened');addTimeline('Customer Complaint',cu.name+' complaint opened');$('cuComplaint').value='';saveCustomerDb();saveDexManage()};
-$('custAddDocument').onclick=()=>{const cu=selectedCustomer(),note=$('cuDocNote').value.trim();if(!cu||!note)return;const now=new Date().toISOString(),doc={id:'custdoc-'+Date.now(),type:$('cuDocType').value,note,signed:!!CUSTOMER_SIGNATURE_DATA,signatureData:CUSTOMER_SIGNATURE_DATA||'',signatureName:CUSTOMER_SIGNATURE_NAME||'',signedAt:CUSTOMER_SIGNATURE_AT||'',createdBy:currentActorName(),createdByUserId:SECURE_SESSION?.user?.id||'',createdAt:now,at:now};cu.documents.unshift(doc);resetCustomerSignature();logCustomer(cu,'Customer document added: '+doc.type+' by '+doc.createdBy);$('cuDocNote').value='';saveCustomerDb();logFormActivity('Created','Customer',doc.id,doc.type,cu.liveId||cu.id,{customer:cu.name,createdBy:doc.createdBy}).catch(()=>{})};
-window.saveCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const d=cu.documents[i],who=currentActorName(),now=new Date().toISOString();logFormActivity('Accessed','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name}).catch(()=>{});d.note=$('cuDocEdit'+i).value;d.updatedBy=who;d.updatedByUserId=SECURE_SESSION?.user?.id||'';d.updatedAt=now;logCustomer(cu,'Customer document updated: '+d.type+' by '+who);saveCustomerDb();logFormActivity('Updated','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name,updatedBy:who}).catch(()=>{})};
-window.removeCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const d=cu.documents[i];if(!confirm('Delete '+d.type+'? This action will be audited.'))return;cu.documents.splice(i,1);logCustomer(cu,'Customer document removed: '+d.type);saveCustomerDb();logFormActivity('Deleted','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name}).catch(()=>{})};
+$('custAdd').onclick=async()=>{const name=prompt('Customer name');if(!name?.trim())return;const id='cust-'+Date.now();const cu={id,name:name.trim(),phone:'',email:'',status:'Active',joined:new Date().toISOString().slice(0,10),preferredContact:'App',loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],communications:[],audit:[]};customerDb.customers.push(cu);customerDb.selected=id;logCustomer(cu,'Customer record created');saveCustomerDb();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure customer save failed: '+e.message)}};
+$('custSave').onclick=async()=>{const cu=selectedCustomer();if(!cu)return;cu.name=$('cuName').value.trim()||'Unnamed customer';cu.phone=$('cuPhone').value.trim();cu.email=$('cuEmail').value.trim();cu.status=$('cuStatus').value;cu.joined=$('cuJoined').value;cu.preferredContact=$('cuContact').value;cu.tags=pickedTags('cuTags');logCustomer(cu,'Customer profile updated');saveCustomerDb();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure customer save failed: '+e.message)}};
+$('custAddComplaint').onclick=async()=>{const cu=selectedCustomer(),text=$('cuComplaint').value.trim();if(!cu||!text)return;cu.complaints.unshift({text,owner:$('cuComplaintOwner').value,due:$('cuComplaintDue').value,resolution:$('cuComplaintResolution').value.trim(),status:'Open',at:new Date().toISOString()});dexManage.tasks.unshift({title:'Customer complaint · '+cu.name,assignee:$('cuComplaintOwner').value,type:'Task',priority:'High',due:$('cuComplaintDue').value,details:text,resolution:$('cuComplaintResolution').value.trim(),tags:['Follow-up'],status:'Open',at:new Date().toISOString()});logCustomer(cu,'Complaint workflow opened');addTimeline('Customer Complaint',cu.name+' complaint opened');$('cuComplaint').value='';saveCustomerDb();saveDexManage();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure complaint save failed: '+e.message)}};
+$('custAddDocument').onclick=async()=>{const cu=selectedCustomer(),note=$('cuDocNote').value.trim();if(!cu||!note)return;const now=new Date().toISOString(),doc={id:'custdoc-'+Date.now(),type:$('cuDocType').value,note,signed:!!CUSTOMER_SIGNATURE_DATA,signatureData:CUSTOMER_SIGNATURE_DATA||'',signatureName:CUSTOMER_SIGNATURE_NAME||'',signedAt:CUSTOMER_SIGNATURE_AT||'',createdBy:currentActorName(),createdByUserId:SECURE_SESSION?.user?.id||'',createdAt:now,at:now};cu.documents.unshift(doc);resetCustomerSignature();logCustomer(cu,'Customer document added: '+doc.type+' by '+doc.createdBy);$('cuDocNote').value='';saveCustomerDb();await Promise.allSettled([persistCustomerRecordDb(cu),logFormActivity('Created','Customer',doc.id,doc.type,cu.liveId||cu.id,{customer:cu.name,createdBy:doc.createdBy})])};
+window.saveCustomerDocument=async i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const d=cu.documents[i],who=currentActorName(),now=new Date().toISOString();logFormActivity('Accessed','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name}).catch(()=>{});d.note=$('cuDocEdit'+i).value;d.updatedBy=who;d.updatedByUserId=SECURE_SESSION?.user?.id||'';d.updatedAt=now;logCustomer(cu,'Customer document updated: '+d.type+' by '+who);saveCustomerDb();await Promise.allSettled([persistCustomerRecordDb(cu),logFormActivity('Updated','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name,updatedBy:who})])};
+window.removeCustomerDocument=async i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const d=cu.documents[i];if(!confirm('Delete '+d.type+'? This action will be audited.'))return;cu.documents.splice(i,1);logCustomer(cu,'Customer document removed: '+d.type);saveCustomerDb();await Promise.allSettled([persistCustomerRecordDb(cu),logFormActivity('Deleted','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name})])};
 
-$('custSaveConsent').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.consent={...(cu.consent||{}),marketing:$('cuMarketing').checked,sms:$('cuSms').checked,email:$('cuEmailConsent').checked,note:$('cuConsentNote').value.trim(),backOfficeUpdatedAt:new Date().toISOString()};logCustomer(cu,'Back Office contact preferences updated');saveCustomerDb()};
-$('custAddComm').onclick=()=>{const cu=selectedCustomer(),text=$('cuCommNote').value.trim();if(!cu||!text)return;cu.communications=cu.communications||[];cu.communications.unshift({text,at:new Date().toISOString(),by:CURRENT_STAFF_ROLE});logCustomer(cu,'Communication record added');$('cuCommNote').value='';saveCustomerDb()};
-$('custAddNote').onclick=()=>{const cu=selectedCustomer(),text=$('cuNote').value.trim();if(!cu||!text)return;cu.notes.unshift({text,at:new Date().toISOString()});logCustomer(cu,'Internal note added');$('cuNote').value='';saveCustomerDb()};
+$('custSaveConsent').onclick=async()=>{const cu=selectedCustomer();if(!cu)return;cu.consent={...(cu.consent||{}),marketing:$('cuMarketing').checked,sms:$('cuSms').checked,email:$('cuEmailConsent').checked,note:$('cuConsentNote').value.trim(),backOfficeUpdatedAt:new Date().toISOString()};logCustomer(cu,'Back Office contact preferences updated');saveCustomerDb();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure consent note save failed: '+e.message)}};
+$('custAddComm').onclick=async()=>{const cu=selectedCustomer(),text=$('cuCommNote').value.trim();if(!cu||!text)return;cu.communications=cu.communications||[];cu.communications.unshift({text,at:new Date().toISOString(),by:CURRENT_STAFF_ROLE});logCustomer(cu,'Communication record added');$('cuCommNote').value='';saveCustomerDb();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure communication save failed: '+e.message)}};
+$('custAddNote').onclick=async()=>{const cu=selectedCustomer(),text=$('cuNote').value.trim();if(!cu||!text)return;cu.notes.unshift({text,at:new Date().toISOString()});logCustomer(cu,'Internal note added');$('cuNote').value='';saveCustomerDb();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure note save failed: '+e.message)}};
 renderCustomerDb();
 
 const DEALKEY='dexters_growth_deals_test_v2';
