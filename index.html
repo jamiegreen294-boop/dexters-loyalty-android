@@ -313,7 +313,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-34-form-creator-updater-display">
+<main class="wrap" data-build="2026-09-08-website-pass-35-customer-app-invite">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -1027,6 +1027,23 @@ body.pride-theme{background:#f7f3f8!important}
 <section class="panel" id="customers">
 <div class="card notice"><b>Customer Files</b><p class="muted">PASS-style joined-up customer records. Loyalty-app sign-ups are pulled from the live Dexter's customer database, while Back Office-only notes, complaints, forms and audit history stay attached to the same customer card.</p></div>
 <div class="card"><div class="row" style="justify-content:space-between"><div><h2>Live Loyalty customers</h2><p class="muted">New loyalty-app sign-ups, customer details, points, stamps and recorded consent are synced into these customer cards.</p></div><button class="btn alt" id="refreshLiveLoyalty">Sync live customers</button></div><div id="liveLoyaltySummary"></div><div id="liveCustomerSyncStatus" class="tiny" style="margin-top:7px"></div></div>
+<div class="card">
+  <div class="row" style="justify-content:space-between;align-items:flex-start">
+    <div><h2>Sign customer up to Dexter's app</h2><p class="muted">Create the customer's live Loyalty account, then give them the app link and login details.</p></div>
+    <span class="badge">PASS-style access invite</span>
+  </div>
+  <div class="grid">
+    <div>
+      <div class="field">Customer name<input id="boInviteName" placeholder="Full name"></div>
+      <div class="field">Email address<input id="boInviteEmail" type="email" placeholder="customer@example.com"></div>
+      <div class="field">Mobile number<input id="boInvitePhone" inputmode="tel" placeholder="07..."></div>
+      <button class="btn" id="boCreateCustomerLogin">Create app login</button>
+    </div>
+    <div>
+      <div id="boCustomerInviteResult" class="summarybox muted">Create an account to generate the customer's app link and temporary login details.</div>
+    </div>
+  </div>
+</div>
 <div class="pass-manager-overview">
   <div class="pass-manager-kpi"><span>Customers</span><b id="custMgrTotal">0</b><small>records</small></div>
   <div class="pass-manager-kpi"><span>Active</span><b id="custMgrActive">0</b><small>current</small></div>
@@ -3342,6 +3359,40 @@ function renderCustomerDb(){
 document.querySelectorAll('[data-custtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-custtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('[id^="custPane-"]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=$('custPane-'+b.dataset.custtab);if(p)p.classList.add('active');if(b.dataset.custtab==='documents'){const cu=selectedCustomer();if(cu)logFormActivity('Accessed','Customer File',cu.liveId||cu.id,'Customer Documents',cu.liveId||cu.id,{customer:cu.name}).catch(()=>{})}});
 const customerBackBtn=$('customerBackToCards');if(customerBackBtn)customerBackBtn.onclick=closeCustomerRecord;
 $('custSearch').addEventListener('input',renderCustDirectory);
+let LAST_CUSTOMER_INVITE_TEXT='';
+function customerInviteMessage(d){
+ return "Welcome to Dexter's Loyalty App\n\nApp: "+d.app_url+"\nEmail: "+d.email+"\nTemporary password: "+d.temporary_password+"\n\nUse these details to sign in. You can then use your Dexter's rewards, points and ordering features.";
+}
+async function createBackOfficeCustomerLogin(){
+ if(secureRoleRank(SECURE_ACCOUNT?.role)<2)return alert('Team Leader or above required.');
+ const name=$('boInviteName').value.trim(),email=$('boInviteEmail').value.trim(),phone=$('boInvitePhone').value.trim(),out=$('boCustomerInviteResult');
+ if(!name||!email)return alert('Enter the customer name and email address.');
+ const btn=$('boCreateCustomerLogin');btn.disabled=true;out.textContent='Creating secure customer account…';
+ try{
+   const res=await fetch(SUPABASE_URL+'/functions/v1/backoffice-create-customer',{
+     method:'POST',
+     headers:{'Content-Type':'application/json','Authorization':'Bearer '+SECURE_SESSION.access_token,'apikey':SUPABASE_KEY},
+     body:JSON.stringify({full_name:name,email,phone})
+   });
+   const d=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(d.error||'Customer account could not be created.');
+   LAST_CUSTOMER_INVITE_TEXT=customerInviteMessage(d);
+   out.innerHTML='<span class="ok"><b>Customer app account created.</b></span><br>'+
+    '<span class="tiny"><b>Created by:</b> '+escLive(d.created_by||currentActorName())+' · '+new Date().toLocaleString()+'</span><hr style="border:0;border-top:1px solid #ffffff17;margin:10px 0">'+
+    '<b>'+escLive(d.full_name)+'</b><br><span class="muted">Email: '+escLive(d.email)+'</span><br>'+
+    '<span class="muted">Temporary password: <b>'+escLive(d.temporary_password)+'</b></span><br>'+
+    '<span class="muted">Loyalty code: '+escLive(d.loyalty_code||'—')+'</span><br>'+
+    '<span class="muted">App: '+escLive(d.app_url)+'</span>'+
+    '<div class="row" style="margin-top:10px"><button class="btn alt small" onclick="copyCustomerInvite()">Copy login details</button><button class="btn alt small" onclick="shareCustomerInvite()">Share login details</button></div>';
+   await syncLiveCustomers();
+   addTimeline('Customer Signup',d.full_name+' app login created by '+(d.created_by||currentActorName()));saveDexManage();
+ }catch(e){out.innerHTML='<span class="bad">'+escLive(e.message)+'</span>'}
+ finally{btn.disabled=false}
+}
+window.copyCustomerInvite=async()=>{if(!LAST_CUSTOMER_INVITE_TEXT)return;try{await navigator.clipboard.writeText(LAST_CUSTOMER_INVITE_TEXT);alert('Customer login details copied.')}catch(e){alert(LAST_CUSTOMER_INVITE_TEXT)}};
+window.shareCustomerInvite=async()=>{if(!LAST_CUSTOMER_INVITE_TEXT)return;try{if(navigator.share)await navigator.share({title:"Dexter's App Login",text:LAST_CUSTOMER_INVITE_TEXT});else await navigator.clipboard.writeText(LAST_CUSTOMER_INVITE_TEXT)}catch(e){}};
+if($('boCreateCustomerLogin'))$('boCreateCustomerLogin').onclick=createBackOfficeCustomerLogin;
+
 $('custAdd').onclick=()=>{const name=prompt('Customer name');if(!name?.trim())return;const id='cust-'+Date.now();customerDb.customers.push({id,name:name.trim(),phone:'',email:'',status:'Active',joined:new Date().toISOString().slice(0,10),preferredContact:'App',loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],audit:[]});customerDb.selected=id;logCustomer(selectedCustomer(),'Customer record created');saveCustomerDb()};
 $('custSave').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.name=$('cuName').value.trim()||'Unnamed customer';cu.phone=$('cuPhone').value.trim();cu.email=$('cuEmail').value.trim();cu.status=$('cuStatus').value;cu.joined=$('cuJoined').value;cu.preferredContact=$('cuContact').value;cu.tags=pickedTags('cuTags');logCustomer(cu,'Customer profile updated');saveCustomerDb()};
 $('custAddComplaint').onclick=()=>{const cu=selectedCustomer(),text=$('cuComplaint').value.trim();if(!cu||!text)return;cu.complaints.unshift({text,owner:$('cuComplaintOwner').value,due:$('cuComplaintDue').value,resolution:$('cuComplaintResolution').value.trim(),status:'Open',at:new Date().toISOString()});dexManage.tasks.unshift({title:'Customer complaint · '+cu.name,assignee:$('cuComplaintOwner').value,type:'Task',priority:'High',due:$('cuComplaintDue').value,details:text,resolution:$('cuComplaintResolution').value.trim(),tags:['Follow-up'],status:'Open',at:new Date().toISOString()});logCustomer(cu,'Complaint workflow opened');addTimeline('Customer Complaint',cu.name+' complaint opened');$('cuComplaint').value='';saveCustomerDb();saveDexManage()};
