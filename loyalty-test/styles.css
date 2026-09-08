@@ -19,32 +19,52 @@ html[data-theme=standrew] body{background:linear-gradient(145deg,#0878be 0 44%,r
 .home-shortcuts .feature-card small{display:none}
 @media(max-width:380px){.order-hero-actions{grid-template-columns:1fr}.home-shortcuts{grid-template-columns:1fr 1fr}.home-shortcuts .feature-card:last-child{grid-column:1/-1}}
 
-/* GitHub Pages test-only theme preview controls */
-.theme-preview-bar{position:sticky;top:0;z-index:30;margin:0 auto 10px;width:min(100%,560px);padding:10px 12px;background:rgba(5,11,25,.96);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
-.theme-preview-bar b{display:block;font-size:12px;margin-bottom:8px}.theme-preview-buttons{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
-.theme-preview-buttons button{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:8px 11px;font-size:12px;font-weight:800}
+
+/* GitHub Pages test-only selector */
+.theme-preview-bar{position:sticky;top:8px;z-index:30;margin:0 0 12px;padding:10px 12px;background:rgba(5,11,25,.96);border:1px solid rgba(255,255,255,.25);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.3);backdrop-filter:blur(12px)}
+.theme-preview-bar b{display:block;font-size:10px;letter-spacing:.08em;margin-bottom:8px;color:#fff}.theme-preview-buttons{display:flex;gap:6px;overflow-x:auto;padding:0 0 3px;scrollbar-width:thin}
+.theme-preview-buttons button{flex:0 0 auto;border:1px solid rgba(255,255,255,.28);background:#172542;color:#fff;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:850}
 .theme-preview-buttons button.active{background:var(--accent);color:var(--accentText);border-color:var(--accent)}
-html[data-theme=pride] .logo-mark{background:linear-gradient(135deg,#e40303,#ff8c00,#ffed00,#008026,#24408e,#732982);color:#fff}
-html[data-theme=burns] .logo-mark{background:linear-gradient(135deg,#17365d 45%,#a1202f 46% 55%,#f2c14e 56%);color:#fff}
-html[data-theme=standrew] .logo-mark{background:linear-gradient(135deg,#0878be 42%,#fff 43% 56%,#075294 57%);color:#fff}
 
-/* Full visual seasonal scenes for the GitHub Pages acceptance test */
-.season-scene{position:relative;display:grid;grid-template-columns:92px 1fr;align-items:center;min-height:136px;margin:12px 0 16px;padding:18px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.28);box-shadow:0 16px 38px rgba(0,0,0,.28);isolation:isolate}
-.season-scene:before,.season-scene:after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(2px);opacity:.42}
-.season-scene:before{width:190px;height:190px;right:-75px;top:-100px;background:#fff}
-.season-scene:after{width:130px;height:130px;left:-60px;bottom:-90px;background:var(--accent)}
-.season-art{font-size:58px;filter:drop-shadow(0 8px 8px rgba(0,0,0,.3));animation:season-float 3s ease-in-out infinite}
-.season-copy{display:grid;gap:5px;position:relative;z-index:2}.season-copy small{font-weight:900;letter-spacing:.13em;font-size:10px;opacity:.82}.season-copy strong{font-size:24px;line-height:1.05}.season-copy span{font-size:13px;line-height:1.35;max-width:320px}
-.season-particles{position:absolute;inset:0;pointer-events:none}.season-particles i{position:absolute;font-style:normal;font-size:20px;left:calc(12% + var(--i)*16%);top:18%;opacity:.75;animation:season-drift calc(3s + var(--i)*.45s) ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.55s)}
-.season-standard{background:linear-gradient(135deg,#102653,#07142f)}
-.season-pride{background:linear-gradient(125deg,#b5125b,#7b2cbf 40%,#175fad 70%,#06765c);border-bottom:7px solid transparent;border-image:linear-gradient(90deg,#e40303,#ff8c00,#ffed00,#008026,#24408e,#732982) 1}
-.season-burns{background-color:#17365d;background-image:linear-gradient(90deg,rgba(161,32,47,.75) 5px,transparent 5px),linear-gradient(rgba(242,193,78,.42) 4px,transparent 4px);background-size:46px 46px}.season-burns .season-copy{background:rgba(7,20,47,.62);padding:12px;border-radius:14px}
-.season-standrew{background:linear-gradient(145deg,#0878be 0 42%,#fff 43% 48%,#075294 49% 51%,#fff 52% 57%,#0878be 58%)}.season-standrew .season-copy{background:rgba(0,56,111,.68);padding:12px;border-radius:14px}
-.season-halloween{background:radial-gradient(circle at 84% 20%,#ff922b 0 8%,transparent 9%),linear-gradient(135deg,#38124e,#12081c 70%)}.season-halloween:after{background:#ff7a18}.season-halloween .season-art{animation:season-bob 2.2s ease-in-out infinite}
-.season-christmas{background:radial-gradient(circle at 85% 22%,#fff 0 2px,transparent 3px),linear-gradient(135deg,#0d6941,#073623 66%,#8c1725)}.season-christmas:after{background:#d72132}
-.season-valentine{background:radial-gradient(circle at 85% 20%,#ffc2d1 0 10%,transparent 11%),linear-gradient(135deg,#8e1749,#40122f 72%)}.season-valentine:after{background:#ff86a6}
-@keyframes season-float{50%{transform:translateY(-7px) rotate(2deg)}}@keyframes season-bob{50%{transform:translateY(-5px) rotate(-4deg) scale(1.04)}}@keyframes season-drift{to{transform:translateY(24px) rotate(18deg);opacity:.28}}
-@media(max-width:380px){.season-scene{grid-template-columns:70px 1fr;padding:14px}.season-art{font-size:44px}.season-copy strong{font-size:20px}}
-@media(prefers-reduced-motion:reduce){.season-art,.season-particles i{animation:none!important}}
+/* Full seasonal campaign hero. Halloween, Christmas and Valentine use the live Dexter's artwork. */
+.season-hero{position:relative;min-height:300px;margin:12px 0 18px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 18px 40px rgba(0,0,0,.38);background:#102653 center/cover no-repeat;isolation:isolate}
+.season-hero:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,transparent 8%,rgba(5,11,25,.12) 42%,rgba(5,11,25,.96) 100%)}
+.season-hero-copy{position:absolute;left:20px;right:20px;bottom:22px;display:grid;gap:8px;text-shadow:0 3px 14px #000}
+.season-hero-copy small{font-size:10px;font-weight:900;letter-spacing:.15em;color:#f4e8dc}
+.season-hero-copy strong{font:700 clamp(35px,9vw,50px)/1.01 Georgia,serif;letter-spacing:-.04em;color:#fff}
+.season-hero-copy span{font-size:13px;line-height:1.45;color:#f1e6dc;max-width:360px}
+.season-halloween{min-height:360px;background-image:url("https://apps.dextersspot.co.uk/haunted-v4.webp");background-position:center 25%;border-color:#ab704966}
+.season-halloween:after{background:linear-gradient(180deg,rgba(6,7,8,0) 15%,rgba(6,7,8,.16) 46%,rgba(6,7,8,.96) 100%)}
+html[data-theme=halloween]{--bg:#060708;--panel:#24170f;--panel2:#100e0c;--line:#ac683d;--accent:#ffd094;--accentText:#190f08;--muted:#d2c0b5}
+html[data-theme=halloween] body{background:linear-gradient(180deg,#06070822,#060708e8 66%,#060708),url("https://apps.dextersspot.co.uk/haunted-v4.webp") center top/cover fixed no-repeat}
+html[data-theme=halloween] .card,html[data-theme=halloween] .feature-card{background:linear-gradient(145deg,#24170ff8,#100e0cf8);border-color:#ac683d66;color:#fff0e5;border-radius:12px}
+html[data-theme=halloween] .welcome-card{background:linear-gradient(120deg,#332013f8,#17100df8)}
+html[data-theme=halloween] .stats-grid>div,html[data-theme=halloween] .action-list button{background:#100e0c;border-color:#ac683d66}
+html[data-theme=halloween] .bottom-nav{background:#100c09f5;border-top-color:#93582855}html[data-theme=halloween] .bottom-nav button.active{color:#ffc88c;background:#3a2315}
+html[data-theme=halloween] .primary{background:linear-gradient(110deg,#ffd094,#e57934)}
 
-.season-particles i:nth-child(2),.season-particles i:nth-child(5){top:55%}.season-particles i:nth-child(3),.season-particles i:nth-child(6){top:34%}
+.season-christmas{min-height:360px;background-image:url("https://apps.dextersspot.co.uk/christmas-v5.webp");background-position:center 25%;border:2px solid #d6b66688;border-radius:32px 32px 12px 12px}
+html[data-theme=christmas]{--bg:#06140e;--panel:#24392a;--panel2:#081b13;--line:#d1aa5b;--accent:#ffdf88;--accentText:#132017;--muted:#dbd8c4}
+html[data-theme=christmas] body{background:linear-gradient(180deg,#06140e22,#06140ee8 66%,#06140e),url("https://apps.dextersspot.co.uk/christmas-v5.webp") center top/cover fixed no-repeat}
+html[data-theme=christmas] .card,html[data-theme=christmas] .feature-card{background:linear-gradient(145deg,#24392af8,#081b13f8);border-color:#d1aa5b88;color:#fff4dd;border-radius:8px 20px}
+html[data-theme=christmas] .welcome-card{background:linear-gradient(120deg,#51202bf8,#28111bf8)}html[data-theme=christmas] .stats-grid>div,html[data-theme=christmas] .action-list button{background:#081b13;border-color:#d1aa5b88}
+
+.season-valentine{min-height:360px;background-image:url("https://apps.dextersspot.co.uk/valentines-v5.webp");background-position:center 25%;border-color:#e7a5bb77;border-radius:45px 45px 18px 18px}
+.season-valentine .season-hero-copy strong{font-style:italic}
+html[data-theme=valentine]{--bg:#210916;--panel:#63203d;--panel2:#2b0b20;--line:#e6a0b8;--accent:#ffd5e0;--accentText:#3f1028;--muted:#edccdb}
+html[data-theme=valentine] body{background:linear-gradient(180deg,#21091622,#210916e8 66%,#210916),url("https://apps.dextersspot.co.uk/valentines-v5.webp") center top/cover fixed no-repeat}
+html[data-theme=valentine] .card,html[data-theme=valentine] .feature-card{background:linear-gradient(145deg,#63203df8,#2b0b20f8);border-color:#e6a0b888;color:#fff0f6;border-radius:22px}
+html[data-theme=valentine] .stats-grid>div,html[data-theme=valentine] .action-list button{background:#2b0b20;border-color:#e6a0b888}
+
+.season-pride{background:linear-gradient(150deg,rgba(0,0,0,.05),rgba(0,0,0,.7)),linear-gradient(115deg,#e40303 0 16.6%,#ff8c00 16.6% 33.2%,#ffed00 33.2% 49.8%,#008026 49.8% 66.4%,#24408e 66.4% 83%,#732982 83%);border-color:#fff8}
+.season-pride:before{content:"LOVE";position:absolute;right:-8px;top:8px;font:900 94px/1 system-ui;color:#fff2;transform:rotate(-8deg);z-index:-1}
+html[data-theme=pride] .card,html[data-theme=pride] .feature-card{background:linear-gradient(145deg,#35205ff5,#18123bf5);border-color:#8068b4}
+.season-burns{background-color:#17365d;background-image:linear-gradient(90deg,transparent 0 20%,#a1202fcc 20% 25%,transparent 25% 70%,#f2c14e88 70% 73%,transparent 73%),linear-gradient(transparent 0 28%,#a1202fcc 28% 34%,transparent 34% 68%,#f2c14e88 68% 72%,transparent 72%),linear-gradient(135deg,#17365d,#091a32)}
+.season-burns:before{content:"✒";position:absolute;right:22px;top:12px;font:100px Georgia;color:#f2c14e66;transform:rotate(-15deg);z-index:-1}
+html[data-theme=burns] .card,html[data-theme=burns] .feature-card{background:linear-gradient(145deg,#17365df5,#0a1c36f5);border-color:#6f8fb7}
+.season-standrew{background:linear-gradient(35deg,transparent 43%,#fff 44% 49%,transparent 50%),linear-gradient(145deg,transparent 43%,#fff 44% 49%,transparent 50%),linear-gradient(160deg,#1191d0,#075294)}
+.season-standrew:before{content:"SCOTLAND";position:absolute;right:8px;top:18px;font:900 54px/1 system-ui;color:#fff2;transform:rotate(-8deg);z-index:-1}
+html[data-theme=standrew] .card,html[data-theme=standrew] .feature-card{background:linear-gradient(145deg,#0865adf5,#063f79f5);border-color:#8cc8ed}
+
+@media(max-width:380px){.season-hero{min-height:330px}.season-hero-copy{left:16px;right:16px;bottom:18px}.theme-preview-bar{top:4px}.order-hero-actions{grid-template-columns:1fr}.home-shortcuts{grid-template-columns:1fr 1fr}.home-shortcuts .feature-card:last-child{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
