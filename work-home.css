@@ -48,3 +48,34 @@ body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #seasonBanner{w
 body:has(#appView:not(.hidden) #qrPage.work-rewards:not(.hidden)) .wrap{padding-bottom:100px}
 
 body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:100px}
+
+/* Requested test-only fixes; preserve exact pre-streamline layout */
+#homePage .work-top .work-small{
+  background:transparent!important;
+  border:0!important;
+  color:var(--white)!important;
+  box-shadow:none!important;
+  padding:8px 0!important;
+}
+#homePage .work-top .work-small:not([hidden]){display:inline-block!important;opacity:1!important;visibility:visible!important}
+#homePage #collectionOrderLiveCard.work-collection-standalone{
+  margin:0 0 14px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.work-page-home{
+  display:inline-flex!important;
+  align-items:center;
+  width:auto!important;
+  margin:0 0 12px!important;
+  padding:8px 0!important;
+  border:0!important;
+  background:transparent!important;
+  color:var(--yellow)!important;
+  box-shadow:none!important;
+  font:inherit!important;
+  font-size:14px!important;
+  font-weight:900!important;
+}
