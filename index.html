@@ -5701,5 +5701,157 @@ renderLessons();renderTrainingManager();
   try{renderLessons()}catch(e){}
 })();
 </script>
+
+<style id="dexters-training-natural-voice-picker-v2-20260908">
+.training-voice-picker{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.training-voice-picker select{max-width:330px;padding:7px 9px;border:1px solid #d9cfdd;border-radius:8px;background:#fff;font-size:12px}
+.training-voice-picker .btn{white-space:nowrap}
+</style>
+<script>
+(function(){
+  let selectedVoiceURI='';
+  let narrationQueue=[];
+  let narrationIndex=0;
+  let narrationStopped=false;
+
+  try{selectedVoiceURI=localStorage.getItem('dexters_training_voice_uri')||''}catch(e){}
+
+  function availableTrainingVoices(){
+    try{
+      return (speechSynthesis.getVoices?.()||[])
+        .filter(v=>/^en(-|$)/i.test(v.lang||''))
+        .sort((a,b)=>{
+          const sa=trainingVoiceScore(a),sb=trainingVoiceScore(b);
+          return sb-sa || String(a.name).localeCompare(String(b.name));
+        });
+    }catch(e){return []}
+  }
+  function trainingVoiceScore(v){
+    const n=String(v.name||'').toLowerCase(),l=String(v.lang||'').toLowerCase();
+    let s=0;
+    if(l==='en-gb')s+=100; else if(l.startsWith('en-gb'))s+=90; else if(l.startsWith('en'))s+=20;
+    if(/natural|neural|premium|enhanced|online/.test(n))s+=80;
+    if(/sonia|ryan|libby|george|serena|daniel|hazel|susan/.test(n))s+=40;
+    if(/google uk english/.test(n))s+=35;
+    if(/microsoft/.test(n)&&l.startsWith('en-gb'))s+=25;
+    return s;
+  }
+  function selectedTrainingVoice(){
+    const vs=availableTrainingVoices();
+    const chosen=vs.find(v=>v.voiceURI===selectedVoiceURI);
+    return chosen||vs[0]||null;
+  }
+  window.getDextersTrainingVoice=selectedTrainingVoice;
+
+  function populateVoicePickers(){
+    const vs=availableTrainingVoices();
+    document.querySelectorAll('[data-dexters-voice-picker]').forEach(sel=>{
+      const current=selectedVoiceURI;
+      sel.innerHTML=vs.map(v=>'<option value="'+String(v.voiceURI).replace(/"/g,'&quot;')+'">'+
+        (/(natural|neural|premium|enhanced|online)/i.test(v.name)?'★ ':'')+
+        v.name+' · '+v.lang+'</option>').join('');
+      if(current&&vs.some(v=>v.voiceURI===current))sel.value=current;
+      else if(vs[0]){sel.value=vs[0].voiceURI;selectedVoiceURI=vs[0].voiceURI}
+    });
+    document.querySelectorAll('.training-voice-quality').forEach(el=>{
+      const v=selectedTrainingVoice();if(v)el.textContent='🔊 '+v.name;
+    });
+  }
+  window.setDextersTrainingVoice=function(uri){
+    selectedVoiceURI=String(uri||'');
+    try{localStorage.setItem('dexters_training_voice_uri',selectedVoiceURI)}catch(e){}
+    populateVoicePickers();
+  };
+  window.previewDextersTrainingVoice=function(){
+    const v=selectedTrainingVoice();if(!v)return;
+    try{speechSynthesis.cancel()}catch(e){}
+    const u=new SpeechSynthesisUtterance("Welcome to Dexter's staff training. This voice will guide you through each practical safety step.");
+    u.voice=v;u.lang=v.lang||'en-GB';u.rate=.94;u.pitch=1;u.volume=1;
+    try{speechSynthesis.speak(u)}catch(e){}
+  };
+
+  function splitNaturalSpeech(text){
+    return String(text||'')
+      .replace(/\s+/g,' ')
+      .split(/(?<=[.!?])\s+/)
+      .map(x=>x.trim())
+      .filter(Boolean);
+  }
+  function playNextNarration(){
+    if(narrationStopped||narrationIndex>=narrationQueue.length)return;
+    const item=narrationQueue[narrationIndex++];
+    const u=new SpeechSynthesisUtterance(item.text);
+    const v=selectedTrainingVoice();
+    if(v){u.voice=v;u.lang=v.lang||'en-GB'}else u.lang='en-GB';
+    u.rate=item.rate||.94;
+    u.pitch=item.pitch||1;
+    u.volume=1;
+    u.onend=()=>setTimeout(playNextNarration,item.pause||320);
+    u.onerror=()=>setTimeout(playNextNarration,250);
+    try{speechSynthesis.speak(u)}catch(e){}
+  }
+  window.stopTrainingSpeech=function(){
+    narrationStopped=true;narrationQueue=[];narrationIndex=0;
+    try{speechSynthesis.cancel()}catch(e){}
+    trainingSpeech=null;
+  };
+  window.speakTrainingSceneNow=function(i){
+    if(!('speechSynthesis' in window))return;
+    stopTrainingSpeech();
+    narrationStopped=false;
+    const l=lessons[i],s=l?.scenes?.[Math.min(videoScene[i]||0,(l?.scenes?.length||1)-1)];
+    if(!l||!s)return;
+    const meta=(s&&typeof s[2]==='object'&&s[2])?s[2]:{};
+    const segments=[];
+    segments.push({text:s[0]+'.',rate:.90,pitch:1.01,pause:420});
+    splitNaturalSpeech(s[1]).forEach((t,k)=>segments.push({text:t,rate:k===0?.93:.95,pitch:1,pause:360}));
+    if(meta.bad)segments.push({text:'Do not do this. '+meta.bad,rate:.91,pitch:.97,pause:520});
+    if(meta.good)segments.push({text:'Do this instead. '+meta.good,rate:.94,pitch:1.02,pause:480});
+    if(Array.isArray(meta.steps)&&meta.steps.length)segments.push({text:'Remember. '+meta.steps.join('. ')+'.',rate:.89,pitch:1,pause:300});
+    narrationQueue=segments;narrationIndex=0;
+    playNextNarration();
+  };
+
+  function voicePickerMarkup(){
+    const v=selectedTrainingVoice();
+    return '<div class="training-voice-picker"><label class="tiny"><b>Voice</b></label><select data-dexters-voice-picker onchange="setDextersTrainingVoice(this.value)"></select><button type="button" class="btn alt small" onclick="previewDextersTrainingVoice()">▶ Preview voice</button><span class="training-voice-quality">🔊 '+(v?.name||'UK English')+'</span></div>';
+  }
+
+  const oldRender=window.renderVideo;
+  window.renderVideo=function(i){
+    oldRender(i);
+    const stage=document.getElementById('trainVideo'+i);if(!stage)return;
+    const controls=stage.querySelector('.training-controls,.mh-controls');
+    if(controls&&!controls.querySelector('[data-dexters-voice-picker]')){
+      const wrap=document.createElement('div');
+      wrap.innerHTML=voicePickerMarkup();
+      controls.appendChild(wrap.firstElementChild);
+      populateVoicePickers();
+    }
+  };
+
+  const oldEnsure=document.getElementById.bind(document);
+  const observer=new MutationObserver(()=>{
+    const footer=document.querySelector('#trainingFullscreenOverlay .training-fullscreen-footer');
+    if(footer&&!footer.querySelector('[data-dexters-voice-picker]')){
+      const wrap=document.createElement('div');wrap.innerHTML=voicePickerMarkup();
+      footer.insertBefore(wrap.firstElementChild,footer.firstChild);
+      populateVoicePickers();
+    }
+  });
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+
+  try{
+    const prev=speechSynthesis.onvoiceschanged;
+    speechSynthesis.onvoiceschanged=()=>{
+      try{if(typeof prev==='function')prev()}catch(e){}
+      populateVoicePickers();
+      try{renderLessons()}catch(e){}
+    };
+  }catch(e){}
+
+  setTimeout(()=>{populateVoicePickers();try{renderLessons()}catch(e){}},500);
+})();
+</script>
 </body>
 </html>
