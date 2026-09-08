@@ -3879,7 +3879,7 @@ function renderStaffDirectory(){
   const due=(s.docs||[]).filter(d=>d.expiry&&new Date(d.expiry+'T12:00:00')<=new Date(Date.now()+30*86400000)).length;
   const abs=(s.absences||[]).length;
   const tr=s.training||{};
-  return '<button type="button" class="pass-staff-card" data-staff-record="'+s.id+'" onclick="window.selectStaffRecord(this.dataset.staffRecord)">'+
+  return '<button type="button" class="pass-staff-card" data-staff-record="'+s.id+'" onclick="document.getElementById(\'staffCardView\').style.display=\'none\';document.getElementById(\'staffRecordView\').style.display=\'block\';document.getElementById(\'staffEmpty\').style.display=\'none\';document.getElementById(\'staffProfile\').style.display=\'block\';if(window.selectStaffRecord)window.selectStaffRecord(this.dataset.staffRecord)">'+
     '<div class="pass-staff-card-top"><div class="pass-avatar large">'+custInitials(s.name)+'</div><span class="pass-status '+(s.status==='Active'?'active':'')+'">'+s.status+'</span></div>'+
     '<h3>'+s.name+'</h3><div class="pass-staff-role">'+s.role+'</div>'+
     '<div class="pass-staff-contact">'+(s.email||s.phone||'No contact details')+'</div>'+
