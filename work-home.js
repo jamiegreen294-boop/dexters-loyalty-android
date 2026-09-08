@@ -14,7 +14,8 @@ function start(){
  const title=node('h1','');title.id='workCoffeeHeadline';
  const count=node('div','work-count');count.append($('stampText'));count.append(' coffees collected');
  const originalMessage=$('stampMessage');originalMessage.hidden=true;
- hero.append(hello,title,coffee.querySelector('.progress'),count,$('stamps'),originalMessage,$('rewardCard'),collection);
+ hero.append(hello,title,coffee.querySelector('.progress'),count,$('stamps'),originalMessage,$('rewardCard'));
+ collection.classList.add('work-collection-standalone');
  greet.remove();coffee.remove();
  const grid=node('div','');grid.id='workQuickActions';grid.innerHTML='<button type="button" class="work-action" id="workRewards"><div class="wi">🎁</div><div class="wt">Your Rewards</div><div class="wd">Coffee, offers & treats</div></button><button type="button" class="work-action" id="workAgain"><div class="wi">⭐</div><div class="wt">Order Again</div><div class="wd">View your previous orders</div></button><button type="button" class="work-action" id="workSpin"><div class="wi">🎡</div><div class="wt">Spin to Win</div><div class="wd" id="workSpinNote">Play when activated</div></button><a class="work-action" href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><div class="wi">💬</div><div class="wt">Ask Dexter</div><div class="wd">Chat with us on WhatsApp</div></a>';
  offers.classList.add('work-deals');offers.querySelector('h2').textContent='Dexter’s Deals';offers.querySelector('h2').className='work-heading';
@@ -24,11 +25,18 @@ function start(){
  const rewardsPage=$('qrPage'),personalRewards=$('myIndividualOffersCard');
  const accountPage=$('accountPage');
  if(rewardsPage&&personalRewards){rewardsPage.append(personalRewards);rewardsPage.classList.add('work-rewards');personalRewards.querySelector('h2').textContent='Your Personal Rewards'}
- home.prepend(top,hero,grid,offers,usual,current);home.classList.add('work-home');
+ home.prepend(top,hero,collection,grid,offers,usual,current);home.classList.add('work-home');
  // The quick action and bottom navigation already provide WhatsApp access.
  for(const heading of home.querySelectorAll('.card > h2')){if(heading.textContent.trim()==='💬 Message Dexter’s')heading.closest('.card').remove()}
+ const pageHomeIds=['qrPage','accountPage','spinPage','staffPage','menuPage'];
+ for(const id of pageHomeIds){const page=$(id);if(!page)continue;const existing=[...page.querySelectorAll('a,button')].find(el=>/^(?:←\s*)?home$/i.test((el.textContent||'').trim()));if(!existing){const b=node('button','work-page-home','← Home');b.type='button';b.onclick=()=>nav('homePage');page.prepend(b)}}
  const menuLink=node('button','work-small','Browse the full menu');menuLink.type='button';menuLink.onclick=()=>nav('menuPage');home.append(menuLink);
- const staffLink=node('button','work-small','Staff / Admin');staffLink.type='button';staffLink.onclick=()=>nav('staffPage');top.append(staffLink);const staffNav=$('staffNav');function syncStaff(){staffLink.hidden=!staffNav||staffNav.classList.contains('hidden')}syncStaff();if(staffNav)new MutationObserver(syncStaff).observe(staffNav,{attributes:true,attributeFilter:['class']});
+ const staffLink=node('button','work-small','Staff / Admin');staffLink.type='button';staffLink.onclick=()=>nav('staffPage');top.append(staffLink);
+ const staffNav=$('staffNav'),roleBadge=$('roleBadge');
+ function syncStaff(){const role=((roleBadge?.textContent)||'').trim().toLowerCase();const roleAllowed=/admin|staff|manager/.test(role);const navAllowed=!!staffNav&&!staffNav.classList.contains('hidden');staffLink.hidden=!(roleAllowed||navAllowed)}
+ syncStaff();
+ if(staffNav)new MutationObserver(syncStaff).observe(staffNav,{attributes:true,attributeFilter:['class']});
+ if(roleBadge)new MutationObserver(syncStaff).observe(roleBadge,{childList:true,characterData:true,subtree:true,attributes:true});
  const homeNav=node('nav','');homeNav.id='workHomeNav';homeNav.setAttribute('aria-label','Customer home navigation');homeNav.innerHTML='<button type="button" id="workNavHome" class="active" aria-current="page"><b>🏠</b>Home</button><a href="/collection-order-test.html"><b>🍔</b>Order</a><button type="button" id="workNavRewards"><b>🎁</b>Rewards</button><a href="https://wa.me/441414735249" target="_blank" rel="noopener noreferrer"><b>💬</b>Dexter</a><button type="button" id="workNavAccount"><b>👤</b>Account</button>';document.body.append(homeNav);
  $('workNavHome').onclick=()=>nav('homePage');
  function syncWorkNav(){const rewardsOn=!!rewardsPage&&!rewardsPage.classList.contains('hidden'),accountOn=!!accountPage&&!accountPage.classList.contains('hidden'),homeOn=!rewardsOn&&!accountOn&&!home.classList.contains('hidden');for(const [id,selected]of [['workNavHome',homeOn],['workNavRewards',rewardsOn],['workNavAccount',accountOn]]){const button=$(id);button.classList.toggle('active',selected);if(selected)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')}}
@@ -70,7 +78,7 @@ function start(){
  }
  const observeView=()=>{if($('appView').classList.contains('hidden'))clear();else refresh()};new MutationObserver(observeView).observe($('appView'),{attributes:true,attributeFilter:['class']});new MutationObserver(observeView).observe(home,{attributes:true,attributeFilter:['class']});
  window.addEventListener('storage',e=>{if(e.key==='sb-bpnkouymdvcogeaqjmxl-auth-token'){clear();refresh()}});document.addEventListener('visibilitychange',refresh);
- if(document.documentElement.dataset.layoutFixture==='true'){render([])}else{refresh();setInterval(refresh,15000)}
+ if(document.documentElement.dataset.layoutFixture==='true'){render([])}else{refresh();setInterval(refresh,30000)}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
