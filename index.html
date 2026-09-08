@@ -5350,5 +5350,172 @@ renderLessons();renderTrainingManager();
   };
 })();
 </script>
+
+<style id="dexters-manual-handling-course-v3-20260908">
+.mh-course{border-radius:16px;overflow:hidden;border:1px solid #ddd4e4;background:#fff;box-shadow:0 8px 28px #00000010}
+.mh-topbar{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 14px;background:#4f0b70;color:#fff}
+.mh-topbar b{font-size:14px}.mh-topbar span{font-size:10px;opacity:.9}
+.mh-scene{padding:16px;background:linear-gradient(180deg,#faf7fc,#fff)}
+.mh-title{display:flex;gap:10px;align-items:flex-start}
+.mh-title .num{flex:0 0 32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#4f0b70;color:#fff;font-weight:900}
+.mh-title h3{margin:0 0 5px;font-size:19px}.mh-title p{margin:0;color:#625d65;line-height:1.48}
+.mh-law{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:#f0e7f5;color:#5b0b7e;font-size:11px;font-weight:800}
+.mh-demo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.mh-panel{position:relative;min-height:220px;border-radius:14px;overflow:hidden;padding:10px;border:1px solid}
+.mh-panel.bad{background:#fff3f5;border-color:#edc6ce}.mh-panel.good{background:#f1faf3;border-color:#c3e0c9}
+.mh-label{font-size:11px;font-weight:900;text-transform:uppercase}.mh-panel.bad .mh-label{color:#a21e39}.mh-panel.good .mh-label{color:#23733a}
+.mh-room{position:absolute;left:10px;right:10px;bottom:10px;height:165px;border-radius:10px;background:linear-gradient(#eee7e2 0 64%,#c5b8aa 64% 67%,#ddd4c9 67%);overflow:hidden}
+.mh-shelf{position:absolute;right:8px;bottom:38px;width:54px;height:105px;border:5px solid #765b45;border-top-width:7px}
+.mh-shelf:before,.mh-shelf:after{content:"";position:absolute;left:-5px;right:-5px;height:4px;background:#765b45}.mh-shelf:before{top:33px}.mh-shelf:after{top:68px}
+.mh-box{position:absolute;width:48px;height:38px;background:#c89155;border:3px solid #8d5c32;border-radius:4px;box-shadow:inset 0 0 0 2px #e6bd87}
+.mh-box:after{content:"STOCK";position:absolute;inset:0;display:grid;place-items:center;font-size:8px;font-weight:900;color:#65401f}
+.mh-person{position:absolute;width:78px;height:118px;left:24px;bottom:28px;transform-origin:42px 52px}
+.mh-head{position:absolute;width:27px;height:27px;border-radius:50%;background:#e6b08c;left:25px;top:0;border:2px solid #744c3c}
+.mh-body{position:absolute;width:34px;height:50px;border-radius:8px;background:#522072;left:22px;top:29px}
+.mh-arm,.mh-leg{position:absolute;width:9px;border-radius:7px;transform-origin:50% 6px}
+.mh-arm{height:46px;background:#e6b08c;top:35px}.mh-arm.a{left:18px;transform:rotate(35deg)}.mh-arm.b{right:17px;transform:rotate(-35deg)}
+.mh-leg{height:52px;background:#272329;top:73px}.mh-leg.a{left:25px;transform:rotate(8deg)}.mh-leg.b{right:24px;transform:rotate(-8deg)}
+.mh-arrow{position:absolute;font-size:31px;font-weight:900;animation:mhArrow 1.2s ease-in-out infinite}
+.mh-cross,.mh-tick{position:absolute;right:10px;top:10px;font-size:30px;font-weight:900}.mh-cross{color:#c92945}.mh-tick{color:#229243}
+.mh-wet{position:absolute;left:80px;bottom:14px;width:60px;height:16px;border-radius:50%;background:#71b9e7aa;animation:mhPulse 1.6s ease-in-out infinite}
+.mh-trolley{position:absolute;left:18px;bottom:22px;width:72px;height:54px;border:4px solid #555;border-top:0;border-radius:4px}
+.mh-trolley:before,.mh-trolley:after{content:"";position:absolute;bottom:-12px;width:15px;height:15px;border-radius:50%;background:#333}.mh-trolley:before{left:7px}.mh-trolley:after{right:7px}
+.mh-trolley-handle{position:absolute;left:-11px;top:-32px;width:10px;height:38px;border-left:4px solid #555;border-top:4px solid #555;border-radius:4px}
+.mh-routebox{position:absolute;right:4px;bottom:22px;width:74px;height:48px;background:#c89155;border:3px solid #8d5c32;border-radius:4px}
+.mh-panel.bad .mh-person.bend{transform:translate(18px,26px) rotate(38deg)}
+.mh-panel.good .mh-person.squat .mh-body{transform:translateY(12px)}
+.mh-panel.good .mh-person.squat .mh-leg.a{transform:rotate(48deg) translate(5px,0)}.mh-panel.good .mh-person.squat .mh-leg.b{transform:rotate(-48deg) translate(-5px,0)}
+.mh-carrybad .mh-box{left:96px;bottom:84px;animation:mhFar 1.5s ease-in-out infinite}.mh-carrygood .mh-box{left:72px;bottom:62px;animation:mhClose 1.5s ease-in-out infinite}
+.mh-twistbad .mh-person{animation:mhTwist 1.4s ease-in-out infinite}.mh-turngood .mh-person{animation:mhStepTurn 1.4s ease-in-out infinite}
+.mh-trolleymove{animation:mhRoll 2.2s ease-in-out infinite}
+.mh-steps{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 0}.mh-steps span{background:#f6f1f8;border:1px solid #e1d7e6;border-radius:999px;padding:6px 9px;font-size:10px;font-weight:900;color:#53335f}
+.mh-steps span.active{background:#4f0b70;color:#fff}
+.mh-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;border-top:1px solid #eee6f1}
+.mh-controls .video-progress{flex:1;min-width:100px}
+.mh-challenge{padding:14px;border-top:1px solid #eee6f1;background:#fff9ed}
+.mh-hazards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.mh-hazard{display:flex;gap:8px;align-items:center;background:#fff;border:1px solid #eadfc8;border-radius:8px;padding:9px;font-size:12px}
+.mh-challenge-result{font-size:12px;margin-top:8px}
+@keyframes mhArrow{0%,100%{transform:translateX(0);opacity:.55}50%{transform:translateX(10px);opacity:1}}
+@keyframes mhPulse{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.12);opacity:1}}
+@keyframes mhFar{0%,100%{transform:translateX(0)}50%{transform:translateX(12px)}}
+@keyframes mhClose{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes mhTwist{0%,100%{transform:rotate(0)}50%{transform:rotate(20deg)}}
+@keyframes mhStepTurn{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(10px) rotate(8deg)}}
+@keyframes mhRoll{0%,100%{transform:translateX(0)}50%{transform:translateX(55px)}}
+@media(max-width:680px){.mh-demo,.mh-hazards{grid-template-columns:1fr}.mh-panel{min-height:205px}}
+</style>
+<script>
+(function(){
+  const MANUAL_TITLE='Manual handling & back safety';
+  window.manualHandlingChallengePassed=window.manualHandlingChallengePassed||{};
+
+  function person(extra){return '<div class="mh-person '+(extra||'')+'"><i class="mh-head"></i><i class="mh-body"></i><i class="mh-arm a"></i><i class="mh-arm b"></i><i class="mh-leg a"></i><i class="mh-leg b"></i></div>'}
+  function room(extra){return '<div class="mh-room '+(extra||'')+'"></div>'}
+  function visual(scene,bad){
+    if(scene===0){
+      return bad
+        ? room()+person('bend')+'<div class="mh-box" style="left:91px;bottom:30px"></div><span class="mh-arrow" style="left:105px;bottom:73px">↓</span>'
+        : room()+'<div class="mh-trolley mh-trolleymove"><i class="mh-trolley-handle"></i><div class="mh-box" style="left:10px;bottom:17px"></div></div><span class="mh-arrow" style="left:105px;bottom:62px">→</span>';
+    }
+    if(scene===1){
+      return bad
+        ? room()+'<div class="mh-box" style="left:94px;bottom:30px"></div>'+person('')+'<span class="mh-arrow" style="left:112px;bottom:88px">?</span>'
+        : room()+'<div class="mh-shelf"></div><div class="mh-box" style="left:95px;bottom:30px"></div>'+person('')+'<div style="position:absolute;left:87px;bottom:92px;font-size:10px;font-weight:900">TASK · LOAD · AREA · YOU</div>';
+    }
+    if(scene===2){
+      return bad
+        ? room()+'<div class="mh-wet"></div><div class="mh-routebox"></div>'+person('')+'<span class="mh-arrow" style="left:115px;bottom:76px">→</span>'
+        : room()+'<div class="mh-wet" style="opacity:.18"></div>'+person('')+'<span class="mh-arrow" style="left:112px;bottom:76px">→</span><div style="position:absolute;right:8px;bottom:20px;font-size:10px;font-weight:900;color:#23733a">ROUTE CLEARED</div>';
+    }
+    if(scene===3){
+      return bad
+        ? '<div class="mh-room mh-carrybad"></div>'+person('')+'<div class="mh-box" style="left:104px;bottom:84px"></div><span class="mh-arrow" style="left:132px;bottom:116px">↔</span>'
+        : '<div class="mh-room mh-carrygood"></div>'+person('squat')+'<div class="mh-box" style="left:71px;bottom:59px"></div><span class="mh-arrow" style="left:106px;bottom:108px">↑</span>';
+    }
+    if(scene===4){
+      return bad
+        ? room()+person('mh-twistbad')+'<div class="mh-box" style="left:74px;bottom:62px"></div><span class="mh-arrow" style="left:115px;bottom:104px">↻</span>'
+        : room()+person('mh-turngood')+'<div class="mh-box" style="left:72px;bottom:62px"></div><span class="mh-arrow" style="left:120px;bottom:92px">↪</span>';
+    }
+    return bad
+      ? room()+'<div class="mh-wet"></div>'+person('bend')+'<div class="mh-box" style="left:94px;bottom:30px"></div>'
+      : room()+'<div class="mh-trolley"><i class="mh-trolley-handle"></i></div>'+person('')+'<div style="position:absolute;right:8px;bottom:24px;font-size:10px;font-weight:900;color:#23733a">STOP · REPORT · IMPROVE</div>';
+  }
+
+  function renderManual(i){
+    const l=lessons[i],n=Math.min(videoScene[i]||0,l.scenes.length-1),s=l.scenes[n],meta=(typeof s[2]==='object'&&s[2])?s[2]:{};
+    const stage=document.getElementById('trainVideo'+i);if(!stage)return;
+    const pct=Math.round((n/Math.max(1,l.scenes.length-1))*100);
+    const isLast=n===l.scenes.length-1;
+    stage.innerHTML=
+      '<div class="mh-course">'+
+        '<div class="mh-topbar"><b>Dexter\'s Manual Handling Training — Scotland / UK</b><span>HSE approach · café scenarios</span></div>'+
+        '<div class="mh-scene">'+
+          '<div class="mh-title"><span class="num">'+(n+1)+'</span><div><h3>'+s[0]+'</h3><p>'+s[1]+'</p></div></div>'+
+          '<div class="mh-law">'+(meta.law||'HSE manual handling guidance')+'</div>'+
+          '<div class="mh-demo">'+
+            '<div class="mh-panel bad"><div class="mh-label">❌ Don\'t do this</div><span class="mh-cross">×</span>'+visual(n,true)+'<div style="position:absolute;left:10px;right:10px;bottom:7px;font-size:10px;font-weight:800;color:#8b2437">'+(meta.bad||'Unsafe shortcut')+'</div></div>'+
+            '<div class="mh-panel good"><div class="mh-label">✅ Do this instead</div><span class="mh-tick">✓</span>'+visual(n,false)+'<div style="position:absolute;left:10px;right:10px;bottom:7px;font-size:10px;font-weight:800;color:#286d3c">'+(meta.good||'Use the safer method')+'</div></div>'+
+          '</div>'+
+          '<div class="mh-steps">'+(meta.steps||['Avoid','Assess','Reduce']).map((x,k)=>'<span class="'+(k<=Math.min(n,2)?'active':'')+'">'+x+'</span>').join('')+'</div>'+
+        '</div>'+
+        '<div class="mh-controls"><button class="btn small" onclick="playTrainingVideo('+i+')">'+(videoTimers[i]?'Playing…':'▶ Play course')+'</button><button class="btn alt small" onclick="speakTrainingSceneNow('+i+')">🔊 Narrate this step</button><div class="video-progress"><i style="width:'+pct+'%"></i></div><span class="tiny">'+(n+1)+'/'+l.scenes.length+'</span></div>'+
+        (isLast?manualChallenge(i):'')+
+      '</div>';
+  }
+
+  function manualChallenge(i){
+    const passed=!!window.manualHandlingChallengePassed[i];
+    return '<div class="mh-challenge"><b>Interactive hazard check</b><p class="tiny">Before the knowledge test unlocks, identify every hazard in this delivery scenario.</p>'+
+      '<div class="mh-hazards">'+
+        '<label class="mh-hazard"><input type="checkbox" data-mh-hazard="wet"> Wet/slippery floor</label>'+
+        '<label class="mh-hazard"><input type="checkbox" data-mh-hazard="blocked"> Blocked carrying route</label>'+
+        '<label class="mh-hazard"><input type="checkbox" data-mh-hazard="load"> Heavy/awkward load not assessed</label>'+
+        '<label class="mh-hazard"><input type="checkbox" data-mh-hazard="height"> Poor storage height / reaching risk</label>'+
+      '</div>'+
+      '<button class="btn small" onclick="checkManualHandlingHazards('+i+')">'+(passed?'Hazard check passed ✓':'Check hazards')+'</button>'+
+      '<div class="mh-challenge-result" id="mhChallengeResult'+i+'">'+(passed?'<span class="ok">All hazards identified. The knowledge test is unlocked.</span>':'')+'</div></div>';
+  }
+
+  window.checkManualHandlingHazards=function(i){
+    const stage=document.getElementById('trainVideo'+i),checks=[...stage.querySelectorAll('[data-mh-hazard]')];
+    const chosen=checks.filter(x=>x.checked).length;
+    const out=document.getElementById('mhChallengeResult'+i);
+    if(chosen!==4){if(out)out.innerHTML='<span class="bad">There are four hazards in this scenario. Check the scene again and identify all four.</span>';return}
+    window.manualHandlingChallengePassed[i]=true;
+    trainState.watched[i]=true;
+    localStorage.setItem(trainingStorageKey?trainingStorageKey():TRAINKEY,JSON.stringify(trainState));
+    localStorage.setItem(TRAINKEY,JSON.stringify(trainState));
+    try{stopTrainingSpeech()}catch(e){}
+    renderLessons();
+  };
+
+  const previousRender=window.renderVideo;
+  window.renderVideo=function(i){
+    if(lessons[i]?.title===MANUAL_TITLE){renderManual(i);return}
+    previousRender(i);
+  };
+
+  const previousPlay=window.playTrainingVideo;
+  window.playTrainingVideo=function(i){
+    if(lessons[i]?.title!==MANUAL_TITLE){previousPlay(i);return}
+    try{stopVideo(i);stopTrainingSpeech()}catch(e){}
+    videoScene[i]=0;renderVideo(i);
+    try{speakTrainingSceneNow(i)}catch(e){}
+    videoTimers[i]=setInterval(()=>{
+      if((videoScene[i]||0)>=lessons[i].scenes.length-1){
+        stopVideo(i);renderVideo(i);return;
+      }
+      videoScene[i]=(videoScene[i]||0)+1;
+      renderVideo(i);
+      try{speakTrainingSceneNow(i)}catch(e){}
+      if(videoScene[i]>=lessons[i].scenes.length-1)stopVideo(i);
+    },11000);
+  };
+
+  try{renderLessons()}catch(e){}
+})();
+</script>
 </body>
 </html>
