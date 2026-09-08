@@ -5141,5 +5141,214 @@ renderLessons();renderTrainingManager();
   try{renderLessons();renderTrainingManager()}catch(e){}
 })();
 </script>
+
+<style id="dexters-training-audio-refresher-v1-20260908">
+.training-sound-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.training-sound-row .tiny{margin-left:auto}
+.refresher-badge{display:inline-block;margin-left:7px;padding:3px 7px;border-radius:999px;background:#fff3cd;color:#7a5600;font-size:10px;font-weight:900}
+.refresher-overdue{background:#fde7eb;color:#a01d36}
+</style>
+<script>
+(function(){
+  const REFRESHER_WARNING_DAYS=30;
+  let trainingVoiceEnabled=true;
+  let trainingSpeech=null;
+
+  window.stopTrainingSpeech=function(){
+    try{speechSynthesis.cancel()}catch(e){}
+    trainingSpeech=null;
+  };
+
+  window.toggleTrainingSound=function(){
+    trainingVoiceEnabled=!trainingVoiceEnabled;
+    if(!trainingVoiceEnabled)stopTrainingSpeech();
+    try{localStorage.setItem('dexters_training_sound',trainingVoiceEnabled?'1':'0')}catch(e){}
+    document.querySelectorAll('[data-training-sound-label]').forEach(el=>el.textContent=trainingVoiceEnabled?'🔊 Sound on':'🔇 Sound off');
+  };
+
+  try{
+    const saved=localStorage.getItem('dexters_training_sound');
+    if(saved==='0')trainingVoiceEnabled=false;
+  }catch(e){}
+
+  function speakTrainingScene(i){
+    if(!trainingVoiceEnabled||!('speechSynthesis' in window))return;
+    stopTrainingSpeech();
+    const l=lessons[i],s=l.scenes[Math.min(videoScene[i]||0,l.scenes.length-1)];
+    if(!s)return;
+    const meta=(s&&typeof s[2]==='object'&&s[2])?s[2]:{};
+    const parts=[
+      s[0],
+      s[1],
+      meta.bad?('Do not do this: '+meta.bad):'',
+      meta.good?('Do this instead: '+meta.good):''
+    ].filter(Boolean);
+    const u=new SpeechSynthesisUtterance(parts.join('. '));
+    u.rate=0.92;u.pitch=1;u.volume=1;
+    const voices=speechSynthesis.getVoices?.()||[];
+    const gb=voices.find(v=>/^en-GB/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang));
+    if(gb)u.voice=gb;
+    trainingSpeech=u;
+    try{speechSynthesis.speak(u)}catch(e){}
+  }
+
+  // Replace the player so every scene can narrate itself.
+  const baseRender=window.renderVideo;
+  window.renderVideo=function(i){
+    baseRender(i);
+    const stage=document.getElementById('trainVideo'+i);if(!stage)return;
+    const controls=stage.querySelector('.training-controls');
+    if(controls&&!controls.querySelector('[data-training-sound-label]')){
+      const row=document.createElement('div');
+      row.className='training-sound-row';
+      row.innerHTML='<button type="button" class="btn alt small" onclick="toggleTrainingSound()"><span data-training-sound-label>'+(trainingVoiceEnabled?'🔊 Sound on':'🔇 Sound off')+'</span></button><button type="button" class="btn alt small" onclick="speakTrainingSceneNow('+i+')">🔁 Repeat narration</button><span class="tiny">UK English narration</span>';
+      controls.appendChild(row);
+    }
+  };
+  window.speakTrainingSceneNow=function(i){speakTrainingScene(i)};
+
+  window.playTrainingVideo=function(i){
+    stopVideo(i);stopTrainingSpeech();videoScene[i]=0;renderVideo(i);speakTrainingScene(i);
+    const advance=()=>{
+      videoScene[i]++;
+      if(videoScene[i]>=lessons[i].scenes.length){
+        stopVideo(i);stopTrainingSpeech();videoScene[i]=lessons[i].scenes.length-1;
+        trainState.watched[i]=true;
+        localStorage.setItem(trainingStorageKey?trainingStorageKey():TRAINKEY,JSON.stringify(trainState));
+        localStorage.setItem(TRAINKEY,JSON.stringify(trainState));
+        renderLessons();return;
+      }
+      renderVideo(i);speakTrainingScene(i);
+    };
+    videoTimers[i]=setInterval(advance,9000);
+  };
+
+  function trainingRowDueState(row){
+    if(!row||row.status!=='Completed'||!row.refresher_due_at)return null;
+    const due=new Date(row.refresher_due_at).getTime(),now=Date.now();
+    if(!Number.isFinite(due))return null;
+    const days=Math.ceil((due-now)/86400000);
+    if(days<0)return {state:'overdue',days:Math.abs(days),dueAt:row.refresher_due_at};
+    if(days<=REFRESHER_WARNING_DAYS)return {state:'due',days,dueAt:row.refresher_due_at};
+    return null;
+  }
+
+  window.applyTrainingRefreshersFromDb=function(rows){
+    if(!Array.isArray(rows))return;
+    let changed=false;
+    rows.forEach(r=>{
+      if(r.module_key==='final-certification')return;
+      const due=trainingRowDueState(r);if(!due)return;
+      const idx=lessons.findIndex(l=>trainingModuleKey(l.title)===r.module_key||l.title===r.module_title);
+      if(idx<0)return;
+      trainState.refresherDue=trainState.refresherDue||{};
+      trainState.refresherDue[idx]={...due,moduleTitle:r.module_title};
+      if(due.state==='overdue'){
+        if(trainState.completed[idx]){delete trainState.completed[idx];changed=true}
+      }
+    });
+    if(changed){
+      trainState.certifiedAt=null;trainState.finalScore=null;
+      localStorage.setItem(trainingStorageKey(),JSON.stringify(trainState));
+      localStorage.setItem(TRAINKEY,JSON.stringify(trainState));
+    }
+  };
+
+  const baseLoad=window.loadSignedInTrainingFromDb;
+  window.loadSignedInTrainingFromDb=async function(){
+    if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.staff_record_id)return;
+    await baseLoad();
+    const {data,error}=await SB.from('backoffice_training_records').select('*').eq('staff_record_id',SECURE_ACCOUNT.staff_record_id).order('updated_at',{ascending:false});
+    if(error)throw error;
+    applyTrainingRefreshersFromDb(data||[]);
+    renderLessons();renderTrainingManager();applyMandatoryTrainingGate();
+  };
+
+  const baseRenderLessons=window.renderLessons;
+  window.renderLessons=function(){
+    baseRenderLessons();
+    const dueMap=trainState.refresherDue||{};
+    Object.keys(dueMap).forEach(k=>{
+      const i=Number(k),info=dueMap[k],video=document.getElementById('trainVideo'+i);
+      const lesson=video?.closest('.lesson');if(!lesson||lesson.querySelector('.refresher-badge'))return;
+      const b=lesson.querySelector('b');
+      if(b){
+        const span=document.createElement('span');
+        span.className='refresher-badge '+(info.state==='overdue'?'refresher-overdue':'');
+        span.textContent=info.state==='overdue'?'Refresher overdue':'Refresher due in '+info.days+' day'+(info.days===1?'':'s');
+        b.appendChild(span);
+      }
+    });
+  };
+
+  window.createTrainingRefresherAlerts=async function(rows){
+    if(!SB||!SECURE_SESSION||!Array.isArray(rows)||secureRoleRank(SECURE_ACCOUNT?.role||'Staff')<2)return;
+    const dueRows=rows.filter(r=>r.module_key!=='final-certification'&&trainingRowDueState(r));
+    for(const r of dueRows){
+      const info=trainingRowDueState(r),staff=staffDb.staff.find(s=>s.id===r.staff_record_id);
+      const alertKey='training-refresher:'+r.staff_record_id+':'+r.module_key+':'+String(r.refresher_due_at).slice(0,10);
+      const {data:existing}=await SB.from('backoffice_tasks').select('id').eq('task_type','Training refresher alert').contains('task_data',{alert_key:alertKey}).limit(1);
+      if(existing&&existing.length)continue;
+      await SB.from('backoffice_tasks').insert({
+        title:(info.state==='overdue'?'Training overdue · ':'Training refresher due · ')+(staff?.name||r.staff_record_id),
+        assigned_staff_record_id:null,
+        task_type:'Training refresher alert',
+        priority:info.state==='overdue'?'High':'Normal',
+        due_date:String(r.refresher_due_at).slice(0,10),
+        details:(staff?.name||'Staff')+' · '+r.module_title+' · '+(info.state==='overdue'?'refresher overdue':'refresher due in '+info.days+' day(s)'),
+        status:'Open',
+        tags:['Training','Refresher',info.state==='overdue'?'Overdue':'Due'],
+        task_data:{alert_key:alertKey,staff_record_id:r.staff_record_id,module_key:r.module_key,module_title:r.module_title,refresher_due_at:r.refresher_due_at,state:info.state},
+        created_by:SECURE_SESSION.user.id,
+        updated_at:new Date().toISOString()
+      });
+    }
+  };
+
+  const oldCollect=window.collectAutoAlerts;
+  if(typeof oldCollect==='function'){
+    window.collectAutoAlerts=function(){
+      const out=oldCollect();
+      if(activeWorkflow('training')&&typeof staffDb!=='undefined'){
+        staffDb.staff.forEach(s=>{
+          const rows=s.training?.records||[];
+          rows.forEach(r=>{
+            const info=trainingRowDueState(r);if(!info)return;
+            out.push({
+              level:info.state==='overdue'?'bad':'warn',
+              text:s.name+' · '+r.module_title+' · '+(info.state==='overdue'?'refresher overdue':'refresher due in '+info.days+' day'+(info.days===1?'':'s'))
+            });
+          });
+        });
+      }
+      return out;
+    };
+  }
+
+  const oldLoadCore=window.loadSecureCoreData;
+  if(typeof oldLoadCore==='function'){
+    window.loadSecureCoreData=async function(){
+      await oldLoadCore();
+      try{
+        if(secureRoleRank(SECURE_ACCOUNT?.role||'Staff')>=2){
+          const {data,error}=await SB.from('backoffice_training_records').select('*').order('updated_at',{ascending:false});
+          if(!error)await createTrainingRefresherAlerts(data||[]);
+        }
+      }catch(e){}
+      try{renderAutoAlerts()}catch(e){}
+    };
+  }
+
+  // When a refresher is passed, clear its refresher badge/state and save a new due date.
+  const oldPersist=window.persistSignedInTrainingModule;
+  window.persistSignedInTrainingModule=async function(i){
+    await oldPersist(i);
+    if(trainState.refresherDue&&trainState.refresherDue[i])delete trainState.refresherDue[i];
+    localStorage.setItem(trainingStorageKey(),JSON.stringify(trainState));
+    localStorage.setItem(TRAINKEY,JSON.stringify(trainState));
+    renderLessons();
+  };
+})();
+</script>
 </body>
 </html>
