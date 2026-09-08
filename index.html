@@ -313,7 +313,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-35-customer-app-invite">
+<main class="wrap" data-build="2026-09-08-website-pass-36-forced-customer-password-change">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -3361,7 +3361,7 @@ const customerBackBtn=$('customerBackToCards');if(customerBackBtn)customerBackBt
 $('custSearch').addEventListener('input',renderCustDirectory);
 let LAST_CUSTOMER_INVITE_TEXT='';
 function customerInviteMessage(d){
- return "Welcome to Dexter's Loyalty App\n\nApp: "+d.app_url+"\nEmail: "+d.email+"\nTemporary password: "+d.temporary_password+"\n\nUse these details to sign in. You can then use your Dexter's rewards, points and ordering features.";
+ return "Welcome to Dexter's Loyalty App\n\nApp: "+d.app_url+"\nEmail: "+d.email+"\nTemporary password: "+d.temporary_password+"\n\nUse these details to sign in. On your first login, the app will require you to choose your own password before you can continue.";
 }
 async function createBackOfficeCustomerLogin(){
  if(secureRoleRank(SECURE_ACCOUNT?.role)<2)return alert('Team Leader or above required.');
@@ -3380,7 +3380,7 @@ async function createBackOfficeCustomerLogin(){
    out.innerHTML='<span class="ok"><b>Customer app account created.</b></span><br>'+
     '<span class="tiny"><b>Created by:</b> '+escLive(d.created_by||currentActorName())+' · '+new Date().toLocaleString()+'</span><hr style="border:0;border-top:1px solid #ffffff17;margin:10px 0">'+
     '<b>'+escLive(d.full_name)+'</b><br><span class="muted">Email: '+escLive(d.email)+'</span><br>'+
-    '<span class="muted">Temporary password: <b>'+escLive(d.temporary_password)+'</b></span><br>'+
+    '<span class="muted">Temporary password: <b>'+escLive(d.temporary_password)+'</b></span><br><span class="tiny">Customer must change this password on first login.</span><br>'+
     '<span class="muted">Loyalty code: '+escLive(d.loyalty_code||'—')+'</span><br>'+
     '<span class="muted">App: '+escLive(d.app_url)+'</span>'+
     '<div class="row" style="margin-top:10px"><button class="btn alt small" onclick="copyCustomerInvite()">Copy login details</button><button class="btn alt small" onclick="shareCustomerInvite()">Share login details</button></div>';
