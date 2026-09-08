@@ -1,0 +1,22 @@
+const fs=require('fs'),assert=require('assert');
+const api=fs.readFileSync('supabase/functions/loyalty-growth-api/index.ts','utf8');
+const sql=fs.readFileSync('supabase/sql/loyalty-growth-live.sql','utf8');
+const ui=fs.readFileSync('web/loyalty-growth-live.js','utf8');
+const catering=fs.readFileSync('web/catering-order.html','utf8');
+const built=fs.readFileSync('dist/index.html','utf8');
+
+assert(api.includes("auth.getUser()"),'API must verify the signed-in user');
+assert(api.includes("backoffice_staff_accounts"),'API must recognise Back Office staff roles');
+assert(api.includes("Date.now()+48*3600000"),'API must enforce catering 48-hour notice');
+assert(api.includes("o.status==='collected'"),'Challenges must count collected orders only');
+assert(api.includes('SYSTEM TEST|DO NOT PREPARE|TEST ITEM'),'Challenges must exclude test orders');
+assert(api.includes("award_loyalty_points_service"),'Approved point rewards must use the existing idempotent points service');
+assert(sql.includes('enable row level security'),'New live tables must have RLS enabled');
+assert(sql.includes('revoke all'),'Tables must not be directly writable from customer clients');
+for(const key of ['catering_enabled','deals_enabled','challenges_enabled'])assert(ui.includes(key),key+' staff control is required');
+assert(ui.includes("setInterval(timer")===false,'Invalid interval wiring');
+assert(ui.includes('30000'),'Refresh interval must remain low-frequency');
+assert(catering.includes('48 hours'),'Customer catering page must explain notice period');
+assert(catering.includes("action,...p"),'Customer catering page must call the authenticated live API');
+assert(built.includes('dextersGrowthLiveLoader'),'Built app must include the growth integration');
+console.log('PASS live catering controls, deals, challenges and security wiring');

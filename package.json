@@ -9,7 +9,8 @@
     "test:auth-return": "node tests/auth-return.cjs",
     "test:collection-amend": "node tests/collection-amend-flow.test.cjs",
     "test:performance": "node tests/performance-regression.test.cjs",
-    "test:loyalty-flows": "node tests/loyalty-flows-regression.test.cjs"
+    "test:loyalty-flows": "node tests/loyalty-flows-regression.test.cjs",
+    "test:growth-live": "node tests/growth-live-regression.test.cjs"
   },
   "deploymentMarker": "pre-streamline-preview-trigger-20260907-1521"
 }
