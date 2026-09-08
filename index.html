@@ -4559,5 +4559,192 @@ if(window.__DEXTERS_PENDING_LOGIN){
 initSecureAuth();
 renderLessons();renderTrainingManager();
 </script>
+
+<script id="dexters-uk-hr-compliance-20260908">
+(function(){
+  // UK HR / employment / cafe compliance additions for Dexter's Back Office.
+  // These records support compliance workflows; they do not replace case-specific legal advice.
+  const addDoc=(cat,doc)=>{
+    const a=STAFF_DOCUMENT_LIBRARY[cat]||(STAFF_DOCUMENT_LIBRARY[cat]=[]);
+    if(!a.some(x=>x.id===doc.id))a.push(doc);
+  };
+  addDoc("Employment & Onboarding",{id:"equality_policy_ack",title:"Equality, Anti-Harassment & Dignity at Work Acknowledgement",review:"On issue/change",prompt:"Policy version/date, equality and anti-harassment standards explained, reporting route, non-retaliation and staff acknowledgement."});
+  addDoc("Employment & Onboarding",{id:"pension_record",title:"Workplace Pension Auto-Enrolment / Postponement Record",review:"On eligibility/postponement/change",prompt:"Assessment date, pension status, postponement if used, communications issued and payroll/pension follow-up."});
+
+  addDoc("HR & Attendance",{id:"family_leave",title:"Family / Statutory Leave Request & Outcome",review:"Per request",prompt:"Leave type, notice received, eligibility, dates, statutory pay status, evidence where lawfully required, decision and return arrangements."});
+  addDoc("HR & Attendance",{id:"carers_dependants",title:"Carer's Leave / Time Off for Dependants Record",review:"Per event/request",prompt:"Type of leave, dependant relationship, dates/time, notice, unpaid/paid status under Dexter's policy, decision and follow-up."});
+  addDoc("HR & Attendance",{id:"reasonable_adjustment",title:"Reasonable Adjustment / Workplace Support Record",review:"On request / review",prompt:"Barrier or disadvantage, worker's requested adjustment, consultation, medical/occupational information where relevant, agreed adjustment, implementation and review date."});
+  addDoc("HR & Attendance",{id:"harassment_equalities",title:"Bullying, Harassment or Equality Concern Record",review:"Per concern",prompt:"Concern raised, protected-characteristic or harassment context if relevant, immediate safeguarding, investigation route, confidentiality, outcome, action and appeal/follow-up."});
+  addDoc("HR & Attendance",{id:"whistleblowing",title:"Whistleblowing / Protected Disclosure Record",review:"Per disclosure",prompt:"Public-interest concern, date/method raised, confidentiality request, recipient, immediate risk action, investigation, outcome/feedback and protection from detriment."});
+  addDoc("HR & Attendance",{id:"working_time",title:"Working Time / 48-Hour Opt-Out Record",review:"If used / withdrawal",prompt:"Voluntary written opt-out for adult workers only, effective date, notice to cancel, cancellation date and manager review. Never use for under-18 workers."});
+  addDoc("HR & Attendance",{id:"holiday_pay_record",title:"Annual Leave & Holiday Pay Record",review:"Ongoing / each leave year",prompt:"Holiday taken, carried over, holiday pay details, payments in lieu on termination and six-year record retention."});
+  addDoc("HR & Attendance",{id:"nmw_record",title:"National Minimum Wage Compliance Check",review:"Pay-rate change / periodic",prompt:"Pay reference period, age/rate band, hours counted, gross eligible pay, deductions/allowances checked, effective hourly rate and reviewer."});
+  addDoc("HR & Attendance",{id:"termination_record",title:"Termination / Dismissal Outcome Record",review:"Per case",prompt:"Reason, fair procedure followed, meetings/evidence, notice/pay in lieu, appeal right/outcome, final pay/holiday and property/access closure."});
+
+  addDoc("Health & Safety",{id:"pregnancy_risk",title:"Pregnancy / New Mother Individual Risk Assessment",review:"On notification and regularly as circumstances change",prompt:"Pregnancy/new-mother/breastfeeding status, work activities and hazards, medical advice, controls/adjustments, night work/rest needs, review dates and worker acknowledgement."});
+  addDoc("Health & Safety",{id:"coffee_hot_drinks",title:"Coffee Machine / Hot Drinks Safety & Competency Sign-Off",review:"Before use / refresher",prompt:"Espresso machine, steam wand, boiling water, burns/scalds, pressure release, cleaning chemicals, shutdown/isolation, safe carrying and competency."});
+
+  Object.assign(STAFF_DOC_FORM_FIELDS,{
+    family_leave:[
+      {id:"leaveType",label:"Leave type",type:"select",options:["Maternity","Paternity","Adoption","Shared parental","Neonatal care","Parental bereavement","Bereaved partner paternity","Unpaid parental leave","Other statutory/family leave"]},
+      {id:"requestDate",label:"Notice / request received",type:"date"},
+      {id:"leaveFrom",label:"Leave from",type:"date"},
+      {id:"leaveTo",label:"Leave to / expected return",type:"date"},
+      {id:"eligibility",label:"Eligibility / qualifying conditions checked",type:"select",options:["Confirmed","Further check required","Not eligible"]},
+      {id:"payStatus",label:"Statutory / contractual pay status",type:"textarea"},
+      {id:"evidence",label:"Evidence / declarations received (only where permitted)",type:"textarea"},
+      {id:"outcome",label:"Outcome / arrangements",type:"textarea"},
+      {id:"returnPlan",label:"Return / keeping-in-touch arrangements",type:"textarea"}
+    ],
+    carers_dependants:[
+      {id:"leaveType",label:"Record type",type:"select",options:["Carer's leave","Emergency time off for dependant","Compassionate leave","Other"]},
+      {id:"requestDate",label:"Request / notification date",type:"date"},
+      {id:"dependant",label:"Dependant relationship / care context",type:"text"},
+      {id:"from",label:"From",type:"datetime-local"},
+      {id:"to",label:"To",type:"datetime-local"},
+      {id:"notice",label:"Notice / information provided",type:"textarea"},
+      {id:"pay",label:"Pay status under policy",type:"select",options:["Unpaid statutory leave","Paid by Dexter's policy","Annual leave used","Other"]},
+      {id:"outcome",label:"Outcome / follow-up",type:"textarea"}
+    ],
+    reasonable_adjustment:[
+      {id:"requestDate",label:"Request / need identified",type:"date"},
+      {id:"barrier",label:"Workplace barrier / disadvantage",type:"textarea"},
+      {id:"requested",label:"Adjustment requested / suggested",type:"textarea"},
+      {id:"consultation",label:"Discussion with worker",type:"textarea"},
+      {id:"evidence",label:"Relevant medical / occupational advice (minimum necessary)",type:"textarea"},
+      {id:"decision",label:"Adjustment decision and reasons",type:"textarea"},
+      {id:"implementation",label:"Implementation actions / owner",type:"textarea"},
+      {id:"review",label:"Review date",type:"date"}
+    ],
+    harassment_equalities:[
+      {id:"raisedDate",label:"Date concern raised",type:"date"},
+      {id:"concernType",label:"Concern type",type:"select",options:["Bullying","Harassment","Sexual harassment","Discrimination","Victimisation","Other equality concern"]},
+      {id:"details",label:"Concern / allegation",type:"textarea"},
+      {id:"people",label:"People / witnesses involved",type:"textarea"},
+      {id:"immediate",label:"Immediate safeguarding / separation action",type:"textarea"},
+      {id:"investigation",label:"Investigation and evidence",type:"textarea"},
+      {id:"outcome",label:"Outcome / action",type:"textarea"},
+      {id:"appeal",label:"Appeal / follow-up / anti-retaliation check",type:"textarea"}
+    ],
+    whistleblowing:[
+      {id:"raisedDate",label:"Date disclosure raised",type:"date"},
+      {id:"category",label:"Public-interest wrongdoing category",type:"select",options:["Criminal offence","Health & safety danger","Legal breach","Environmental harm","Miscarriage of justice","Cover-up","Sexual harassment / systemic wrongdoing","Other public-interest concern"]},
+      {id:"details",label:"Disclosure details",type:"textarea"},
+      {id:"confidentiality",label:"Confidentiality requested?",type:"select",options:["No","Yes","Anonymous disclosure"]},
+      {id:"recipient",label:"Received / handled by",type:"text"},
+      {id:"immediate",label:"Immediate risk-control action",type:"textarea"},
+      {id:"investigation",label:"Investigation / referral",type:"textarea"},
+      {id:"outcome",label:"Outcome / feedback / detriment check",type:"textarea"}
+    ],
+    working_time:[
+      {id:"adult",label:"Worker is aged 18 or over?",type:"select",options:["Yes","No — opt-out must not be used"]},
+      {id:"agreementDate",label:"Written opt-out agreement date",type:"date"},
+      {id:"effectiveDate",label:"Effective date",type:"date"},
+      {id:"voluntary",label:"Worker confirms agreement is voluntary?",type:"select",options:["Yes","No"]},
+      {id:"notice",label:"Notice required to cancel (7 days to max 3 months)",type:"text"},
+      {id:"withdrawal",label:"Withdrawal / cancellation date",type:"date"},
+      {id:"hoursReview",label:"Working-hours / fatigue review notes",type:"textarea"}
+    ],
+    holiday_pay_record:[
+      {id:"leaveYear",label:"Leave year",type:"text"},
+      {id:"taken",label:"Holiday taken (dates / days / hours)",type:"textarea"},
+      {id:"carried",label:"Holiday carried over",type:"text"},
+      {id:"pay",label:"Holiday pay and components included",type:"textarea"},
+      {id:"pilon",label:"Payment in lieu of unused holiday (if employment ended)",type:"textarea"},
+      {id:"recordDate",label:"Record date",type:"date"},
+      {id:"reviewer",label:"Checked by",type:"text"}
+    ],
+    nmw_record:[
+      {id:"period",label:"Pay reference period",type:"text"},
+      {id:"ageBand",label:"Worker age / applicable rate band",type:"text"},
+      {id:"hours",label:"Hours counted for minimum-wage purposes",type:"number"},
+      {id:"pay",label:"Eligible gross pay (£)",type:"number"},
+      {id:"deductions",label:"Deductions / allowances reviewed",type:"textarea"},
+      {id:"effectiveRate",label:"Calculated effective hourly rate (£)",type:"number"},
+      {id:"rateRequired",label:"Applicable statutory minimum rate (£)",type:"number"},
+      {id:"outcome",label:"Outcome",type:"select",options:["Compliant","Correction required","Further payroll check required"]},
+      {id:"reviewer",label:"Reviewed by",type:"text"}
+    ],
+    termination_record:[
+      {id:"reason",label:"Termination / dismissal reason",type:"textarea"},
+      {id:"procedure",label:"Procedure followed / meetings / evidence",type:"textarea"},
+      {id:"decisionDate",label:"Decision date",type:"date"},
+      {id:"lastDay",label:"Last day of employment",type:"date"},
+      {id:"notice",label:"Notice / pay in lieu arrangements",type:"textarea"},
+      {id:"holiday",label:"Final holiday entitlement / payment",type:"textarea"},
+      {id:"appeal",label:"Appeal right and outcome",type:"textarea"},
+      {id:"property",label:"Property, keys and system access closed",type:"textarea"}
+    ],
+    pregnancy_risk:[
+      {id:"notifiedDate",label:"Written notification date",type:"date"},
+      {id:"status",label:"Status",type:"select",options:["Pregnant","Gave birth within last 6 months","Breastfeeding"]},
+      {id:"activities",label:"Normal work activities / shift pattern",type:"textarea"},
+      {id:"hazards",label:"Specific hazards identified",type:"textarea"},
+      {id:"medical",label:"Medical / midwife recommendations",type:"textarea"},
+      {id:"controls",label:"Controls / changes / adjustments",type:"textarea"},
+      {id:"nightWork",label:"Night work / rest considerations",type:"textarea"},
+      {id:"reviewDate",label:"Next review date",type:"date"},
+      {id:"shared",label:"Findings discussed and shared with worker?",type:"select",options:["Yes","No — action required"]}
+    ],
+    coffee_hot_drinks:[
+      {id:"equipment",label:"Equipment covered",type:"textarea"},
+      {id:"hazards",label:"Burn / scald / steam / pressure hazards explained",type:"select",options:["Yes","No"]},
+      {id:"cleaning",label:"Safe cleaning / chemical procedure demonstrated",type:"select",options:["Yes","No"]},
+      {id:"shutdown",label:"Shutdown / isolation procedure demonstrated",type:"select",options:["Yes","No"]},
+      {id:"practical",label:"Practical competency observed",type:"textarea"},
+      {id:"outcome",label:"Outcome",type:"select",options:["Authorised","Further training required","Not authorised"]},
+      {id:"trainer",label:"Trainer / assessor",type:"text"},
+      {id:"review",label:"Refresher / review date",type:"date"}
+    ]
+  });
+
+  if(typeof lessons!=="undefined" && Array.isArray(lessons)){
+    const addLesson=l=>{if(!lessons.some(x=>x.title===l.title))lessons.push(l)};
+    addLesson({group:"Cafe safety",title:"Coffee machine, steam & hot drinks safety",icon:"☕",scenes:[
+      ["Hot drinks can cause serious burns","Treat espresso machines, steam wands, boiling water and hot cups as burn/scald hazards."],
+      ["Use equipment only when trained","Follow the machine procedure, keep hands clear of steam and release pressure safely."],
+      ["Carry and serve safely","Do not overfill, use stable trays/cups and warn customers when drinks are very hot."],
+      ["Clean and isolate correctly","Use the approved cleaning chemical and shutdown/isolation steps before maintenance or deep cleaning."]
+    ],questions:[
+      ["Who should use the coffee machine?",["Anyone","Only trained/authorised staff","Customers"],1],
+      ["What is a main steam-wand risk?",["Cold injury","Burn/scald","Noise only"],1],
+      ["Before deep cleaning or maintenance?",["Keep it running","Follow shutdown/isolation procedure","Add more pressure"],1]
+    ]});
+    addLesson({group:"People & HR",title:"Equality, dignity, bullying & harassment",icon:"🤝",scenes:[
+      ["Treat people fairly","Dexter's does not accept discrimination, harassment, sexual harassment, bullying or victimisation."],
+      ["Speak up early","Staff should know how to raise a concern with a manager or through the formal grievance route."],
+      ["No retaliation","Nobody should be disadvantaged for raising a genuine concern or supporting an investigation."],
+      ["Keep matters confidential","Only share case information with people who genuinely need it to handle the issue."]
+    ],questions:[
+      ["What should staff do about harassment?",["Ignore it","Raise it through the correct route","Post it publicly"],1],
+      ["Can someone be punished for raising a genuine concern?",["Yes","No","Only if busy"],1],
+      ["How should case information be handled?",["Need-to-know confidentially","Shared with everyone","Posted in group chat"],0]
+    ]});
+    addLesson({group:"People & HR",title:"Speaking up & whistleblowing",icon:"📣",scenes:[
+      ["Whistleblowing is different from a personal grievance","It concerns wrongdoing in the public interest, such as legal breaches or danger to health and safety."],
+      ["Use the reporting route","Raise the concern with the appropriate manager or other permitted route and give factual information."],
+      ["Protection matters","A worker making a protected disclosure must not be subjected to detriment for speaking up."],
+      ["Urgent safety issues come first","Take immediate steps to control serious risks while the concern is investigated."]
+    ],questions:[
+      ["Whistleblowing usually concerns?",["A public-interest wrongdoing","A holiday request","A menu preference"],0],
+      ["Should a worker suffer detriment for a protected disclosure?",["Yes","No","Only managers decide"],1],
+      ["If there is immediate danger?",["Control/escalate the risk","Wait a month","Delete the record"],0]
+    ]});
+    addLesson({group:"People & HR",title:"Working time, breaks & fatigue",icon:"⏱️",scenes:[
+      ["Accurate time records matter","Clocking and rota records should reflect the hours actually worked."],
+      ["Rest and fatigue are safety issues","Managers must plan shifts and breaks in line with legal requirements and safe working."],
+      ["48-hour opt-outs are voluntary","Adult workers may agree in writing; under-18 workers cannot use the adult opt-out."],
+      ["Raise unsafe fatigue","If hours or fatigue may make work unsafe, tell the manager and record the concern."]
+    ],questions:[
+      ["Can an under-18 worker sign the adult 48-hour opt-out?",["Yes","No","Only weekends"],1],
+      ["Should time records match actual work?",["Yes","No","Only payroll week"],0],
+      ["What should staff do about unsafe fatigue?",["Ignore it","Raise it","Work faster"],1]
+    ]});
+  }
+
+  try{populateStaffDocLibrary()}catch(e){}
+  try{renderLessons();renderTrainingManager();renderRefresherAndFinal()}catch(e){}
+})();
+</script>
 </body>
 </html>
