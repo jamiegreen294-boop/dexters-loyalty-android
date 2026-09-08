@@ -18,3 +18,12 @@ html[data-theme=standrew] body{background:linear-gradient(145deg,#0878be 0 44%,r
 .home-shortcuts .feature-card{min-height:112px;padding:13px}.home-shortcuts .feature-card span{font-size:24px;margin-bottom:9px}
 .home-shortcuts .feature-card small{display:none}
 @media(max-width:380px){.order-hero-actions{grid-template-columns:1fr}.home-shortcuts{grid-template-columns:1fr 1fr}.home-shortcuts .feature-card:last-child{grid-column:1/-1}}
+
+/* GitHub Pages test-only theme preview controls */
+.theme-preview-bar{position:sticky;top:0;z-index:30;margin:0 auto 10px;width:min(100%,560px);padding:10px 12px;background:rgba(5,11,25,.96);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.theme-preview-bar b{display:block;font-size:12px;margin-bottom:8px}.theme-preview-buttons{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.theme-preview-buttons button{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:8px 11px;font-size:12px;font-weight:800}
+.theme-preview-buttons button.active{background:var(--accent);color:var(--accentText);border-color:var(--accent)}
+html[data-theme=pride] .logo-mark{background:linear-gradient(135deg,#e40303,#ff8c00,#ffed00,#008026,#24408e,#732982);color:#fff}
+html[data-theme=burns] .logo-mark{background:linear-gradient(135deg,#17365d 45%,#a1202f 46% 55%,#f2c14e 56%);color:#fff}
+html[data-theme=standrew] .logo-mark{background:linear-gradient(135deg,#0878be 42%,#fff 43% 56%,#075294 57%);color:#fff}
