@@ -1,0 +1,13 @@
+{
+  "name":"Dexter's Staff",
+  "short_name":"Dexter Staff",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#f5f3f7",
+  "theme_color":"#5b0b7e",
+  "description":"Dexter's staff rota, training, leave and shift app",
+  "icons":[
+    {"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
