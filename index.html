@@ -291,7 +291,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-22-live-loyalty-customers">
+<main class="wrap" data-build="2026-09-08-website-pass-23-live-customer-delete-sync">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -3096,6 +3096,7 @@ async function syncLiveCustomers(){
    const rows=await liveRpc('backoffice_live_customer_feed');
    const list=Array.isArray(rows)?rows:[];
    const byLive=new Map((customerDb.customers||[]).filter(x=>x.liveId).map(x=>[x.liveId,x]));
+   const liveIds=new Set(list.map(r=>r.id));
    list.forEach(r=>{
      let cu=byLive.get(r.id)||customerDb.customers.find(x=>x.id===r.id);
      if(!cu){
@@ -3108,9 +3109,15 @@ async function syncLiveCustomers(){
      cu.consent={...(cu.consent||{}),marketing:!!r.marketing_consent,sms:!!r.sms_consent,email:!!r.email_consent,termsAccepted:!!r.terms_accepted,privacyAccepted:!!r.privacy_accepted,recorded:!!r.consent_recorded,version:r.consent_version||'',source:r.consent_source||'',updatedAt:r.consent_at||null,note:(cu.consent||{}).note||''};
      cu.lastLiveSync=new Date().toISOString();
    });
+   const removed=customerDb.customers.filter(x=>x.source==='Live Loyalty'&&x.liveId&&!liveIds.has(x.liveId));
+   if(removed.length){
+     const removedIds=new Set(removed.map(x=>x.id));
+     customerDb.customers=customerDb.customers.filter(x=>!removedIds.has(x.id));
+     if(removedIds.has(customerDb.selected)){customerDb.selected=customerDb.customers[0]?.id||null;CUSTOMER_RECORD_OPEN=false}
+   }
    localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));
    renderCustomerDb();
-   if(status)status.innerHTML='<span class="ok">'+list.length+' live loyalty customer(s) synced · '+new Date().toLocaleTimeString()+'</span>';
+   if(status)status.innerHTML='<span class="ok">'+list.length+' live loyalty customer(s) synced'+(removed.length?' · '+removed.length+' deleted account(s) removed from Back Office':'')+' · '+new Date().toLocaleTimeString()+'</span>';
  }catch(e){if(status)status.innerHTML='<span class="bad">Live customer sync failed: '+escLive(e.message)+'</span>'}
 }
 window.syncLiveCustomers=syncLiveCustomers;
