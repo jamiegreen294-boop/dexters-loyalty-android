@@ -5853,5 +5853,305 @@ renderLessons();renderTrainingManager();
   setTimeout(()=>{populateVoicePickers();try{renderLessons()}catch(e){}},500);
 })();
 </script>
+<!-- DEXTERS_TRAINING_V2_14_MODULES -->
+<script>
+(function(){
+'use strict';
+
+const DX_TRAIN={
+  modules:[],
+  records:[],
+  dashboard:[],
+  activeKey:null,
+  activeScene:0,
+  loading:false
+};
+
+const dxEsc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const dxDate=v=>v?new Date(v).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+const dxStatus=r=>{
+  if(!r)return 'Not Started';
+  if(r.refresher_due_at && new Date(r.refresher_due_at)<=new Date())return 'Refresher Due';
+  const s=String(r.status||'Not Started').trim();
+  if(/^not started$/i.test(s))return 'Not Started';
+  return s;
+};
+const dxStatusClass=s=>{
+  s=String(s||'').toLowerCase();
+  if(s.includes('passed'))return 'ok';
+  if(s.includes('refresher'))return 'bad';
+  if(s.includes('progress'))return 'warn';
+  return 'muted';
+};
+const dxRecord=key=>DX_TRAIN.records.find(r=>r.module_key===key);
+const dxModule=key=>DX_TRAIN.modules.find(m=>m.module_key===key);
+const dxScenes=m=>Array.isArray(m?.content?.scenes)?m.content.scenes:[];
+const dxQuiz=m=>Array.isArray(m?.quiz)?m.quiz:[];
+
+function dxTrainingRoot(){
+  return document.getElementById('lessonList');
+}
+
+function dxSetHeader(){
+  const panel=document.getElementById('training');
+  if(!panel)return;
+  const notice=panel.querySelector('.card.notice');
+  if(notice)notice.innerHTML='<b>Dexter\'s Staff Training</b><p class="muted">14 mandatory practical training modules based on the relevant HSE, Food Standards Scotland, Scottish Government, Acas and GOV.UK guidance. Progress, scores and refresher dates are saved to the secure Back Office record.</p>';
+  const name=document.getElementById('trainStaffName');
+  const role=document.getElementById('trainRole');
+  if(name){
+    name.value=(window.SECURE_ACCOUNT?.staff_name||window.SECURE_SESSION?.user?.email||'Signed-in staff');
+    name.disabled=true;
+  }
+  if(role){
+    role.value=window.SECURE_ACCOUNT?.role||'Staff';
+    role.disabled=true;
+  }
+}
+
+function dxRenderLibrary(){
+  const root=dxTrainingRoot(); if(!root)return;
+  if(!window.SECURE_SESSION||!window.SECURE_ACCOUNT?.staff_record_id){
+    root.innerHTML='<div class="summarybox"><span class="bad"><b>Sign in to open staff training.</b></span></div>';
+    return;
+  }
+  const groups=[
+    [1,'Food & Customer Safety'],
+    [2,'Workplace Safety'],
+    [3,'Staff Standards']
+  ];
+  root.innerHTML=groups.map(([phase,label])=>{
+    const mods=DX_TRAIN.modules.filter(m=>Number(m.phase)===phase).sort((a,b)=>a.sort_order-b.sort_order);
+    if(!mods.length)return '';
+    return '<h2 style="margin-top:22px">'+dxEsc(label)+'</h2>'+
+      '<div class="tiny" style="margin-bottom:8px">'+mods.length+' module'+(mods.length===1?'':'s')+'</div>'+
+      mods.map(m=>{
+        const r=dxRecord(m.module_key),status=dxStatus(r),sc=dxScenes(m);
+        const sceneDone=Math.min(Number(r?.training_data?.current_scene||0),sc.length);
+        const progress=sc.length?Math.round(sceneDone/sc.length*100):0;
+        return '<div class="lesson '+(status==='Passed'?'done':'')+'" data-dx-module="'+dxEsc(m.module_key)+'">'+
+          '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px">'+
+            '<div><b>'+dxEsc(m.title)+'</b><div class="tiny muted">'+dxEsc(m.authority_name)+' · '+Number(m.duration_minutes||10)+' mins · Pass '+Number(m.pass_score||80)+'%</div></div>'+
+            '<span class="'+dxStatusClass(status)+'"><b>'+dxEsc(status)+'</b></span>'+
+          '</div>'+
+          '<div class="video-progress" style="margin-top:10px"><i style="width:'+progress+'%"></i></div>'+
+          '<div class="tiny" style="margin-top:6px">'+sceneDone+'/'+sc.length+' scenes'+(r?.score!=null?' · Score '+Number(r.score)+'%':'')+(r?.refresher_due_at?' · Refresher '+dxDate(r.refresher_due_at):'')+'</div>'+
+          '<button class="btn small" style="margin-top:10px" data-dx-open="'+dxEsc(m.module_key)+'">'+(status==='Not Started'?'Start module':status==='Passed'?'Review module':'Continue module')+'</button>'+
+        '</div>';
+      }).join('');
+  }).join('');
+  root.querySelectorAll('[data-dx-open]').forEach(b=>b.onclick=()=>dxOpenModule(b.dataset.dxOpen));
+  dxRenderSummary();
+}
+
+function dxRenderSummary(){
+  const required=DX_TRAIN.modules.filter(m=>m.active!==false);
+  const passed=required.filter(m=>dxStatus(dxRecord(m.module_key))==='Passed').length;
+  const due=required.filter(m=>dxStatus(dxRecord(m.module_key))==='Refresher Due').length;
+  const progress=required.filter(m=>dxStatus(dxRecord(m.module_key))==='In Progress').length;
+  const done=document.getElementById('trainDone');
+  const status=document.getElementById('trainStatus');
+  if(done)done.textContent=passed+' / '+required.length;
+  if(status){
+    status.innerHTML=due
+      ?'<span class="bad"><b>'+due+' refresher'+(due===1?' is':'s are')+' due.</b></span>'
+      :passed===required.length&&required.length
+        ?'<span class="ok"><b>All mandatory training is current.</b></span>'
+        :'<b>'+(required.length-passed)+' module'+((required.length-passed)===1?'':'s')+' still to pass.</b><br><span class="muted">'+progress+' in progress.</span>';
+  }
+  dxRenderManager();
+  const refresher=document.getElementById('trainRefresher');
+  if(refresher){
+    const own=DX_TRAIN.records.filter(r=>r.refresher_due_at).sort((a,b)=>new Date(a.refresher_due_at)-new Date(b.refresher_due_at));
+    refresher.innerHTML=own.length
+      ?'<b>Next refresher:</b> '+dxEsc(own[0].module_title)+' · '+dxDate(own[0].refresher_due_at)
+      :'<span class="muted">Refresher dates are created automatically when modules are passed.</span>';
+  }
+  const final=document.getElementById('trainFinal');
+  if(final)final.innerHTML='<b>Completion record</b><br><span class="tiny">Each module is individually scored and recorded. Passing a module automatically sets its refresher date.</span>';
+}
+
+function dxRenderManager(){
+  const el=document.getElementById('trainManager'); if(!el)return;
+  const role=window.SECURE_ACCOUNT?.role||'Staff';
+  const rank=typeof window.secureRoleRank==='function'?window.secureRoleRank(role):0;
+  if(rank<2){
+    el.innerHTML='<div class="summarybox"><b>Your training record</b><br><span class="tiny">Managers and Team Leaders can review team progress.</span></div>';
+    return;
+  }
+  const byStaff={};
+  DX_TRAIN.dashboard.forEach(r=>{
+    const name=r.full_name||r.staff_record_id||'Staff';
+    if(!byStaff[name])byStaff[name]=[];
+    byStaff[name].push(r);
+  });
+  const names=Object.keys(byStaff).sort();
+  el.innerHTML=names.length?names.map(name=>{
+    const rows=byStaff[name],total=DX_TRAIN.modules.length;
+    const passed=rows.filter(r=>String(r.effective_status||r.status)==='Passed').length;
+    const due=rows.filter(r=>String(r.effective_status||'')==='Refresher Due').length;
+    return '<div class="summarybox" style="margin:8px 0"><b>'+dxEsc(name)+'</b><br><span class="tiny">'+passed+'/'+total+' passed'+(due?' · <span class="bad">'+due+' refresher due</span>':'')+'</span></div>';
+  }).join(''):'<span class="muted">No team training records available.</span>';
+}
+
+function dxPlayerShell(){
+  let box=document.getElementById('dxTrainingPlayer');
+  if(box)return box;
+  box=document.createElement('div');
+  box.id='dxTrainingPlayer';
+  box.className='modal-backdrop';
+  box.style.display='none';
+  box.innerHTML='<div class="modal" style="width:min(760px,100%);max-height:92vh;overflow:auto">'+
+    '<div class="row" style="justify-content:space-between;align-items:center"><h3 id="dxTrainTitle" style="margin:0"></h3><button class="btn alt small" id="dxTrainClose">Close</button></div>'+
+    '<div id="dxTrainBody" style="margin-top:14px"></div>'+
+  '</div>';
+  document.body.appendChild(box);
+  document.getElementById('dxTrainClose').onclick=()=>{try{speechSynthesis.cancel()}catch(e){};box.style.display='none';dxLoadTrainingV2();};
+  return box;
+}
+
+async function dxOpenModule(key){
+  const m=dxModule(key);if(!m)return;
+  DX_TRAIN.activeKey=key;
+  let r=dxRecord(key);
+  if(!r||dxStatus(r)==='Not Started'||dxStatus(r)==='Refresher Due'){
+    const {data,error}=await window.SB.rpc('backoffice_training_start',{p_module_key:key});
+    if(error){alert('Could not start training: '+error.message);return}
+    await dxLoadTrainingV2(false);
+    r=dxRecord(key);
+  }
+  DX_TRAIN.activeScene=Math.max(0,Math.min(Number(r?.training_data?.current_scene||0),Math.max(0,dxScenes(m).length-1)));
+  const box=dxPlayerShell();
+  box.style.display='grid';
+  dxRenderPlayer();
+}
+
+function dxSpeak(text){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(String(text||''));
+    u.lang='en-GB';u.rate=.93;u.pitch=1;
+    const voices=speechSynthesis.getVoices();
+    const v=voices.find(x=>/en-GB/i.test(x.lang))||voices.find(x=>/^en/i.test(x.lang));
+    if(v)u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function dxRenderPlayer(){
+  const m=dxModule(DX_TRAIN.activeKey),r=dxRecord(DX_TRAIN.activeKey);if(!m)return;
+  const scenes=dxScenes(m),idx=Math.max(0,Math.min(DX_TRAIN.activeScene,scenes.length-1)),scene=scenes[idx]||{};
+  const completed=Math.min(Number(r?.training_data?.current_scene||0),scenes.length);
+  document.getElementById('dxTrainTitle').textContent=m.title;
+  const body=document.getElementById('dxTrainBody');
+  const allDone=completed>=scenes.length;
+  body.innerHTML=
+    '<div class="tiny muted">'+dxEsc(m.authority_name)+' · '+Number(m.duration_minutes||10)+' mins · '+dxEsc(dxStatus(r))+'</div>'+
+    '<div class="training-video">'+
+      '<div class="training-stage"><div class="training-scene"><span class="emoji">'+(idx===0?'🎓':idx===scenes.length-1?'✅':'▶️')+'</span><h3>'+dxEsc(scene.title||('Scene '+(idx+1)))+'</h3><p>'+dxEsc(scene.narration||'')+'</p></div></div>'+
+      '<div class="training-controls"><span class="tiny">Scene '+(idx+1)+' of '+scenes.length+'</span><div class="video-progress"><i style="width:'+Math.round((idx+1)/Math.max(1,scenes.length)*100)+'%"></i></div><button class="btn alt small" id="dxSpeakScene">🔊 Listen</button></div>'+
+    '</div>'+
+    '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap">'+
+      '<button class="btn alt small" id="dxPrevScene" '+(idx===0?'disabled':'')+'>← Previous</button>'+
+      (idx<scenes.length-1
+        ?'<button class="btn small" id="dxCompleteScene">'+(idx<completed?'Next →':'Complete scene →')+'</button>'
+        :(!allDone?'<button class="btn small" id="dxCompleteScene">Complete final scene</button>':'<button class="btn small" id="dxOpenQuiz">Take knowledge test</button>'))+
+    '</div>'+
+    '<div id="dxQuizArea" style="margin-top:14px"></div>';
+  document.getElementById('dxSpeakScene').onclick=()=>dxSpeak((scene.title||'')+'. '+(scene.narration||''));
+  const prev=document.getElementById('dxPrevScene');if(prev)prev.onclick=()=>{DX_TRAIN.activeScene--;dxRenderPlayer()};
+  const complete=document.getElementById('dxCompleteScene');if(complete)complete.onclick=dxCompleteScene;
+  const quiz=document.getElementById('dxOpenQuiz');if(quiz)quiz.onclick=dxRenderQuiz;
+}
+
+async function dxCompleteScene(){
+  const m=dxModule(DX_TRAIN.activeKey),scenes=dxScenes(m),sceneNo=DX_TRAIN.activeScene+1;
+  const {error}=await window.SB.rpc('backoffice_training_complete_scene',{p_module_key:DX_TRAIN.activeKey,p_scene:sceneNo});
+  if(error){alert('Could not save training progress: '+error.message);return}
+  await dxLoadTrainingV2(false);
+  if(DX_TRAIN.activeScene<scenes.length-1)DX_TRAIN.activeScene++;
+  dxRenderPlayer();
+}
+
+function dxRenderQuiz(){
+  const m=dxModule(DX_TRAIN.activeKey),quiz=dxQuiz(m),area=document.getElementById('dxQuizArea');if(!area)return;
+  area.innerHTML='<div class="summarybox"><b>Knowledge check — pass mark '+Number(m.pass_score||80)+'%</b><p class="tiny">Answer every question.</p>'+
+    quiz.map((q,i)=>'<div class="field"><b>'+(i+1)+'. '+dxEsc(q.question)+'</b><select id="dxQ'+i+'"><option value="">Choose an answer</option>'+q.options.map((o,j)=>'<option value="'+j+'">'+dxEsc(o)+'</option>').join('')+'</select></div>').join('')+
+    '<button class="btn" id="dxSubmitQuiz">Submit test</button><div id="dxQuizFeedback" class="tiny" style="margin-top:8px"></div></div>';
+  document.getElementById('dxSubmitQuiz').onclick=dxSubmitQuiz;
+}
+
+async function dxSubmitQuiz(){
+  const m=dxModule(DX_TRAIN.activeKey),quiz=dxQuiz(m),answers=[];
+  for(let i=0;i<quiz.length;i++){
+    const el=document.getElementById('dxQ'+i);
+    if(!el||el.value===''){document.getElementById('dxQuizFeedback').innerHTML='<span class="bad">Answer every question before submitting.</span>';return}
+    answers.push(Number(el.value));
+  }
+  const fb=document.getElementById('dxQuizFeedback');fb.textContent='Saving result…';
+  const {data,error}=await window.SB.rpc('backoffice_training_submit_quiz',{p_module_key:DX_TRAIN.activeKey,p_answers:answers});
+  if(error){fb.innerHTML='<span class="bad">'+dxEsc(error.message)+'</span>';return}
+  await dxLoadTrainingV2(false);
+  const result=Array.isArray(data)?data[0]:data;
+  if(result?.passed){
+    fb.innerHTML='<span class="ok"><b>Passed — '+Number(result.score)+'%</b></span><br>Completion and refresher date saved.';
+    try{if(typeof window.appendAuditDb==='function')await window.appendAuditDb('training',DX_TRAIN.activeKey,'Training module passed',null,{score:Number(result.score),module_title:m.title})}catch(e){}
+  }else{
+    fb.innerHTML='<span class="bad"><b>Score '+Number(result?.score||0)+'%. You need '+Number(result?.pass_score||m.pass_score||80)+'%.</b></span><br>Review the training and try again.';
+  }
+  dxRenderSummary();
+}
+
+async function dxLoadTrainingV2(render=true){
+  if(DX_TRAIN.loading)return;
+  if(!window.SB||!window.SECURE_SESSION||!window.SECURE_ACCOUNT?.staff_record_id){
+    if(render){dxSetHeader();dxRenderLibrary();}
+    return;
+  }
+  DX_TRAIN.loading=true;
+  try{
+    const staffId=window.SECURE_ACCOUNT.staff_record_id;
+    const [mods,records]=await Promise.all([
+      window.SB.from('backoffice_training_modules').select('*').eq('active',true).order('sort_order'),
+      window.SB.from('backoffice_training_records').select('*').eq('staff_record_id',staffId).order('updated_at',{ascending:false})
+    ]);
+    if(mods.error)throw mods.error;if(records.error)throw records.error;
+    DX_TRAIN.modules=mods.data||[];DX_TRAIN.records=records.data||[];
+    const role=window.SECURE_ACCOUNT?.role||'Staff';
+    const rank=typeof window.secureRoleRank==='function'?window.secureRoleRank(role):0;
+    if(rank>=2){
+      const d=await window.SB.from('backoffice_training_dashboard').select('*').order('full_name').order('sort_order');
+      DX_TRAIN.dashboard=d.error?[]:(d.data||[]);
+    }else DX_TRAIN.dashboard=[];
+    if(render){dxSetHeader();dxRenderLibrary();}
+  }catch(e){
+    const root=dxTrainingRoot();
+    if(root)root.innerHTML='<div class="summarybox"><span class="bad"><b>Training could not load:</b> '+dxEsc(e.message||e)+'</span></div>';
+  }finally{DX_TRAIN.loading=false}
+}
+
+const oldLoad=window.loadSignedInTrainingFromDb;
+window.loadSignedInTrainingFromDb=async function(){
+  if(typeof oldLoad==='function'){
+    try{await oldLoad()}catch(e){}
+  }
+  await dxLoadTrainingV2(true);
+};
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tab="training"]');
+  if(t)setTimeout(()=>dxLoadTrainingV2(true),0);
+});
+
+const oldRender=window.renderLessons;
+window.renderLessons=function(){
+  if(window.SECURE_SESSION&&window.SECURE_ACCOUNT?.staff_record_id){dxLoadTrainingV2(true);return}
+  if(typeof oldRender==='function')return oldRender();
+};
+
+setTimeout(()=>dxLoadTrainingV2(true),900);
+})();
+</script>
+
 </body>
 </html>
