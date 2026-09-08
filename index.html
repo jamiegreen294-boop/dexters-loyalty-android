@@ -903,7 +903,8 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="card"><h2>Live lateness & missed clock-outs</h2><div id="timeAlerts"></div></div>
 <div class="card"><h2>Weekly timesheets</h2>
 <div class="grid"><div class="field">Week start<input id="timesheetStart" type="date"></div><div class="field">Week end<input id="timesheetEnd" type="date"></div></div>
-<button class="btn alt" id="buildTimesheets">Build timesheets</button>
+<button class="btn alt" id="buildTimesheets">Build / refresh timesheet</button>
+<p class="tiny">Uses the live clock-in and clock-out records for the selected dates. Managers can review every shift before sign-off.</p>
 <div id="timesheetList" style="margin-top:10px"></div>
 </div>
 </div>
@@ -2862,9 +2863,12 @@ function buildTimesheetRows(start,end){
 }
 function renderTimesheets(){
  if(!$('timesheetList'))return;
- $('timesheetList').innerHTML=(dexManage.timesheets||[]).map((t,i)=>'<div class="summarybox"><b>'+t.start+' → '+t.end+'</b><br>'+t.rows.map((r,ri)=>'<div class="tiny">'+r.name+' · '+r.hours.toFixed(2)+'h · '+r.status+' '+(r.staffSignedAt?'✓ staff ':'')+(r.managerSignedAt?'✓ manager':'')+'</div>').join('')+'<div class="row"><button class="btn alt small" onclick="signTimesheet('+i+',false)">Staff sign</button>'+(roleRank(CURRENT_STAFF_ROLE)>=3?'<button class="btn alt small" onclick="signTimesheet('+i+',true)">Manager sign</button>':'')+'</div></div>').join('')||'<span class="muted">No timesheets built.</span>';
+ $('timesheetList').innerHTML=(dexManage.timesheets||[]).map((t,i)=>'<details class="summarybox" '+(i===0?'open':'')+'><summary><b>'+t.start+' → '+t.end+'</b> · '+t.rows.reduce((n,r)=>n+Number(r.hours||0),0).toFixed(2)+' total hours</summary><div style="margin-top:10px">'+t.rows.map((r,ri)=>'<div class="summarybox"><div class="row" style="justify-content:space-between"><b>'+r.name+'</b><span class="badge">'+r.hours.toFixed(2)+'h</span></div><div class="tiny">'+r.shifts+' completed shift'+(r.shifts===1?'':'s')+' · '+r.status+' '+(r.staffSignedAt?'· ✓ staff signed ':'')+(r.managerSignedAt?'· ✓ manager signed':'')+'</div><button class="btn alt small" style="margin-top:7px" onclick="viewTimesheetShifts('+i+','+ri+')">View shift details</button></div>').join('')+'<div class="row" style="margin-top:10px"><button class="btn alt small" onclick="refreshTimesheet('+i+')">Refresh hours</button><button class="btn alt small" onclick="signTimesheet('+i+',false)">Staff sign</button>'+(roleRank(CURRENT_STAFF_ROLE)>=3?'<button class="btn alt small" onclick="signTimesheet('+i+',true)">Manager sign</button><button class="btn alt small" onclick="deleteTimesheet('+i+')">Delete report</button>':'')+'</div></div></details>').join('')||'<span class="muted">No timesheets built.</span>';
 }
 window.signTimesheet=(i,manager)=>{const t=dexManage.timesheets[i];if(!t)return;if(manager){if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');t.rows.forEach(r=>{r.managerSignedAt=new Date().toISOString();r.status=r.staffSignedAt?'Signed off':'Manager signed'})}else{const id=CURRENT_SHIFT_STAFF_ID;const r=t.rows.find(x=>x.staffId===id);if(!r)return alert('No timesheet row for this staff member.');r.staffSignedAt=new Date().toISOString();r.status=r.managerSignedAt?'Signed off':'Staff signed'}addTimeline('Timesheet','Timesheet '+t.start+' updated');saveDexManage()};
+window.refreshTimesheet=i=>{const t=dexManage.timesheets[i];if(!t)return;const signed=new Map((t.rows||[]).map(r=>[r.staffId,r]));t.rows=buildTimesheetRows(t.start,t.end).map(r=>({...r,staffSignedAt:signed.get(r.staffId)?.staffSignedAt||null,managerSignedAt:signed.get(r.staffId)?.managerSignedAt||null,status:signed.get(r.staffId)?.status||r.status}));addTimeline('Timesheet','Timesheet hours refreshed '+t.start+' → '+t.end);saveDexManage()};
+window.deleteTimesheet=i=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const t=dexManage.timesheets[i];if(!t||!confirm('Delete the generated timesheet report for '+t.start+' to '+t.end+'? This does not delete any shifts or clock records.'))return;dexManage.timesheets.splice(i,1);addTimeline('Timesheet','Generated timesheet report deleted');saveDexManage()};
+window.viewTimesheetShifts=(ti,ri)=>{const t=dexManage.timesheets[ti],row=t?.rows?.[ri];if(!t||!row)return;const shifts=dexManage.rota.filter(r=>r.staffId===row.staffId&&r.date>=t.start&&r.date<=t.end);const text=shifts.length?shifts.map(r=>r.date+' · scheduled '+(r.start||'—')+'–'+(r.end||'—')+' · clocked '+(r.clockInAt?new Date(r.clockInAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'—')+'–'+(r.clockOutAt?new Date(r.clockOutAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'—')+' · '+(shiftWorkedMinutes(r)==null?'incomplete':formatWorkedMinutes(shiftWorkedMinutes(r)))).join('\n'):'No completed clock records in this period.';alert(row.name+'\n\n'+text)};
 function renderLeave(){
  staffOptions('leaveStaff');staffOptions('availabilityStaff');staffOptions('swapTarget');
  if($('leaveRequests'))$('leaveRequests').innerHTML=(dexManage.leaveRequests||[]).map((r,i)=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.status+'</span><span class="muted"> '+r.from+' → '+r.to+'</span><br><span class="tiny">'+r.note+'</span>'+((roleRank(CURRENT_STAFF_ROLE)>=3&&r.status==='Pending')?'<div class="row"><button class="btn alt small" onclick="decideLeave('+i+',true)">Approve</button><button class="btn alt small" onclick="decideLeave('+i+',false)">Reject</button></div>':'')+'</div>').join('')||'<span class="muted">No leave requests.</span>';
@@ -3070,9 +3074,10 @@ function renderDexManagement(){
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map((r,i)=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+' · RTW '+(r.rtw||'Not checked')+'</span><br><span class="tiny">'+(r.interviewOutcome||r.stage||'')+(r.decision?' · Decision: '+r.decision:'')+(r.interview?' · '+r.interview:'')+'</span>'+((r.stage==='Hired'||r.decision==='Hired')&&!r.convertedStaffId?'<div class="row"><button class="btn small" onclick="convertApplicantToStaff('+i+')">Create staff card</button></div>':r.convertedStaffId?'<div class="tiny ok">Staff card created</div>':'')+'</div>').join('')||'<span class="muted">No applicants.</span>';
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
- if($('rotaList'))$('rotaList').innerHTML=dexManage.rota.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map((r,i)=>{
+ if($('rotaList'))$('rotaList').innerHTML=dexManage.rota.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(r=>{
+   const i=dexManage.rota.indexOf(r);
    const worked=shiftWorkedMinutes(r);
-   return '<div class="summarybox"><b>'+r.date+' · '+staffNameById(r.staffId)+'</b><br><span class="badge">'+r.status+'</span>'+tagChips(r.tags)+'<br><span class="muted">Scheduled '+(r.start||'—')+'–'+(r.end||'—')+(r.area?' · '+r.area:'')+'</span>'+(r.clockInAt?'<br><span class="tiny">Clocked in '+new Date(r.clockInAt).toLocaleString()+'</span>':'')+(r.clockOutAt?'<br><span class="tiny">Clocked out '+new Date(r.clockOutAt).toLocaleString()+(worked!=null?' · '+formatWorkedMinutes(worked):'')+'</span>':'')+(r.notes?'<br><span class="tiny">'+r.notes+'</span>':'')+'</div>';
+   return '<div class="summarybox"><b>'+r.date+' · '+staffNameById(r.staffId)+'</b><br><span class="badge">'+r.status+'</span>'+tagChips(r.tags)+'<br><span class="muted">Scheduled '+(r.start||'—')+'–'+(r.end||'—')+(r.area?' · '+r.area:'')+'</span>'+(r.clockInAt?'<br><span class="tiny">Clocked in '+new Date(r.clockInAt).toLocaleString()+'</span>':'')+(r.clockOutAt?'<br><span class="tiny">Clocked out '+new Date(r.clockOutAt).toLocaleString()+(worked!=null?' · '+formatWorkedMinutes(worked):'')+'</span>':'')+(r.notes?'<br><span class="tiny">'+r.notes+'</span>':'')+(roleRank(CURRENT_STAFF_ROLE)>=3?'<div class="row" style="margin-top:9px"><button class="btn alt small" onclick="editRotaShift('+i+')">Edit / correct</button><button class="btn alt small" onclick="deleteRotaShift('+i+')">Delete shift</button></div>':'')+'</div>';
  }).join('')||'<span class="muted">No shifts recorded.</span>';
  renderMyShifts();
  if($('taskList'))$('taskList').innerHTML=dexManage.tasks.map((r,i)=>'<div class="summarybox"><b>'+r.title+'</b><br><span class="badge">'+r.status+'</span><span class="badge">'+r.priority+'</span><span class="badge">'+r.type+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+staffNameById(r.assignee)+' · due '+(r.due||'not set')+'</span><br><span class="tiny">'+r.details+'</span>'+(r.resolution?'<br><span class="tiny">Resolution: '+r.resolution+'</span>':'')+(r.status!=='Completed'?'<div class="row"><button class="btn alt small" onclick="closeDexTask('+i+')">Mark complete</button></div>':'')+'</div>').join('')||'<span class="muted">No tasks or handovers.</span>';
@@ -3093,6 +3098,8 @@ function renderDexManagement(){
 }
 window.removeDexTag=i=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');if(dexManage.tags[i]?.system)return;dexManage.tags.splice(i,1);saveDexManage()};
 window.closeDexTask=async i=>{const t=dexManage.tasks[i];if(!t)return;t.status='Completed';if(!t.resolution)t.resolution='Completed '+new Date().toISOString().slice(0,10);saveDexManage();if(CORE_DB_CONNECTED)try{await persistTaskDb(t);saveDexManage()}catch(e){alert('Secure task update failed: '+e.message)}};
+window.editRotaShift=async i=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const r=dexManage.rota[i];if(!r)return;const date=prompt('Shift date (YYYY-MM-DD):',r.date);if(date===null)return;const start=prompt('Scheduled start (HH:MM):',r.start||'');if(start===null)return;const end=prompt('Scheduled finish (HH:MM):',r.end||'');if(end===null)return;if(start&&end&&start>=end)return alert('Finish time must be after start time.');const area=prompt('Area / station:',r.area||'');if(area===null)return;const status=prompt('Status:',r.status||'Scheduled');if(status===null)return;const notes=prompt('Manager notes:',r.notes||'');if(notes===null)return;const before={date:r.date,start:r.start,end:r.end,area:r.area,status:r.status,notes:r.notes};Object.assign(r,{date,start,end,area,status,notes});r.timeAudit=r.timeAudit||[];r.timeAudit.push({at:new Date().toISOString(),action:'Shift corrected by manager',staffId:r.staffId,before});if(CORE_DB_CONNECTED&&r.dbId){const {error}=await SB.from('backoffice_rota_shifts').update({shift_date:date,scheduled_start:start||null,scheduled_end:end||null,area:area||null,status,notes:notes||null,shift_data:{timeAudit:r.timeAudit},updated_at:new Date().toISOString()}).eq('id',r.dbId);if(error){Object.assign(r,before);return alert('Secure shift update failed: '+error.message)}await appendAuditDb('rota_shift',r.dbId,'Shift corrected',before,{date,start,end,area,status,notes})}addTimeline('Rota',staffNameById(r.staffId)+' shift corrected');saveDexManage()};
+window.deleteRotaShift=async i=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const r=dexManage.rota[i];if(!r||!confirm('Delete '+staffNameById(r.staffId)+' shift on '+r.date+'? This cannot be undone.'))return;if(CORE_DB_CONNECTED&&r.dbId){const snapshot={...r};const {error}=await SB.from('backoffice_rota_shifts').delete().eq('id',r.dbId);if(error)return alert('Secure shift delete failed: '+error.message);await appendAuditDb('rota_shift',r.dbId,'Shift deleted',snapshot,null)}dexManage.rota.splice(i,1);addTimeline('Rota',staffNameById(r.staffId)+' shift deleted for '+r.date);saveDexManage()};
 if($('addTagBtn'))$('addTagBtn').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');const name=$('newTagName').value.trim();if(!name||dexManage.tags.some(t=>t.name.toLowerCase()===name.toLowerCase()))return;dexManage.tags.push({name,system:false});$('newTagName').value='';saveDexManage()};
 window.convertApplicantToStaff=async i=>{
  if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
@@ -3432,6 +3439,7 @@ async function createBackOfficeCustomerLogin(){
    if(!res.ok)throw new Error(d.error||'Customer account could not be created.');
    LAST_CUSTOMER_INVITE_TEXT=customerInviteMessage(d);
    out.innerHTML='<span class="ok"><b>Customer app account created.</b></span><br>'+
+    (d.welcome_email_requested?'<span class="ok"><b>✓ Welcome/password email requested.</b></span><br><span class="tiny">Ask the customer to check their inbox and junk folder.</span><br>':'<span class="bad"><b>Welcome email could not be requested.</b></span><br><span class="tiny">'+escLive(d.welcome_email_error||'Copy or share the login details below.')+'</span><br>')+
     '<span class="tiny"><b>Created by:</b> '+escLive(d.created_by||currentActorName())+' · '+new Date().toLocaleString()+'</span><hr style="border:0;border-top:1px solid #ffffff17;margin:10px 0">'+
     '<b>'+escLive(d.full_name)+'</b><br><span class="muted">Email: '+escLive(d.email)+'</span><br>'+
     '<span class="muted">Temporary password: <b>'+escLive(d.temporary_password)+'</b></span><br><span class="tiny">Customer must change this password on first login.</span><br>'+
@@ -5966,6 +5974,9 @@ renderLessons();renderTrainingManager();
   setTimeout(()=>{populateVoicePickers();try{renderLessons()}catch(e){}},500);
 })();
 </script>
+<style id="dexters-training-professional-player-v1">
+.dx-course-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.dx-course-meta .tiny{font-size:13px}.dx-scene-track{display:flex;gap:5px;margin:9px 0 12px}.dx-scene-track i{height:6px;flex:1;border-radius:99px;background:#ddd5e2}.dx-scene-track i.on{background:#5b0b7e}.dx-pro-stage{min-height:330px!important;display:flex;align-items:center;background:linear-gradient(145deg,#24122f,#5b0b7e 62%,#7c3aed)!important;color:#fff!important;border:0!important;box-shadow:0 18px 45px #2d113340}.dx-pro-stage:before{opacity:.16}.dx-pro-stage .training-scene{width:100%;text-align:left}.dx-pro-stage .training-scene .emoji{background:#ffffff18;color:#fff;border:1px solid #ffffff2b;box-shadow:none}.dx-pro-stage .training-scene h3{color:#fff;font-size:clamp(25px,4vw,34px);line-height:1.08}.dx-pro-stage .training-scene p{color:#fff!important;font-size:16px;line-height:1.65;max-width:650px}.dx-kicker{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#e7d3f0;margin-bottom:10px}.dx-takeaway{background:#ffffff14;border-left:4px solid #ffd43b;border-radius:8px;padding:11px 13px;font-weight:800;line-height:1.45;margin-top:15px}.dx-source{font-size:12px;color:#eadff0;margin-top:14px}@media(max-width:640px){.dx-pro-stage{min-height:390px!important;padding:20px!important}.dx-takeaway{font-size:14px}}
+</style>
 <!-- DEXTERS_TRAINING_V2_14_MODULES -->
 <script>
 (function(){
@@ -6000,6 +6011,19 @@ const dxRecord=key=>DX_TRAIN.records.find(r=>r.module_key===key);
 const dxModule=key=>DX_TRAIN.modules.find(m=>m.module_key===key);
 const dxScenes=m=>Array.isArray(m?.content?.scenes)?m.content.scenes:[];
 const dxQuiz=m=>Array.isArray(m?.quiz)?m.quiz:[];
+const dxVisual=m=>{
+  const key=String(m?.module_key||'').toLowerCase();
+  if(/allergen|food|handwash|hygiene|temperature/.test(key))return {icon:'🧑‍🍳',label:'Food & customer safety'};
+  if(/fire|emergency/.test(key))return {icon:'🚨',label:'Emergency readiness'};
+  if(/coshh|chemical/.test(key))return {icon:'🧴',label:'Chemical safety'};
+  if(/manual|slip|hot|equipment|young/.test(key))return {icon:'🦺',label:'Workplace safety'};
+  if(/equality|harass|whistle|working|fatigue/.test(key))return {icon:'🤝',label:'People & workplace standards'};
+  return {icon:'🎓',label:'Dexter\'s staff standard'};
+};
+const dxTakeaway=scene=>{
+  const n=String(scene?.narration||'').trim();
+  return n.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim()||n||'Follow the approved Dexter\'s procedure and ask a manager if anything is unclear.';
+};
 
 function dxTrainingRoot(){
   return document.getElementById('lessonList');
@@ -6155,20 +6179,22 @@ function dxRenderPlayer(){
   const m=dxModule(DX_TRAIN.activeKey),r=dxRecord(DX_TRAIN.activeKey);if(!m)return;
   const scenes=dxScenes(m),idx=Math.max(0,Math.min(DX_TRAIN.activeScene,scenes.length-1)),scene=scenes[idx]||{};
   const completed=Math.min(Number(r?.training_data?.current_scene||0),scenes.length);
+  const visual=dxVisual(m),source=m.authority_name||'Dexter\'s approved procedure';
   document.getElementById('dxTrainTitle').textContent=m.title;
   const body=document.getElementById('dxTrainBody');
   const allDone=completed>=scenes.length;
   body.innerHTML=
-    '<div class="tiny muted">'+dxEsc(m.authority_name)+' · '+Number(m.duration_minutes||10)+' mins · '+dxEsc(dxStatus(r))+'</div>'+
+    '<div class="dx-course-meta"><span class="tiny muted">'+dxEsc(source)+' · '+Number(m.duration_minutes||10)+' mins · Pass '+Number(m.pass_score||80)+'%</span><span class="badge">'+dxEsc(dxStatus(r))+'</span></div>'+
+    '<div class="dx-scene-track">'+scenes.map((_,i)=>'<i class="'+(i<=idx?'on':'')+'"></i>').join('')+'</div>'+
     '<div class="training-video">'+
-      '<div class="training-stage"><div class="training-scene"><span class="emoji">'+(idx===0?'🎓':idx===scenes.length-1?'✅':'▶️')+'</span><h3>'+dxEsc(scene.title||('Scene '+(idx+1)))+'</h3><p>'+dxEsc(scene.narration||'')+'</p></div></div>'+
+      '<div class="training-stage dx-pro-stage"><div class="training-scene"><div class="dx-kicker">'+dxEsc(visual.label)+' · Scene '+(idx+1)+' of '+scenes.length+'</div><span class="emoji">'+visual.icon+'</span><h3>'+dxEsc(scene.title||('Scene '+(idx+1)))+'</h3><p>'+dxEsc(scene.narration||'')+'</p><div class="dx-takeaway">Key point: '+dxEsc(dxTakeaway(scene))+'</div><div class="dx-source">Source: '+dxEsc(source)+'</div></div></div>'+
       '<div class="training-controls"><span class="tiny">Scene '+(idx+1)+' of '+scenes.length+'</span><div class="video-progress"><i style="width:'+Math.round((idx+1)/Math.max(1,scenes.length)*100)+'%"></i></div><button class="btn alt small" id="dxSpeakScene">🔊 Listen</button></div>'+
     '</div>'+
     '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap">'+
       '<button class="btn alt small" id="dxPrevScene" '+(idx===0?'disabled':'')+'>← Previous</button>'+
       (idx<scenes.length-1
-        ?'<button class="btn small" id="dxCompleteScene">'+(idx<completed?'Next →':'Complete scene →')+'</button>'
-        :(!allDone?'<button class="btn small" id="dxCompleteScene">Complete final scene</button>':'<button class="btn small" id="dxOpenQuiz">Take knowledge test</button>'))+
+        ?'<button class="btn small" id="dxCompleteScene">'+(idx<completed?'Next scene →':'Mark complete →')+'</button>'
+        :(!allDone?'<button class="btn small" id="dxCompleteScene">Complete final scene</button>':'<button class="btn small" id="dxOpenQuiz">Start knowledge check</button>'))+
     '</div>'+
     '<div id="dxQuizArea" style="margin-top:14px"></div>';
   document.getElementById('dxSpeakScene').onclick=()=>dxSpeak((scene.title||'')+'. '+(scene.narration||''));
@@ -6188,9 +6214,9 @@ async function dxCompleteScene(){
 
 function dxRenderQuiz(){
   const m=dxModule(DX_TRAIN.activeKey),quiz=dxQuiz(m),area=document.getElementById('dxQuizArea');if(!area)return;
-  area.innerHTML='<div class="summarybox"><b>Knowledge check — pass mark '+Number(m.pass_score||80)+'%</b><p class="tiny">Answer every question.</p>'+
-    quiz.map((q,i)=>'<div class="field"><b>'+(i+1)+'. '+dxEsc(q.question)+'</b><select id="dxQ'+i+'"><option value="">Choose an answer</option>'+q.options.map((o,j)=>'<option value="'+j+'">'+dxEsc(o)+'</option>').join('')+'</select></div>').join('')+
-    '<button class="btn" id="dxSubmitQuiz">Submit test</button><div id="dxQuizFeedback" class="tiny" style="margin-top:8px"></div></div>';
+  area.innerHTML='<div class="summarybox"><b>Scenario assessment — '+quiz.length+' questions · pass mark '+Number(m.pass_score||80)+'%</b><p class="tiny">Choose the safest, most complete response to each workplace scenario. Answer every question; if you do not pass, review the lesson before trying again.</p>'+
+    quiz.map((q,i)=>'<div class="field"><b>Question '+(i+1)+' of '+quiz.length+': '+dxEsc(q.question)+'</b><select id="dxQ'+i+'"><option value="">Choose the best answer</option>'+q.options.map((o,j)=>'<option value="'+j+'">'+dxEsc(o)+'</option>').join('')+'</select></div>').join('')+
+    '<button class="btn" id="dxSubmitQuiz">Submit assessment</button><div id="dxQuizFeedback" class="tiny" style="margin-top:8px" aria-live="polite"></div></div>';
   document.getElementById('dxSubmitQuiz').onclick=dxSubmitQuiz;
 }
 
