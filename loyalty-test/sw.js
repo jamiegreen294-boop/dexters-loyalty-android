@@ -1,4 +1,4 @@
-const CACHE='dexters-loyalty-github-pages-test-v2';
+const CACHE='dexters-loyalty-github-pages-test-v3';
 const SCOPE='/loyalty-test/';
 const SHELL=[SCOPE,SCOPE+'index.html',SCOPE+'styles.css',SCOPE+'config.js',SCOPE+'app.js',SCOPE+'theme-rebuild.js',SCOPE+'theme-preview.js',SCOPE+'spin-rebuild.js',SCOPE+'customer-rebuild.js',SCOPE+'manifest.webmanifest'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).catch(()=>{}));});
