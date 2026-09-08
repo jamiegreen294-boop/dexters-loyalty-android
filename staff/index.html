@@ -71,7 +71,10 @@ nav button{border:0;background:#fff;padding:11px 3px 9px;font-size:11px;font-wei
 
 <section class="panel" id="rota">
   <div class="card"><h1>My Rota</h1><p class="muted">Published shifts assigned to you.</p></div>
-  <div class="card" id="rotaList"></div>
+  <div class="card" id="rotaList"></div><div class="card">
+  <div class="row space"><div><h2>Who's off this week</h2><p class="muted">Holiday and staff availability for the week.</p></div><input id="staffOffWeek" type="date" style="max-width:160px"></div>
+  <div id="staffOffWeekList"></div>
+</div>
 </section>
 
 <section class="panel" id="training">
@@ -195,9 +198,27 @@ async function clockShift(action,id){
  const {error}=await sb.rpc(fn,{p_shift_id:id});if(error)return alert(error.message);
  await loadAll();renderAll();
 }
+
+// DEXTERS_STAFF_TEAM_OFF_WEEK_V1
+function staffWeekStart(d){
+ const x=d?new Date(d+'T12:00:00'):new Date();
+ const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);
+ return x.toLocaleDateString('en-CA');
+}
+async function renderTeamOffWeek(){
+ const box=$('staffOffWeekList'),inp=$('staffOffWeek');if(!box||!session)return;
+ if(!inp.value)inp.value=staffWeekStart();
+ const start=staffWeekStart(inp.value);inp.value=start;box.innerHTML='<span class="muted">Loading…</span>';
+ const {data,error}=await sb.rpc('backoffice_team_week_off',{p_week_start:start});
+ if(error){box.innerHTML='<span class="bad">'+esc(error.message)+'</span>';return}
+ const rows=data||[];
+ box.innerHTML=rows.length?rows.map(r=>'<div class="shift"><div class="row space"><b>'+esc(r.full_name)+'</b><span class="badge">'+esc(r.display_type)+'</span></div><div class="muted">'+fmtDate(r.date_from)+' → '+fmtDate(r.date_to)+'</div></div>').join(''):'<span class="muted">Nobody is recorded off this week.</span>';
+}
+document.addEventListener('change',e=>{if(e.target?.id==='staffOffWeek')renderTeamOffWeek()});
+
 function renderRota(){
  const future=shifts.filter(s=>s.shift_date>=todayYmd()).slice(0,30);
- $('rotaList').innerHTML=future.map(s=>shiftHtml(s,s.shift_date===todayYmd())).join('')||'<span class="muted">No published shifts.</span>';bindShiftButtons($('rotaList'));
+ $('rotaList').innerHTML=future.map(s=>shiftHtml(s,s.shift_date===todayYmd())).join('')||'<span class="muted">No published shifts.</span>';bindShiftButtons($('rotaList'));renderTeamOffWeek();
 }
 function renderHome(){
  const todays=shifts.filter(s=>s.shift_date===todayYmd());
