@@ -313,7 +313,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-29-operations-validation">
+<main class="wrap" data-build="2026-09-08-website-pass-30-staff-name-login-card">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -321,7 +321,7 @@ body.pride-theme{background:#f7f3f8!important}
 </header>
 
 <div class="card" id="secureAuthCard" style="margin:14px 0">
-<h2>Secure Staff Login</h2>
+<h2 id="secureLoginHeading">Secure Staff Login</h2>
 <div id="secureSignedOut">
 <div class="grid"><div class="field">Email<input id="secureLoginEmail" type="email" autocomplete="username"></div><div class="field">Password<input id="secureLoginPassword" type="password" autocomplete="current-password"></div></div>
 <div class="row"><button class="btn" id="secureLoginBtn">Sign in</button><button class="btn alt" id="secureForgotBtn">Forgot password</button></div>
@@ -381,8 +381,9 @@ body.pride-theme{background:#f7f3f8!important}
       const shell=document.getElementById('secureBackOfficeShell');
       if(signedOut)signedOut.style.display='none';
       if(signedIn)signedIn.style.display='block';
-      if(userLabel)userLabel.textContent=session.user?.email||account.email||'Signed in';
-      if(roleLabel)roleLabel.textContent=account.role||'Authenticated';const passNavUser=document.getElementById('passNavUser');if(passNavUser)passNavUser.textContent=(account.role||'Staff')+' · '+(session.user?.email||account.email||'');
+      if(userLabel)userLabel.textContent=account.staff_name||session.user?.email||account.email||'Signed in';
+      const heading=document.getElementById('secureLoginHeading');if(heading)heading.textContent=account.staff_name||'Secure Staff Login';
+      if(roleLabel)roleLabel.textContent=account.role||'Authenticated';const passNavUser=document.getElementById('passNavUser');if(passNavUser)passNavUser.textContent=(account.role||'Staff')+' · '+(account.staff_name||session.user?.email||account.email||'');
       if(account.must_change_password){
         sessionStorage.setItem('dexters_backoffice_recovery_pending','1');
         const ov=document.getElementById('firstPasswordOverlay');
@@ -425,6 +426,10 @@ body.pride-theme{background:#f7f3f8!important}
           .select('staff_record_id,email,role,must_change_password,active')
           .eq('auth_user_id',session.user.id)
           .maybeSingle();
+        if(account?.staff_record_id){
+          const {data:profile}=await client.from('backoffice_staff_profiles').select('full_name').eq('staff_record_id',account.staff_record_id).maybeSingle();
+          if(profile?.full_name)account.staff_name=profile.full_name;
+        }
         if(accountError||!account||account.active===false)return;
         showStandaloneSession(session,account);
         // Exactly one handoff: immediate if the full Back Office is ready,
@@ -466,6 +471,10 @@ body.pride-theme{background:#f7f3f8!important}
           .select('staff_record_id,email,role,must_change_password,active')
           .eq('auth_user_id',data.session.user.id)
           .maybeSingle();
+        if(account?.staff_record_id){
+          const {data:profile}=await client.from('backoffice_staff_profiles').select('full_name').eq('staff_record_id',account.staff_record_id).maybeSingle();
+          if(profile?.full_name)account.staff_name=profile.full_name;
+        }
 
         if(accountError)throw accountError;
         if(!account)throw new Error('This account is not authorised for Dexter\'s Back Office.');
@@ -1744,6 +1753,10 @@ function applySecureAccess(){
 async function loadSecureAccount(){
  if(!SB||!SECURE_SESSION)return null;
  const {data,error}=await SB.from('backoffice_staff_accounts').select('staff_record_id,email,role,must_change_password,active').eq('auth_user_id',SECURE_SESSION.user.id).maybeSingle();
+ if(data?.staff_record_id){
+   const {data:profile}=await SB.from('backoffice_staff_profiles').select('full_name').eq('staff_record_id',data.staff_record_id).maybeSingle();
+   if(profile?.full_name)data.staff_name=profile.full_name;
+ }
  if(error)throw error;
  SECURE_ACCOUNT=data||null;
  if(SECURE_ACCOUNT?.role)CURRENT_STAFF_ROLE=SECURE_ACCOUNT.role;
@@ -1756,7 +1769,8 @@ function renderSecureAuth(){
  const mapped=!!SECURE_ACCOUNT;
  out.style.display=SECURE_SESSION?'none':'block';inside.style.display=SECURE_SESSION?'block':'none';
  if(SECURE_SESSION){
-  $('secureUserLabel').textContent=SECURE_SESSION.user.email||'Signed in';
+  $('secureUserLabel').textContent=SECURE_ACCOUNT?.staff_name||SECURE_SESSION.user.email||'Signed in';
+  const heading=$('secureLoginHeading');if(heading)heading.textContent=SECURE_ACCOUNT?.staff_name||'Secure Staff Login';
   $('secureRoleLabel').textContent=SECURE_ACCOUNT?.role||'No Back Office role';
   if(msg){
     if(!mapped)msg.innerHTML='<span class="bad">This account is not authorised for Dexter\'s Back Office.</span>';
