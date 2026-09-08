@@ -313,7 +313,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-32-form-audit-alerts">
+<main class="wrap" data-build="2026-09-08-website-pass-33-alert-centre-resolution">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -661,8 +661,14 @@ body.pride-theme{background:#f7f3f8!important}
   </div>
 
   <div class="card pass-dash-card">
-    <h3>Form security alerts</h3>
-    <div id="formSecurityAlerts" class="muted">No form activity loaded yet.</div>
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h3 style="margin:0">Alert Centre</h3>
+      <div class="row">
+        <button class="btn alt small" id="alertShowOpen">Open</button>
+        <button class="btn alt small" id="alertShowResolved">Resolved</button>
+      </div>
+    </div>
+    <div id="formSecurityAlerts" class="muted" style="margin-top:10px">No form alerts loaded yet.</div>
   </div>
 
   <div class="card pass-dash-card">
@@ -2079,13 +2085,14 @@ function currentActorName(){
 }
 async function logFormActivity(action,formKind,formId,formName,subjectId='',metadata={}){
  if(!CORE_DB_CONNECTED||!SECURE_SESSION)return;
+ const isAlert=action==='Created'||action==='Deleted';
  const row={
    form_kind:formKind||'Form',form_id:String(formId||''),form_name:String(formName||'Form'),
    subject_id:String(subjectId||''),action,
    actor_user_id:SECURE_SESSION.user.id,
    actor_staff_record_id:SECURE_ACCOUNT?.staff_record_id||null,
    actor_name:currentActorName(),actor_role:SECURE_ACCOUNT?.role||CURRENT_STAFF_ROLE,
-   metadata:metadata||{}
+   metadata:metadata||{},is_alert:isAlert,alert_status:isAlert?'Open':null
  };
  const {error}=await SB.from('backoffice_form_activity').insert(row);
  if(error)throw error;
@@ -2094,7 +2101,7 @@ async function logFormActivity(action,formKind,formId,formName,subjectId='',meta
    dexManage.notifications=dexManage.notifications||[];
    if(typeof staffDb!=='undefined'){
      staffDb.staff.filter(s=>['Manager','Super User'].includes(s.role)).forEach(s=>notifyStaff(
-       s.id,'Form '+action.toLowerCase(),row.form_name+' · '+row.actor_name+' · '+new Date().toLocaleString(),'Form Audit'
+       s.id,'Form '+action.toLowerCase(),row.form_name+' · '+row.actor_name+' · '+new Date().toLocaleString()+' · review in Alert Centre','Form Audit'
      ));
    }
    addTimeline('Form Alert',row.form_name+' '+action.toLowerCase()+' by '+row.actor_name);
@@ -2102,13 +2109,35 @@ async function logFormActivity(action,formKind,formId,formName,subjectId='',meta
  }
  loadFormSecurityAlerts().catch(()=>{});
 }
+let FORM_ALERT_VIEW='Open';
+async function resolveFormAlert(id){
+ if(secureRoleRank(SECURE_ACCOUNT?.role)<3)return alert('Manager access required to resolve alerts.');
+ const rows=await SB.from('backoffice_form_activity').select('*').eq('id',id).maybeSingle();
+ if(rows.error)return alert('Could not load alert: '+rows.error.message);
+ const r=rows.data;if(!r)return alert('Alert not found.');
+ const note=prompt('Resolution note for "'+r.form_name+'":','Checked and resolved');
+ if(note===null)return;
+ const now=new Date().toISOString();
+ const {error}=await SB.from('backoffice_form_activity').update({
+   alert_status:'Resolved',resolved_by:SECURE_SESSION.user.id,resolved_by_name:currentActorName(),
+   resolved_at:now,resolution_note:note.trim()||'Resolved'
+ }).eq('id',id);
+ if(error)return alert('Could not resolve alert: '+error.message);
+ await appendAuditDb('form_alert',String(id),'Alert resolved',r,{resolved_by:currentActorName(),resolution_note:note.trim()||'Resolved',resolved_at:now});
+ addTimeline('Alert Resolved',r.form_name+' resolved by '+currentActorName());
+ saveDexManage();loadFormSecurityAlerts();
+}
 async function loadFormSecurityAlerts(){
  const box=$('formSecurityAlerts');if(!box||!SB||!SECURE_SESSION)return;
- const {data,error}=await SB.from('backoffice_form_activity').select('*').order('occurred_at',{ascending:false}).limit(20);
+ const {data,error}=await SB.from('backoffice_form_activity').select('*').eq('is_alert',true).order('occurred_at',{ascending:false}).limit(100);
  if(error){box.innerHTML='<span class="bad">'+escLive(error.message)+'</span>';return}
- const rows=data||[];
- box.innerHTML=rows.map(r=>'<div class="summarybox"><b>'+escLive(r.form_name)+'</b><br><span class="badge">'+escLive(r.action)+'</span><span class="muted"> '+escLive(r.actor_name||'Unknown user')+' · '+fmtLiveDate(r.occurred_at)+'</span><br><span class="tiny">'+escLive(r.form_kind||'Form')+(r.subject_id?' · '+escLive(r.subject_id):'')+'</span></div>').join('')||'<span class="muted">No form activity recorded.</span>';
+ const rows=(data||[]).filter(r=>(r.alert_status||'Open')===FORM_ALERT_VIEW);
+ box.innerHTML=rows.map(r=>'<div class="summarybox"><b>'+escLive(r.form_name)+'</b><br><span class="badge">'+escLive(r.action)+'</span><span class="badge">'+escLive(r.alert_status||'Open')+'</span><br><span class="muted">'+escLive(r.actor_name||'Unknown user')+' · '+fmtLiveDate(r.occurred_at)+'</span><br><span class="tiny">'+escLive(r.form_kind||'Form')+(r.subject_id?' · '+escLive(r.subject_id):'')+'</span>'+
+   ((r.alert_status||'Open')==='Open'&&secureRoleRank(SECURE_ACCOUNT?.role)>=3?'<div class="row" style="margin-top:8px"><button class="btn small" onclick="resolveFormAlert('+r.id+')">Check & resolve</button></div>':'')+
+   (r.alert_status==='Resolved'?'<div class="tiny ok" style="margin-top:7px">Resolved by '+escLive(r.resolved_by_name||'Unknown user')+' · '+fmtLiveDate(r.resolved_at)+(r.resolution_note?' · '+escLive(r.resolution_note):'')+'</div>':'')+
+   '</div>').join('')||'<span class="muted">No '+FORM_ALERT_VIEW.toLowerCase()+' alerts.</span>';
 }
+window.resolveFormAlert=resolveFormAlert;
 async function liveRpc(name,args={}){
  if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.active)throw new Error('Secure sign-in required.');
  const {data,error}=await SB.rpc(name,args);
@@ -3116,6 +3145,8 @@ if($('policyPublish'))$('policyPublish').onclick=()=>{if(CURRENT_STAFF_ROLE!=='S
 if($('ackSave'))$('ackSave').onclick=()=>{const i=Number($('ackPolicy').value),p=dexManage.policies[i],staffId=$('ackStaff').value,sig=$('ackSignature').value.trim();if(!p||!staffId||!sig||!$('ackConfirm').checked)return alert('Choose policy/staff, confirm and sign.');dexManage.policyAcks.unshift({policyId:p.id,policyTitle:p.title,version:p.version,staffId,signature:sig,at:new Date().toISOString()});addTimeline('Policy',staffNameById(staffId)+' acknowledged '+p.title);saveDexManage()};
 if($('formCreate'))$('formCreate').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can create form templates.');const name=$('formName').value.trim();if(!name)return;const f={id:'form-'+Date.now(),name,version:$('formVersion').value.trim()||'1.0',fields:$('formFields').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),createdBy:currentActorName(),createdAt:new Date().toISOString()};dexManage.formTemplates.unshift(f);addTimeline('Form Builder',name+' template created');saveDexManage();logFormActivity('Created','Form Template',f.id,f.name,'',{version:f.version}).catch(()=>{})};
 if($('dashPeriod'))$('dashPeriod').onchange=()=>{renderBusinessTimeline();renderAutoAlerts()};
+if($('alertShowOpen'))$('alertShowOpen').onclick=()=>{FORM_ALERT_VIEW='Open';loadFormSecurityAlerts()};
+if($('alertShowResolved'))$('alertShowResolved').onclick=()=>{FORM_ALERT_VIEW='Resolved';loadFormSecurityAlerts()};
 if($('globalSearchInput'))$('globalSearchInput').oninput=renderGlobalSearch;
 if($('eqServiceAdd'))$('eqServiceAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader or above required.');const i=Number($('eqServiceEquipment').value),e=dexManage.equipment[i],cost=Number($('eqServiceCost').value||0),work=$('eqServiceWork').value.trim();if(!e)return alert('Choose equipment.');if(!work)return alert('Add the work completed.');if(!Number.isFinite(cost)||cost<0)return alert('Service cost cannot be negative.');dexManage.equipmentService.unshift({equipmentIndex:i,equipmentName:e.name,date:$('eqServiceDate').value||new Date().toISOString().slice(0,10),engineer:$('eqServiceEngineer').value.trim(),work,cost,at:new Date().toISOString()});addTimeline('Maintenance',e.name+' service history updated');saveDexManage()};
 
