@@ -130,7 +130,7 @@ nav button{border:0;background:#fff;padding:11px 3px 9px;font-size:11px;font-wei
 const SUPABASE_URL='https://bpnkouymdvcogeaqjmxl.supabase.co';
 const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:localStorage,storageKey:'dexters-staff-auth-v1'}});
-let session=null,account=null,profile=null,shifts=[],leaveRows=[],modules=[],trainingRows=[],documents=[];
+let session=null,account=null,profile=null,shifts=[],leaveRows=[],modules=[],trainingRows=[],documents=[],notifications=[];
 let activeDocument=null,formSignatureData='';
 let activeCourse=null,activeScene=0;
 const $=id=>document.getElementById(id);
@@ -156,16 +156,17 @@ function showLoggedOut(){$('loginWrap').classList.remove('hidden');$('app').clas
 function showLoggedIn(){$('loginWrap').classList.add('hidden');$('app').classList.remove('hidden');$('bottomNav').classList.remove('hidden');$('logoutBtn').classList.remove('hidden');$('headerSub').textContent=profile.full_name+' · '+profile.role;$('welcome').textContent='Hi, '+profile.full_name.split(' ')[0];$('roleLine').textContent=profile.role+' · '+profile.employment_status;renderAll()}
 async function loadAll(){
  const sid=account.staff_record_id;
- const [s,l,m,t,d]=await Promise.all([
+ const [s,l,m,t,d,n]=await Promise.all([
   sb.from('backoffice_rota_shifts').select('*').eq('staff_record_id',sid).eq('published',true).order('shift_date'),
   sb.from('backoffice_leave_requests').select('*').eq('staff_record_id',sid).order('created_at',{ascending:false}),
   sb.from('backoffice_training_modules').select('*').eq('active',true).order('sort_order'),
   sb.from('backoffice_training_records').select('*').eq('staff_record_id',sid).order('updated_at',{ascending:false}),
-  sb.from('backoffice_staff_documents').select('*').eq('staff_record_id',sid).order('created_at',{ascending:false})
+  sb.from('backoffice_staff_documents').select('*').eq('staff_record_id',sid).order('created_at',{ascending:false}),
+  sb.from('backoffice_staff_notifications').select('*').eq('staff_record_id',sid).order('created_at',{ascending:false})
  ]);
- shifts=s.error?[]:(s.data||[]);leaveRows=l.error?[]:(l.data||[]);modules=m.error?[]:(m.data||[]);trainingRows=t.error?[]:(t.data||[]);documents=d.error?[]:(d.data||[]);
+ shifts=s.error?[]:(s.data||[]);leaveRows=l.error?[]:(l.data||[]);modules=m.error?[]:(m.data||[]);trainingRows=t.error?[]:(t.data||[]);documents=d.error?[]:(d.data||[]);notifications=n.error?[]:(n.data||[]);
 }
-function renderAll(){renderProfile();renderRota();renderLeave();renderTraining();renderForms();renderHome()}
+function renderAll(){renderProfile();renderRota();renderLeave();renderTraining();renderForms();renderNotifications();renderHome()}
 function renderProfile(){
  $('profileCard').innerHTML=
  '<div class="metric"><span>Name</span><b>'+esc(profile.full_name)+'</b></div>'+
@@ -220,13 +221,31 @@ function renderRota(){
  const future=shifts.filter(s=>s.shift_date>=todayYmd()).slice(0,30);
  $('rotaList').innerHTML=future.map(s=>shiftHtml(s,s.shift_date===todayYmd())).join('')||'<span class="muted">No published shifts.</span>';bindShiftButtons($('rotaList'));renderTeamOffWeek();
 }
+
+function renderNotifications(){
+ const box=$('staffNotifications');if(!box)return;
+ const unread=notifications.filter(n=>!n.read_at);
+ box.innerHTML=notifications.length?notifications.slice(0,8).map(n=>'<div class="shift"><div class="row space"><div><b>'+esc(n.title)+'</b><div class="tiny muted">'+fmtDT(n.created_at)+'</div></div>'+(n.read_at?'<span class="badge">Read</span>':'<span class="badge">New</span>')+'</div><div class="muted" style="margin-top:6px">'+esc(n.message)+'</div>'+(!n.read_at?'<button class="btn alt" style="margin-top:8px" data-notify-read="'+n.id+'">Mark as read</button>':'')+'</div>').join(''):'<span class="muted">No notifications.</span>';
+ box.querySelectorAll('[data-notify-read]').forEach(b=>b.onclick=()=>markNotificationRead(b.dataset.notifyRead));
+ const leaveBtn=document.querySelector('nav button[data-panel="leave"]');
+ if(leaveBtn){
+   const base='🌴<br>Leave';
+   leaveBtn.innerHTML=unread.length?base+'<br><span class="badge">'+unread.length+'</span>':base;
+ }
+}
+async function markNotificationRead(id){
+ const {error}=await sb.from('backoffice_staff_notifications').update({read_at:new Date().toISOString()}).eq('id',id);
+ if(error)return alert(error.message);
+ await loadAll();renderNotifications();
+}
+
 function renderHome(){
  const todays=shifts.filter(s=>s.shift_date===todayYmd());
  $('todayShift').innerHTML=todays.map(s=>shiftHtml(s,true)).join('')||'<span class="muted">No shift scheduled today.</span>';bindShiftButtons($('todayShift'));
  const passed=modules.filter(m=>statusOf(trainingRows.find(r=>r.module_key===m.module_key))==='Passed').length;
  $('homeTraining').textContent=passed+' / '+modules.length+' passed';
  const next=shifts.find(s=>s.shift_date>=todayYmd());$('homeNextShift').textContent=next?fmtDate(next.shift_date)+' '+String(next.scheduled_start||'').slice(0,5):'None';
- $('homeLeave').textContent=leaveRows.filter(x=>x.status==='Pending'||x.status==='Requested').length+' pending';
+ $('homeLeave').textContent=leaveRows.filter(x=>x.status==='Pending'||x.status==='Requested').length+' pending';renderNotifications();
 }
 function renderLeave(){
  $('leaveList').innerHTML=leaveRows.map(r=>'<div class="shift"><div class="row space"><b>'+esc(r.leave_type)+'</b><span class="badge">'+esc(r.status||'Pending')+'</span></div><div class="muted">'+fmtDate(r.leave_from)+' → '+fmtDate(r.leave_to)+'</div>'+(r.note?'<div class="tiny">'+esc(r.note)+'</div>':'')+'</div>').join('')||'<span class="muted">No leave requests yet.</span>';
