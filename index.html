@@ -313,7 +313,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-27-secure-staff-hr-persistence">
+<main class="wrap" data-build="2026-09-08-website-pass-28-recruitment-permissions">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -1952,11 +1952,13 @@ async function loadSecureCoreData(){
  else jobs.push(SB.from('backoffice_staff_documents').select('*').eq('staff_record_id',SECURE_ACCOUNT.staff_record_id||'__none__'));
  if(secureRoleRank(role)>=2) jobs.push(SB.from('backoffice_tasks').select('*').order('created_at',{ascending:false}));
  else jobs.push(SB.from('backoffice_tasks').select('*').eq('assigned_staff_record_id',SECURE_ACCOUNT.staff_record_id||'__none__'));
+ if(secureRoleRank(role)>=3) jobs.push(SB.from('backoffice_recruitment').select('*').order('created_at',{ascending:false}));
+ else jobs.push(Promise.resolve({data:[],error:null}));
 
  const res=await Promise.all(jobs);
  const err=res.find(x=>x?.error)?.error;if(err)throw err;
 
- const [staffR,rotaR,leaveR,holidayR,payR,docsR,tasksR]=res;
+ const [staffR,rotaR,leaveR,holidayR,payR,docsR,tasksR,recruitR]=res;
  const staff=(staffR.data||[]).map(mapDbStaff);
  const docs=docsR.data||[];
  staff.forEach(s=>{
@@ -1989,6 +1991,16 @@ async function loadSecureCoreData(){
    dbId:t.id,title:t.title,assignee:t.assigned_staff_record_id||'',type:t.task_type||'Task',priority:t.priority||'Normal',
    due:t.due_date||'',details:t.details||'',resolution:t.resolution||'',status:t.status||'Open',
    tags:Array.isArray(t.tags)?t.tags:[],at:t.created_at
+ }));
+ dexManage.recruitment=(recruitR.data||[]).map(r=>({
+   dbId:r.id,name:r.applicant_name,phone:r.phone||'',email:r.email||'',role:r.role_applied||'Staff',
+   applied:r.applied_date||'',stage:r.stage||'Applied',availability:r.availability||'',
+   interviewDate:r.interview_date||'',interviewer:r.interviewer||'',interview:r.interview_notes||'',
+   interviewOutcome:r.interview_outcome||'',score:r.score||'',rtw:r.rtw_status||'Not checked',
+   rtwMethod:r.rtw_method||'',rtwDate:r.rtw_date||'',rtwRef:r.rtw_reference||'',
+   references:r.references_note||'',onboarding:r.onboarding_note||'',startDate:r.start_date||'',
+   decision:r.decision||'',tags:Array.isArray(r.tags)?r.tags:[],convertedStaffId:r.converted_staff_record_id||null,
+   convertedAt:r.converted_at||null,at:r.created_at
  }));
  localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));
  CORE_DB_CONNECTED=true;
@@ -2961,10 +2973,31 @@ window.convertApplicantToStaff=async i=>{
  const s={id,name:r.name,role,status:'Active',start:r.startDate||new Date().toISOString().slice(0,10),phone:r.phone||'',email:r.email||'',contractType:'Regular hours',contractDays:5,contractHours:0,leaveYearStart:new Date().getFullYear()+'-01-01',holidayWeeks:5.6,bankHolidaysIncluded:true,tags:r.tags||[],permissions:roleDefaultPerms(role),docs:[],absences:[],incidents:[],notes:[],checklists:[],training:{completed:0,total:0,finalScore:null,certifiedAt:null,refresherDue:null},audit:[{at:new Date().toISOString(),action:'Staff record created from recruitment'}]};
  if(r.rtw==='Checked')s.docs.push({category:'Employment & Onboarding',templateId:'right_to_work',type:'Right to Work Check',documentDate:r.rtwDate||new Date().toISOString().slice(0,10),expiry:'',completedBy:r.interviewer||CURRENT_STAFF_ROLE,note:'Recruitment RTW method: '+(r.rtwMethod||'')+(r.rtwRef?' · Reference: '+r.rtwRef:''),formData:{checkDate:r.rtwDate||'',method:r.rtwMethod||'',reference:r.rtwRef||'',checker:r.interviewer||'',outcome:'Checked'},signed:false,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
  staffDb.staff.push(s);staffDb.selected=id;r.convertedStaffId=id;r.stage='Hired';r.decision='Hired';r.convertedAt=new Date().toISOString();localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));
- if(CORE_DB_CONNECTED){try{await persistStaffProfileDb(s)}catch(e){alert('Staff card created locally, but secure staff save failed: '+e.message)}}
+ if(CORE_DB_CONNECTED){
+   try{
+     await persistStaffProfileDb(s);
+     const rtwDoc=s.docs?.[0];
+     if(rtwDoc){
+       const {error:docError}=await SB.from('backoffice_staff_documents').insert({
+         staff_record_id:s.id,category:rtwDoc.category,document_type:rtwDoc.type,document_date:rtwDoc.documentDate||null,
+         completed_by:rtwDoc.completedBy||null,acknowledged:false,details:rtwDoc.note||null,
+         document_data:{schemaVersion:2,templateId:rtwDoc.templateId,category:rtwDoc.category,note:rtwDoc.note,formData:rtwDoc.formData||{},signatureData:'',signatureName:'',signedAt:''},
+         created_by:SECURE_SESSION.user.id
+       });
+       if(docError)throw docError;
+     }
+     if(r.dbId){
+       const {error:recError}=await SB.from('backoffice_recruitment').update({
+         stage:'Hired',decision:'Hired',converted_staff_record_id:id,converted_at:new Date().toISOString(),updated_at:new Date().toISOString()
+       }).eq('id',r.dbId);
+       if(recError)throw recError;
+     }
+     await appendAuditDb('staff_profile',id,'Staff record created from recruitment',null,{applicant:r.name,recruitment_id:r.dbId||null});
+   }catch(e){alert('Staff card created locally, but secure recruitment conversion save failed: '+e.message)}
+ }
  addTimeline('Recruitment',r.name+' converted to staff record');saveDexManage();renderStaffDb();
 };
-if($('recAdd'))$('recAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const name=$('recName').value.trim();if(!name)return alert('Add the applicant name.');if($('recDecision').value==='Hired'&&$('recRTW').value!=='Checked')return alert('Complete the right-to-work check before marking the applicant Hired.');dexManage.recruitment.unshift({name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value.trim(),applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interviewDate:$('recInterviewDate').value,interviewer:$('recInterviewer').value.trim(),interview:$('recInterview').value.trim(),interviewOutcome:$('recInterviewOutcome').value,score:$('recScore').value.trim(),rtw:$('recRTW').value,rtwMethod:$('recRTWMethod').value,rtwDate:$('recRTWDate').value,rtwRef:$('recRTWRef').value.trim(),references:$('recReferences').value.trim(),onboarding:$('recOnboarding').value.trim(),startDate:$('recStartDate').value,decision:$('recDecision').value,tags:pickedTags('recTags'),at:new Date().toISOString()});saveDexManage()};
+if($('recAdd'))$('recAdd').onclick=async()=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const name=$('recName').value.trim();if(!name)return alert('Add the applicant name.');if($('recDecision').value==='Hired'&&$('recRTW').value!=='Checked')return alert('Complete the right-to-work check before marking the applicant Hired.');const item={name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value.trim(),applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interviewDate:$('recInterviewDate').value,interviewer:$('recInterviewer').value.trim(),interview:$('recInterview').value.trim(),interviewOutcome:$('recInterviewOutcome').value,score:$('recScore').value.trim(),rtw:$('recRTW').value,rtwMethod:$('recRTWMethod').value,rtwDate:$('recRTWDate').value,rtwRef:$('recRTWRef').value.trim(),references:$('recReferences').value.trim(),onboarding:$('recOnboarding').value.trim(),startDate:$('recStartDate').value,decision:$('recDecision').value,tags:pickedTags('recTags'),at:new Date().toISOString()};if(CORE_DB_CONNECTED){const {data,error}=await SB.from('backoffice_recruitment').insert({applicant_name:item.name,phone:item.phone||null,email:item.email||null,role_applied:item.role||null,applied_date:item.applied||null,stage:item.stage,availability:item.availability||null,interview_date:item.interviewDate||null,interviewer:item.interviewer||null,interview_notes:item.interview||null,interview_outcome:item.interviewOutcome||null,score:item.score||null,rtw_status:item.rtw||null,rtw_method:item.rtwMethod||null,rtw_date:item.rtwDate||null,rtw_reference:item.rtwRef||null,references_note:item.references||null,onboarding_note:item.onboarding||null,start_date:item.startDate||null,decision:item.decision||null,tags:item.tags||[],created_by:SECURE_SESSION.user.id}).select().single();if(error)return alert('Secure recruitment save failed: '+error.message);item.dbId=data.id;}dexManage.recruitment.unshift(item);saveDexManage()};
 if($('appAdd'))$('appAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader access required.');if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
 if($('rotaAdd'))$('rotaAdd').onclick=async()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return alert('Choose staff and a shift date.');if($('rotaStart').value&&$('rotaEnd').value&&$('rotaStart').value>=$('rotaEnd').value)return alert('Shift finish time must be after the start time.');
  const item={staffId:$('rotaStaff').value,date:$('rotaDate').value,area:$('rotaArea').value.trim(),start:$('rotaStart').value,end:$('rotaEnd').value,status:$('rotaStatus').value,notes:$('rotaNotes').value.trim(),tags:pickedTags('rotaTags'),clockInAt:null,clockOutAt:null,timeAudit:[],createdAt:new Date().toISOString()};
@@ -2974,9 +3007,9 @@ if($('rotaAdd'))$('rotaAdd').onclick=async()=>{if(!$('rotaStaff').value||!$('rot
  }else dexManage.rota.unshift(item);
  saveDexManage()
 };
-if($('taskAdd'))$('taskAdd').onclick=()=>{const title=$('taskTitle').value.trim();if(!title)return;dexManage.tasks.unshift({title,assignee:$('taskAssignee').value,type:$('taskType').value,priority:$('taskPriority').value,due:$('taskDue').value,details:$('taskDetails').value.trim(),resolution:$('taskResolution').value.trim(),tags:pickedTags('taskTags'),status:'Open',at:new Date().toISOString()});saveDexManage()};
-if($('eqAdd'))$('eqAdd').onclick=()=>{const name=$('eqName').value.trim();if(!name)return;dexManage.equipment.unshift({name,asset:$('eqAsset').value.trim(),location:$('eqLocation').value.trim(),status:$('eqStatus').value,last:$('eqLast').value,due:$('eqDue').value,fault:$('eqFault').value.trim(),action:$('eqAction').value.trim(),assignee:$('eqAssignee').value,engineer:$('eqEngineer').value.trim(),tags:pickedTags('eqTags'),at:new Date().toISOString()});saveDexManage()};
-if($('masterCompAdd'))$('masterCompAdd').onclick=()=>{const title=$('masterCompTitle').value.trim();if(!title)return;dexManage.masterCompliance.unshift({type:$('masterCompType').value,title,date:$('masterCompDate').value,review:$('masterCompReview').value,owner:$('masterCompOwner').value.trim(),hazard:$('masterCompHazard').value.trim(),scope:$('masterCompScope').value.trim(),controls:$('masterCompControls').value.trim(),actions:$('masterCompActions').value.trim(),tags:pickedTags('masterCompTags'),at:new Date().toISOString()});saveDexManage()};
+if($('taskAdd'))$('taskAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader access required.');const title=$('taskTitle').value.trim();if(!title)return;dexManage.tasks.unshift({title,assignee:$('taskAssignee').value,type:$('taskType').value,priority:$('taskPriority').value,due:$('taskDue').value,details:$('taskDetails').value.trim(),resolution:$('taskResolution').value.trim(),tags:pickedTags('taskTags'),status:'Open',at:new Date().toISOString()});saveDexManage()};
+if($('eqAdd'))$('eqAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader access required.');const name=$('eqName').value.trim();if(!name)return;dexManage.equipment.unshift({name,asset:$('eqAsset').value.trim(),location:$('eqLocation').value.trim(),status:$('eqStatus').value,last:$('eqLast').value,due:$('eqDue').value,fault:$('eqFault').value.trim(),action:$('eqAction').value.trim(),assignee:$('eqAssignee').value,engineer:$('eqEngineer').value.trim(),tags:pickedTags('eqTags'),at:new Date().toISOString()});saveDexManage()};
+if($('masterCompAdd'))$('masterCompAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const title=$('masterCompTitle').value.trim();if(!title)return;dexManage.masterCompliance.unshift({type:$('masterCompType').value,title,date:$('masterCompDate').value,review:$('masterCompReview').value,owner:$('masterCompOwner').value.trim(),hazard:$('masterCompHazard').value.trim(),scope:$('masterCompScope').value.trim(),controls:$('masterCompControls').value.trim(),actions:$('masterCompActions').value.trim(),tags:pickedTags('masterCompTags'),at:new Date().toISOString()});saveDexManage()};
 
 if($('saveHmrcSettings'))$('saveHmrcSettings').onclick=()=>{
  if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can change HMRC/PAYE settings.');
