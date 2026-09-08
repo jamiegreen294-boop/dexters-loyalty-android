@@ -507,10 +507,11 @@ body.pride-theme{background:#f7f3f8!important}
       }finally{forgotBtn.disabled=false;}
     };
 
+    restoreStandaloneSession();
     passEl.addEventListener('keydown',function(e){if(e.key==='Enter')loginBtn.click();});
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){initStandaloneAuthButtons();restoreStandaloneSession();});
-  else {initStandaloneAuthButtons();restoreStandaloneSession();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initStandaloneAuthButtons);
+  else initStandaloneAuthButtons();
 })();
 </script>
 
@@ -3873,7 +3874,8 @@ function roleDefaultPerms(role){
 function renderStaffDirectory(){
  const q=($('staffSearch').value||'').trim().toLowerCase();
  const items=staffDb.staff.filter(s=>!q||String(s.name).toLowerCase().includes(q)||String(s.role).toLowerCase().includes(q));
- $('staffDirectory').innerHTML=items.map(s=>{
+ const directory=$('staffDirectory');
+ directory.innerHTML=items.map(s=>{
   const due=(s.docs||[]).filter(d=>d.expiry&&new Date(d.expiry+'T12:00:00')<=new Date(Date.now()+30*86400000)).length;
   const abs=(s.absences||[]).length;
   const tr=s.training||{};
@@ -3883,6 +3885,9 @@ function renderStaffDirectory(){
     '<div class="pass-staff-contact">'+(s.email||s.phone||'No contact details')+'</div>'+
     '<div class="pass-staff-metrics"><span><b>'+Number(tr.completed||0)+'</b><small>training</small></span><span><b>'+due+'</b><small>docs due</small></span><span><b>'+abs+'</b><small>absence</small></span></div>'+
     '<div class="pass-staff-open">Open staff record →</div></button>';
+ directory.querySelectorAll('[data-staff-record]').forEach(card=>{
+  card.onclick=()=>window.selectStaffRecord(card.dataset.staffRecord);
+ });
  }).join('')||'<span class="muted">No staff match your search.</span>';
 }
 let STAFF_RECORD_OPEN=false;
