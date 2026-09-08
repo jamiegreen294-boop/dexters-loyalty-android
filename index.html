@@ -291,7 +291,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-23-live-customer-delete-sync">
+<main class="wrap" data-build="2026-09-08-website-pass-24-live-customer-orders">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -3106,6 +3106,7 @@ async function syncLiveCustomers(){
      cu.liveId=r.id;cu.source='Live Loyalty';cu.name=r.full_name||cu.name||'Customer';cu.phone=r.phone||'';cu.email=r.email||'';cu.status=cu.status==='Blocked'?'Blocked':'Active';
      cu.joined=r.joined_at?String(r.joined_at).slice(0,10):cu.joined||'';
      cu.lastActive=r.last_active||null;cu.loyaltyCode=r.loyalty_code||'';cu.loyalty=cu.loyalty||{};cu.loyalty.points=Number(r.points||0);cu.loyalty.stamps=Number(r.stamps||0);cu.loyalty.rewardReady=!!r.reward_ready;
+     cu.orders=(Array.isArray(r.orders)?r.orders:[]).map(o=>({...o,date:o.date||String(o.created_at||'').slice(0,10),status:o.status||'Unknown'}));
      cu.consent={...(cu.consent||{}),marketing:!!r.marketing_consent,sms:!!r.sms_consent,email:!!r.email_consent,termsAccepted:!!r.terms_accepted,privacyAccepted:!!r.privacy_accepted,recorded:!!r.consent_recorded,version:r.consent_version||'',source:r.consent_source||'',updatedAt:r.consent_at||null,note:(cu.consent||{}).note||''};
      cu.lastLiveSync=new Date().toISOString();
    });
@@ -3148,7 +3149,7 @@ function renderCustomerDb(){
  $('cuName').value=cu.name||'';$('cuPhone').value=cu.phone||'';$('cuEmail').value=cu.email||'';$('cuStatus').value=cu.status||'Active';$('cuJoined').value=cu.joined||'';$('cuContact').value=cu.preferredContact||'App';tagPicker('cuTags',cu.tags||[]);
  const l=cu.loyalty||{points:0,stamps:0,rewards:[]};
  $('custLoyalty').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Points</span><b>'+Number(l.points||0)+'</b></div><div class="bo-kpi"><span class="muted">Stamps</span><b>'+Number(l.stamps||0)+'</b></div><div class="bo-kpi"><span class="muted">Reward ready</span><b>'+(l.rewardReady?'Yes':'No')+'</b></div><div class="bo-kpi"><span class="muted">Loyalty code</span><b style="font-size:15px">'+(cu.loyaltyCode||'—')+'</b></div></div><div class="summarybox"><b>Live customer activity</b><br><span class="muted">'+(cu.lastActive?'Last active '+new Date(cu.lastActive).toLocaleString():'No activity date recorded')+'</span></div>';
- $('custOrders').innerHTML=(cu.orders||[]).map(o=>'<div class="summarybox"><b>'+o.ref+'</b><br><span class="muted">'+o.date+' · '+o.status+'</span></div>').join('')||'<span class="muted">No linked test orders yet.</span>';
+ $('custOrders').innerHTML=(cu.orders||[]).map(o=>'<div class="summarybox"><b>'+o.ref+'</b> '+(o.source?'<span class="badge">'+o.source+'</span>':'')+'<br><span class="muted">'+(o.date||'')+(o.collection_time?' · collect '+o.collection_time:'')+' · '+(o.status||'Unknown')+'</span>'+(o.items?'<br><span class="tiny">'+o.items.map(i=>(i.qty||1)+'× '+(i.name||i.item_name||'Item')).join(' · ')+'</span>':'')+(o.total_pence!=null?'<br><span class="tiny">Total '+payMoney(Number(o.total_pence||0)/100)+(o.payment_status?' · '+o.payment_status:'')+(o.balance_payment_status?' · balance '+o.balance_payment_status:'')+'</span>':'')+'</div>').join('')||'<span class="muted">No linked live orders yet.</span>';
  $('custCatering').innerHTML=(cu.catering||[]).map(o=>'<div class="summarybox"><b>'+o.ref+'</b><br><span class="muted">'+o.date+' · '+o.status+'</span></div>').join('')||'<span class="muted">No linked catering requests.</span>';
  $('custDeals').innerHTML=(cu.deals||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.status+'</span></div>').join('')||'<span class="muted">No linked deals.</span>';
  $('custChallenges').innerHTML=(cu.challenges||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.progress+'</span></div>').join('')||'<span class="muted">No linked challenge progress.</span>';
