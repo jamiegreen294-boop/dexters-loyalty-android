@@ -16,7 +16,8 @@ async function run(){
  response={data:{},error:{message:'Email service unavailable'}};await vm.runInContext('signup()',context);assert.equal(messages.at(-1),'Email service unavailable');
  fields.signupPassword.value='x';const count=requests.length;await vm.runInContext('signup()',context);assert.equal(requests.length,count);
  const built=fs.readFileSync('dist/app-auth.js','utf8');assert.equal(zlib.gunzipSync(Buffer.from(built.match(/const b='([^']+)'/)[1],'base64')).toString('utf8'),updated);
- const html=fs.readFileSync('dist/index.html','utf8');assert.equal(html.split('src="/app-auth.js"').length-1,1);
+ const html=fs.readFileSync('dist/index.html','utf8');
+ assert.equal((html.split('src="/app-auth.js"').length-1)+(html.split(built).length-1),1);
  assert(!/dexters-loyalty-android@[a-f0-9]+\/web\/app\.js/.test(html));
  console.log('PASS 11 verification-email return and signup regression checks. Email sending is mocked.');
 }

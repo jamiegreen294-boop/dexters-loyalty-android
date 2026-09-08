@@ -52,5 +52,8 @@ async function liveOrders(){
 }
 function boot(){style();ensureTop();ensureBottom();role();ensureOrderCard();liveOrders();setTimeout(()=>{if(document.getElementById('workHomeNav'))document.getElementById('dextersRecoveryBottom')?.remove()},250)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-setTimeout(boot,500);setTimeout(boot,1500);setInterval(()=>{role();liveOrders()},5000);
+setTimeout(boot,500);setTimeout(boot,1500);
+const recoveryAppView=document.getElementById('appView');
+if(recoveryAppView)new MutationObserver(()=>{if(!recoveryAppView.classList.contains('hidden'))boot()}).observe(recoveryAppView,{attributes:true,attributeFilter:['class']});
+setInterval(()=>{if(!document.hidden&&token()&&recoveryAppView&&!recoveryAppView.classList.contains('hidden'))liveOrders()},10000);
 })();
