@@ -4886,7 +4886,7 @@ renderLessons();renderTrainingManager();
 <script id="dexters-mandatory-training-sync-20260908">
 (function(){
   window.trainingStorageKey=function(){
-    const id=window.SECURE_ACCOUNT?.staff_record_id||SECURE_ACCOUNT?.staff_record_id||'local-test';
+    const id=SECURE_ACCOUNT?.staff_record_id||'local-test';
     return 'dexters_training_'+id;
   };
   window.trainingModuleKey=function(title){
@@ -6037,18 +6037,18 @@ function dxSetHeader(){
   const name=document.getElementById('trainStaffName');
   const role=document.getElementById('trainRole');
   if(name){
-    name.value=(window.SECURE_ACCOUNT?.staff_name||window.SECURE_SESSION?.user?.email||'Signed-in staff');
+    name.value=(SECURE_ACCOUNT?.staff_name||SECURE_SESSION?.user?.email||'Signed-in staff');
     name.disabled=true;
   }
   if(role){
-    role.value=window.SECURE_ACCOUNT?.role||'Staff';
+    role.value=SECURE_ACCOUNT?.role||'Staff';
     role.disabled=true;
   }
 }
 
 function dxRenderLibrary(){
   const root=dxTrainingRoot(); if(!root)return;
-  if(!window.SECURE_SESSION||!window.SECURE_ACCOUNT?.staff_record_id){
+  if(!SECURE_SESSION||!SECURE_ACCOUNT?.staff_record_id){
     root.innerHTML='<div class="summarybox"><span class="bad"><b>Sign in to open staff training.</b></span></div>';
     return;
   }
@@ -6110,8 +6110,8 @@ function dxRenderSummary(){
 
 function dxRenderManager(){
   const el=document.getElementById('trainManager'); if(!el)return;
-  const role=window.SECURE_ACCOUNT?.role||'Staff';
-  const rank=typeof window.secureRoleRank==='function'?window.secureRoleRank(role):0;
+  const role=SECURE_ACCOUNT?.role||'Staff';
+  const rank=typeof secureRoleRank==='function'?secureRoleRank(role):0;
   if(rank<2){
     el.innerHTML='<div class="summarybox"><b>Your training record</b><br><span class="tiny">Managers and Team Leaders can review team progress.</span></div>';
     return;
@@ -6152,7 +6152,7 @@ async function dxOpenModule(key){
   DX_TRAIN.activeKey=key;
   let r=dxRecord(key);
   if(!r||dxStatus(r)==='Not Started'||dxStatus(r)==='Refresher Due'){
-    const {data,error}=await window.SB.rpc('backoffice_training_start',{p_module_key:key});
+    const {data,error}=await SB.rpc('backoffice_training_start',{p_module_key:key});
     if(error){alert('Could not start training: '+error.message);return}
     await dxLoadTrainingV2(false);
     r=dxRecord(key);
@@ -6205,7 +6205,7 @@ function dxRenderPlayer(){
 
 async function dxCompleteScene(){
   const m=dxModule(DX_TRAIN.activeKey),scenes=dxScenes(m),sceneNo=DX_TRAIN.activeScene+1;
-  const {error}=await window.SB.rpc('backoffice_training_complete_scene',{p_module_key:DX_TRAIN.activeKey,p_scene:sceneNo});
+  const {error}=await SB.rpc('backoffice_training_complete_scene',{p_module_key:DX_TRAIN.activeKey,p_scene:sceneNo});
   if(error){alert('Could not save training progress: '+error.message);return}
   await dxLoadTrainingV2(false);
   if(DX_TRAIN.activeScene<scenes.length-1)DX_TRAIN.activeScene++;
@@ -6228,13 +6228,13 @@ async function dxSubmitQuiz(){
     answers.push(Number(el.value));
   }
   const fb=document.getElementById('dxQuizFeedback');fb.textContent='Saving result…';
-  const {data,error}=await window.SB.rpc('backoffice_training_submit_quiz',{p_module_key:DX_TRAIN.activeKey,p_answers:answers});
+  const {data,error}=await SB.rpc('backoffice_training_submit_quiz',{p_module_key:DX_TRAIN.activeKey,p_answers:answers});
   if(error){fb.innerHTML='<span class="bad">'+dxEsc(error.message)+'</span>';return}
   await dxLoadTrainingV2(false);
   const result=Array.isArray(data)?data[0]:data;
   if(result?.passed){
     fb.innerHTML='<span class="ok"><b>Passed — '+Number(result.score)+'%</b></span><br>Completion and refresher date saved.';
-    try{if(typeof window.appendAuditDb==='function')await window.appendAuditDb('training',DX_TRAIN.activeKey,'Training module passed',null,{score:Number(result.score),module_title:m.title})}catch(e){}
+    try{if(typeof appendAuditDb==='function')await appendAuditDb('training',DX_TRAIN.activeKey,'Training module passed',null,{score:Number(result.score),module_title:m.title})}catch(e){}
   }else{
     fb.innerHTML='<span class="bad"><b>Score '+Number(result?.score||0)+'%. You need '+Number(result?.pass_score||m.pass_score||80)+'%.</b></span><br>Review the training and try again.';
   }
@@ -6243,23 +6243,23 @@ async function dxSubmitQuiz(){
 
 async function dxLoadTrainingV2(render=true){
   if(DX_TRAIN.loading)return;
-  if(!window.SB||!window.SECURE_SESSION||!window.SECURE_ACCOUNT?.staff_record_id){
+  if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.staff_record_id){
     if(render){dxSetHeader();dxRenderLibrary();}
     return;
   }
   DX_TRAIN.loading=true;
   try{
-    const staffId=window.SECURE_ACCOUNT.staff_record_id;
+    const staffId=SECURE_ACCOUNT.staff_record_id;
     const [mods,records]=await Promise.all([
-      window.SB.from('backoffice_training_modules').select('*').eq('active',true).order('sort_order'),
-      window.SB.from('backoffice_training_records').select('*').eq('staff_record_id',staffId).order('updated_at',{ascending:false})
+      SB.from('backoffice_training_modules').select('*').eq('active',true).order('sort_order'),
+      SB.from('backoffice_training_records').select('*').eq('staff_record_id',staffId).order('updated_at',{ascending:false})
     ]);
     if(mods.error)throw mods.error;if(records.error)throw records.error;
     DX_TRAIN.modules=mods.data||[];DX_TRAIN.records=records.data||[];
-    const role=window.SECURE_ACCOUNT?.role||'Staff';
-    const rank=typeof window.secureRoleRank==='function'?window.secureRoleRank(role):0;
+    const role=SECURE_ACCOUNT?.role||'Staff';
+    const rank=typeof secureRoleRank==='function'?secureRoleRank(role):0;
     if(rank>=2){
-      const d=await window.SB.from('backoffice_training_dashboard').select('*').order('full_name').order('sort_order');
+      const d=await SB.from('backoffice_training_dashboard').select('*').order('full_name').order('sort_order');
       DX_TRAIN.dashboard=d.error?[]:(d.data||[]);
     }else DX_TRAIN.dashboard=[];
     if(render){dxSetHeader();dxRenderLibrary();}
@@ -6284,7 +6284,7 @@ document.addEventListener('click',e=>{
 
 const oldRender=window.renderLessons;
 window.renderLessons=function(){
-  if(window.SECURE_SESSION&&window.SECURE_ACCOUNT?.staff_record_id){dxLoadTrainingV2(true);return}
+  if(SECURE_SESSION&&SECURE_ACCOUNT?.staff_record_id){dxLoadTrainingV2(true);return}
   if(typeof oldRender==='function')return oldRender();
 };
 
@@ -6322,7 +6322,7 @@ function ensureGdprRegisterUi(){
 }
 
 async function loadGdprGovernance(){
-  if(!window.SB||!window.SECURE_SESSION)return;
+  if(!SB||!SECURE_SESSION)return;
   ensureGdprRegisterUi();
   const [p,a,c]=await Promise.all([
     SB.from('backoffice_policies').select('*').eq('active',true).order('sort_order'),
@@ -6388,7 +6388,7 @@ async function saveGdprAck(){
 }
 
 async function createGdprCase(){
-  if(!window.SECURE_SESSION)return alert('Sign in first.');
+  if(!SECURE_SESSION)return alert('Sign in first.');
   const type=document.getElementById('gdprCaseType').value;
   const person=document.getElementById('gdprCasePerson').value.trim();
   const details=document.getElementById('gdprCaseDetails').value.trim();
@@ -6459,13 +6459,13 @@ const oldRenderPolicies=window.renderPolicies;
 window.renderPolicies=function(){
   try{if(typeof oldRenderPolicies==='function')oldRenderPolicies()}catch(e){}
   ensureGdprRegisterUi();bindGdprControls();
-  if(window.SECURE_SESSION)loadGdprGovernance();
+  if(SECURE_SESSION)loadGdprGovernance();
 };
 
 document.addEventListener('click',e=>{
   if(e.target.closest('[data-tab="policies"]'))setTimeout(()=>{ensureGdprRegisterUi();bindGdprControls();loadGdprGovernance()},0);
 });
-setTimeout(()=>{ensureGdprRegisterUi();bindGdprControls();if(window.SECURE_SESSION)loadGdprGovernance()},1200);
+setTimeout(()=>{ensureGdprRegisterUi();bindGdprControls();if(SECURE_SESSION)loadGdprGovernance()},1200);
 })();
 </script>
 
@@ -6483,7 +6483,7 @@ function boDate(v){return v?new Date(v+'T12:00:00').toLocaleDateString('en-GB',{
 function boEsc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 async function loadTeamOffWeek(){
   const box=document.getElementById('teamOffWeekList'),inp=document.getElementById('teamOffWeek');
-  if(!box||!window.SB||!window.SECURE_SESSION)return;
+  if(!box||!SB||!SECURE_SESSION)return;
   if(!inp.value)inp.value=boWeekStart();
   box.innerHTML='<span class="muted">Loading…</span>';
   const start=boWeekStart(inp.value);
