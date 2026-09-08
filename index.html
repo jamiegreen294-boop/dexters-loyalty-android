@@ -5517,5 +5517,189 @@ renderLessons();renderTrainingManager();
   try{renderLessons()}catch(e){}
 })();
 </script>
+
+<style id="dexters-training-premium-voice-fullscreen-v1-20260908">
+#trainingFullscreenOverlay{position:fixed;inset:0;z-index:99999;background:#141017f2;display:none;align-items:center;justify-content:center;padding:16px}
+#trainingFullscreenOverlay.open{display:flex}
+.training-fullscreen-shell{width:min(1180px,100%);height:min(94vh,900px);background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 25px 80px #0008}
+.training-fullscreen-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;background:#4f0b70;color:#fff}
+.training-fullscreen-head h2{font-size:18px;margin:0}.training-fullscreen-head .tiny{color:#eee}
+.training-fullscreen-actions{display:flex;gap:8px;flex-wrap:wrap}
+.training-fullscreen-actions button{border:1px solid #ffffff55;background:#ffffff18;color:#fff;border-radius:8px;padding:8px 11px;font-weight:800}
+.training-fullscreen-body{flex:1;overflow:auto;padding:16px;background:#f6f3f7}
+.training-fullscreen-body .training-video{max-width:1050px;margin:0 auto}
+.training-fullscreen-body .training-stage{min-height:520px}
+.training-fullscreen-body .mh-course{min-height:620px}
+.training-fullscreen-body .mh-panel{min-height:330px}
+.training-fullscreen-body .mh-room{height:260px}
+.training-fullscreen-body .training-scene h3{font-size:28px}
+.training-fullscreen-body .training-scene p{font-size:17px;line-height:1.6}
+.training-fullscreen-body .dex-demo{min-height:190px;font-size:15px}
+.training-fullscreen-body .training-controls,.training-fullscreen-body .mh-controls{position:sticky;bottom:0;background:#fff;z-index:4;box-shadow:0 -6px 16px #0000000c}
+.training-fullscreen-footer{padding:10px 14px;border-top:1px solid #e6e0e8;background:#fff;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.training-fullscreen-btn{margin-left:6px}
+.training-voice-quality{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:#4f0b70;background:#f1e8f5;border-radius:999px;padding:4px 8px}
+@media(max-width:680px){
+ #trainingFullscreenOverlay{padding:0}
+ .training-fullscreen-shell{width:100%;height:100vh;border-radius:0}
+ .training-fullscreen-head{align-items:flex-start}
+ .training-fullscreen-body{padding:8px}
+ .training-fullscreen-body .training-stage{min-height:440px}
+ .training-fullscreen-body .mh-panel{min-height:230px}
+ .training-fullscreen-body .mh-room{height:180px}
+ .training-fullscreen-actions{justify-content:flex-end}
+}
+</style>
+<script>
+(function(){
+  let currentFullscreenTrainingIndex=null;
+  let premiumVoice=null;
+
+  function allVoices(){try{return speechSynthesis.getVoices?.()||[]}catch(e){return []}}
+  function voiceScore(v){
+    const name=String(v.name||'').toLowerCase(),lang=String(v.lang||'').toLowerCase();
+    let s=0;
+    if(lang==='en-gb')s+=100;
+    else if(lang.startsWith('en-gb'))s+=90;
+    else if(lang.startsWith('en'))s+=25;
+    if(/natural|neural|premium|enhanced|online/.test(name))s+=45;
+    if(/google uk english female|google uk english male/.test(name))s+=38;
+    if(/serena|daniel|susan|george|hazel|libby|ryan|sonia/.test(name))s+=30;
+    if(/microsoft/.test(name)&&lang.startsWith('en-gb'))s+=20;
+    if(v.localService===false)s+=5;
+    return s;
+  }
+  function choosePremiumVoice(){
+    const vs=allVoices();
+    premiumVoice=vs.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null;
+    return premiumVoice;
+  }
+  choosePremiumVoice();
+  try{speechSynthesis.onvoiceschanged=()=>choosePremiumVoice()}catch(e){}
+
+  window.getDextersTrainingVoice=function(){return premiumVoice||choosePremiumVoice()};
+
+  // Upgrade the existing narrator with better pacing and the best UK voice exposed by the device/browser.
+  window.speakTrainingSceneNow=function(i){
+    if(!('speechSynthesis' in window))return;
+    try{speechSynthesis.cancel()}catch(e){}
+    const l=lessons[i],s=l?.scenes?.[Math.min(videoScene[i]||0,(l?.scenes?.length||1)-1)];
+    if(!l||!s)return;
+    const meta=(s&&typeof s[2]==='object'&&s[2])?s[2]:{};
+    const parts=[
+      s[0]+'.',
+      s[1],
+      meta.bad?('Do not do this. '+meta.bad):'',
+      meta.good?('Do this instead. '+meta.good):'',
+      Array.isArray(meta.steps)&&meta.steps.length?('Remember: '+meta.steps.join(', ')+'.'):''
+    ].filter(Boolean);
+    const u=new SpeechSynthesisUtterance(parts.join(' '));
+    const v=getDextersTrainingVoice();if(v)u.voice=v;
+    u.lang=v?.lang||'en-GB';
+    u.rate=0.88;
+    u.pitch=0.96;
+    u.volume=1;
+    trainingSpeech=u;
+    try{speechSynthesis.speak(u)}catch(e){}
+  };
+
+  function ensureOverlay(){
+    let o=document.getElementById('trainingFullscreenOverlay');
+    if(o)return o;
+    o=document.createElement('div');o.id='trainingFullscreenOverlay';
+    o.innerHTML='<div class="training-fullscreen-shell">'+
+      '<div class="training-fullscreen-head"><div><h2 id="trainingFullscreenTitle">Training</h2><div class="tiny" id="trainingFullscreenSub">Dexter\'s Staff Training</div></div>'+
+      '<div class="training-fullscreen-actions"><button type="button" onclick="repeatFullscreenNarration()">🔊 Repeat voice</button><button type="button" onclick="browserFullscreenTraining()">⛶ Browser full screen</button><button type="button" onclick="closeTrainingFullscreen()">✕ Close</button></div></div>'+
+      '<div class="training-fullscreen-body"><div class="training-video" id="trainingFullscreenVideo"></div></div>'+
+      '<div class="training-fullscreen-footer"><span class="training-voice-quality" id="trainingVoiceQuality">🔊 UK English voice</span><span class="tiny">Press Esc or Close to return to the Training page.</span></div>'+
+      '</div>';
+    document.body.appendChild(o);
+    o.addEventListener('click',e=>{if(e.target===o)closeTrainingFullscreen()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&o.classList.contains('open'))closeTrainingFullscreen()});
+    return o;
+  }
+
+  function renderFullscreenTraining(){
+    if(currentFullscreenTrainingIndex==null)return;
+    const i=currentFullscreenTrainingIndex,l=lessons[i],host=document.getElementById('trainingFullscreenVideo');
+    if(!l||!host)return;
+    // Temporarily give renderVideo the fullscreen target ID, render, then restore.
+    const normal=document.getElementById('trainVideo'+i);
+    const placeholderId='trainVideo'+i;
+    if(normal)normal.id='trainVideoNormal'+i;
+    host.id=placeholderId;
+    try{renderVideo(i)}finally{
+      host.id='trainingFullscreenVideo';
+      if(normal)normal.id=placeholderId;
+    }
+    const v=getDextersTrainingVoice();
+    const q=document.getElementById('trainingVoiceQuality');
+    if(q)q.textContent='🔊 '+(v?.name||'Best UK English voice available');
+  }
+
+  window.openTrainingFullscreen=function(i){
+    currentFullscreenTrainingIndex=Number(i);
+    const o=ensureOverlay(),l=lessons[currentFullscreenTrainingIndex];
+    document.getElementById('trainingFullscreenTitle').textContent=l?.title||'Training';
+    document.getElementById('trainingFullscreenSub').textContent=(l?.group||"Dexter's")+' · animated training course';
+    o.classList.add('open');
+    document.body.style.overflow='hidden';
+    renderFullscreenTraining();
+  };
+  window.closeTrainingFullscreen=function(){
+    try{speechSynthesis.cancel()}catch(e){}
+    const o=document.getElementById('trainingFullscreenOverlay');if(o)o.classList.remove('open');
+    document.body.style.overflow='';
+    currentFullscreenTrainingIndex=null;
+  };
+  window.repeatFullscreenNarration=function(){
+    if(currentFullscreenTrainingIndex!=null)speakTrainingSceneNow(currentFullscreenTrainingIndex);
+  };
+  window.browserFullscreenTraining=async function(){
+    const shell=document.querySelector('#trainingFullscreenOverlay .training-fullscreen-shell');
+    if(!shell)return;
+    try{
+      if(!document.fullscreenElement)await shell.requestFullscreen?.();
+      else await document.exitFullscreen?.();
+    }catch(e){}
+  };
+
+  // Keep fullscreen scene in sync while a lesson is playing.
+  const oldRender=window.renderVideo;
+  window.renderVideo=function(i){
+    oldRender(i);
+    const stage=document.getElementById('trainVideo'+i);
+    if(stage){
+      const controls=stage.querySelector('.training-controls,.mh-controls');
+      if(controls&&!controls.querySelector('.training-fullscreen-btn')){
+        const b=document.createElement('button');b.type='button';b.className='btn alt small training-fullscreen-btn';
+        b.textContent='⛶ Full screen';b.onclick=()=>openTrainingFullscreen(i);controls.appendChild(b);
+      }
+      if(controls&&!controls.querySelector('.training-voice-quality')){
+        const v=getDextersTrainingVoice();
+        const chip=document.createElement('span');chip.className='training-voice-quality';
+        chip.textContent='🔊 '+(v?.name||'UK English');
+        controls.appendChild(chip);
+      }
+    }
+    if(currentFullscreenTrainingIndex===i){
+      setTimeout(()=>{try{renderFullscreenTraining()}catch(e){}},0);
+    }
+  };
+
+  // Re-render once voices have loaded so the displayed voice name is accurate.
+  try{
+    const prev=speechSynthesis.onvoiceschanged;
+    speechSynthesis.onvoiceschanged=()=>{
+      try{if(typeof prev==='function')prev()}catch(e){}
+      choosePremiumVoice();
+      try{renderLessons()}catch(e){}
+      if(currentFullscreenTrainingIndex!=null)renderFullscreenTraining();
+    };
+  }catch(e){}
+
+  try{renderLessons()}catch(e){}
+})();
+</script>
 </body>
 </html>
