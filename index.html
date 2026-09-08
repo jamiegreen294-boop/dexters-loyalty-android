@@ -507,8 +507,8 @@ body.pride-theme{background:#f7f3f8!important}
       }finally{forgotBtn.disabled=false;}
     };
 
-    restoreStandaloneSession();
     passEl.addEventListener('keydown',function(e){if(e.key==='Enter')loginBtn.click();});
+    restoreStandaloneSession();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initStandaloneAuthButtons);
   else initStandaloneAuthButtons();
@@ -770,7 +770,7 @@ body.pride-theme{background:#f7f3f8!important}
 <details class="flowstep">
 <summary><span><span class="stepnum">7</span>Review & send</span></summary>
 <div class="flowbody">
-<div class="summarybox stickytotal"><b>Test estimate: <span id="catEstimate">£78.00</span></b><br><span class="tiny">Final price is confirmed by Dexter's before payment.</span></div>
+<div class="summarybox stickytotal"><b>Estimated total: <span id="catEstimate">£78.00</span></b><br><span class="tiny">Final price is confirmed by Dexter's before payment.</span></div>
 <label class="field"><input id="catConfirm" type="checkbox" style="width:auto;margin-right:8px"> I confirm the catering details above are correct</label>
 <button class="btn" id="catSubmit">Send catering request</button>
 <div id="catCustomerStatus" class="summarybox muted">No request submitted yet.</div>
@@ -786,7 +786,7 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="lesson"><b>Buffet Extras</b><p class="muted">Mini quiche · sausage rolls · cocktail sausages · mini pizzas · vegetable pakora/samosas · mini spring rolls · chicken strips · fruit platter · cakes/traybakes · Walkers Ready Salted Crisps · salad/coleslaw · dips.</p></div>
 <p class="tiny">Set buffet prices are designed for 10+ people. Buffet-only items do not get added to Dexter's normal takeaway menu. Allergy and dietary requirements must be confirmed before staff approval.</p>
 <hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
-<h2>Staff approval queue</h2><div id="catQueue" class="muted">No test requests yet.</div></div>
+<h2>Staff approval queue</h2><div id="catQueue" class="muted">No live requests yet.</div></div>
 </div>
 </section>
 
@@ -872,7 +872,7 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="grid">
 <div class="card">
 <h2>My Shifts</h2>
-<div class="field">Test signed-in staff member<select id="myShiftStaff"></select></div>
+<div class="field">Staff member<select id="myShiftStaff"></select></div>
 <div id="myShiftList"></div>
 </div>
 
@@ -1460,10 +1460,10 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="training">
-<div class="card notice"><b>Staff Training App</b><p class="muted">Staff complete short Dexter's training modules with a knowledge check. Progress is remembered in this test and managers can review completion.</p></div>
+<div class="card notice"><b>Staff Training App</b><p class="muted">Staff complete required Dexter's training modules with knowledge checks. Progress and completion records are securely available to authorised managers and in the Staff App.</p></div>
 <div class="grid">
 <div class="card"><h2>Staff member</h2>
-<div class="field">Staff name<input id="trainStaffName" value="Test Staff"></div>
+<div class="field">Staff name<input id="trainStaffName" placeholder="Select or enter a staff member"></div>
 <div class="field">Role<select id="trainRole"><option>Staff</option><option>Team Leader</option><option>Manager</option><option>Super User</option></select></div>
 <div id="lessonList"></div>
 </div>
@@ -1667,7 +1667,7 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="reports">
-<div class="card notice"><b>Reports</b><p class="muted">PASS-style at-a-glance management reporting from the records held in this Back Office test.</p></div>
+<div class="card notice"><b>Reports</b><p class="muted">PASS-style at-a-glance management reporting from the current Back Office records.</p></div>
 <div class="bo-kpis">
   <div class="bo-kpi"><span class="muted">Active staff</span><b id="reportStaff">0</b><span class="tiny">current records</span></div>
   <div class="bo-kpi"><span class="muted">Open tasks</span><b id="reportTasks">0</b><span class="tiny">not completed</span></div>
@@ -1734,17 +1734,7 @@ const STAFFDBKEY='dexters_growth_staff_database_test_v1';
 
 let staffDb={selected:null,staff:[]};
 try{const saved=JSON.parse(localStorage.getItem(STAFFDBKEY)||'null');if(saved)staffDb=saved}catch(e){}
-if(!Array.isArray(staffDb.staff)||!staffDb.staff.length){
- staffDb={selected:'staff-demo-1',staff:[{
-  id:'staff-demo-1',name:'Test Staff',role:'Staff',status:'Active',start:new Date().toISOString().slice(0,10),
-  phone:'',email:'',emergencyName:'',emergencyPhone:'',
-  permissions:['KDS','Collection orders','Loyalty scanner'],
-  docs:[],absences:[],incidents:[],notes:[],
-  training:{completed:0,total:0,finalScore:null,certifiedAt:null,refresherDue:null},
-  audit:[{at:new Date().toISOString(),action:'Test staff record created'}]
- }]}
- localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));
-}
+if(!Array.isArray(staffDb.staff))staffDb={selected:null,staff:[]};
 
 window.dextersCompleteSecureLogin=async function(session,account){
  SECURE_SESSION=session||null;
@@ -2508,7 +2498,7 @@ function renderCat(){
    const edit='<details style="margin-top:10px"><summary><b>Staff quote / amend</b></summary><div class="field">People<input id="staffPeople'+i+'" type="number" min="1" value="'+x.people+'"></div><div class="field">Final quote (£)<input id="staffQuote'+i+'" inputmode="decimal" value="'+(x.total!=null?Number(x.total).toFixed(2):'')+'" placeholder="Enter final quote"></div><div class="field">Staff note<textarea id="staffNote'+i+'" rows="2" placeholder="Reason for amendment / note for customer">'+(x.staffNote||'')+'</textarea></div><div class="field"><b>Item quantities</b>'+((x.allocations||[]).map((a,j)=>'<div class="row" style="justify-content:space-between;margin:6px 0"><span>'+a.name+'</span><input id="staffAlloc'+i+'_'+j+'" type="number" min="0" value="'+a.qty+'" style="width:90px;margin:0"></div>').join('')||'<span class="muted">No item quantities</span>')+'</div><div class="field"><b>Paid extras</b>'+((x.extras||[]).map((a,j)=>'<div class="row" style="justify-content:space-between;margin:6px 0"><span>'+a.name+'</span><input id="staffExtra'+i+'_'+j+'" type="number" min="0" value="'+a.qty+'" style="width:90px;margin:0"></div>').join('')||'<span class="muted">No paid extras</span>')+'</div><div class="field"><b>Paid dip tubs</b>'+((x.paidDips||[]).map((a,j)=>'<div class="row" style="justify-content:space-between;margin:6px 0"><span>'+a.name+'</span><input id="staffDip'+i+'_'+j+'" type="number" min="0" value="'+a.qty+'" style="width:90px;margin:0"></div>').join('')||'<span class="muted">No paid dips</span>')+'</div><div class="row"><button class="btn small" onclick="saveStaffAmend('+i+')">Send amended quote</button><button class="btn alt small" onclick="approveCat('+i+')" '+(x.status==='Amended — awaiting customer confirmation'||x.status==='Customer declined amended quote'?'disabled title="Customer confirmation required"':'')+'>Approve</button><button class="btn alt small" onclick="declineCat('+i+')">Reject</button></div></details>';
    const confirm=x.status==='Amended — awaiting customer confirmation'?'<div class="summarybox notice"><b>Customer confirmation required</b><br><span class="muted">Revised quote: £'+Number(x.total||0).toFixed(2)+'</span><br>'+(x.staffNote?'<span class="muted">'+x.staffNote+'</span><br>':'')+'<div class="row" style="margin-top:8px"><button class="btn small" onclick="customerConfirmCat('+i+')">Customer accepts quote</button><button class="btn alt small" onclick="customerRejectCat('+i+')">Customer declines</button></div></div>':'';
    return base+edit+confirm+'</div>';
- }).join('')||'No test requests yet.'
+ }).join('')||'No live requests yet.'
 }
 window.approveCat=i=>{if(cat[i].status==='Amended — awaiting customer confirmation'){alert('Customer must accept the amended quote before staff can approve it.');return}if(cat[i].status==='Customer declined amended quote'){alert('This amended quote was declined. Update the quote before approving.');return}cat[i].status='Approved';saveCat()};
 window.declineCat=i=>{cat[i].status='Rejected';saveCat()};
@@ -2697,7 +2687,7 @@ function recalcPayrollRow(r){
 function renderHmrcSettings(){
  const h=dexManage.hmrcSettings||{};
  if($('hmrcOffice')){$('hmrcOffice').value=h.office||'';$('hmrcPayeRef').value=h.payeRef||'';$('hmrcAccountsRef').value=h.accountsRef||'';$('hmrcPayday').value=h.payday||'Friday';$('hmrcEmployerName').value=h.employerName||"Dexter's";}
- if($('hmrcSettingsStatus'))$('hmrcSettingsStatus').innerHTML=(h.office&&h.payeRef&&h.accountsRef)?'<span class="ok">PAYE identifiers entered for this test.</span>':'<span class="muted">Add employer PAYE identifiers before an HMRC submission can be prepared.</span>';
+ if($('hmrcSettingsStatus'))$('hmrcSettingsStatus').innerHTML=(h.office&&h.payeRef&&h.accountsRef)?'<span class="ok">PAYE identifiers saved.</span>':'<span class="muted">Add employer PAYE identifiers before an HMRC submission can be prepared.</span>';
 }
 function renderPayroll(){
  if(!$('weeklyPayrollRuns'))return;
@@ -2825,7 +2815,7 @@ function renderStaffChecklists(s){
 window.toggleStaffChecklistItem=(i,ii,done)=>{const s=selectedStaff();if(!s||!s.checklists?.[i]?.items?.[ii])return;s.checklists[i].items[ii].done=done;s.checklists[i].status=s.checklists[i].items.every(x=>x.done)?'Completed':'In progress';logStaff(s,'Checklist updated: '+s.checklists[i].type);saveStaffDb();addTimeline('Checklist',s.name+' · '+s.checklists[i].type+' '+s.checklists[i].status);saveDexManage();if(CORE_DB_CONNECTED)persistStaffProfileDb(s).catch(e=>alert('Secure checklist update failed: '+e.message))};
 function readEvidenceFile(input,cb){
  const file=input?.files?.[0];if(!file)return cb(null);
- if(file.size>1200000){alert('For this test build, evidence files must be under 1.2 MB.');return cb(null)}
+ if(file.size>1200000){alert('Evidence files must be under 1.2 MB.');return cb(null)}
  const reader=new FileReader();reader.onload=()=>cb({name:file.name,type:file.type,data:reader.result});reader.readAsDataURL(file);
 }
 
@@ -3072,7 +3062,7 @@ function renderReports(){
  $('reportFinance').innerHTML='<div class="summarybox"><b>£'+Number(sales).toFixed(2)+' recorded sales</b><br><span class="muted">'+low+' low-stock record(s) · '+waste+' wastage record(s)</span></div>';
  const faults=(dexManage.equipment||[]).filter(x=>x.status&&x.status!=='Operational').length;
  $('reportRisk').innerHTML='<div class="summarybox"><b>'+complianceDue+' compliance item(s) due/overdue</b><br><span class="muted">'+faults+' equipment item(s) needing attention</span></div>';
- $('reportGenerated').textContent='Generated from the current PASS Back Office test records at '+new Date().toLocaleString()+'.';
+ $('reportGenerated').textContent='Generated from the current Back Office records at '+new Date().toLocaleString()+'.';
 }
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
@@ -3264,14 +3254,7 @@ loadWorkflowSettings();
 const CUSTOMERDBKEY='dexters_backoffice_customer_files_test_v1';
 let customerDb={selected:null,customers:[]};
 try{const saved=JSON.parse(localStorage.getItem(CUSTOMERDBKEY)||'null');if(saved)customerDb=saved}catch(e){}
-if(!Array.isArray(customerDb.customers)||!customerDb.customers.length){
- customerDb={selected:'cust-demo-1',customers:[{
-  id:'cust-demo-1',name:'Test Customer',phone:'',email:'',status:'Active',joined:new Date().toISOString().slice(0,10),preferredContact:'App',
-  loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],
-  complaints:[],documents:[],notes:[],audit:[{at:new Date().toISOString(),action:'Test customer record created'}]
- }]}
- localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));
-}
+if(!Array.isArray(customerDb.customers))customerDb={selected:null,customers:[]};
 function saveCustomerDb(){localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));renderCustomerDb()}
 function selectedCustomer(){return customerDb.customers.find(x=>x.id===customerDb.selected)||null}
 function logCustomer(cu,action){cu.audit=cu.audit||[];cu.audit.unshift({at:new Date().toISOString(),action,by:currentActorName()});cu.audit=cu.audit.slice(0,100)}
@@ -3490,7 +3473,7 @@ function renderDealCandidates(){
  $('dealOut').innerHTML=dealCandidates.map((d,i)=>'<div class="summarybox"><b>'+d.title+'</b><br>'+d.offer+'<br><span class="muted"><b>Why:</b> '+d.reason+'</span><br><span class="tiny">Suggested expiry: '+d.expiry+' · '+d.rule+'</span><div class="row" style="margin-top:8px"><button class="btn small" onclick="approveDeal('+i+')">Approve deal draft</button><button class="btn alt small" onclick="rejectDeal('+i+')">Reject</button></div></div>').join('')||'<span class="muted">No deal rules matched this customer.</span>';
 }
 $('dealRun').onclick=()=>{
- const customer=$('dealName').value.trim()||'Test Customer',days=Math.max(0,Number($('dealDays').value||0)),visits=Math.max(0,Number($('dealVisits').value||0)),spend=Math.max(0,Number($('dealSpend').value||0)),fav=$('dealFav').value,bday=$('dealBirthday').value==='Yes',unused=$('dealUnused').value==='Yes',annual=$('dealAnnual').value==='Yes';
+ const customer=$('dealName').value.trim()||'Customer',days=Math.max(0,Number($('dealDays').value||0)),visits=Math.max(0,Number($('dealVisits').value||0)),spend=Math.max(0,Number($('dealSpend').value||0)),fav=$('dealFav').value,bday=$('dealBirthday').value==='Yes',unused=$('dealUnused').value==='Yes',annual=$('dealAnnual').value==='Yes';
  const out=[];
  if(days>=21) out.push({title:'We miss you 👋',offer:'£2.00 off a collection order over £10',reason:'No order for '+days+' days',rule:'Win-back · one use'+(annual?' · does not stack with 12-month auto deal':''),expiry:dealExpiry(7),customer});
  else if(days>=14) out.push({title:'Come back to Dexter\'s',offer:'£1.50 off a collection order over £8',reason:'No order for '+days+' days',rule:'Win-back · one use'+(annual?' · does not stack with 12-month auto deal':''),expiry:dealExpiry(7),customer});
@@ -3580,7 +3563,7 @@ function renderScratch(){
  if(challengeState.approved){
   el.textContent='REWARD APPROVED ✓';
   $('scratchStatus').innerHTML='<span class="ok"><b>'+challengeState.pendingReward+'</b> approved by staff.</span>';
-  staff.innerHTML='<span class="ok">Reward approved in this test.</span>';
+  staff.innerHTML='<span class="ok">Reward approved.</span>';
  }else if(challengeState.revealed){
   el.textContent='YOU REVEALED: '+challengeState.pendingReward+' 🎉';
   $('scratchStatus').innerHTML='<b>Reward revealed</b><br><span class="muted">Waiting for staff approval before it could be issued.</span>';
@@ -3885,18 +3868,18 @@ function renderStaffDirectory(){
     '<div class="pass-staff-contact">'+(s.email||s.phone||'No contact details')+'</div>'+
     '<div class="pass-staff-metrics"><span><b>'+Number(tr.completed||0)+'</b><small>training</small></span><span><b>'+due+'</b><small>docs due</small></span><span><b>'+abs+'</b><small>absence</small></span></div>'+
     '<div class="pass-staff-open">Open staff record →</div></button>';
+ }).join('')||'<span class="muted">No staff match your search.</span>';
  directory.querySelectorAll('[data-staff-record]').forEach(card=>{
   card.onclick=()=>window.selectStaffRecord(card.dataset.staffRecord);
  });
- }).join('')||'<span class="muted">No staff match your search.</span>';
 }
 let STAFF_RECORD_OPEN=false;
 window.selectStaffRecord=id=>{staffDb.selected=id;STAFF_RECORD_OPEN=true;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb();window.scrollTo({top:0,behavior:'smooth'})};
+window.closeStaffRecord=()=>{STAFF_RECORD_OPEN=false;renderStaffDb();window.scrollTo({top:0,behavior:'smooth'})};
 document.addEventListener('click',e=>{
  const card=e.target.closest('[data-staff-record]');
  if(card)window.selectStaffRecord(card.dataset.staffRecord);
 });
-window.closeStaffRecord=()=>{STAFF_RECORD_OPEN=false;renderStaffDb();window.scrollTo({top:0,behavior:'smooth'})};
 function fmtDate(d){if(!d)return '—';const x=new Date(d);return Number.isNaN(x.getTime())?d:x.toLocaleDateString()}
 function toggleLeavingFields(){
  const leave=$('sdStatus')?.value==='No Longer Employed';
@@ -4410,7 +4393,7 @@ lessons.push(
 );
 const TRAIN_GROUPS={"Core":0,"Operational":1,"Health & Safety":2,"Management":3};
 lessons.forEach((l,i)=>{if(!l.group)l.group="Core"});
-let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{},completedAt:{},finalAttempts:0,finalScore:null,certifiedAt:null,refreshDays:180};
+let trainState={staffName:'',role:'Staff',completed:{},attempts:{},watched:{},scores:{},completedAt:{},finalAttempts:0,finalScore:null,certifiedAt:null,refreshDays:365};
 try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState={...trainState,...saved,completedAt:saved.completedAt||{}}}catch(e){}
 let videoScene={},videoTimers={};
 function saveTraining(){localStorage.setItem(trainingStorageKey(),JSON.stringify(trainState));localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderLessons();renderTrainingManager();if(typeof applyMandatoryTrainingGate==='function')applyMandatoryTrainingGate()}
