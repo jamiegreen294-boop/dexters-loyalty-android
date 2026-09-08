@@ -4885,5 +4885,76 @@ renderLessons();renderTrainingManager();
   };
 })();
 </script>
+
+<style id="dexters-training-collapsible-sections-20260908">
+#lessonList .training-group{background:#fff;border:1px solid #dedde3;border-radius:6px;margin:12px 0;overflow:hidden;box-shadow:0 1px 4px #0000000a}
+#lessonList .training-group>summary{list-style:none;cursor:pointer;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:900;color:#3f3b42;background:#faf9fb}
+#lessonList .training-group>summary::-webkit-details-marker{display:none}
+#lessonList .training-group>summary:after{content:"▾";font-size:18px;color:#5b0b7e;transition:transform .18s}
+#lessonList .training-group[open]>summary:after{transform:rotate(180deg)}
+#lessonList .training-group-head{display:flex;flex-direction:column;gap:3px;min-width:0}
+#lessonList .training-group-title{font-size:16px}
+#lessonList .training-group-meta{font-size:11px;color:#77717a;font-weight:700}
+#lessonList .training-group-body{padding:4px 14px 14px;background:#fff}
+#lessonList .training-group .lesson{margin:10px 0}
+#lessonList .training-group-complete{color:#20853a}
+#lessonList .training-group-pending{color:#9a6a00}
+</style>
+<script>
+(function(){
+  function trainingGroupDescription(group){
+    if(group==='Health & Safety')return 'Workplace safety, equipment, fire, COSHH and incident training.';
+    if(group==='Operational')return "Dexter's day-to-day systems, orders and service procedures.";
+    if(group==='Cafe safety')return 'Cafe equipment, hot drinks and practical safety.';
+    if(group==='People & HR')return 'Workplace conduct, equality, speaking up and working-time awareness.';
+    if(group==='Management')return 'Additional management responsibilities and escalation.';
+    return "Core Dexter's training required for staff.";
+  }
+
+  window.renderLessons=function(){
+    const nameEl=document.getElementById('trainStaffName'),roleEl=document.getElementById('trainRole');
+    if(nameEl)nameEl.value=trainState.staffName||'';
+    if(roleEl)roleEl.value=trainState.role||'Staff';
+
+    const visible=lessons.map((l,i)=>({l,i})).filter(x=>!x.l.managerOnly||['Team Leader','Manager','Super User'].includes(trainState.role));
+    const order=[];
+    const grouped={};
+    visible.forEach(({l,i})=>{
+      const g=l.group||'Core';
+      if(!grouped[g]){grouped[g]=[];order.push(g)}
+      grouped[g].push({l,i});
+    });
+
+    const box=document.getElementById('lessonList');
+    if(!box)return;
+    box.innerHTML=order.map((group,gi)=>{
+      const items=grouped[group];
+      const doneCount=items.filter(({i})=>!!trainState.completed[i]).length;
+      const remaining=items.length-doneCount;
+      const firstIncomplete=items.some(({i})=>!trainState.completed[i]);
+      const openAttr=(gi===0||firstIncomplete&&order.slice(0,gi).every(g=>(grouped[g]||[]).every(({i})=>!!trainState.completed[i])))?' open':'';
+      const statusClass=remaining===0?'training-group-complete':'training-group-pending';
+      const statusText=remaining===0?'Complete':remaining+' remaining';
+
+      const content=items.map(({l,i})=>{
+        const done=!!trainState.completed[i],watched=!!trainState.watched[i],attempts=trainState.attempts[i]||0,score=trainState.scores[i];
+        return '<div class="lesson '+(done?'done':'')+'"><b>'+l.icon+' '+l.title+'</b><p class="muted">'+(done?'Completed':'Animated lesson + knowledge test')+'</p><div class="training-video" id="trainVideo'+i+'"></div>'+(watched?(done?'<div class="summarybox"><span class="ok"><b>Passed ✓</b></span><br><span class="tiny">Score '+score+'% · '+attempts+' attempt(s)</span></div>':quizMarkup(l,i)):'<p class="tiny">Finish the animated lesson to unlock the test.</p>')+'</div>';
+      }).join('');
+
+      return '<details class="training-group" data-training-group="'+group.replace(/"/g,'&quot;')+'"'+openAttr+'><summary><span class="training-group-head"><span class="training-group-title">'+group+' Training</span><span class="training-group-meta">'+trainingGroupDescription(group)+'</span></span><span class="'+statusClass+'">'+doneCount+'/'+items.length+' · '+statusText+'</span></summary><div class="training-group-body">'+content+'</div></details>';
+    }).join('');
+
+    lessons.forEach((_,i)=>renderVideo(i));
+    const req=requiredLessonIndexes(),done=completedCount();
+    const doneEl=document.getElementById('trainDone'),statusEl=document.getElementById('trainStatus');
+    if(doneEl)doneEl.textContent=done+' / '+req.length;
+    if(statusEl)statusEl.innerHTML=done===req.length
+      ?'<span class="ok"><b>All required training completed.</b></span>'
+      :'<b>'+(req.length-done)+' required module(s) remaining.</b><br><span class="muted">Open a training section above. Each required module needs the animated lesson and an 80% test score.</span>';
+  };
+
+  try{renderLessons()}catch(e){}
+})();
+</script>
 </body>
 </html>
