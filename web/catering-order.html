@@ -12,7 +12,7 @@
 .step{border:1px solid #ffffff22;border-radius:16px;margin:12px 0;background:#ffffff08;overflow:hidden}.stephead{padding:14px;font-size:19px;font-weight:900;display:flex;align-items:center;cursor:pointer;user-select:none}.stephead .toggle{margin-left:auto;font-size:22px;color:#ffd43b}.step.collapsed .stepbody{display:none}.step.collapsed .stephead{border-bottom:0}.menu-card{cursor:pointer}.menu-card .menu-toggle{float:right;color:#ffd43b;font-size:22px}.menu-card .menu-detail{margin-top:10px}.menu-card.collapsed .menu-detail{display:none}.stepbody{padding:14px;border-top:1px solid #ffffff16}.stepnum{display:inline-flex;width:34px;height:34px;border-radius:50%;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffd43b,#7c3aed);color:#fff;font-weight:900;margin-right:8px}
 .package-select{font-size:17px}.included{padding:14px;border:1px solid #ffffff22;border-radius:12px;background:#ffffff08;line-height:1.5}.choice-list{display:grid;gap:8px;margin:10px 0}.choice-row{display:flex;gap:10px;align-items:center}.choice-row input[type=checkbox]{width:22px;height:22px}.alloc{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:8px;align-items:center;margin:7px 0}.alloc input,.qty input{padding:9px;border-radius:9px;border:1px solid #ffffff2e;background:#0e1726;color:#fff;width:100%;box-sizing:border-box}
 .qty-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.qty{border:1px solid #ffffff20;border-radius:11px;padding:10px;background:#ffffff06}.qty b{display:block;margin-bottom:6px}.price{font-weight:900}.estimate{font-size:24px;font-weight:900}.buffet-menu{display:grid;gap:14px}.menu-card{border:1px solid #ffffff35;border-radius:22px;padding:20px;background:#ffffff06}.menu-card h3{margin:0 0 12px}.menu-card p{line-height:1.45;color:#cbd5e1}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checkgrid label{display:flex;gap:9px;align-items:flex-start}.checkgrid input{width:21px;height:21px}
-.note{padding:12px;border-radius:11px;background:#ffd43b14;border:1px solid #ffd43b33}
+.note{padding:12px;border-radius:11px;background:#ffd43b14;border:1px solid #ffd43b33}.allergen-list{display:grid;gap:10px;margin-top:12px}.allergen-card{border:1px solid #ffffff35;border-radius:16px;padding:14px;background:#ffffff06}.allergen-card b{display:block;font-size:17px}.contains{color:#ff8a9a}.maycheck{color:#cbd5e1;margin-top:4px}.extra-meta{font-size:13px;color:#cbd5e1;margin-top:3px}
 @media(max-width:620px){.grid,.checkgrid,.qty-grid{grid-template-columns:1fr}.alloc{grid-template-columns:minmax(0,1fr) 86px}}
 </style>
 </head>
@@ -53,7 +53,8 @@
   <div class="step">
     <div class="stephead"><span class="stepnum">4</span>Allergen information <span class="toggle">−</span></div>
     <div class="stepbody">
-      <div class="note"><b>Important allergen information</b><br>Buffet food can contain or come into contact with allergens. Dexter’s staff must review allergy information before approving a catering request. If anyone has a serious allergy, add full details in step 6.</div>
+      <div class="note"><b>Buffet allergen information</b><br>All Dexter’s catering food is prepared in the same kitchen. Cross-contact with other allergens is possible.</div>
+      <div id="packageAllergens" class="allergen-list"></div>
     </div>
   </div>
 
@@ -62,7 +63,7 @@
     <div class="stepbody">
       <h3>2oz dip tubs</h3><p class="muted2">Add any tubs you need. Current menu prices are shown.</p>
       <div id="dips" class="qty-grid"></div>
-      <h3 style="margin-top:18px">Buffet extras</h3><p class="muted2">Choose quantities. Buffet-extra pricing is confirmed by Dexter’s before payment.</p>
+      <h3 style="margin-top:18px">Buffet extras</h3><p class="muted2">Choose quantities. Prices below are included in the estimate; Dexter’s confirms the final total before payment.</p>
       <div id="extras" class="qty-grid"></div>
     </div>
   </div>
@@ -109,8 +110,27 @@ const packages={
  chinese:{key:'hot_chinese',name:"Dexter's Hot Chinese Buffet",menuName:'Hot Chinese Buffet',price:12.95,desc:'Choose two mains from Chicken Breast Curry, Chicken Szechuan, Black Bean Chicken, Garlic Chicken, Sweet & Sour Chicken or Salt & Chilli Chicken. Served with Boiled Rice, Chips, mini spring rolls and Prawn Crackers.',included:['Required: choose 2 mains','Boiled Rice','Chips','Mini spring rolls','Prawn Crackers'],choices:['Chicken Breast Curry','Chicken Szechuan','Black Bean Chicken','Garlic Chicken','Sweet & Sour Chicken','Salt & Chilli Chicken'],min:2,max:2,allocate:true,allocationLabel:'main portions'}
 };
 const dips=[['Garlic Mayo',0.80],["Dexter's Sauce",0.80],['Nero Sauce',0.80],['Luna Sauce',0.80],['Inferno Sauce',0.80],['Fire Sauce',0.80],['Nashville Hot Honey Sauce',0.80],['Spicy Chipotle Sauce',0.80],['Ranch Sauce',0.80],['Sweet Chilli Sauce',0.80],['BBQ Sauce',0.50],['Chilli Dip',0.50]];
-const extras=['Mini quiche','Sausage rolls','Cocktail sausages','Mini pizzas','Vegetable pakora / samosas','Mini spring rolls','Chicken strips','Fruit platter','Cakes / traybakes','Walkers Ready Salted Crisps','Salad / coleslaw'];
+const extras=[
+ {name:'Mini Sausage Rolls',pieces:'6 pieces',price:4.50},
+ {name:'Vegetable Pakora',pieces:'6 pieces',price:3.50},
+ {name:'Vegetable Samosas',pieces:'6 pieces',price:3.95},
+ {name:'Mini Spring Rolls',pieces:'8 pieces',price:4.50},
+ {name:'Cocktail Sausages',pieces:'10 pieces',price:4.50},
+ {name:'Mini Quiche',pieces:'6 pieces',price:5.50},
+ {name:'Mini Pizza Slices',pieces:'8 pieces',price:6.50},
+ {name:'Southern Fried Chicken Strips',pieces:'6 pieces',price:5.95}
+];
 const declarations=['Celery','Cereals containing gluten','Crustaceans','Egg','Fish','Lupin','Milk / dairy','Molluscs','Mustard','Tree nuts','Peanuts','Sesame','Soya','Sulphites','Vegetarian requirement','Vegan requirement','No known allergies or dietary requirements'];
+const packageAllergens={
+ breakfast:[
+  {name:'Square Sausage',contains:'Wheat/Gluten, Soya, Sulphites'},
+  {name:'Bacon',contains:'Wheat/Gluten'},
+  {name:'LINKS x2',contains:'Wheat/Gluten',check:'Sausage supplier label still to confirm'},
+  {name:'POTATO SCONE x2',contains:'Wheat/Gluten',check:'Potato-scone supplier label still to confirm'},
+  {name:'Fried Egg',contains:'Wheat/Gluten, Egg'},
+  {name:'Scrambled Egg',contains:'Wheat/Gluten, Egg'}
+ ]
+};
 const $=id=>document.getElementById(id), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function token(){try{const j=JSON.parse(localStorage.getItem('sb-bpnkouymdvcogeaqjmxl-auth-token')||'null'),s=j?.currentSession||j?.session||j;return s?.access_token||''}catch{return''}}
 async function call(action,p={}){const t=token();if(!t)throw Error('Please sign in through the Loyalty App first.');const r=await fetch(A,{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({action,...p})}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d}
@@ -139,9 +159,13 @@ function choiceChanged(){
  document.querySelectorAll('.allocQty').forEach(x=>x.addEventListener('input',review)); review();
 }
 function quantities(selector,labelAttr='data-name'){const o={};document.querySelectorAll(selector).forEach(x=>{const q=Math.max(0,Math.floor(Number(x.value)||0));if(q)o[x.getAttribute(labelAttr)]=q});return o}
+function renderAllergens(){
+ const p=current(),rows=packageAllergens[p.key]||[];
+ $('packageAllergens').innerHTML=rows.length?rows.map(a=>'<div class="allergen-card"><b>'+esc(a.name)+'</b><div><strong>Contains:</strong> <span class="contains">'+esc(a.contains)+'</span></div>'+(a.check?'<div class="maycheck"><strong>May contain / check:</strong> '+esc(a.check)+'</div>':'')+'</div>').join(''):'<div class="allergen-card"><b>'+esc(p.menuName)+'</b><div class="maycheck">Package-specific allergen details must be checked by Dexter’s staff before approval. Add any customer allergy or dietary information in step 6.</div></div>';
+}
 function renderDips(){
  $('dips').innerHTML=dips.map(([n,p])=>'<label class="qty"><b>'+esc(n)+' <span class="price">'+money(p)+'</span></b><input type="number" min="0" value="0" class="dipQty" data-name="'+esc(n)+'" data-price="'+p+'"></label>').join('');
- $('extras').innerHTML=extras.map(n=>'<label class="qty"><b>'+esc(n)+'</b><input type="number" min="0" value="0" class="extraQty" data-name="'+esc(n)+'"></label>').join('');
+ $('extras').innerHTML=extras.map(x=>'<label class="qty"><b>'+esc(x.name)+' · '+esc(x.pieces)+' · <span class="price">'+money(x.price)+'</span></b><input type="number" min="0" value="0" class="extraQty" data-name="'+esc(x.name)+'" data-price="'+x.price+'"></label>').join('');
  document.querySelectorAll('.dipQty,.extraQty').forEach(x=>x.addEventListener('input',review));
 }
 function renderDeclarations(){
@@ -151,6 +175,7 @@ function renderDeclarations(){
 function estimate(){
  const p=current(),people=Math.max(0,Number($('people').value)||0);let total=p.price*people;
  document.querySelectorAll('.dipQty').forEach(x=>total+=(Number(x.value)||0)*(Number(x.dataset.price)||0));
+ document.querySelectorAll('.extraQty').forEach(x=>total+=(Number(x.value)||0)*(Number(x.dataset.price)||0));
  return total;
 }
 function review(){
@@ -180,15 +205,15 @@ function validate(){
 }
 function requestData(){
  const p=current();
- return {version:2,package:{key:p.key,name:p.name,menu_name:p.menuName,price_per_person:p.price,included:p.included},selected_choices:selectedChoices(),quantity_allocation:quantities('.allocQty'),dips:quantities('.dipQty'),paid_extras:quantities('.extraQty'),allergy_dietary_declaration:[...document.querySelectorAll('.decl:checked')].map(x=>x.value),allergy_dietary_notes:$('allergyNotes').value,people:Math.floor(Number($('people').value)||0)};
+ return {version:2,package:{key:p.key,name:p.name,menu_name:p.menuName,price_per_person:p.price,included:p.included},selected_choices:selectedChoices(),quantity_allocation:quantities('.allocQty'),dips:quantities('.dipQty'),paid_extras:quantities('.extraQty'),paid_extra_prices:Object.fromEntries(extras.map(x=>[x.name,x.price])),allergy_dietary_declaration:[...document.querySelectorAll('.decl:checked')].map(x=>x.value),allergy_dietary_notes:$('allergyNotes').value,people:Math.floor(Number($('people').value)||0)};
 }
 async function history(){try{const d=await call('my_catering');$('history').innerHTML=d.requests.map(x=>'<div class="status"><b>'+esc(x.event_name)+'</b><br>'+new Date(x.collection_at).toLocaleString('en-GB')+' · '+esc(x.package_name)+'<br><span class="'+(x.status==='approved'?'ok':'')+'">'+esc(x.status.replaceAll('_',' '))+'</span></div>').join('')||'No requests yet.'}catch(e){$('history').textContent=e.message}}
 function initCollapsibles(){document.querySelectorAll('.stephead').forEach(h=>h.addEventListener('click',e=>{if(e.target.closest('input,select,textarea,button,label'))return;const step=h.closest('.step');step.classList.toggle('collapsed');const t=h.querySelector('.toggle');if(t)t.textContent=step.classList.contains('collapsed')?'+':'−'}));document.querySelectorAll('.step').forEach((step,i)=>{if(i>0&&i<6){step.classList.add('collapsed');const t=step.querySelector('.toggle');if(t)t.textContent='+'}})}
 async function boot(){
  const min=new Date(Date.now()+48*3600000);$('date').min=min.toISOString().slice(0,10);$('date').value=$('date').min;
  $('package').innerHTML=Object.values(packages).map(p=>'<option value="'+p.key+'">'+esc(p.name)+' — '+money(p.price)+'pp</option>').join('');
- renderMenu();renderDips();renderDeclarations();renderPackage();initCollapsibles();
- $('package').addEventListener('change',()=>{renderPackage();review()});$('people').addEventListener('input',()=>{choiceChanged();review()});['date','time','event','name','phone'].forEach(id=>$(id).addEventListener('input',review));
+ renderMenu();renderDips();renderDeclarations();renderPackage();renderAllergens();initCollapsibles();
+ $('package').addEventListener('change',()=>{renderPackage();renderAllergens();review()});$('people').addEventListener('input',()=>{choiceChanged();review()});['date','time','event','name','phone'].forEach(id=>$(id).addEventListener('input',review));
  try{const d=await call('status');$('closed').textContent=d.settings.catering_enabled?'Catering is open for requests.':'Catering ordering is currently switched off by staff.';$('form').hidden=!d.settings.catering_enabled;if(d.settings.catering_enabled)$('closed').classList.add('ok')}catch(e){$('closed').textContent=e.message;$('closed').classList.add('bad')}
  history();review();
 }
