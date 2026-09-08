@@ -341,7 +341,6 @@ body.pride-theme{background:#f7f3f8!important}
     const msg=document.getElementById('secureAuthMessage');
     if(!loginBtn||!forgotBtn||!emailEl||!passEl||!msg)return;
 
-    if(!emailEl.value)emailEl.value='jgreen.25@hotmail.co.uk';
 
     function getClient(){
       if(!window.supabase){
@@ -4503,7 +4502,7 @@ if($('secureForgotBtn'))$('secureForgotBtn').onclick=async()=>{
  const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
  $('secureAuthMessage').innerHTML=error?'<span class="bad">'+error.message+'</span>':'<span class="ok">Password reset link sent if the account exists.</span>';
 };
-if($('secureLogoutBtn'))$('secureLogoutBtn').onclick=async()=>{try{localStorage.removeItem('dexters-backoffice-session-fallback')}catch(e){}await SB.auth.signOut();SECURE_SESSION=null;SECURE_ACCOUNT=null;CURRENT_STAFF_ROLE='Staff';renderSecureAuth()};
+if($('secureLogoutBtn'))$('secureLogoutBtn').onclick=async()=>{try{localStorage.removeItem('dexters-backoffice-session-fallback');localStorage.removeItem('dexters_growth_staff_database_test_v1');localStorage.removeItem('dexters_backoffice_management_test_v2');localStorage.removeItem('dexters_growth_staff_training_test_v3')}catch(e){}await SB.auth.signOut();SECURE_SESSION=null;SECURE_ACCOUNT=null;CURRENT_STAFF_ROLE='Staff';renderSecureAuth()};
 if($('firstPasswordSave'))$('firstPasswordSave').onclick=async()=>{
  const a=$('firstNewPassword').value,b=$('firstConfirmPassword').value,msg=$('firstPasswordMessage');
  if(a.length<10)return msg.innerHTML='<span class="bad">Use at least 10 characters.</span>';
