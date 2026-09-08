@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5b0b7e">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>Dexter's Staff</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--p:#5b0b7e;--p2:#7c3aed;--bg:#f5f3f7;--card:#fff;--text:#332f37;--muted:#77717c;--line:#ddd8e2;--ok:#14833b;--bad:#c52d4a;--warn:#a16b00}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{background:#fff;border-bottom:1px solid var(--line);padding:18px 16px 14px;position:sticky;top:0;z-index:10}
+.brand{font-weight:1000;font-size:22px;color:var(--p)}.sub{font-size:13px;color:var(--muted)}
+main{max-width:760px;margin:auto;padding:14px 14px 90px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 14px #00000008}
+h1,h2,h3{margin:0 0 8px}.muted{color:var(--muted)}.tiny{font-size:12px}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{font-size:13px;font-weight:700;margin:9px 0}.field input,.field select,.field textarea{width:100%;margin-top:5px;padding:12px;border:1px solid #cfc8d6;border-radius:11px;background:#fff;font:inherit;color:var(--text)}
+.btn{appearance:none;border:0;border-radius:11px;padding:11px 14px;background:var(--p);color:#fff;font-weight:900}.btn.alt{background:#eee8f2;color:var(--p)}.btn.badbtn{background:var(--bad)}.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.space{justify-content:space-between}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#efe8f4;color:var(--p);font-size:12px;font-weight:800}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);z-index:15;padding-bottom:env(safe-area-inset-bottom)}
+nav button{border:0;background:#fff;padding:11px 3px 9px;font-size:11px;font-weight:800;color:#69616f}nav button.active{color:var(--p);background:#f2ebf5}
+.panel{display:none}.panel.active{display:block}.metric{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee}.metric:last-child{border:0}
+.shift{border:1px solid var(--line);border-radius:13px;padding:13px;margin:9px 0}.shift.today{border:2px solid var(--p);background:#faf6fc}
+.lesson{border:1px solid var(--line);border-radius:13px;padding:13px;margin:9px 0}.progress{height:7px;border-radius:999px;background:#e8e3eb;overflow:hidden}.progress i{display:block;height:100%;background:var(--p)}
+.overlay{position:fixed;inset:0;background:#0008;display:none;align-items:flex-end;z-index:50}.sheet{background:#fff;border-radius:20px 20px 0 0;padding:18px;width:100%;max-height:92vh;overflow:auto}.scene{min-height:210px;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(145deg,#24122f,#5b0b7e);color:#fff;border-radius:15px;padding:22px;margin:12px 0}.scene h2{font-size:25px}.quizq{padding:10px 0;border-bottom:1px solid #eee}
+#loginWrap{max-width:520px;margin:25px auto}.hidden{display:none!important}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.brand{font-size:20px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="row space">
+    <div><div class="brand">DEXTER'S STAFF</div><div class="sub" id="headerSub">Secure staff app</div></div>
+    <button class="btn alt hidden" id="logoutBtn">Sign out</button>
+  </div>
+</header>
+
+<div id="loginWrap">
+  <div class="card">
+    <h1>Staff sign in</h1>
+    <p class="muted">Use the login details issued by Dexter's management.</p>
+    <div class="field">Email<input id="loginEmail" type="email" autocomplete="username"></div>
+    <div class="field">Password<input id="loginPassword" type="password" autocomplete="current-password"></div>
+    <button class="btn" id="loginBtn">Sign in</button>
+    <div id="loginMsg" class="tiny" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<main id="app" class="hidden">
+<section class="panel active" id="home">
+  <div class="card">
+    <div class="row space"><div><h1 id="welcome">Hello</h1><div class="muted" id="roleLine"></div></div><span class="badge">Staff App</span></div>
+  </div>
+  <div class="card">
+    <h2>Today</h2>
+    <div id="todayShift"></div>
+  </div>
+  <div class="card">
+    <h2>Quick overview</h2>
+    <div class="metric"><span>Training</span><b id="homeTraining">—</b></div>
+    <div class="metric"><span>Next shift</span><b id="homeNextShift">—</b></div>
+    <div class="metric"><span>Holiday requests</span><b id="homeLeave">—</b></div>
+  </div>
+</section>
+
+<section class="panel" id="profile">
+  <div class="card"><h1>My Profile</h1><p class="muted">Your staff record held by Dexter's.</p></div>
+  <div class="card" id="profileCard"></div>
+</section>
+
+<section class="panel" id="rota">
+  <div class="card"><h1>My Rota</h1><p class="muted">Published shifts assigned to you.</p></div>
+  <div class="card" id="rotaList"></div>
+</section>
+
+<section class="panel" id="training">
+  <div class="card"><h1>My Training</h1><p class="muted">Complete each mandatory course and knowledge check.</p><div id="trainingSummary"></div></div>
+  <div id="trainingList"></div>
+</section>
+
+<section class="panel" id="leave">
+  <div class="card">
+    <h1>Holiday & Leave</h1>
+    <p class="muted">Send a request to management. A request is not approved until its status changes to Approved.</p>
+    <div class="field">Leave type<select id="leaveType"><option>Holiday</option><option>Unpaid leave</option><option>Other</option></select></div>
+    <div class="grid"><div class="field">From<input id="leaveFrom" type="date"></div><div class="field">To<input id="leaveTo" type="date"></div></div>
+    <div class="field">Note<textarea id="leaveNote" rows="3" placeholder="Optional note"></textarea></div>
+    <button class="btn" id="leaveSubmit">Request leave</button>
+    <div id="leaveMsg" class="tiny" style="margin-top:8px"></div>
+  </div>
+  <div class="card"><h2>My requests</h2><div id="leaveList"></div></div>
+</section>
+</main>
+
+<nav id="bottomNav" class="hidden">
+  <button data-panel="home" class="active">🏠<br>Home</button>
+  <button data-panel="profile">👤<br>Profile</button>
+  <button data-panel="rota">📅<br>Rota</button>
+  <button data-panel="training">🎓<br>Training</button>
+  <button data-panel="leave">🌴<br>Leave</button>
+</nav>
+
+<div class="overlay" id="trainingOverlay"><div class="sheet">
+  <div class="row space"><h2 id="courseTitle">Training</h2><button class="btn alt" id="courseClose">Close</button></div>
+  <div id="courseBody"></div>
+</div></div>
+
+<div class="overlay" id="passwordOverlay"><div class="sheet">
+  <h2>Choose a new password</h2><p class="muted">Your temporary password must be changed before using the Staff App.</p>
+  <div class="field">New password<input id="newPassword" type="password"></div>
+  <div class="field">Confirm password<input id="confirmPassword" type="password"></div>
+  <button class="btn" id="savePassword">Save password</button><div id="passwordMsg" class="tiny" style="margin-top:8px"></div>
+</div></div>
+
+<script>
+const SUPABASE_URL='https://bpnkouymdvcogeaqjmxl.supabase.co';
+const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:localStorage,storageKey:'dexters-staff-auth-v1'}});
+let session=null,account=null,profile=null,shifts=[],leaveRows=[],modules=[],trainingRows=[];
+let activeCourse=null,activeScene=0;
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const fmtDate=v=>v?new Date(v+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}):'—';
+const fmtDT=v=>v?new Date(v).toLocaleString('en-GB'):'—';
+const todayYmd=()=>new Date().toLocaleDateString('en-CA');
+const statusOf=r=>r?.refresher_due_at&&new Date(r.refresher_due_at)<=new Date()?'Refresher Due':(r?.status||'Not Started');
+
+async function loadIdentity(){
+ const {data:{session:s}}=await sb.auth.getSession();session=s;
+ if(!session){showLoggedOut();return}
+ const a=await sb.from('backoffice_staff_accounts').select('*').eq('auth_user_id',session.user.id).eq('active',true).maybeSingle();
+ if(a.error||!a.data){await sb.auth.signOut();$('loginMsg').innerHTML='<span class="bad">No active Dexter\'s staff account is linked to this login.</span>';showLoggedOut();return}
+ account=a.data;
+ const p=await sb.from('backoffice_staff_profiles').select('*').eq('staff_record_id',account.staff_record_id).maybeSingle();
+ if(p.error||!p.data){showLoggedOut();return}
+ profile=p.data;
+ if(account.must_change_password){$('passwordOverlay').style.display='flex'}
+ await loadAll();showLoggedIn();
+}
+function showLoggedOut(){$('loginWrap').classList.remove('hidden');$('app').classList.add('hidden');$('bottomNav').classList.add('hidden');$('logoutBtn').classList.add('hidden');$('headerSub').textContent='Secure staff app'}
+function showLoggedIn(){$('loginWrap').classList.add('hidden');$('app').classList.remove('hidden');$('bottomNav').classList.remove('hidden');$('logoutBtn').classList.remove('hidden');$('headerSub').textContent=profile.full_name+' · '+profile.role;$('welcome').textContent='Hi, '+profile.full_name.split(' ')[0];$('roleLine').textContent=profile.role+' · '+profile.employment_status;renderAll()}
+async function loadAll(){
+ const sid=account.staff_record_id;
+ const [s,l,m,t]=await Promise.all([
+  sb.from('backoffice_rota_shifts').select('*').eq('staff_record_id',sid).eq('published',true).order('shift_date'),
+  sb.from('backoffice_leave_requests').select('*').eq('staff_record_id',sid).order('created_at',{ascending:false}),
+  sb.from('backoffice_training_modules').select('*').eq('active',true).order('sort_order'),
+  sb.from('backoffice_training_records').select('*').eq('staff_record_id',sid).order('updated_at',{ascending:false})
+ ]);
+ shifts=s.error?[]:(s.data||[]);leaveRows=l.error?[]:(l.data||[]);modules=m.error?[]:(m.data||[]);trainingRows=t.error?[]:(t.data||[]);
+}
+function renderAll(){renderProfile();renderRota();renderLeave();renderTraining();renderHome()}
+function renderProfile(){
+ $('profileCard').innerHTML=
+ '<div class="metric"><span>Name</span><b>'+esc(profile.full_name)+'</b></div>'+
+ '<div class="metric"><span>Role</span><b>'+esc(profile.role)+'</b></div>'+
+ '<div class="metric"><span>Status</span><b>'+esc(profile.employment_status)+'</b></div>'+
+ '<div class="metric"><span>Start date</span><b>'+fmtDate(profile.start_date)+'</b></div>'+
+ '<div class="metric"><span>Email</span><b>'+esc(profile.email||session.user.email||'—')+'</b></div>'+
+ '<div class="metric"><span>Phone</span><b>'+esc(profile.phone||'—')+'</b></div>'+
+ '<div class="metric"><span>Contract</span><b>'+esc(profile.contract_type||'—')+'</b></div>'+
+ '<div class="metric"><span>Contract hours</span><b>'+Number(profile.contract_hours||0)+'</b></div>';
+}
+function shiftHtml(s,allowClock){
+ const started=!!s.clock_in_at,ended=!!s.clock_out_at;
+ let action='';
+ if(allowClock&&!started)action='<button class="btn" data-start="'+s.id+'">Start shift</button>';
+ else if(allowClock&&started&&!ended)action='<button class="btn badbtn" data-end="'+s.id+'">End shift</button>';
+ else if(ended)action='<span class="ok"><b>Shift completed ✓</b></span>';
+ return '<div class="shift '+(s.shift_date===todayYmd()?'today':'')+'"><div class="row space"><b>'+fmtDate(s.shift_date)+'</b><span class="badge">'+esc(s.status||'Scheduled')+'</span></div>'+
+ '<div class="muted">'+esc(String(s.scheduled_start||'').slice(0,5))+'–'+esc(String(s.scheduled_end||'').slice(0,5))+(s.area?' · '+esc(s.area):'')+'</div>'+
+ (started?'<div class="tiny">Started '+fmtDT(s.clock_in_at)+'</div>':'')+(ended?'<div class="tiny">Ended '+fmtDT(s.clock_out_at)+'</div>':'')+
+ '<div class="row" style="margin-top:9px">'+action+'</div></div>';
+}
+function bindShiftButtons(root=document){
+ root.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>clockShift('start',b.dataset.start));
+ root.querySelectorAll('[data-end]').forEach(b=>b.onclick=()=>clockShift('end',b.dataset.end));
+}
+async function clockShift(action,id){
+ const s=shifts.find(x=>x.id===id);if(!s||s.shift_date!==todayYmd())return alert('Only today\'s shift can be clocked from the Staff App.');
+ const fn=action==='start'?'backoffice_start_my_shift':'backoffice_end_my_shift';
+ const {error}=await sb.rpc(fn,{p_shift_id:id});if(error)return alert(error.message);
+ await loadAll();renderAll();
+}
+function renderRota(){
+ const future=shifts.filter(s=>s.shift_date>=todayYmd()).slice(0,30);
+ $('rotaList').innerHTML=future.map(s=>shiftHtml(s,s.shift_date===todayYmd())).join('')||'<span class="muted">No published shifts.</span>';bindShiftButtons($('rotaList'));
+}
+function renderHome(){
+ const todays=shifts.filter(s=>s.shift_date===todayYmd());
+ $('todayShift').innerHTML=todays.map(s=>shiftHtml(s,true)).join('')||'<span class="muted">No shift scheduled today.</span>';bindShiftButtons($('todayShift'));
+ const passed=modules.filter(m=>statusOf(trainingRows.find(r=>r.module_key===m.module_key))==='Passed').length;
+ $('homeTraining').textContent=passed+' / '+modules.length+' passed';
+ const next=shifts.find(s=>s.shift_date>=todayYmd());$('homeNextShift').textContent=next?fmtDate(next.shift_date)+' '+String(next.scheduled_start||'').slice(0,5):'None';
+ $('homeLeave').textContent=leaveRows.filter(x=>x.status==='Pending'||x.status==='Requested').length+' pending';
+}
+function renderLeave(){
+ $('leaveList').innerHTML=leaveRows.map(r=>'<div class="shift"><div class="row space"><b>'+esc(r.leave_type)+'</b><span class="badge">'+esc(r.status||'Pending')+'</span></div><div class="muted">'+fmtDate(r.leave_from)+' → '+fmtDate(r.leave_to)+'</div>'+(r.note?'<div class="tiny">'+esc(r.note)+'</div>':'')+'</div>').join('')||'<span class="muted">No leave requests yet.</span>';
+}
+$('leaveSubmit').onclick=async()=>{
+ const from=$('leaveFrom').value,to=$('leaveTo').value;if(!from||!to)return $('leaveMsg').innerHTML='<span class="bad">Choose both dates.</span>';
+ if(to<from)return $('leaveMsg').innerHTML='<span class="bad">The end date cannot be before the start date.</span>';
+ const row={staff_record_id:account.staff_record_id,leave_type:$('leaveType').value,leave_from:from,leave_to:to,note:$('leaveNote').value.trim()||null,status:'Pending',request_data:{source:'Dexters Staff App'},created_by:session.user.id,updated_at:new Date().toISOString()};
+ const {error}=await sb.from('backoffice_leave_requests').insert(row);
+ if(error)return $('leaveMsg').innerHTML='<span class="bad">'+esc(error.message)+'</span>';
+ $('leaveMsg').innerHTML='<span class="ok">Holiday request sent to management.</span>';$('leaveFrom').value='';$('leaveTo').value='';$('leaveNote').value='';await loadAll();renderAll();
+};
+function recFor(key){return trainingRows.find(r=>r.module_key===key)}
+function renderTraining(){
+ const passed=modules.filter(m=>statusOf(recFor(m.module_key))==='Passed').length;
+ const due=modules.filter(m=>statusOf(recFor(m.module_key))==='Refresher Due').length;
+ $('trainingSummary').innerHTML='<div class="metric"><span>Passed</span><b>'+passed+' / '+modules.length+'</b></div><div class="metric"><span>Refresher due</span><b class="'+(due?'bad':'ok')+'">'+due+'</b></div>';
+ $('trainingList').innerHTML=modules.map(m=>{const r=recFor(m.module_key),st=statusOf(r),sc=Array.isArray(m.content?.scenes)?m.content.scenes:[],done=Math.min(Number(r?.training_data?.current_scene||0),sc.length),pc=sc.length?Math.round(done/sc.length*100):0;return '<div class="card lesson"><div class="row space"><b>'+esc(m.title)+'</b><span class="badge">'+esc(st)+'</span></div><div class="tiny muted">'+esc(m.authority_name||'Dexter\'s')+' · '+Number(m.duration_minutes||10)+' mins</div><div class="progress" style="margin:9px 0"><i style="width:'+pc+'%"></i></div><div class="tiny">'+done+'/'+sc.length+' scenes'+(r?.score!=null?' · '+Number(r.score)+'%':'')+'</div><button class="btn" style="margin-top:9px" data-course="'+esc(m.module_key)+'">'+(st==='Not Started'?'Start':'Open')+'</button></div>'}).join('');
+ $('trainingList').querySelectorAll('[data-course]').forEach(b=>b.onclick=()=>openCourse(b.dataset.course));
+}
+async function openCourse(key){
+ activeCourse=modules.find(m=>m.module_key===key);if(!activeCourse)return;
+ let r=recFor(key);const st=statusOf(r);
+ if(!r||st==='Not Started'||st==='Refresher Due'){const x=await sb.rpc('backoffice_training_start',{p_module_key:key});if(x.error)return alert(x.error.message);await loadAll();r=recFor(key)}
+ const scenes=activeCourse.content?.scenes||[];activeScene=Math.max(0,Math.min(Number(r?.training_data?.current_scene||0),Math.max(0,scenes.length-1)));$('trainingOverlay').style.display='flex';renderCourse();
+}
+function renderCourse(){
+ const m=activeCourse,r=recFor(m.module_key),scenes=m.content?.scenes||[],scene=scenes[activeScene]||{},done=Math.min(Number(r?.training_data?.current_scene||0),scenes.length),allDone=done>=scenes.length;
+ $('courseTitle').textContent=m.title;
+ $('courseBody').innerHTML='<div class="tiny muted">'+esc(m.authority_name||'')+' · Pass '+Number(m.pass_score||80)+'%</div><div class="scene"><div><h2>'+esc(scene.title||('Scene '+(activeScene+1)))+'</h2><p>'+esc(scene.narration||'')+'</p></div></div><div class="row space"><button class="btn alt" id="prevScene" '+(activeScene===0?'disabled':'')+'>← Previous</button>'+(activeScene<scenes.length-1?'<button class="btn" id="nextScene">'+(activeScene<done?'Next →':'Complete scene →')+'</button>':(!allDone?'<button class="btn" id="nextScene">Complete final scene</button>':'<button class="btn" id="quizBtn">Take quiz</button>'))+'</div><div id="quizArea"></div>';
+ if($('prevScene'))$('prevScene').onclick=()=>{activeScene--;renderCourse()};
+ if($('nextScene'))$('nextScene').onclick=completeScene;
+ if($('quizBtn'))$('quizBtn').onclick=renderQuiz;
+}
+async function completeScene(){const {error}=await sb.rpc('backoffice_training_complete_scene',{p_module_key:activeCourse.module_key,p_scene:activeScene+1});if(error)return alert(error.message);await loadAll();const sc=activeCourse.content?.scenes||[];if(activeScene<sc.length-1)activeScene++;renderCourse();renderTraining();renderHome()}
+function renderQuiz(){
+ const qs=Array.isArray(activeCourse.quiz)?activeCourse.quiz:[];$('quizArea').innerHTML='<div class="card"><h3>Knowledge check</h3>'+qs.map((q,i)=>'<div class="quizq"><b>'+(i+1)+'. '+esc(q.question)+'</b><select id="q'+i+'"><option value="">Choose an answer</option>'+q.options.map((o,j)=>'<option value="'+j+'">'+esc(o)+'</option>').join('')+'</select></div>').join('')+'<button class="btn" id="submitQuiz" style="margin-top:10px">Submit quiz</button><div id="quizMsg" class="tiny" style="margin-top:8px"></div></div>';$('submitQuiz').onclick=submitQuiz;
+}
+async function submitQuiz(){const qs=activeCourse.quiz||[],answers=[];for(let i=0;i<qs.length;i++){const e=$('q'+i);if(!e||e.value==='')return $('quizMsg').innerHTML='<span class="bad">Answer every question.</span>';answers.push(Number(e.value))}const {data,error}=await sb.rpc('backoffice_training_submit_quiz',{p_module_key:activeCourse.module_key,p_answers:answers});if(error)return $('quizMsg').innerHTML='<span class="bad">'+esc(error.message)+'</span>';const result=Array.isArray(data)?data[0]:data;await loadAll();if(result?.passed){$('quizMsg').innerHTML='<span class="ok"><b>Passed — '+Number(result.score)+'%</b></span>';renderTraining();renderHome()}else $('quizMsg').innerHTML='<span class="bad"><b>Score '+Number(result?.score||0)+'%. Review the course and try again.</b></span>'}
+$('courseClose').onclick=()=>{$('trainingOverlay').style.display='none';activeCourse=null;renderTraining()};
+$('loginBtn').onclick=async()=>{const email=$('loginEmail').value.trim(),password=$('loginPassword').value;if(!email||!password)return;$('loginBtn').disabled=true;$('loginMsg').textContent='Signing in…';const {error}=await sb.auth.signInWithPassword({email,password});$('loginBtn').disabled=false;if(error)return $('loginMsg').innerHTML='<span class="bad">'+esc(error.message)+'</span>';await loadIdentity()};
+$('logoutBtn').onclick=async()=>{await sb.auth.signOut();session=account=profile=null;showLoggedOut()};
+$('savePassword').onclick=async()=>{const a=$('newPassword').value,b=$('confirmPassword').value;if(a.length<10)return $('passwordMsg').innerHTML='<span class="bad">Use at least 10 characters.</span>';if(a!==b)return $('passwordMsg').innerHTML='<span class="bad">Passwords do not match.</span>';const {error}=await sb.auth.updateUser({password:a});if(error)return $('passwordMsg').innerHTML='<span class="bad">'+esc(error.message)+'</span>';const res=await fetch(SUPABASE_URL+'/functions/v1/backoffice-staff-auth',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY},body:JSON.stringify({action:'password_changed'})});if(!res.ok)return $('passwordMsg').innerHTML='<span class="bad">Password changed, but account status could not update.</span>';$('passwordOverlay').style.display='none';account.must_change_password=false};
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.panel));if(b.dataset.panel==='training')renderTraining()});
+sb.auth.onAuthStateChange((event,s)=>{session=s;if(event==='SIGNED_OUT')showLoggedOut()});
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{}));
+loadIdentity();
+</script>
+</body>
+</html>
