@@ -313,7 +313,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-26-customer-live-completion">
+<main class="wrap" data-build="2026-09-08-website-pass-27-secure-staff-hr-persistence">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -1961,12 +1961,18 @@ async function loadSecureCoreData(){
  const docs=docsR.data||[];
  staff.forEach(s=>{
    s.docs=docs.filter(d=>d.staff_record_id===s.id).map(d=>{
-     const extra=decodeStaffDocDetails(d.details);
+     const legacy=decodeStaffDocDetails(d.details),extra=(d.document_data&&typeof d.document_data==='object')?d.document_data:{};
      return {
-       dbId:d.id,category:d.category||'',type:d.document_type,templateId:d.document_key||'',
+       dbId:d.id,category:d.category||extra.category||'',type:d.document_type,
+       templateId:extra.templateId||'',
        documentDate:d.document_date||'',expiry:d.review_expiry_date||'',completedBy:d.completed_by||'',
-       signed:!!d.acknowledged,note:extra.note||'',formData:extra.formData||{},signatureData:extra.signatureData||'',
-       signatureName:extra.signatureName||'',signedAt:extra.signedAt||'',createdAt:d.created_at,updatedAt:d.updated_at
+       signed:!!d.acknowledged,
+       note:extra.note??legacy.note??'',
+       formData:extra.formData||legacy.formData||{},
+       signatureData:extra.signatureData||legacy.signatureData||'',
+       signatureName:extra.signatureName||legacy.signatureName||'',
+       signedAt:extra.signedAt||legacy.signedAt||'',
+       createdAt:d.created_at,updatedAt:d.updated_at
      };
    });
  });
@@ -2006,6 +2012,27 @@ async function persistStaffProfileDb(s){
   tags:s.tags||[],profile_data:profileData,updated_at:new Date().toISOString()
  };
  const {error}=await SB.from('backoffice_staff_profiles').upsert(row,{onConflict:'staff_record_id'});
+ if(error)throw error;
+}
+async function persistTaskDb(task){
+ if(!CORE_DB_CONNECTED||!SECURE_SESSION||!task)return null;
+ const row={
+  title:task.title,assigned_staff_record_id:task.assignee||null,task_type:task.type||'Task',
+  priority:task.priority||'Normal',due_date:task.due||null,details:task.details||null,
+  resolution:task.resolution||null,status:task.status||'Open',tags:task.tags||[],
+  task_data:{source:task.source||'Back Office',workflow:task.workflow||null},
+  updated_at:new Date().toISOString()
+ };
+ let q;
+ if(task.dbId)q=SB.from('backoffice_tasks').update(row).eq('id',task.dbId).select('id').single();
+ else q=SB.from('backoffice_tasks').insert({...row,created_by:SECURE_SESSION.user.id}).select('id').single();
+ const {data,error}=await q;if(error)throw error;if(data?.id)task.dbId=data.id;return data?.id||null;
+}
+async function completeReturnToWorkTasksDb(staffId,resolution){
+ if(!CORE_DB_CONNECTED||!SECURE_SESSION||!staffId)return;
+ const {error}=await SB.from('backoffice_tasks').update({
+   status:'Completed',resolution:resolution||'Return-to-work completed',updated_at:new Date().toISOString()
+ }).eq('assigned_staff_record_id',staffId).neq('status','Completed').ilike('title','Return-to-work%');
  if(error)throw error;
 }
 async function appendAuditDb(entityType,entityId,action,beforeData=null,afterData=null){
@@ -3716,9 +3743,27 @@ $('staffSaveProfile').onclick=()=>{
 };
 window.saveStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=[...document.querySelectorAll('.sd-perm:checked')].map(x=>x.value);logStaff(s,'System permissions updated by Super User');saveStaffDb()};
 window.resetStaffPermissions=()=>{if(CURRENT_STAFF_ROLE!=='Super User'){alert('Only Super User can change permissions.');return}const s=selectedStaff();if(!s)return;s.permissions=roleDefaultPerms(s.role);logStaff(s,'Permissions reset to '+s.role+' defaults by Super User');saveStaffDb()};
-$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const existingDbId=editingStaffDocIndex===null?null:(s.docs[editingStaffDocIndex]?.dbId||null);const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),formData:collectStaffDocStructuredFields(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,signatureData:STAFF_SIGNATURE_DATA||'',signatureName:STAFF_SIGNATURE_NAME||'',signedAt:STAFF_SIGNATURE_AT||'',updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}if(t.id==='return_work'&&String(rec.formData?.fitToReturn||'').startsWith('Yes')){s.status='Active';(dexManage.tasks||[]).filter(x=>x.assignee===s.id&&x.status!=='Completed'&&String(x.title||'').startsWith('Return-to-work')).forEach(x=>{x.status='Completed';x.resolution='Return-to-work form completed '+new Date().toISOString().slice(0,10)});logStaff(s,'Returned to Active after completed return-to-work form');saveDexManage();if(CORE_DB_CONNECTED)persistStaffProfileDb(s).catch(()=>{})}clearStaffDocForm();saveStaffDb();renderComplianceDashboard();
+$('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selectedStaffDocTemplate();if(!t)return alert('Choose a document template.');s.docs=s.docs||[];const existingDbId=editingStaffDocIndex===null?null:(s.docs[editingStaffDocIndex]?.dbId||null);const rec={category:$('sdDocCategory').value,templateId:t.id,type:t.title,documentDate:$('sdDocDate').value||new Date().toISOString().slice(0,10),expiry:$('sdDocExpiry').value,note:$('sdDocNote').value.trim(),formData:collectStaffDocStructuredFields(),completedBy:$('sdDocCompletedBy').value.trim(),signed:$('sdDocSigned').checked,signatureData:STAFF_SIGNATURE_DATA||'',signatureName:STAFF_SIGNATURE_NAME||'',signedAt:STAFF_SIGNATURE_AT||'',updatedAt:new Date().toISOString()};if(editingStaffDocIndex===null){rec.createdAt=new Date().toISOString();s.docs.unshift(rec);logStaff(s,'Document added: '+t.title)}else{s.docs[editingStaffDocIndex]={...s.docs[editingStaffDocIndex],...rec};logStaff(s,'Document updated: '+t.title)}if(t.id==='return_work'&&String(rec.formData?.fitToReturn||'').startsWith('Yes')){
+ const resolution='Return-to-work form completed '+new Date().toISOString().slice(0,10);
+ s.status='Active';
+ (dexManage.tasks||[]).filter(x=>x.assignee===s.id&&x.status!=='Completed'&&String(x.title||'').startsWith('Return-to-work')).forEach(x=>{x.status='Completed';x.resolution=resolution});
+ logStaff(s,'Returned to Active after completed return-to-work form');saveDexManage();
  if(CORE_DB_CONNECTED){
-   const dbRow={staff_record_id:s.id,category:rec.category,document_type:rec.type,document_date:rec.documentDate||null,review_expiry_date:rec.expiry||null,completed_by:rec.completedBy||null,acknowledged:!!rec.signed,details:encodeStaffDocDetails(rec)};
+   persistStaffProfileDb(s).catch(e=>alert('Secure staff status save failed: '+e.message));
+   completeReturnToWorkTasksDb(s.id,resolution).catch(e=>alert('Secure return-to-work task update failed: '+e.message));
+ }
+}clearStaffDocForm();saveStaffDb();renderComplianceDashboard();
+ if(CORE_DB_CONNECTED){
+   const dbRow={
+     staff_record_id:s.id,category:rec.category,document_type:rec.type,document_date:rec.documentDate||null,
+     review_expiry_date:rec.expiry||null,completed_by:rec.completedBy||null,acknowledged:!!rec.signed,
+     details:rec.note||null,
+     document_data:{
+       schemaVersion:2,templateId:rec.templateId||'',category:rec.category||'',note:rec.note||'',
+       formData:rec.formData||{},signatureData:rec.signatureData||'',signatureName:rec.signatureName||'',
+       signedAt:rec.signedAt||''
+     }
+   };
    const dbId=existingDbId||null;
    const q=dbId?SB.from('backoffice_staff_documents').update({...dbRow,updated_at:new Date().toISOString()}).eq('id',dbId):SB.from('backoffice_staff_documents').insert({...dbRow,created_by:SECURE_SESSION.user.id});
    q.then(({error})=>{if(error)alert('Secure document save failed: '+error.message);else loadSecureCoreData()});
@@ -3729,10 +3774,10 @@ window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i]
 
 $('sdChecklistType').onchange=()=>{const items=staffChecklistDefaults($('sdChecklistType').value);if(items.length)$('sdChecklistItems').value=items.join('\n')};
 $('sdChecklistType').dispatchEvent(new Event('change'));
-$('staffAddChecklist').onclick=()=>{const s=selectedStaff();if(!s)return;const type=$('sdChecklistType').value;const raw=$('sdChecklistItems').value.trim();const items=(raw?raw.split(/\n+/):staffChecklistDefaults(type)).map(text=>({text:text.trim(),done:false})).filter(x=>x.text);s.checklists=s.checklists||[];s.checklists.unshift({type,due:$('sdChecklistDue').value,status:'Not started',items,createdAt:new Date().toISOString()});logStaff(s,'Checklist assigned: '+type);addTimeline('Checklist',s.name+' assigned '+type);saveStaffDb();saveDexManage()};
-$('staffAddAbsence').onclick=()=>{const s=selectedStaff();if(!s)return;const from=$('sdAbsFrom').value,to=$('sdAbsTo').value,type=$('sdAbsType').value;if(!from||!to)return alert('Add both dates.');if(from>to)return alert('The absence end date cannot be before the start date.');s.absences=s.absences||[];s.absences.unshift({type,from,to,note:$('sdAbsNote').value.trim(),at:new Date().toISOString()});if(type==='Sickness'){s.status='Sick';const due=new Date(to+'T12:00:00');due.setDate(due.getDate()+1);dexManage.tasks=dexManage.tasks||[];dexManage.tasks.unshift({title:'Return-to-work · '+s.name,assignee:s.id,type:'Compliance action',priority:'High',due:due.toISOString().slice(0,10),details:'Complete the Return-to-Work Meeting form after sickness absence '+from+' → '+to,resolution:'',tags:['HR','Return to Work'],status:'Open',at:new Date().toISOString()});addTimeline('HR',s.name+' sickness recorded; return-to-work follow-up created')}logStaff(s,'Absence added: '+type+' '+from+' to '+to);$('sdAbsNote').value='';saveStaffDb();saveDexManage();if(CORE_DB_CONNECTED)persistStaffProfileDb(s).catch(e=>alert('Secure absence save failed: '+e.message))};
-$('staffAddIncident').onclick=()=>{const s=selectedStaff();if(!s)return;const details=$('sdIncidentDetails').value.trim();if(!details)return;readEvidenceFile($('sdIncidentEvidence'),evidence=>{s.incidents=s.incidents||[];const rec={type:$('sdIncidentType').value,date:$('sdIncidentDate').value||new Date().toISOString().slice(0,10),details,action:$('sdIncidentAction').value.trim(),evidence,at:new Date().toISOString()};s.incidents.unshift(rec);logStaff(s,'Incident recorded: '+rec.type);addTimeline('Incident',s.name+' · '+rec.type);if(activeWorkflow('incidents')){dexManage.tasks.unshift({title:'Follow up: '+rec.type+' · '+s.name,assignee:s.id,type:'Incident action',priority:'High',due:'',details:rec.action||rec.details,resolution:'',tags:['Incident','Follow-up'],status:'Open',at:new Date().toISOString()})}$('sdIncidentDetails').value='';$('sdIncidentAction').value='';$('sdIncidentEvidence').value='';saveStaffDb();saveDexManage()})};
-$('staffAddNote').onclick=()=>{const s=selectedStaff();if(!s)return;const text=$('sdNote').value.trim();if(!text)return;s.notes=s.notes||[];s.notes.unshift({text,at:new Date().toISOString()});logStaff(s,'Manager note added');$('sdNote').value='';saveStaffDb()};
+$('staffAddChecklist').onclick=()=>{const s=selectedStaff();if(!s)return;const type=$('sdChecklistType').value;const raw=$('sdChecklistItems').value.trim();const items=(raw?raw.split(/\n+/):staffChecklistDefaults(type)).map(text=>({text:text.trim(),done:false})).filter(x=>x.text);s.checklists=s.checklists||[];s.checklists.unshift({type,due:$('sdChecklistDue').value,status:'Not started',items,createdAt:new Date().toISOString()});logStaff(s,'Checklist assigned: '+type);addTimeline('Checklist',s.name+' assigned '+type);saveStaffDb();saveDexManage();if(CORE_DB_CONNECTED)persistStaffProfileDb(s).catch(e=>alert('Secure checklist save failed: '+e.message))};
+$('staffAddAbsence').onclick=()=>{const s=selectedStaff();if(!s)return;const from=$('sdAbsFrom').value,to=$('sdAbsTo').value,type=$('sdAbsType').value;if(!from||!to)return alert('Add both dates.');if(from>to)return alert('The absence end date cannot be before the start date.');s.absences=s.absences||[];s.absences.unshift({type,from,to,note:$('sdAbsNote').value.trim(),at:new Date().toISOString()});let rtwTask=null;if(type==='Sickness'){s.status='Sick';const due=new Date(to+'T12:00:00');due.setDate(due.getDate()+1);dexManage.tasks=dexManage.tasks||[];rtwTask={title:'Return-to-work · '+s.name,assignee:s.id,type:'Compliance action',priority:'High',due:due.toISOString().slice(0,10),details:'Complete the Return-to-Work Meeting form after sickness absence '+from+' → '+to,resolution:'',tags:['HR','Return to Work'],status:'Open',source:'Staff absence',workflow:'return_work',at:new Date().toISOString()};dexManage.tasks.unshift(rtwTask);addTimeline('HR',s.name+' sickness recorded; return-to-work follow-up created')}logStaff(s,'Absence added: '+type+' '+from+' to '+to);$('sdAbsNote').value='';saveStaffDb();saveDexManage();if(CORE_DB_CONNECTED){persistStaffProfileDb(s).catch(e=>alert('Secure absence save failed: '+e.message));if(rtwTask)persistTaskDb(rtwTask).then(()=>saveDexManage()).catch(e=>alert('Secure return-to-work task save failed: '+e.message))}};
+$('staffAddIncident').onclick=()=>{const s=selectedStaff();if(!s)return;const details=$('sdIncidentDetails').value.trim();if(!details)return;readEvidenceFile($('sdIncidentEvidence'),evidence=>{s.incidents=s.incidents||[];const rec={type:$('sdIncidentType').value,date:$('sdIncidentDate').value||new Date().toISOString().slice(0,10),details,action:$('sdIncidentAction').value.trim(),evidence,at:new Date().toISOString()};s.incidents.unshift(rec);logStaff(s,'Incident recorded: '+rec.type);addTimeline('Incident',s.name+' · '+rec.type);if(activeWorkflow('incidents')){dexManage.tasks.unshift({title:'Follow up: '+rec.type+' · '+s.name,assignee:s.id,type:'Incident action',priority:'High',due:'',details:rec.action||rec.details,resolution:'',tags:['Incident','Follow-up'],status:'Open',at:new Date().toISOString()})}$('sdIncidentDetails').value='';$('sdIncidentAction').value='';$('sdIncidentEvidence').value='';saveStaffDb();saveDexManage();if(CORE_DB_CONNECTED)persistStaffProfileDb(s).catch(e=>alert('Secure incident save failed: '+e.message))})};
+$('staffAddNote').onclick=()=>{const s=selectedStaff();if(!s)return;const text=$('sdNote').value.trim();if(!text)return;s.notes=s.notes||[];s.notes.unshift({text,at:new Date().toISOString()});logStaff(s,'Manager note added');$('sdNote').value='';saveStaffDb();if(CORE_DB_CONNECTED)persistStaffProfileDb(s).catch(e=>alert('Secure note save failed: '+e.message))};
 window.syncSelectedTraining=()=>{
  const s=selectedStaff();if(!s)return;
  try{
@@ -3743,7 +3788,7 @@ window.syncSelectedTraining=()=>{
   const certifiedAt=ts.certifiedAt||null;
   const refresherDue=certifiedAt?new Date(new Date(certifiedAt).getTime()+Number(ts.refreshDays||180)*86400000).toISOString():null;
   s.training={completed,total,finalScore:ts.finalScore??null,certifiedAt,refresherDue};
-  logStaff(s,'Training summary synced from Staff Training test');saveStaffDb();
+  logStaff(s,'Training summary synced from Staff Training test');saveStaffDb();if(CORE_DB_CONNECTED)persistStaffProfileDb(s).catch(e=>alert('Secure training save failed: '+e.message));
  }catch(e){alert('Could not read training progress.')}
 };
 
