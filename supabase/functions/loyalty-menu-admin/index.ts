@@ -17,8 +17,12 @@ Deno.serve(async(req:Request)=>{
  const {data:{user},error:userErr}=await userClient.auth.getUser();
  if(userErr||!user) return json({error:"Invalid session"},401);
  const admin=createClient(url,service);
- const {data:profile}=await admin.from("profiles").select("role,staff_permissions").eq("id",user.id).single();
- const canManage=profile?.role==="admin" || ((profile?.role==="staff" || profile?.role==="manager") && !!profile?.staff_permissions?.manage_menu);
+ const [{data:profile},{data:backoffice}]=await Promise.all([
+   admin.from("profiles").select("role,staff_permissions").eq("id",user.id).maybeSingle(),
+   admin.from("backoffice_staff_accounts").select("role,active,must_change_password").eq("auth_user_id",user.id).maybeSingle()
+ ]);
+ const backofficeRole=backoffice?.active&&!backoffice?.must_change_password?String(backoffice.role||"").toLowerCase():"";
+ const canManage=profile?.role==="admin" || ((profile?.role==="staff" || profile?.role==="manager") && !!profile?.staff_permissions?.manage_menu) || backofficeRole==="manager" || backofficeRole==="super user";
  if(!canManage) return json({error:"Menu management permission required"},403);
  let body:any={}; try{body=await req.json()}catch{return json({error:"Invalid request"},400)}
  const action=str(body.action,40);
