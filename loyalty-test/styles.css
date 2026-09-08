@@ -35,7 +35,7 @@ html[data-theme=standrew] .logo-mark{background:linear-gradient(135deg,#0878be 4
 .season-scene:after{width:130px;height:130px;left:-60px;bottom:-90px;background:var(--accent)}
 .season-art{font-size:58px;filter:drop-shadow(0 8px 8px rgba(0,0,0,.3));animation:season-float 3s ease-in-out infinite}
 .season-copy{display:grid;gap:5px;position:relative;z-index:2}.season-copy small{font-weight:900;letter-spacing:.13em;font-size:10px;opacity:.82}.season-copy strong{font-size:24px;line-height:1.05}.season-copy span{font-size:13px;line-height:1.35;max-width:320px}
-.season-particles{position:absolute;inset:0;pointer-events:none}.season-particles i{position:absolute;font-style:normal;font-size:20px;left:calc(12% + var(--i)*16%);top:calc(12% + mod(var(--i),3)*28%);opacity:.75;animation:season-drift calc(3s + var(--i)*.45s) ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.55s)}
+.season-particles{position:absolute;inset:0;pointer-events:none}.season-particles i{position:absolute;font-style:normal;font-size:20px;left:calc(12% + var(--i)*16%);top:18%;opacity:.75;animation:season-drift calc(3s + var(--i)*.45s) ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.55s)}
 .season-standard{background:linear-gradient(135deg,#102653,#07142f)}
 .season-pride{background:linear-gradient(125deg,#b5125b,#7b2cbf 40%,#175fad 70%,#06765c);border-bottom:7px solid transparent;border-image:linear-gradient(90deg,#e40303,#ff8c00,#ffed00,#008026,#24408e,#732982) 1}
 .season-burns{background-color:#17365d;background-image:linear-gradient(90deg,rgba(161,32,47,.75) 5px,transparent 5px),linear-gradient(rgba(242,193,78,.42) 4px,transparent 4px);background-size:46px 46px}.season-burns .season-copy{background:rgba(7,20,47,.62);padding:12px;border-radius:14px}
@@ -46,3 +46,5 @@ html[data-theme=standrew] .logo-mark{background:linear-gradient(135deg,#0878be 4
 @keyframes season-float{50%{transform:translateY(-7px) rotate(2deg)}}@keyframes season-bob{50%{transform:translateY(-5px) rotate(-4deg) scale(1.04)}}@keyframes season-drift{to{transform:translateY(24px) rotate(18deg);opacity:.28}}
 @media(max-width:380px){.season-scene{grid-template-columns:70px 1fr;padding:14px}.season-art{font-size:44px}.season-copy strong{font-size:20px}}
 @media(prefers-reduced-motion:reduce){.season-art,.season-particles i{animation:none!important}}
+
+.season-particles i:nth-child(2),.season-particles i:nth-child(5){top:55%}.season-particles i:nth-child(3),.season-particles i:nth-child(6){top:34%}
