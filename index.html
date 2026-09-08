@@ -313,7 +313,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-31-full-audit-fixes">
+<main class="wrap" data-build="2026-09-08-website-pass-32-form-audit-alerts">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -658,6 +658,11 @@ body.pride-theme{background:#f7f3f8!important}
     <div class="pass-statline"><span>Food safety</span><b id="liveFsStatus">—</b></div>
     <button class="btn alt small" id="refreshLiveReadOnly">Refresh live data</button>
     <div id="liveReadOnlyMessage" class="tiny" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card pass-dash-card">
+    <h3>Form security alerts</h3>
+    <div id="formSecurityAlerts" class="muted">No form activity loaded yet.</div>
   </div>
 
   <div class="card pass-dash-card">
@@ -2019,6 +2024,7 @@ async function loadSecureCoreData(){
  localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));
  CORE_DB_CONNECTED=true;
  renderStaffDb();renderDexManagement();syncLiveCustomers();if(!window.__DEXTERS_LIVE_CUSTOMER_TIMER)window.__DEXTERS_LIVE_CUSTOMER_TIMER=setInterval(()=>{if(SECURE_SESSION&&SECURE_ACCOUNT?.active)syncLiveCustomers()},30000);
+ loadFormSecurityAlerts().catch(()=>{});
  const msg=$('secureAuthMessage');if(msg)msg.innerHTML='<span class="ok">Secure database connected.</span>';
 }
 async function persistStaffProfileDb(s){
@@ -2067,6 +2073,41 @@ async function appendAuditDb(entityType,entityId,action,beforeData=null,afterDat
   actor_user_id:SECURE_SESSION.user.id,actor_role:SECURE_ACCOUNT?.role||CURRENT_STAFF_ROLE,
   entity_type:entityType,entity_id:String(entityId||''),action,before_data:beforeData,after_data:afterData
  });
+}
+function currentActorName(){
+ return SECURE_ACCOUNT?.staff_name||SECURE_SESSION?.user?.email||'Unknown user';
+}
+async function logFormActivity(action,formKind,formId,formName,subjectId='',metadata={}){
+ if(!CORE_DB_CONNECTED||!SECURE_SESSION)return;
+ const row={
+   form_kind:formKind||'Form',form_id:String(formId||''),form_name:String(formName||'Form'),
+   subject_id:String(subjectId||''),action,
+   actor_user_id:SECURE_SESSION.user.id,
+   actor_staff_record_id:SECURE_ACCOUNT?.staff_record_id||null,
+   actor_name:currentActorName(),actor_role:SECURE_ACCOUNT?.role||CURRENT_STAFF_ROLE,
+   metadata:metadata||{}
+ };
+ const {error}=await SB.from('backoffice_form_activity').insert(row);
+ if(error)throw error;
+ await appendAuditDb('form',row.form_id,action+' form: '+row.form_name,null,{form_kind:row.form_kind,subject_id:row.subject_id,actor_name:row.actor_name});
+ if(action==='Created'||action==='Deleted'){
+   dexManage.notifications=dexManage.notifications||[];
+   if(typeof staffDb!=='undefined'){
+     staffDb.staff.filter(s=>['Manager','Super User'].includes(s.role)).forEach(s=>notifyStaff(
+       s.id,'Form '+action.toLowerCase(),row.form_name+' · '+row.actor_name+' · '+new Date().toLocaleString(),'Form Audit'
+     ));
+   }
+   addTimeline('Form Alert',row.form_name+' '+action.toLowerCase()+' by '+row.actor_name);
+   saveDexManage();
+ }
+ loadFormSecurityAlerts().catch(()=>{});
+}
+async function loadFormSecurityAlerts(){
+ const box=$('formSecurityAlerts');if(!box||!SB||!SECURE_SESSION)return;
+ const {data,error}=await SB.from('backoffice_form_activity').select('*').order('occurred_at',{ascending:false}).limit(20);
+ if(error){box.innerHTML='<span class="bad">'+escLive(error.message)+'</span>';return}
+ const rows=data||[];
+ box.innerHTML=rows.map(r=>'<div class="summarybox"><b>'+escLive(r.form_name)+'</b><br><span class="badge">'+escLive(r.action)+'</span><span class="muted"> '+escLive(r.actor_name||'Unknown user')+' · '+fmtLiveDate(r.occurred_at)+'</span><br><span class="tiny">'+escLive(r.form_kind||'Form')+(r.subject_id?' · '+escLive(r.subject_id):'')+'</span></div>').join('')||'<span class="muted">No form activity recorded.</span>';
 }
 async function liveRpc(name,args={}){
  if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.active)throw new Error('Secure sign-in required.');
@@ -3073,7 +3114,7 @@ if($('announceSend'))$('announceSend').onclick=()=>{if(roleRank(CURRENT_STAFF_RO
 if($('fsSave'))$('fsSave').onclick=()=>{const signature=$('fsSignature').value.trim();if(!signature)return alert('A digital signature is required.');dexManage.foodSafety.unshift({date:$('fsDate').value||new Date().toISOString().slice(0,10),type:$('fsType').value,area:$('fsArea').value.trim(),reading:$('fsReading').value.trim(),outcome:$('fsOutcome').value,action:$('fsAction').value.trim(),staffId:$('fsStaff').value,signature,signedAt:new Date().toISOString()});if($('fsOutcome').value.startsWith('Fail'))dexManage.tasks.unshift({title:'Food safety corrective action · '+$('fsType').value,assignee:$('fsStaff').value,type:'Compliance action',priority:'High',due:'',details:$('fsAction').value.trim(),resolution:'',tags:['Compliance','High Priority'],status:'Open',at:new Date().toISOString()});addTimeline('Food Safety',$('fsType').value+' · '+$('fsOutcome').value);saveDexManage()};
 if($('policyPublish'))$('policyPublish').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can publish policies.');const title=$('policyTitle').value.trim();if(!title)return;dexManage.policies.unshift({id:'pol-'+Date.now(),title,version:$('policyVersion').value.trim()||'1.0',review:$('policyReview').value,content:$('policyContent').value.trim(),publishedAt:new Date().toISOString(),publishedBy:'Super User'});if(typeof staffDb!=='undefined')staffDb.staff.filter(s=>s.status==='Active').forEach(s=>notifyStaff(s.id,'Policy acknowledgement required',title+' v'+$('policyVersion').value,'Policy'));addTimeline('Policy',title+' published');saveDexManage()};
 if($('ackSave'))$('ackSave').onclick=()=>{const i=Number($('ackPolicy').value),p=dexManage.policies[i],staffId=$('ackStaff').value,sig=$('ackSignature').value.trim();if(!p||!staffId||!sig||!$('ackConfirm').checked)return alert('Choose policy/staff, confirm and sign.');dexManage.policyAcks.unshift({policyId:p.id,policyTitle:p.title,version:p.version,staffId,signature:sig,at:new Date().toISOString()});addTimeline('Policy',staffNameById(staffId)+' acknowledged '+p.title);saveDexManage()};
-if($('formCreate'))$('formCreate').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can create form templates.');const name=$('formName').value.trim();if(!name)return;dexManage.formTemplates.unshift({id:'form-'+Date.now(),name,version:$('formVersion').value.trim()||'1.0',fields:$('formFields').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),createdAt:new Date().toISOString()});addTimeline('Form Builder',name+' template created');saveDexManage()};
+if($('formCreate'))$('formCreate').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can create form templates.');const name=$('formName').value.trim();if(!name)return;const f={id:'form-'+Date.now(),name,version:$('formVersion').value.trim()||'1.0',fields:$('formFields').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),createdBy:currentActorName(),createdAt:new Date().toISOString()};dexManage.formTemplates.unshift(f);addTimeline('Form Builder',name+' template created');saveDexManage();logFormActivity('Created','Form Template',f.id,f.name,'',{version:f.version}).catch(()=>{})};
 if($('dashPeriod'))$('dashPeriod').onchange=()=>{renderBusinessTimeline();renderAutoAlerts()};
 if($('globalSearchInput'))$('globalSearchInput').oninput=renderGlobalSearch;
 if($('eqServiceAdd'))$('eqServiceAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader or above required.');const i=Number($('eqServiceEquipment').value),e=dexManage.equipment[i],cost=Number($('eqServiceCost').value||0),work=$('eqServiceWork').value.trim();if(!e)return alert('Choose equipment.');if(!work)return alert('Add the work completed.');if(!Number.isFinite(cost)||cost<0)return alert('Service cost cannot be negative.');dexManage.equipmentService.unshift({equipmentIndex:i,equipmentName:e.name,date:$('eqServiceDate').value||new Date().toISOString().slice(0,10),engineer:$('eqServiceEngineer').value.trim(),work,cost,at:new Date().toISOString()});addTimeline('Maintenance',e.name+' service history updated');saveDexManage()};
@@ -3261,20 +3302,20 @@ function renderCustomerDb(){
  $('custDeals').innerHTML=(cu.deals||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b> '+(d.source?'<span class="badge">'+d.source+'</span>':'')+'<br><span class="muted">'+(d.status||'')+(d.value?' · '+d.value:'')+(d.expiresAt?' · expires '+new Date(d.expiresAt).toLocaleDateString('en-GB'):'')+'</span></div>').join('')||'<span class="muted">No linked live deals.</span>';
  $('custChallenges').innerHTML=(cu.challenges||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.progress+'</span></div>').join('')||'<span class="muted">No linked challenge progress.</span>';
  $('custComplaints').innerHTML=(cu.complaints||[]).map((x,i)=>'<div class="summarybox"><b>Complaint / incident</b><br><span class="muted">'+x.text+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No complaints or incidents.</span>';
- $('custDocuments').innerHTML=(cu.documents||[]).map((x,i)=>'<div class="summarybox"><b>'+x.type+'</b>'+(x.signed?'<span class="badge">Signed</span>':'')+'<br><textarea id="cuDocEdit'+i+'" rows="3">'+String(x.note||'').replace(/</g,'&lt;')+'</textarea>'+(x.signatureData?'<div class="pass-saved-signature"><span>Signed by '+(x.signatureName||'customer')+(x.signedAt?' · '+new Date(x.signedAt).toLocaleString():'')+'</span><img src="'+x.signatureData+'" alt="Saved customer signature"></div>':'')+'<div class="row"><button class="btn alt small" onclick="saveCustomerDocument('+i+')">Save changes</button><button class="btn alt small" onclick="removeCustomerDocument('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No customer documents.</span>';
+ $('custDocuments').innerHTML=(cu.documents||[]).map((x,i)=>'<div class="summarybox"><b>'+x.type+'</b>'+(x.signed?'<span class="badge">Signed</span>':'')+'<br><span class="tiny">Created by '+(x.createdBy||'Unknown user')+' · '+new Date(x.at||Date.now()).toLocaleString()+'</span><br><textarea id="cuDocEdit'+i+'" rows="3">'+String(x.note||'').replace(/</g,'&lt;')+'</textarea>'+(x.signatureData?'<div class="pass-saved-signature"><span>Signed by '+(x.signatureName||'customer')+(x.signedAt?' · '+new Date(x.signedAt).toLocaleString():'')+'</span><img src="'+x.signatureData+'" alt="Saved customer signature"></div>':'')+'<div class="row"><button class="btn alt small" onclick="saveCustomerDocument('+i+')">Save changes</button><button class="btn alt small" onclick="removeCustomerDocument('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No customer documents.</span>';
  $('custNotes').innerHTML=(cu.notes||[]).map(x=>'<div class="summarybox"><span class="muted">'+x.text+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No notes.</span>';
  renderCustomerWorkflow(cu);
  $('custAudit').innerHTML=(cu.audit||[]).map(x=>'<div class="tiny" style="padding:7px 0;border-bottom:1px solid #ffffff10"><b>'+new Date(x.at).toLocaleString()+'</b> — '+x.action+'</div>').join('')||'No audit history.';
 }
-document.querySelectorAll('[data-custtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-custtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('[id^="custPane-"]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=$('custPane-'+b.dataset.custtab);if(p)p.classList.add('active')});
+document.querySelectorAll('[data-custtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-custtab]').forEach(x=>x.classList.remove('active'));document.querySelectorAll('[id^="custPane-"]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=$('custPane-'+b.dataset.custtab);if(p)p.classList.add('active');if(b.dataset.custtab==='documents'){const cu=selectedCustomer();if(cu)logFormActivity('Accessed','Customer File',cu.liveId||cu.id,'Customer Documents',cu.liveId||cu.id,{customer:cu.name}).catch(()=>{})}});
 const customerBackBtn=$('customerBackToCards');if(customerBackBtn)customerBackBtn.onclick=closeCustomerRecord;
 $('custSearch').addEventListener('input',renderCustDirectory);
 $('custAdd').onclick=()=>{const name=prompt('Customer name');if(!name?.trim())return;const id='cust-'+Date.now();customerDb.customers.push({id,name:name.trim(),phone:'',email:'',status:'Active',joined:new Date().toISOString().slice(0,10),preferredContact:'App',loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],audit:[]});customerDb.selected=id;logCustomer(selectedCustomer(),'Customer record created');saveCustomerDb()};
 $('custSave').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.name=$('cuName').value.trim()||'Unnamed customer';cu.phone=$('cuPhone').value.trim();cu.email=$('cuEmail').value.trim();cu.status=$('cuStatus').value;cu.joined=$('cuJoined').value;cu.preferredContact=$('cuContact').value;cu.tags=pickedTags('cuTags');logCustomer(cu,'Customer profile updated');saveCustomerDb()};
 $('custAddComplaint').onclick=()=>{const cu=selectedCustomer(),text=$('cuComplaint').value.trim();if(!cu||!text)return;cu.complaints.unshift({text,owner:$('cuComplaintOwner').value,due:$('cuComplaintDue').value,resolution:$('cuComplaintResolution').value.trim(),status:'Open',at:new Date().toISOString()});dexManage.tasks.unshift({title:'Customer complaint · '+cu.name,assignee:$('cuComplaintOwner').value,type:'Task',priority:'High',due:$('cuComplaintDue').value,details:text,resolution:$('cuComplaintResolution').value.trim(),tags:['Follow-up'],status:'Open',at:new Date().toISOString()});logCustomer(cu,'Complaint workflow opened');addTimeline('Customer Complaint',cu.name+' complaint opened');$('cuComplaint').value='';saveCustomerDb();saveDexManage()};
-$('custAddDocument').onclick=()=>{const cu=selectedCustomer(),note=$('cuDocNote').value.trim();if(!cu||!note)return;cu.documents.unshift({type:$('cuDocType').value,note,signed:!!CUSTOMER_SIGNATURE_DATA,signatureData:CUSTOMER_SIGNATURE_DATA||'',signatureName:CUSTOMER_SIGNATURE_NAME||'',signedAt:CUSTOMER_SIGNATURE_AT||'',at:new Date().toISOString()});resetCustomerSignature();logCustomer(cu,'Customer document added: '+$('cuDocType').value);$('cuDocNote').value='';saveCustomerDb()};
-window.saveCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;cu.documents[i].note=$('cuDocEdit'+i).value;cu.documents[i].updatedAt=new Date().toISOString();logCustomer(cu,'Customer document updated: '+cu.documents[i].type);saveCustomerDb()};
-window.removeCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const t=cu.documents[i].type;cu.documents.splice(i,1);logCustomer(cu,'Customer document removed: '+t);saveCustomerDb()};
+$('custAddDocument').onclick=()=>{const cu=selectedCustomer(),note=$('cuDocNote').value.trim();if(!cu||!note)return;const doc={id:'custdoc-'+Date.now(),type:$('cuDocType').value,note,signed:!!CUSTOMER_SIGNATURE_DATA,signatureData:CUSTOMER_SIGNATURE_DATA||'',signatureName:CUSTOMER_SIGNATURE_NAME||'',signedAt:CUSTOMER_SIGNATURE_AT||'',createdBy:currentActorName(),at:new Date().toISOString()};cu.documents.unshift(doc);resetCustomerSignature();logCustomer(cu,'Customer document added: '+doc.type);$('cuDocNote').value='';saveCustomerDb();logFormActivity('Created','Customer',doc.id,doc.type,cu.liveId||cu.id,{customer:cu.name}).catch(()=>{})};
+window.saveCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const d=cu.documents[i];logFormActivity('Accessed','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name}).catch(()=>{});d.note=$('cuDocEdit'+i).value;d.updatedAt=new Date().toISOString();logCustomer(cu,'Customer document updated: '+d.type);saveCustomerDb();logFormActivity('Updated','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name}).catch(()=>{})};
+window.removeCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const d=cu.documents[i];if(!confirm('Delete '+d.type+'? This action will be audited.'))return;cu.documents.splice(i,1);logCustomer(cu,'Customer document removed: '+d.type);saveCustomerDb();logFormActivity('Deleted','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name}).catch(()=>{})};
 
 $('custSaveConsent').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.consent={...(cu.consent||{}),marketing:$('cuMarketing').checked,sms:$('cuSms').checked,email:$('cuEmailConsent').checked,note:$('cuConsentNote').value.trim(),backOfficeUpdatedAt:new Date().toISOString()};logCustomer(cu,'Back Office contact preferences updated');saveCustomerDb()};
 $('custAddComm').onclick=()=>{const cu=selectedCustomer(),text=$('cuCommNote').value.trim();if(!cu||!text)return;cu.communications=cu.communications||[];cu.communications.unshift({text,at:new Date().toISOString(),by:CURRENT_STAFF_ROLE});logCustomer(cu,'Communication record added');$('cuCommNote').value='';saveCustomerDb()};
@@ -3822,11 +3863,15 @@ $('staffAddDoc').onclick=()=>{const s=selectedStaff();if(!s)return;const t=selec
    };
    const dbId=existingDbId||null;
    const q=dbId?SB.from('backoffice_staff_documents').update({...dbRow,updated_at:new Date().toISOString()}).eq('id',dbId):SB.from('backoffice_staff_documents').insert({...dbRow,created_by:SECURE_SESSION.user.id});
-   q.then(({error})=>{if(error)alert('Secure document save failed: '+error.message);else loadSecureCoreData()});
+   q.then(async({data,error})=>{if(error)return alert('Secure document save failed: '+error.message);
+     const action=dbId?'Updated':'Created';
+     await logFormActivity(action,'Staff HR',dbId||rec.dbId||'',rec.type,s.id,{category:rec.category,templateId:rec.templateId}).catch(()=>{});
+     loadSecureCoreData();
+   });
  }
 };
-window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo();renderStaffDocStructuredFields(d.formData||{})}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';loadStaffSignature(d);$('staffAddDoc').textContent='Save document changes'};
-window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb();if(CORE_DB_CONNECTED&&d?.dbId)SB.from('backoffice_staff_documents').delete().eq('id',d.dbId).then(({error})=>{if(error)alert('Secure document delete failed: '+error.message);else loadSecureCoreData()})};
+window.editStaffDoc=i=>{const s=selectedStaff();if(!s||!s.docs[i])return;const d=s.docs[i];logFormActivity('Accessed','Staff HR',d.dbId||d.templateId||i,d.type,s.id,{category:d.category}).catch(()=>{});editingStaffDocIndex=i;if(d.category&&STAFF_DOCUMENT_LIBRARY[d.category]){$('sdDocCategory').value=d.category;$('sdDocTemplate').innerHTML=STAFF_DOCUMENT_LIBRARY[d.category].map(x=>'<option value="'+x.id+'">'+x.title+'</option>').join('');$('sdDocTemplate').value=d.templateId||STAFF_DOCUMENT_LIBRARY[d.category][0].id;updateStaffDocInfo();renderStaffDocStructuredFields(d.formData||{})}$('sdDocDate').value=d.documentDate||new Date().toISOString().slice(0,10);$('sdDocExpiry').value=d.expiry||'';$('sdDocCompletedBy').value=d.completedBy||'';$('sdDocNote').value=d.note||'';loadStaffSignature(d);$('staffAddDoc').textContent='Save document changes'};
+window.removeStaffDoc=i=>{const s=selectedStaff();if(!s)return;const d=s.docs[i];if(!confirm('Delete '+(d?.type||'this form')+'? This action will be audited.'))return;s.docs.splice(i,1);logStaff(s,'Document record removed: '+(d?.type||'document'));saveStaffDb();if(CORE_DB_CONNECTED&&d?.dbId)SB.from('backoffice_staff_documents').delete().eq('id',d.dbId).then(async({error})=>{if(error)return alert('Secure document delete failed: '+error.message);await logFormActivity('Deleted','Staff HR',d.dbId,d.type,s.id,{category:d.category}).catch(()=>{});loadSecureCoreData()})};
 
 $('sdChecklistType').onchange=()=>{const items=staffChecklistDefaults($('sdChecklistType').value);if(items.length)$('sdChecklistItems').value=items.join('\n')};
 $('sdChecklistType').dispatchEvent(new Event('change'));
