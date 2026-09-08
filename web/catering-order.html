@@ -9,7 +9,7 @@
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:block;margin:12px 0;font-weight:800}.field input,.field select,.field textarea{width:100%;box-sizing:border-box;margin-top:5px;padding:12px;border:1px solid #ffffff35;border-radius:10px;background:#0e1726;color:#fff}
 .btn{border:0;border-radius:12px;padding:13px 15px;font-weight:900;background:linear-gradient(110deg,#ff2a00,#ffd43b,#0ca34a,#185adb,#6a0dad);color:white;text-shadow:0 1px 2px #0007}
 .status{padding:12px;border-radius:12px;background:#ffffff0d;margin:10px 0}.ok{color:#9ff3c5}.bad{color:#ffb4c0}.muted2{color:#b8c1ce;font-size:13px}
-.step{border:1px solid #ffffff22;border-radius:16px;margin:12px 0;background:#ffffff08;overflow:hidden}.stephead{padding:14px;font-size:19px;font-weight:900}.stepbody{padding:14px;border-top:1px solid #ffffff16}.stepnum{display:inline-flex;width:34px;height:34px;border-radius:50%;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffd43b,#7c3aed);color:#fff;font-weight:900;margin-right:8px}
+.step{border:1px solid #ffffff22;border-radius:16px;margin:12px 0;background:#ffffff08;overflow:hidden}.stephead{padding:14px;font-size:19px;font-weight:900;display:flex;align-items:center;cursor:pointer;user-select:none}.stephead .toggle{margin-left:auto;font-size:22px;color:#ffd43b}.step.collapsed .stepbody{display:none}.step.collapsed .stephead{border-bottom:0}.menu-card{cursor:pointer}.menu-card .menu-toggle{float:right;color:#ffd43b;font-size:22px}.menu-card .menu-detail{margin-top:10px}.menu-card.collapsed .menu-detail{display:none}.stepbody{padding:14px;border-top:1px solid #ffffff16}.stepnum{display:inline-flex;width:34px;height:34px;border-radius:50%;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffd43b,#7c3aed);color:#fff;font-weight:900;margin-right:8px}
 .package-select{font-size:17px}.included{padding:14px;border:1px solid #ffffff22;border-radius:12px;background:#ffffff08;line-height:1.5}.choice-list{display:grid;gap:8px;margin:10px 0}.choice-row{display:flex;gap:10px;align-items:center}.choice-row input[type=checkbox]{width:22px;height:22px}.alloc{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:8px;align-items:center;margin:7px 0}.alloc input,.qty input{padding:9px;border-radius:9px;border:1px solid #ffffff2e;background:#0e1726;color:#fff;width:100%;box-sizing:border-box}
 .qty-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.qty{border:1px solid #ffffff20;border-radius:11px;padding:10px;background:#ffffff06}.qty b{display:block;margin-bottom:6px}.price{font-weight:900}.estimate{font-size:24px;font-weight:900}.buffet-menu{display:grid;gap:14px}.menu-card{border:1px solid #ffffff35;border-radius:22px;padding:20px;background:#ffffff06}.menu-card h3{margin:0 0 12px}.menu-card p{line-height:1.45;color:#cbd5e1}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checkgrid label{display:flex;gap:9px;align-items:flex-start}.checkgrid input{width:21px;height:21px}
 .note{padding:12px;border-radius:11px;background:#ffd43b14;border:1px solid #ffd43b33}
@@ -24,7 +24,7 @@
 
 <section class="card" id="form" hidden>
   <div class="step">
-    <div class="stephead"><span class="stepnum">1</span>Event details</div>
+    <div class="stephead"><span class="stepnum">1</span>Event details <span class="toggle">−</span></div>
     <div class="stepbody">
       <div class="grid">
         <label class="field">Event or company name<input id="event" maxlength="160"></label>
@@ -38,7 +38,7 @@
   </div>
 
   <div class="step">
-    <div class="stephead"><span class="stepnum">2</span>Buffet package</div>
+    <div class="stephead"><span class="stepnum">2</span>Buffet package <span class="toggle">−</span></div>
     <div class="stepbody">
       <label class="field">Choose package<select id="package" class="package-select"></select></label>
       <div id="included" class="included"></div>
@@ -46,19 +46,19 @@
   </div>
 
   <div class="step">
-    <div class="stephead"><span class="stepnum">3</span>Choose items &amp; quantities</div>
+    <div class="stephead"><span class="stepnum">3</span>Choose items &amp; quantities <span class="toggle">−</span></div>
     <div class="stepbody" id="choices"></div>
   </div>
 
   <div class="step">
-    <div class="stephead"><span class="stepnum">4</span>Allergen information</div>
+    <div class="stephead"><span class="stepnum">4</span>Allergen information <span class="toggle">−</span></div>
     <div class="stepbody">
       <div class="note"><b>Important allergen information</b><br>Buffet food can contain or come into contact with allergens. Dexter’s staff must review allergy information before approving a catering request. If anyone has a serious allergy, add full details in step 6.</div>
     </div>
   </div>
 
   <div class="step">
-    <div class="stephead"><span class="stepnum">5</span>Dips &amp; paid extras</div>
+    <div class="stephead"><span class="stepnum">5</span>Dips &amp; paid extras <span class="toggle">−</span></div>
     <div class="stepbody">
       <h3>2oz dip tubs</h3><p class="muted2">Add any tubs you need. Current menu prices are shown.</p>
       <div id="dips" class="qty-grid"></div>
@@ -68,7 +68,7 @@
   </div>
 
   <div class="step">
-    <div class="stephead"><span class="stepnum">6</span>Allergy &amp; dietary declaration</div>
+    <div class="stephead"><span class="stepnum">6</span>Allergy &amp; dietary declaration <span class="toggle">−</span></div>
     <div class="stepbody">
       <h3>Allergy &amp; dietary requirements</h3>
       <p class="muted2">Select anything relevant. Dexter’s staff must review any allergy information before approving the catering request.</p>
@@ -78,7 +78,7 @@
   </div>
 
   <div class="step">
-    <div class="stephead"><span class="stepnum">7</span>Review &amp; send</div>
+    <div class="stephead"><span class="stepnum">7</span>Review &amp; send <span class="toggle">−</span></div>
     <div class="stepbody">
       <div class="included"><div id="estimate" class="estimate">Estimate: £0.00</div><div class="muted2">Final price is confirmed by Dexter’s before payment. Unpriced buffet extras are not included in this estimate.</div></div>
       <div id="review" class="status"></div>
@@ -117,8 +117,9 @@ async function call(action,p={}){const t=token();if(!t)throw Error('Please sign 
 function current(){return packages[$('package').value]||packages.breakfast}
 function money(n){return '£'+Number(n||0).toFixed(2)}
 function renderMenu(){
- $('buffetMenu').innerHTML=Object.values(packages).map(p=>'<div class="menu-card"><h3>'+esc(p.menuName)+' — '+money(p.price)+'pp</h3><p>'+esc(p.desc)+'</p></div>').join('')+
- '<div class="menu-card"><h3>Buffet Extras</h3><p>Mini quiche · sausage rolls · cocktail sausages · mini pizzas · vegetable pakora/samosas · mini spring rolls · chicken strips · fruit platter · cakes/traybakes · Walkers Ready Salted Crisps · salad/coleslaw · dips.</p></div>';
+ $('buffetMenu').innerHTML=Object.values(packages).map(p=>'<div class="menu-card collapsed"><h3>'+esc(p.menuName)+' — '+money(p.price)+'pp <span class="menu-toggle">+</span></h3><div class="menu-detail"><p>'+esc(p.desc)+'</p></div></div>').join('')+
+ '<div class="menu-card collapsed"><h3>Buffet Extras <span class="menu-toggle">+</span></h3><div class="menu-detail"><p>Mini quiche · sausage rolls · cocktail sausages · mini pizzas · vegetable pakora/samosas · mini spring rolls · chicken strips · fruit platter · cakes/traybakes · Walkers Ready Salted Crisps · salad/coleslaw · dips.</p></div></div>';
+ document.querySelectorAll('.menu-card').forEach(card=>card.addEventListener('click',()=>{card.classList.toggle('collapsed');const t=card.querySelector('.menu-toggle');if(t)t.textContent=card.classList.contains('collapsed')?'+':'−'}));
 }
 function renderPackage(){
  const p=current();
@@ -182,10 +183,11 @@ function requestData(){
  return {version:2,package:{key:p.key,name:p.name,menu_name:p.menuName,price_per_person:p.price,included:p.included},selected_choices:selectedChoices(),quantity_allocation:quantities('.allocQty'),dips:quantities('.dipQty'),paid_extras:quantities('.extraQty'),allergy_dietary_declaration:[...document.querySelectorAll('.decl:checked')].map(x=>x.value),allergy_dietary_notes:$('allergyNotes').value,people:Math.floor(Number($('people').value)||0)};
 }
 async function history(){try{const d=await call('my_catering');$('history').innerHTML=d.requests.map(x=>'<div class="status"><b>'+esc(x.event_name)+'</b><br>'+new Date(x.collection_at).toLocaleString('en-GB')+' · '+esc(x.package_name)+'<br><span class="'+(x.status==='approved'?'ok':'')+'">'+esc(x.status.replaceAll('_',' '))+'</span></div>').join('')||'No requests yet.'}catch(e){$('history').textContent=e.message}}
+function initCollapsibles(){document.querySelectorAll('.stephead').forEach(h=>h.addEventListener('click',e=>{if(e.target.closest('input,select,textarea,button,label'))return;const step=h.closest('.step');step.classList.toggle('collapsed');const t=h.querySelector('.toggle');if(t)t.textContent=step.classList.contains('collapsed')?'+':'−'}));document.querySelectorAll('.step').forEach((step,i)=>{if(i>0&&i<6){step.classList.add('collapsed');const t=step.querySelector('.toggle');if(t)t.textContent='+'}})}
 async function boot(){
  const min=new Date(Date.now()+48*3600000);$('date').min=min.toISOString().slice(0,10);$('date').value=$('date').min;
  $('package').innerHTML=Object.values(packages).map(p=>'<option value="'+p.key+'">'+esc(p.name)+' — '+money(p.price)+'pp</option>').join('');
- renderMenu();renderDips();renderDeclarations();renderPackage();
+ renderMenu();renderDips();renderDeclarations();renderPackage();initCollapsibles();
  $('package').addEventListener('change',()=>{renderPackage();review()});$('people').addEventListener('input',()=>{choiceChanged();review()});['date','time','event','name','phone'].forEach(id=>$(id).addEventListener('input',review));
  try{const d=await call('status');$('closed').textContent=d.settings.catering_enabled?'Catering is open for requests.':'Catering ordering is currently switched off by staff.';$('form').hidden=!d.settings.catering_enabled;if(d.settings.catering_enabled)$('closed').classList.add('ok')}catch(e){$('closed').textContent=e.message;$('closed').classList.add('bad')}
  history();review();
