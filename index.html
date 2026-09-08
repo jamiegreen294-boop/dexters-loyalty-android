@@ -291,7 +291,7 @@ body.pride-theme{background:#f7f3f8!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-21-system-completion">
+<main class="wrap" data-build="2026-09-08-website-pass-22-live-loyalty-customers">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
@@ -983,8 +983,8 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="customers">
-<div class="card notice"><b>Customer Files</b><p class="muted">PASS-style joined-up customer records for Dexter's — profile, loyalty, orders, catering, deals, challenges, complaints, documents, notes and audit history in one place. Test only.</p></div>
-<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Live Loyalty summary</h2><p class="muted">Read-only totals from the existing live loyalty system.</p></div><button class="btn alt" id="refreshLiveLoyalty">Refresh</button></div><div id="liveLoyaltySummary"></div></div>
+<div class="card notice"><b>Customer Files</b><p class="muted">PASS-style joined-up customer records. Loyalty-app sign-ups are pulled from the live Dexter's customer database, while Back Office-only notes, complaints, forms and audit history stay attached to the same customer card.</p></div>
+<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Live Loyalty customers</h2><p class="muted">New loyalty-app sign-ups, customer details, points, stamps and recorded consent are synced into these customer cards.</p></div><button class="btn alt" id="refreshLiveLoyalty">Sync live customers</button></div><div id="liveLoyaltySummary"></div><div id="liveCustomerSyncStatus" class="tiny" style="margin-top:7px"></div></div>
 <div class="pass-manager-overview">
   <div class="pass-manager-kpi"><span>Customers</span><b id="custMgrTotal">0</b><small>records</small></div>
   <div class="pass-manager-kpi"><span>Active</span><b id="custMgrActive">0</b><small>current</small></div>
@@ -996,7 +996,7 @@ body.pride-theme{background:#f7f3f8!important}
   <div class="staff-pass-list" id="customerCardView">
     <h2>Customers</h2><p class="muted">Choose a customer card to open the full record, forms and history.</p>
     <div class="field">Search customers<input id="custSearch" placeholder="Search name or phone"></div>
-    <button class="btn" id="custAdd">+ Add test customer</button>
+    <button class="btn" id="custAdd">+ Add Back Office customer</button>
     <div id="custDirectory" style="margin-top:10px"></div>
   </div>
   <div class="staff-pass-profile" id="customerRecordView" style="display:none">
@@ -1964,7 +1964,7 @@ async function loadSecureCoreData(){
  }));
  localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));
  CORE_DB_CONNECTED=true;
- renderStaffDb();renderDexManagement();
+ renderStaffDb();renderDexManagement();syncLiveCustomers();if(!window.__DEXTERS_LIVE_CUSTOMER_TIMER)window.__DEXTERS_LIVE_CUSTOMER_TIMER=setInterval(()=>{if(SECURE_SESSION&&SECURE_ACCOUNT?.active)syncLiveCustomers()},30000);
  const msg=$('secureAuthMessage');if(msg)msg.innerHTML='<span class="ok">Secure database connected.</span>';
 }
 async function persistStaffProfileDb(s){
@@ -2724,7 +2724,7 @@ function renderCustomerWorkflow(cu){
  if(!$('custConsentSummary'))return;
  const co=cu.consent||{};
  $('cuMarketing').checked=!!co.marketing;$('cuSms').checked=!!co.sms;$('cuEmailConsent').checked=!!co.email;$('cuConsentNote').value=co.note||'';
- $('custConsentSummary').innerHTML='<div class="summarybox"><b>Consent status</b><br><span class="badge">Marketing '+(co.marketing?'Yes':'No')+'</span><span class="badge">SMS '+(co.sms?'Yes':'No')+'</span><span class="badge">Email '+(co.email?'Yes':'No')+'</span></div>';
+ $('custConsentSummary').innerHTML='<div class="summarybox"><b>Consent status</b><br><span class="badge">'+(co.recorded?'Recorded by loyalty app':'No signup consent record yet')+'</span><span class="badge">Marketing '+(co.marketing?'Yes':'No')+'</span><span class="badge">SMS '+(co.sms?'Yes':'No')+'</span><span class="badge">Email '+(co.email?'Yes':'No')+'</span><br><span class="tiny">Terms '+(co.termsAccepted?'accepted':'not recorded')+' · Privacy '+(co.privacyAccepted?'accepted':'not recorded')+(co.updatedAt?' · '+new Date(co.updatedAt).toLocaleString():'')+(co.version?' · version '+co.version:'')+'</span></div>';
  $('custComms').innerHTML=(cu.communications||[]).map(x=>'<div class="summarybox"><span class="muted">'+x.text+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No communication history.</span>';
 }
 
@@ -3057,7 +3057,7 @@ function renderCustDirectory(){
  const loyalty=x.loyalty||{points:0,stamps:0},complaints=(x.complaints||[]).filter(c=>c.status!=='Resolved'&&c.status!=='Closed').length,catering=(x.catering||[]).length;
  return '<button class="pass-customer-card" onclick="selectCustomerRecord(&quot;'+x.id+'&quot;)">'+
   '<div class="pass-staff-card-top"><div class="pass-avatar large">'+custInitials(x.name)+'</div><span class="pass-status '+(x.status==='Active'?'active':'')+'">'+x.status+'</span></div>'+
-  '<h3>'+x.name+'</h3><div class="pass-staff-role">'+(x.preferredContact||'Customer')+'</div>'+
+  '<h3>'+x.name+'</h3><div class="pass-staff-role">'+(x.source==='Live Loyalty'?'<span class="badge">LIVE LOYALTY</span> ':'')+(x.preferredContact||'Customer')+'</div>'+
   '<div class="pass-staff-contact">'+(x.phone||x.email||'No contact details')+'</div>'+
   '<div class="pass-staff-metrics"><span><b>'+Number(loyalty.points||0)+'</b><small>points</small></span><span><b>'+complaints+'</b><small>complaints</small></span><span><b>'+catering+'</b><small>catering</small></span></div>'+
   '<div class="pass-staff-open">Open customer record →</div></button>';
@@ -3089,6 +3089,31 @@ function initCustomerSignaturePad(){
  clear.onclick=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);prep();hasInk=false;msg.textContent='Signature cleared.'};
  save.onclick=()=>{const signer=name.value.trim();if(!signer)return msg.innerHTML='<span class="bad">Enter the customer name.</span>';if(!hasInk)return msg.innerHTML='<span class="bad">Add a signature in the box first.</span>';CUSTOMER_SIGNATURE_DATA=canvas.toDataURL('image/png');CUSTOMER_SIGNATURE_NAME=signer;CUSTOMER_SIGNATURE_AT=new Date().toISOString();refreshCustomerSignatureBox();overlay.style.display='none'};
 }
+async function syncLiveCustomers(){
+ if(!SB||!SECURE_SESSION||secureRoleRank(SECURE_ACCOUNT?.role)<2)return;
+ const status=$('liveCustomerSyncStatus');if(status)status.textContent='Syncing live loyalty customers…';
+ try{
+   const rows=await liveRpc('backoffice_live_customer_feed');
+   const list=Array.isArray(rows)?rows:[];
+   const byLive=new Map((customerDb.customers||[]).filter(x=>x.liveId).map(x=>[x.liveId,x]));
+   list.forEach(r=>{
+     let cu=byLive.get(r.id)||customerDb.customers.find(x=>x.id===r.id);
+     if(!cu){
+       cu={id:r.id,liveId:r.id,source:'Live Loyalty',name:r.full_name||'Customer',phone:'',email:'',status:'Active',joined:'',preferredContact:'App',tags:[],loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],communications:[],audit:[]};
+       customerDb.customers.push(cu);
+     }
+     cu.liveId=r.id;cu.source='Live Loyalty';cu.name=r.full_name||cu.name||'Customer';cu.phone=r.phone||'';cu.email=r.email||'';cu.status=cu.status==='Blocked'?'Blocked':'Active';
+     cu.joined=r.joined_at?String(r.joined_at).slice(0,10):cu.joined||'';
+     cu.lastActive=r.last_active||null;cu.loyaltyCode=r.loyalty_code||'';cu.loyalty=cu.loyalty||{};cu.loyalty.points=Number(r.points||0);cu.loyalty.stamps=Number(r.stamps||0);cu.loyalty.rewardReady=!!r.reward_ready;
+     cu.consent={...(cu.consent||{}),marketing:!!r.marketing_consent,sms:!!r.sms_consent,email:!!r.email_consent,termsAccepted:!!r.terms_accepted,privacyAccepted:!!r.privacy_accepted,recorded:!!r.consent_recorded,version:r.consent_version||'',source:r.consent_source||'',updatedAt:r.consent_at||null,note:(cu.consent||{}).note||''};
+     cu.lastLiveSync=new Date().toISOString();
+   });
+   localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));
+   renderCustomerDb();
+   if(status)status.innerHTML='<span class="ok">'+list.length+' live loyalty customer(s) synced · '+new Date().toLocaleTimeString()+'</span>';
+ }catch(e){if(status)status.innerHTML='<span class="bad">Live customer sync failed: '+escLive(e.message)+'</span>'}
+}
+window.syncLiveCustomers=syncLiveCustomers;
 function renderCustomerManagerOverview(){
  if(!$('custMgrTotal'))return;
  const list=customerDb.customers||[];
@@ -3112,10 +3137,10 @@ function renderCustomerDb(){
  if(cardView)cardView.style.display=CUSTOMER_RECORD_OPEN?'none':'block';
  if(recordView)recordView.style.display=CUSTOMER_RECORD_OPEN?'block':'none';
  $('custEmpty').style.display=(CUSTOMER_RECORD_OPEN&&show)?'none':'block';$('custProfileWrap').style.display=(CUSTOMER_RECORD_OPEN&&show)?'block':'none';if(!cu)return;
- $('custAvatar').textContent=custInitials(cu.name);$('custProfileTitle').textContent=cu.name;$('custProfileMeta').textContent=(cu.phone||'No phone')+' · '+cu.status;
+ $('custAvatar').textContent=custInitials(cu.name);$('custProfileTitle').textContent=cu.name;$('custProfileMeta').textContent=(cu.source==='Live Loyalty'?'Live Loyalty · ':'')+(cu.phone||'No phone')+' · '+cu.status+(cu.loyaltyCode?' · '+cu.loyaltyCode:'');
  $('cuName').value=cu.name||'';$('cuPhone').value=cu.phone||'';$('cuEmail').value=cu.email||'';$('cuStatus').value=cu.status||'Active';$('cuJoined').value=cu.joined||'';$('cuContact').value=cu.preferredContact||'App';tagPicker('cuTags',cu.tags||[]);
  const l=cu.loyalty||{points:0,stamps:0,rewards:[]};
- $('custLoyalty').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Points</span><b>'+Number(l.points||0)+'</b></div><div class="bo-kpi"><span class="muted">Stamps</span><b>'+Number(l.stamps||0)+'</b></div></div><div class="summarybox"><b>Rewards</b><br><span class="muted">'+((l.rewards||[]).join(' · ')||'No test rewards')+'</span></div>';
+ $('custLoyalty').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Points</span><b>'+Number(l.points||0)+'</b></div><div class="bo-kpi"><span class="muted">Stamps</span><b>'+Number(l.stamps||0)+'</b></div><div class="bo-kpi"><span class="muted">Reward ready</span><b>'+(l.rewardReady?'Yes':'No')+'</b></div><div class="bo-kpi"><span class="muted">Loyalty code</span><b style="font-size:15px">'+(cu.loyaltyCode||'—')+'</b></div></div><div class="summarybox"><b>Live customer activity</b><br><span class="muted">'+(cu.lastActive?'Last active '+new Date(cu.lastActive).toLocaleString():'No activity date recorded')+'</span></div>';
  $('custOrders').innerHTML=(cu.orders||[]).map(o=>'<div class="summarybox"><b>'+o.ref+'</b><br><span class="muted">'+o.date+' · '+o.status+'</span></div>').join('')||'<span class="muted">No linked test orders yet.</span>';
  $('custCatering').innerHTML=(cu.catering||[]).map(o=>'<div class="summarybox"><b>'+o.ref+'</b><br><span class="muted">'+o.date+' · '+o.status+'</span></div>').join('')||'<span class="muted">No linked catering requests.</span>';
  $('custDeals').innerHTML=(cu.deals||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.status+'</span></div>').join('')||'<span class="muted">No linked deals.</span>';
@@ -3136,7 +3161,7 @@ $('custAddDocument').onclick=()=>{const cu=selectedCustomer(),note=$('cuDocNote'
 window.saveCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;cu.documents[i].note=$('cuDocEdit'+i).value;cu.documents[i].updatedAt=new Date().toISOString();logCustomer(cu,'Customer document updated: '+cu.documents[i].type);saveCustomerDb()};
 window.removeCustomerDocument=i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const t=cu.documents[i].type;cu.documents.splice(i,1);logCustomer(cu,'Customer document removed: '+t);saveCustomerDb()};
 
-$('custSaveConsent').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.consent={marketing:$('cuMarketing').checked,sms:$('cuSms').checked,email:$('cuEmailConsent').checked,note:$('cuConsentNote').value.trim(),updatedAt:new Date().toISOString()};logCustomer(cu,'Consent/preferences updated');saveCustomerDb()};
+$('custSaveConsent').onclick=()=>{const cu=selectedCustomer();if(!cu)return;cu.consent={...(cu.consent||{}),marketing:$('cuMarketing').checked,sms:$('cuSms').checked,email:$('cuEmailConsent').checked,note:$('cuConsentNote').value.trim(),backOfficeUpdatedAt:new Date().toISOString()};logCustomer(cu,'Back Office contact preferences updated');saveCustomerDb()};
 $('custAddComm').onclick=()=>{const cu=selectedCustomer(),text=$('cuCommNote').value.trim();if(!cu||!text)return;cu.communications=cu.communications||[];cu.communications.unshift({text,at:new Date().toISOString(),by:CURRENT_STAFF_ROLE});logCustomer(cu,'Communication record added');$('cuCommNote').value='';saveCustomerDb()};
 $('custAddNote').onclick=()=>{const cu=selectedCustomer(),text=$('cuNote').value.trim();if(!cu||!text)return;cu.notes.unshift({text,at:new Date().toISOString()});logCustomer(cu,'Internal note added');$('cuNote').value='';saveCustomerDb()};
 renderCustomerDb();
@@ -4204,7 +4229,7 @@ if($('menuAvailAdd'))$('menuAvailAdd').onclick=()=>{
 };
 if($('refreshLiveReadOnly'))$('refreshLiveReadOnly').onclick=loadLiveReadOnly;
 if($('refreshLiveOrders'))$('refreshLiveOrders').onclick=loadLiveOrders;
-if($('refreshLiveLoyalty'))$('refreshLiveLoyalty').onclick=loadLiveLoyalty;
+if($('refreshLiveLoyalty'))$('refreshLiveLoyalty').onclick=()=>{loadLiveLoyalty();syncLiveCustomers()};
 if($('refreshLiveFoodSafety'))$('refreshLiveFoodSafety').onclick=loadLiveFoodSafety;
 if($('refreshLiveDevices'))$('refreshLiveDevices').onclick=loadLiveDevices;
 
