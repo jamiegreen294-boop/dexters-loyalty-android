@@ -33,4 +33,6 @@ async function run(source) {
   signedIn=false;mutation(nodes.get('appView'),'attributes');await settle();
   assert(!nodes.has('dextersDealsCustomerReward'));
 }
-run(fs.readFileSync(process.argv[2]||'web/deals-live.js','utf8')).then(()=>console.log('PASS: bounded refreshes, stable QR, no DOM feedback loop, redemption removal and signed-out cleanup.')).catch(e=>{console.error(e.message);process.exitCode=1});
+const source=fs.readFileSync(process.argv[2]||'web/deals-live.js','utf8');
+assert(source.includes("['qrPage','rewardsPage'"),'Meal deal must target the live Rewards/QR page');
+run(source).then(()=>console.log('PASS: bounded refreshes, stable QR, no DOM feedback loop, redemption removal and signed-out cleanup.')).catch(e=>{console.error(e.message);process.exitCode=1});

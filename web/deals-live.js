@@ -25,7 +25,7 @@ function deal(){return DEALS[new Date().getMonth()]}
 function dealKey(d){const n=new Date(),m=n.getMonth()+1;return 'yearly-'+n.getFullYear()+'-'+String(m).padStart(2,'0')+'-'+d.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
 function nextMonthIso(){const n=new Date();return new Date(n.getFullYear(),n.getMonth()+1,1,0,0,0,0).toISOString()}
 function rewardsHost(){
- const ids=['rewardsPage','rewards','yourRewards','rewardsList','rewardList','rewardCards','rewardsContainer','offers'];
+ const ids=['qrPage','rewardsPage','rewards','yourRewards','rewardsList','rewardList','rewardCards','rewardsContainer','offers'];
  for(const id of ids){const el=document.getElementById(id);if(el)return el}
  const headings=[...document.querySelectorAll('h1,h2,h3,h4')];
  const h=headings.find(x=>/your\s+rewards|rewards/i.test((x.textContent||'').trim())&&!/staff|admin/i.test((x.textContent||'').trim()));
