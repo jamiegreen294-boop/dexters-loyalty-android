@@ -1,20 +1,197 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#140a20"><title>Catering Order • Dexter’s</title><link rel="stylesheet" href="/legal.css"><style>.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:block;margin:12px 0;font-weight:800}.field input,.field select,.field textarea{width:100%;box-sizing:border-box;margin-top:5px;padding:12px;border:1px solid #ffffff35;border-radius:10px;background:#0e1726;color:#fff}.btn{border:0;border-radius:12px;padding:13px 15px;font-weight:900;background:linear-gradient(110deg,#ffd43b,#ff8a00);color:#15100a}.status{padding:12px;border-radius:12px;background:#ffffff0d;margin:10px 0}.ok{color:#9ff3c5}.bad{color:#ffb4c0}.step{border:1px solid #ffffff22;border-radius:16px;padding:14px;margin:12px 0;background:#ffffff08}.step h2{margin:0 0 8px;font-size:18px}.stepnum{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;background:linear-gradient(110deg,#ffd43b,#ff8a00);color:#15100a;font-weight:900;margin-right:8px}.package-grid{display:grid;gap:10px;margin:10px 0 14px}.package-card{display:block;border:1px solid #ffffff28;border-radius:14px;padding:14px;background:#0e1726;cursor:pointer}.package-card:has(input:checked){border-color:#ffd43b;box-shadow:0 0 0 2px #ffd43b33;background:#182239}.package-head{display:flex;gap:10px;align-items:flex-start}.package-head input{margin-top:4px}.package-title{font-weight:900}.package-desc{font-size:13px;line-height:1.45;color:#cbd5e1;margin:5px 0 0}.package-note{font-size:12px;color:#aab4c3;margin-top:5px}@media(max-width:620px){.grid{grid-template-columns:1fr}}</style></head><body><main class="wrap"><nav><a href="/">← Dexter’s Loyalty App</a><a href="/allergens.html">Allergens</a></nav><header><p class="eyebrow">DEXTER’S CATERING</p><h1>Build a catering request</h1><p class="muted">For collection only. Please allow at least 48 hours. Staff will check availability, allergens and the final price before confirming.</p></header><section class="card" id="closed">Checking catering availability…</section><section class="card" id="form" hidden>
-<div class="step"><h2><span class="stepnum">1</span>Event details</h2><div class="grid"><label class="field">Event or company name<input id="event" maxlength="160"></label><label class="field">Number of people<input id="people" type="number" min="1" max="500" value="12"></label></div></div>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#140a20">
+<title>Catering Order • Dexter’s</title>
+<link rel="stylesheet" href="/legal.css">
+<style>
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:block;margin:12px 0;font-weight:800}.field input,.field select,.field textarea{width:100%;box-sizing:border-box;margin-top:5px;padding:12px;border:1px solid #ffffff35;border-radius:10px;background:#0e1726;color:#fff}
+.btn{border:0;border-radius:12px;padding:13px 15px;font-weight:900;background:linear-gradient(110deg,#ff2a00,#ffd43b,#0ca34a,#185adb,#6a0dad);color:white;text-shadow:0 1px 2px #0007}
+.status{padding:12px;border-radius:12px;background:#ffffff0d;margin:10px 0}.ok{color:#9ff3c5}.bad{color:#ffb4c0}.muted2{color:#b8c1ce;font-size:13px}
+.step{border:1px solid #ffffff22;border-radius:16px;margin:12px 0;background:#ffffff08;overflow:hidden}.stephead{padding:14px;font-size:19px;font-weight:900}.stepbody{padding:14px;border-top:1px solid #ffffff16}.stepnum{display:inline-flex;width:34px;height:34px;border-radius:50%;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffd43b,#7c3aed);color:#fff;font-weight:900;margin-right:8px}
+.package-select{font-size:17px}.included{padding:14px;border:1px solid #ffffff22;border-radius:12px;background:#ffffff08;line-height:1.5}.choice-list{display:grid;gap:8px;margin:10px 0}.choice-row{display:flex;gap:10px;align-items:center}.choice-row input[type=checkbox]{width:22px;height:22px}.alloc{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:8px;align-items:center;margin:7px 0}.alloc input,.qty input{padding:9px;border-radius:9px;border:1px solid #ffffff2e;background:#0e1726;color:#fff;width:100%;box-sizing:border-box}
+.qty-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.qty{border:1px solid #ffffff20;border-radius:11px;padding:10px;background:#ffffff06}.qty b{display:block;margin-bottom:6px}.price{font-weight:900}.estimate{font-size:24px;font-weight:900}.buffet-menu{display:grid;gap:14px}.menu-card{border:1px solid #ffffff35;border-radius:22px;padding:20px;background:#ffffff06}.menu-card h3{margin:0 0 12px}.menu-card p{line-height:1.45;color:#cbd5e1}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checkgrid label{display:flex;gap:9px;align-items:flex-start}.checkgrid input{width:21px;height:21px}
+.note{padding:12px;border-radius:11px;background:#ffd43b14;border:1px solid #ffd43b33}
+@media(max-width:620px){.grid,.checkgrid,.qty-grid{grid-template-columns:1fr}.alloc{grid-template-columns:minmax(0,1fr) 86px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<nav><a href="/">← Dexter’s Loyalty App</a><a href="/allergens.html">Allergens</a></nav>
+<header><p class="eyebrow">DEXTER’S CATERING</p><h1>Build a catering request</h1><p class="muted">Collection only. Please allow at least 48 hours. Staff review availability, allergies and the final price before confirming.</p></header>
+<section class="card" id="closed">Checking catering availability…</section>
 
-<div class="step"><h2><span class="stepnum">2</span>Collection date & time</h2><div class="grid"><label class="field">Collection date<input id="date" type="date"></label><label class="field">Collection time<input id="time" type="time" value="12:30"></label></div></div>
+<section class="card" id="form" hidden>
+  <div class="step">
+    <div class="stephead"><span class="stepnum">1</span>Event details</div>
+    <div class="stepbody">
+      <div class="grid">
+        <label class="field">Event or company name<input id="event" maxlength="160"></label>
+        <label class="field">Number of people<input id="people" type="number" min="1" max="500" value="12"></label>
+        <label class="field">Collection date<input id="date" type="date"></label>
+        <label class="field">Collection time<input id="time" type="time" value="12:30"></label>
+        <label class="field">Your name<input id="name" autocomplete="name"></label>
+        <label class="field">Phone number<input id="phone" autocomplete="tel"></label>
+      </div>
+    </div>
+  </div>
 
-<div class="step"><h2><span class="stepnum">3</span>Choose your catering package</h2><div class="package-grid" id="packageCards">
-<label class="package-card"><div class="package-head"><input type="radio" name="packageChoice" value="breakfast" checked><div><div class="package-title">Breakfast rolls buffet</div><p class="package-desc">A group breakfast option built around Dexter’s breakfast rolls. Ideal for morning meetings, staff breakfasts and early events.</p><div class="package-note">Final roll choices, quantities and availability are confirmed by staff.</div></div></div></label>
-<label class="package-card"><div class="package-head"><input type="radio" name="packageChoice" value="sandwiches"><div><div class="package-title">Sandwich &amp; wrap platters</div><p class="package-desc">A cold catering option using Dexter’s sandwiches and wraps, prepared for sharing at meetings, parties and events.</p><div class="package-note">Fillings and quantities are agreed with you before the order is confirmed.</div></div></div></label>
-<label class="package-card"><div class="package-head"><input type="radio" name="packageChoice" value="hot"><div><div class="package-title">Hot lunch buffet</div><p class="package-desc">Hot Dexter’s food for groups and events, using suitable items from the current menu.</p><div class="package-note">The final hot-food selection, portions and price are checked and confirmed by staff.</div></div></div></label>
-<label class="package-card"><div class="package-head"><input type="radio" name="packageChoice" value="custom"><div><div class="package-title">Custom Dexter’s menu order</div><p class="package-desc">For larger or mixed orders that do not fit one package. Build the request around items from Dexter’s current menu.</p><div class="package-note">Tell us what you need below and staff will confirm what can be supplied.</div></div></div></label>
-</div><select id="package" hidden aria-hidden="true"><option value="breakfast">Breakfast rolls buffet</option><option value="sandwiches">Sandwich &amp; wrap platters</option><option value="hot">Hot lunch buffet</option><option value="custom">Custom Dexter’s menu order</option></select></div>
+  <div class="step">
+    <div class="stephead"><span class="stepnum">2</span>Buffet package</div>
+    <div class="stepbody">
+      <label class="field">Choose package<select id="package" class="package-select"></select></label>
+      <div id="included" class="included"></div>
+    </div>
+  </div>
 
-<div class="step"><h2><span class="stepnum">4</span>Your contact details</h2><div class="grid"><label class="field">Your name<input id="name" autocomplete="name"></label><label class="field">Phone number<input id="phone" autocomplete="tel"></label></div></div>
+  <div class="step">
+    <div class="stephead"><span class="stepnum">3</span>Choose items &amp; quantities</div>
+    <div class="stepbody" id="choices"></div>
+  </div>
 
-<div class="step"><h2><span class="stepnum">5</span>Dietary requirements</h2><label class="field">Dietary requirements<textarea id="diet" rows="3" placeholder="Vegetarian, halal, portion notes or other requirements"></textarea></label></div>
+  <div class="step">
+    <div class="stephead"><span class="stepnum">4</span>Allergen information</div>
+    <div class="stepbody">
+      <div class="note"><b>Important allergen information</b><br>Buffet food can contain or come into contact with allergens. Dexter’s staff must review allergy information before approving a catering request. If anyone has a serious allergy, add full details in step 6.</div>
+    </div>
+  </div>
 
-<div class="step"><h2><span class="stepnum">6</span>Allergies & intolerances</h2><label class="field">Allergies or intolerances<textarea id="allergy" rows="3" placeholder="Write none if there are none"></textarea></label><p class="muted">Dexter’s staff will review this before confirming the request.</p></div>
+  <div class="step">
+    <div class="stephead"><span class="stepnum">5</span>Dips &amp; paid extras</div>
+    <div class="stepbody">
+      <h3>2oz dip tubs</h3><p class="muted2">Add any tubs you need. Current menu prices are shown.</p>
+      <div id="dips" class="qty-grid"></div>
+      <h3 style="margin-top:18px">Buffet extras</h3><p class="muted2">Choose quantities. Buffet-extra pricing is confirmed by Dexter’s before payment.</p>
+      <div id="extras" class="qty-grid"></div>
+    </div>
+  </div>
 
-<div class="step"><h2><span class="stepnum">7</span>Review & send</h2><label class="field"><input id="confirm" type="checkbox" style="width:auto"> I have checked these details and understand this is a request, not a confirmed order.</label><button class="btn" id="send">Send catering request</button><div id="message" class="status"></div></div>
-</section><section class="card"><h2>My recent catering requests</h2><div id="history">Sign in to view requests.</div></section></main><script>(function(){const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',A=U+'/functions/v1/loyalty-growth-api';function token(){try{const j=JSON.parse(localStorage.getItem('sb-bpnkouymdvcogeaqjmxl-auth-token')||'null'),s=j?.currentSession||j?.session||j;return s?.access_token||''}catch{return''}}async function call(action,p={}){const t=token();if(!t)throw Error('Please sign in through the Loyalty App first.');const r=await fetch(A,{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({action,...p})}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d}const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));document.querySelectorAll('input[name="packageChoice"]').forEach(r=>r.addEventListener('change',()=>{$('package').value=r.value}));const min=new Date(Date.now()+48*3600000);$('date').min=min.toISOString().slice(0,10);$('date').value=$('date').min;async function history(){try{const d=await call('my_catering');$('history').innerHTML=d.requests.map(x=>'<div class="status"><b>'+esc(x.event_name)+'</b><br>'+new Date(x.collection_at).toLocaleString('en-GB')+' · '+esc(x.package_name)+'<br><span class="'+(x.status==='approved'?'ok':'')+'">'+esc(x.status.replaceAll('_',' '))+'</span></div>').join('')||'No requests yet.'}catch(e){$('history').textContent=e.message}}async function boot(){try{const d=await call('status');$('closed').textContent=d.settings.catering_enabled?'Catering is open for requests.':'Catering ordering is currently switched off by staff.';$('form').hidden=!d.settings.catering_enabled;if(d.settings.catering_enabled)$('closed').classList.add('ok')}catch(e){$('closed').textContent=e.message;$('closed').classList.add('bad')}history()}$('send').onclick=async()=>{const b=$('send'),m=$('message');if(!$('confirm').checked){m.textContent='Please confirm the request details.';m.className='status bad';return}b.disabled=true;m.textContent='Sending…';try{const p=$('package'),dt=$('date').value+'T'+$('time').value+':00';await call('create_catering',{event_name:$('event').value,people:$('people').value,collection_at:new Date(dt).toISOString(),package_key:p.value,package_name:p.selectedOptions[0].textContent,customer_name:$('name').value,customer_phone:$('phone').value,dietary_notes:$('diet').value,allergy_declaration:$('allergy').value});m.textContent='Request sent. Dexter’s staff will review it before it is confirmed.';m.className='status ok';history()}catch(e){m.textContent=e.message;m.className='status bad'}finally{b.disabled=false}};boot()})();</script></body></html>
+  <div class="step">
+    <div class="stephead"><span class="stepnum">6</span>Allergy &amp; dietary declaration</div>
+    <div class="stepbody">
+      <h3>Allergy &amp; dietary requirements</h3>
+      <p class="muted2">Select anything relevant. Dexter’s staff must review any allergy information before approving the catering request.</p>
+      <div id="allergyChecks" class="checkgrid"></div>
+      <label class="field">Allergy / dietary notes<textarea id="allergyNotes" rows="5" placeholder="Give details, names of affected guests, severity, or any other requirements"></textarea></label>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="stephead"><span class="stepnum">7</span>Review &amp; send</div>
+    <div class="stepbody">
+      <div class="included"><div id="estimate" class="estimate">Estimate: £0.00</div><div class="muted2">Final price is confirmed by Dexter’s before payment. Unpriced buffet extras are not included in this estimate.</div></div>
+      <div id="review" class="status"></div>
+      <label class="field" style="font-weight:700"><input id="confirm" type="checkbox" style="width:auto"> I confirm the catering details above are correct</label>
+      <button class="btn" id="send">Send catering request</button>
+      <div id="message" class="status">No request submitted yet.</div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+<h2>Dexter’s Buffet Menu</h2>
+<div id="buffetMenu" class="buffet-menu"></div>
+<p class="muted">Set buffet prices are designed for 10+ people. Buffet-only items do not get added to Dexter’s normal takeaway menu. Allergy and dietary requirements must be confirmed before staff approval.</p>
+</section>
+
+<section class="card"><h2>My recent catering requests</h2><div id="history">Sign in to view requests.</div></section>
+</main>
+
+<script>
+(function(){
+const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',A=U+'/functions/v1/loyalty-growth-api';
+const packages={
+ breakfast:{key:'breakfast',name:"Dexter's Breakfast Rolls",menuName:'Breakfast Rolls',price:4.25,desc:'One hot roll per person. Choose a mix of Square Sausage, Bacon, Links x2, Potato Scone x2, Fried Egg or Scrambled Egg. Brown and tomato sauce supplied.',included:['1 hot roll per person','Required: choose at least 2 roll fillings','2oz dip tubs can be added'],choices:['Square Sausage','Bacon','LINKS x2','POTATO SCONE x2','Fried Egg','Scrambled Egg'],min:2,max:99,allocate:true,allocationLabel:'rolls'},
+ lunch:{key:'lunch',name:"Dexter's Lunch Platter",menuName:'Lunch Platter',price:6.95,desc:"Mixed Dexter's cold rolls and wraps, cut for sharing. Fillings can include Ham Salad, Turkey Salad, Chopped Pork & Ham, Cheese & Ham, Cheese & Tomato, Cheese & Onion, Chicken Tikka and Tandoori Chicken.",included:["Mixed Dexter's cold rolls and wraps, cut for sharing",'Choose the fillings you want included'],choices:['Ham Salad','Turkey Salad','Chopped Pork & Ham','Cheese & Ham','Cheese & Tomato','Cheese & Onion','Chicken Tikka','Tandoori Chicken'],min:1,max:99,allocate:true,allocationLabel:'rolls / wraps'},
+ classic:{key:'classic_glasgow',name:"Dexter's Classic Glasgow Buffet",menuName:'Classic Glasgow Buffet',price:9.95,desc:"Mixed sandwiches & wraps, mini sausage rolls, mini pizza slices, Dexter's Chicken Tenders, vegetable pakora/samosas, mini spring rolls, cocktail sausages, Walkers Ready Salted Crisps and Dexter's dips.",included:['Mixed sandwiches & wraps','Mini sausage rolls','Mini pizza slices',"Dexter's Chicken Tenders",'Vegetable pakora / samosas','Mini spring rolls','Cocktail sausages','Walkers Ready Salted Crisps',"Dexter's dips"],choices:[],min:0,max:0,allocate:false},
+ street:{key:'street_feast',name:"Dexter's Street Feast",menuName:'Street Feast',price:12.95,desc:"Dexter's Street Sub pieces, pizza slices, Chicken Tenders, Garlic Bread, Onion Rings, mini sausage rolls, pakora/samosas and dips. Sub choices can include Chicken Mayo Melt, Southern Fried Chicken, Chicken Tikka, Pepperoni & Cheese, Philly Steak and Chicken & Bacon.",included:["Dexter's Street Sub pieces",'Pizza slices','Chicken Tenders','Garlic Bread','Onion Rings','Mini sausage rolls','Pakora / samosas','Dips','Choose the Street Sub varieties you want included'],choices:['Chicken Mayo Melt','Southern Fried Chicken','Chicken Tikka','Pepperoni & Cheese','Philly Steak','Chicken & Bacon'],min:1,max:99,allocate:false},
+ chinese:{key:'hot_chinese',name:"Dexter's Hot Chinese Buffet",menuName:'Hot Chinese Buffet',price:12.95,desc:'Choose two mains from Chicken Breast Curry, Chicken Szechuan, Black Bean Chicken, Garlic Chicken, Sweet & Sour Chicken or Salt & Chilli Chicken. Served with Boiled Rice, Chips, mini spring rolls and Prawn Crackers.',included:['Required: choose 2 mains','Boiled Rice','Chips','Mini spring rolls','Prawn Crackers'],choices:['Chicken Breast Curry','Chicken Szechuan','Black Bean Chicken','Garlic Chicken','Sweet & Sour Chicken','Salt & Chilli Chicken'],min:2,max:2,allocate:true,allocationLabel:'main portions'}
+};
+const dips=[['Garlic Mayo',0.80],["Dexter's Sauce",0.80],['Nero Sauce',0.80],['Luna Sauce',0.80],['Inferno Sauce',0.80],['Fire Sauce',0.80],['Nashville Hot Honey Sauce',0.80],['Spicy Chipotle Sauce',0.80],['Ranch Sauce',0.80],['Sweet Chilli Sauce',0.80],['BBQ Sauce',0.50],['Chilli Dip',0.50]];
+const extras=['Mini quiche','Sausage rolls','Cocktail sausages','Mini pizzas','Vegetable pakora / samosas','Mini spring rolls','Chicken strips','Fruit platter','Cakes / traybakes','Walkers Ready Salted Crisps','Salad / coleslaw'];
+const declarations=['Celery','Cereals containing gluten','Crustaceans','Egg','Fish','Lupin','Milk / dairy','Molluscs','Mustard','Tree nuts','Peanuts','Sesame','Soya','Sulphites','Vegetarian requirement','Vegan requirement','No known allergies or dietary requirements'];
+const $=id=>document.getElementById(id), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function token(){try{const j=JSON.parse(localStorage.getItem('sb-bpnkouymdvcogeaqjmxl-auth-token')||'null'),s=j?.currentSession||j?.session||j;return s?.access_token||''}catch{return''}}
+async function call(action,p={}){const t=token();if(!t)throw Error('Please sign in through the Loyalty App first.');const r=await fetch(A,{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({action,...p})}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d}
+function current(){return packages[$('package').value]||packages.breakfast}
+function money(n){return '£'+Number(n||0).toFixed(2)}
+function renderMenu(){
+ $('buffetMenu').innerHTML=Object.values(packages).map(p=>'<div class="menu-card"><h3>'+esc(p.menuName)+' — '+money(p.price)+'pp</h3><p>'+esc(p.desc)+'</p></div>').join('')+
+ '<div class="menu-card"><h3>Buffet Extras</h3><p>Mini quiche · sausage rolls · cocktail sausages · mini pizzas · vegetable pakora/samosas · mini spring rolls · chicken strips · fruit platter · cakes/traybakes · Walkers Ready Salted Crisps · salad/coleslaw · dips.</p></div>';
+}
+function renderPackage(){
+ const p=current();
+ $('included').innerHTML='<b>What\'s included</b><br>'+p.included.map(x=>'• '+esc(x)).join('<br>');
+ if(!p.choices.length){$('choices').innerHTML='<div class="included"><b>Included buffet</b><br>'+p.included.filter(x=>!x.startsWith('Required')).map(x=>'• '+esc(x)).join('<br>')+'<br><br><span class="muted2">No package-specific selection is required for this buffet. Add dips or paid extras in step 5 if needed.</span></div>';review();return}
+ const rule=p.max===2?'Choose exactly 2 mains':p.min===2?'Choose at least 2 roll fillings':'Choose the items you want included';
+ $('choices').innerHTML='<div class="included"><b>Required buffet choices</b><div class="muted2">'+esc(rule)+'</div><div class="choice-list">'+p.choices.map((x,i)=>'<label class="choice-row"><input type="checkbox" class="buffetChoice" value="'+esc(x)+'"> '+esc(x)+'</label>').join('')+'</div><div id="selectedCount" class="muted2">0 selected</div><div id="allocation"></div></div>';
+ document.querySelectorAll('.buffetChoice').forEach(x=>x.addEventListener('change',choiceChanged)); choiceChanged();
+}
+function selectedChoices(){return [...document.querySelectorAll('.buffetChoice:checked')].map(x=>x.value)}
+function choiceChanged(){
+ const p=current(),sel=selectedChoices(); if($('selectedCount'))$('selectedCount').textContent=sel.length+' selected';
+ if(p.max&&sel.length>p.max){event.target.checked=false;return choiceChanged()}
+ if(!$('allocation'))return;
+ if(!p.allocate||!sel.length){$('allocation').innerHTML='<div class="included" style="margin-top:12px"><b>Quantity allocation</b><br><span class="muted2">'+(sel.length?'Dexter’s will portion these choices across the buffet.':'Select your buffet choices first.')+'</span></div>';review();return}
+ $('allocation').innerHTML='<div class="included" style="margin-top:12px"><b>Quantity allocation</b><div class="muted2">Allocate '+esc(p.allocationLabel)+' across your selected choices. Total should match the number of people.</div>'+sel.map(x=>'<label class="alloc"><span>'+esc(x)+'</span><input type="number" class="allocQty" data-name="'+esc(x)+'" min="0" value="0"></label>').join('')+'<div id="allocTotal" class="muted2"></div></div>';
+ document.querySelectorAll('.allocQty').forEach(x=>x.addEventListener('input',review)); review();
+}
+function quantities(selector,labelAttr='data-name'){const o={};document.querySelectorAll(selector).forEach(x=>{const q=Math.max(0,Math.floor(Number(x.value)||0));if(q)o[x.getAttribute(labelAttr)]=q});return o}
+function renderDips(){
+ $('dips').innerHTML=dips.map(([n,p])=>'<label class="qty"><b>'+esc(n)+' <span class="price">'+money(p)+'</span></b><input type="number" min="0" value="0" class="dipQty" data-name="'+esc(n)+'" data-price="'+p+'"></label>').join('');
+ $('extras').innerHTML=extras.map(n=>'<label class="qty"><b>'+esc(n)+'</b><input type="number" min="0" value="0" class="extraQty" data-name="'+esc(n)+'"></label>').join('');
+ document.querySelectorAll('.dipQty,.extraQty').forEach(x=>x.addEventListener('input',review));
+}
+function renderDeclarations(){
+ $('allergyChecks').innerHTML=declarations.map(n=>'<label><input type="checkbox" class="decl" value="'+esc(n)+'"> <span>'+esc(n)+'</span></label>').join('');
+ document.querySelectorAll('.decl').forEach(x=>x.addEventListener('change',review)); $('allergyNotes').addEventListener('input',review);
+}
+function estimate(){
+ const p=current(),people=Math.max(0,Number($('people').value)||0);let total=p.price*people;
+ document.querySelectorAll('.dipQty').forEach(x=>total+=(Number(x.value)||0)*(Number(x.dataset.price)||0));
+ return total;
+}
+function review(){
+ const p=current(),people=Math.max(0,Math.floor(Number($('people').value)||0)),sel=selectedChoices(),alloc=quantities('.allocQty'),allocSum=Object.values(alloc).reduce((a,b)=>a+b,0);
+ if($('allocTotal'))$('allocTotal').textContent='Allocated: '+allocSum+' / '+people;
+ const dipsQ=quantities('.dipQty'),extrasQ=quantities('.extraQty'),decl=[...document.querySelectorAll('.decl:checked')].map(x=>x.value);
+ $('estimate').textContent='Estimate: '+money(estimate());
+ $('review').innerHTML='<b>'+esc(p.menuName)+'</b> · '+people+' people<br>'+esc($('date').value||'No date')+' '+esc($('time').value||'')+
+ (sel.length?'<br>Choices: '+sel.map(esc).join(', '):'')+
+ (Object.keys(dipsQ).length?'<br>Dips: '+Object.entries(dipsQ).map(([n,q])=>q+' × '+esc(n)).join(', '):'')+
+ (Object.keys(extrasQ).length?'<br>Extras: '+Object.entries(extrasQ).map(([n,q])=>q+' × '+esc(n)).join(', '):'')+
+ (decl.length?'<br>Allergy/dietary declaration: '+decl.map(esc).join(', '):'');
+}
+function validate(){
+ const p=current(),people=Math.floor(Number($('people').value)||0),sel=selectedChoices(),alloc=quantities('.allocQty'),sum=Object.values(alloc).reduce((a,b)=>a+b,0);
+ if(!$('event').value.trim())return 'Enter the event or company name.';
+ if(people<1||people>500)return 'Enter between 1 and 500 people.';
+ if(!$('date').value||!$('time').value)return 'Choose the collection date and time.';
+ if(!$('name').value.trim()||$('phone').value.replace(/\D/g,'').length<7)return 'Enter your name and a valid phone number.';
+ if(p.min&&sel.length<p.min)return p.max===2?'Choose exactly 2 mains.':'Choose at least '+p.min+' buffet choices.';
+ if(p.max&&sel.length>p.max)return 'Choose no more than '+p.max+' buffet choices.';
+ if(p.allocate&&sel.length&&sum!==people)return 'Quantity allocation must total '+people+' people.';
+ const decl=[...document.querySelectorAll('.decl:checked')].map(x=>x.value);
+ if(decl.includes('No known allergies or dietary requirements')&&decl.length>1)return 'Do not select “No known allergies” together with another allergy or dietary requirement.';
+ if(!$('confirm').checked)return 'Please confirm the catering details.';
+ return '';
+}
+function requestData(){
+ const p=current();
+ return {version:2,package:{key:p.key,name:p.name,menu_name:p.menuName,price_per_person:p.price,included:p.included},selected_choices:selectedChoices(),quantity_allocation:quantities('.allocQty'),dips:quantities('.dipQty'),paid_extras:quantities('.extraQty'),allergy_dietary_declaration:[...document.querySelectorAll('.decl:checked')].map(x=>x.value),allergy_dietary_notes:$('allergyNotes').value,people:Math.floor(Number($('people').value)||0)};
+}
+async function history(){try{const d=await call('my_catering');$('history').innerHTML=d.requests.map(x=>'<div class="status"><b>'+esc(x.event_name)+'</b><br>'+new Date(x.collection_at).toLocaleString('en-GB')+' · '+esc(x.package_name)+'<br><span class="'+(x.status==='approved'?'ok':'')+'">'+esc(x.status.replaceAll('_',' '))+'</span></div>').join('')||'No requests yet.'}catch(e){$('history').textContent=e.message}}
+async function boot(){
+ const min=new Date(Date.now()+48*3600000);$('date').min=min.toISOString().slice(0,10);$('date').value=$('date').min;
+ $('package').innerHTML=Object.values(packages).map(p=>'<option value="'+p.key+'">'+esc(p.name)+' — '+money(p.price)+'pp</option>').join('');
+ renderMenu();renderDips();renderDeclarations();renderPackage();
+ $('package').addEventListener('change',()=>{renderPackage();review()});$('people').addEventListener('input',()=>{choiceChanged();review()});['date','time','event','name','phone'].forEach(id=>$(id).addEventListener('input',review));
+ try{const d=await call('status');$('closed').textContent=d.settings.catering_enabled?'Catering is open for requests.':'Catering ordering is currently switched off by staff.';$('form').hidden=!d.settings.catering_enabled;if(d.settings.catering_enabled)$('closed').classList.add('ok')}catch(e){$('closed').textContent=e.message;$('closed').classList.add('bad')}
+ history();review();
+}
+$('send').onclick=async()=>{const b=$('send'),m=$('message'),err=validate();if(err){m.textContent=err;m.className='status bad';return}b.disabled=true;m.textContent='Sending…';try{const p=current(),dt=$('date').value+'T'+$('time').value+':00',decl=[...document.querySelectorAll('.decl:checked')].map(x=>x.value),notes=$('allergyNotes').value;await call('create_catering',{event_name:$('event').value,people:$('people').value,collection_at:new Date(dt).toISOString(),package_key:p.key,package_name:p.name,customer_name:$('name').value,customer_phone:$('phone').value,dietary_notes:decl.filter(x=>x.includes('requirement')).join(', ')||null,allergy_declaration:[...decl.filter(x=>!x.includes('requirement')),notes].filter(Boolean).join(' | ')||null,request_data:requestData(),estimated_total:estimate()});m.textContent='Request sent. Dexter’s staff will review it before it is confirmed.';m.className='status ok';history()}catch(e){m.textContent=e.message;m.className='status bad'}finally{b.disabled=false}};
+boot();
+})();
+</script>
+</body></html>
