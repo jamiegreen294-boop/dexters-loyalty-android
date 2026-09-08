@@ -932,7 +932,13 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="field">Reason<input id="holidayAdjustReason" placeholder="Correction / carry-over / contractual adjustment"></div>
 <button class="btn alt" id="holidayAdjustAdd">Add adjustment</button>
 </div>
-<div class="card" style="margin-bottom:14px"><h2>Holiday ledger</h2><div id="holidayLedger"></div></div>
+<div class="card" style="margin-bottom:14px"><h2>Holiday ledger</h2><div id="holidayLedger"></div></div><div class="card" style="margin-bottom:14px">
+  <div class="row" style="justify-content:space-between;align-items:flex-start">
+    <div><h2>Who's off this week</h2><p class="muted">Approved holiday and recorded absences for the selected week.</p></div>
+    <input id="teamOffWeek" type="date" style="max-width:180px">
+  </div>
+  <div id="teamOffWeekList"></div>
+</div>
 <div class="grid">
 <div class="card"><h2>Holiday / leave request</h2>
 <div class="field">Staff<select id="leaveStaff"></select></div>
@@ -6332,6 +6338,38 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-tab="policies"]'))setTimeout(()=>{ensureGdprRegisterUi();bindGdprControls();loadGdprGovernance()},0);
 });
 setTimeout(()=>{ensureGdprRegisterUi();bindGdprControls();if(window.SECURE_SESSION)loadGdprGovernance()},1200);
+})();
+</script>
+
+<!-- DEXTERS_TEAM_OFF_WEEK_V1 -->
+<script>
+(function(){
+'use strict';
+function boWeekStart(d){
+  const x=d?new Date(d+'T12:00:00'):new Date();
+  const day=(x.getDay()+6)%7;
+  x.setDate(x.getDate()-day);
+  return x.toLocaleDateString('en-CA');
+}
+function boDate(v){return v?new Date(v+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}):'—'}
+function boEsc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+async function loadTeamOffWeek(){
+  const box=document.getElementById('teamOffWeekList'),inp=document.getElementById('teamOffWeek');
+  if(!box||!window.SB||!window.SECURE_SESSION)return;
+  if(!inp.value)inp.value=boWeekStart();
+  box.innerHTML='<span class="muted">Loading…</span>';
+  const start=boWeekStart(inp.value);
+  inp.value=start;
+  const {data,error}=await SB.rpc('backoffice_team_week_off',{p_week_start:start});
+  if(error){box.innerHTML='<span class="bad">'+boEsc(error.message)+'</span>';return}
+  const rows=data||[];
+  box.innerHTML=rows.length?rows.map(r=>'<div class="summarybox"><b>'+boEsc(r.full_name)+'</b> <span class="badge">'+boEsc(r.display_type)+'</span><br><span class="muted">'+boDate(r.date_from)+' → '+boDate(r.date_to)+'</span></div>').join(''):'<span class="muted">Nobody is recorded off this week.</span>';
+}
+document.addEventListener('change',e=>{if(e.target?.id==='teamOffWeek')loadTeamOffWeek()});
+document.addEventListener('click',e=>{if(e.target.closest('[data-tab="leave"]'))setTimeout(loadTeamOffWeek,0)});
+const oldRenderLeave=window.renderLeave;
+window.renderLeave=function(){if(typeof oldRenderLeave==='function')oldRenderLeave();setTimeout(loadTeamOffWeek,0)};
+setTimeout(loadTeamOffWeek,1200);
 })();
 </script>
 
