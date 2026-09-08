@@ -44,7 +44,7 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 @media(max-width:680px){.bo-kpis{grid-template-columns:repeat(2,1fr)}.bo-module-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.top{display:block}.pill{display:inline-block;margin-top:8px}}
 
 
-/* PASS-inspired Back Office visual shell — Dexter's test only */
+/* PASS-inspired Back Office visual shell */
 :root{--pass-purple:#5b0b7e;--pass-purple-dark:#43045f;--pass-purple-soft:#efe7f3;--pass-bg:#f3f3f5;--pass-card:#ffffff;--pass-border:#dedde3;--pass-text:#37343b;--pass-muted:#74707a}
 body{background:var(--pass-bg);color:var(--pass-text)}
 .wrap{max-width:none;padding:0 0 28px}
@@ -327,7 +327,7 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="row"><button class="btn" id="secureLoginBtn">Sign in</button><button class="btn alt" id="secureForgotBtn">Forgot password</button></div>
 <p class="tiny">Secure staff access only. Your authenticated Dexter's role controls what you can see.</p>
 </div>
-<div id="secureSignedIn" style="display:none"><span class="ok"><b id="secureUserLabel">Signed in</b></span> <span class="badge" id="secureRoleLabel"></span><button class="btn alt small" id="secureLogoutBtn">Sign out</button></div>
+<div id="secureSignedIn" style="display:none"><span class="ok"><b id="secureUserLabel">Signed in</b></span> <span class="badge" id="secureRoleLabel"></span><a class="btn alt small" href="/staff/" style="text-decoration:none">Open Staff App</a><button class="btn alt small" id="secureLogoutBtn">Sign out</button></div>
 
 <div id="secureAuthMessage" class="tiny" style="margin-top:8px"></div>
 </div>
@@ -866,7 +866,7 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="rota">
-<div class="card notice"><b>Rota & Timekeeping</b><p class="muted">Staff can see their own shifts and clock in/out. Managers can create and review shifts. Test only.</p></div>
+<div class="card notice"><b>Rota & Timekeeping</b><p class="muted">Staff can see published shifts and clock in or out in the Staff App. Managers can create, publish and review shifts here.</p></div>
 
 <div class="grid">
 <div class="card">
@@ -1165,33 +1165,33 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="menuadmin">
-<div class="card notice"><b>Menu & Admin</b><p class="muted">Test-only management area for menu notes, availability and change requests. Nothing here writes to Dexter's live customer menu.</p></div>
+<div class="card notice"><b>Menu Planning</b><p class="muted">Record proposed menu changes here. Live customer-menu changes must be completed through the authorised Loyalty App menu service.</p></div>
 <div class="grid">
   <div class="card">
     <h2>Menu change request</h2>
     <div class="field">Item / category<input id="menuChangeItem" placeholder="e.g. Street Subs"></div>
     <div class="field">Change type<select id="menuChangeType"><option>Price</option><option>Description</option><option>Modifier</option><option>Availability</option><option>Allergen note</option><option>Other</option></select></div>
-    <div class="field">Requested change<textarea id="menuChangeNote" rows="4" placeholder="Describe the proposed test change"></textarea></div>
+    <div class="field">Requested change<textarea id="menuChangeNote" rows="4" placeholder="Describe the proposed change"></textarea></div>
     <div class="field">Priority<select id="menuChangePriority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>
-    <button class="btn" id="menuChangeAdd">Add test change request</button>
+    <button class="btn" id="menuChangeAdd">Add change request</button>
   </div>
   <div class="card">
-    <h2>Test availability control</h2>
-    <p class="muted">This records a Back Office test status only. It does not alter live ordering.</p>
+    <h2>Availability planning</h2>
+    <p class="muted">This records an internal planning status. It does not alter live ordering.</p>
     <div class="field">Item<input id="menuAvailItem" placeholder="Item name"></div>
-    <div class="field">Test status<select id="menuAvailStatus"><option>Available</option><option>Low stock</option><option>Out of stock</option><option>Hidden for review</option></select></div>
+    <div class="field">Planning status<select id="menuAvailStatus"><option>Available</option><option>Low stock</option><option>Out of stock</option><option>Hidden for review</option></select></div>
     <div class="field">Reason<input id="menuAvailReason" placeholder="Optional reason"></div>
-    <button class="btn alt" id="menuAvailAdd">Save test status</button>
+    <button class="btn alt" id="menuAvailAdd">Save planning status</button>
   </div>
 </div>
 <div class="grid" style="margin-top:14px">
   <div class="card"><h2>Change request queue</h2><div id="menuChangeList"></div></div>
-  <div class="card"><h2>Test availability list</h2><div id="menuAvailList"></div></div>
+  <div class="card"><h2>Availability planning list</h2><div id="menuAvailList"></div></div>
 </div>
 </section>
 
 <section class="panel" id="deals">
-<div class="card notice"><b>Dexter's Deals Engine</b><p class="muted">Build short-term personalised test offers around Dexter's existing 12-month automatic deal. Nothing here replaces or duplicates that long-term deal.</p></div>
+<div class="card notice"><b>Dexter's Deals Planner</b><p class="muted">Prepare suggested short-term offers around Dexter's existing automatic deal. Suggestions are not issued to customers until they are created through the live Loyalty App reward service.</p></div>
 <div class="grid">
 <div class="card"><h2>Customer signals</h2>
 <div class="field">Customer name<input id="dealName" value="Test Customer"></div>
@@ -1205,21 +1205,21 @@ body.pride-theme{background:#f7f3f8!important}
 <label class="field">Has unused reward?<select id="dealUnused"><option>No</option><option>Yes</option></select></label>
 <label class="field">Covered by 12-month auto deal?<select id="dealAnnual"><option selected>Yes</option><option>No</option></select></label>
 <button class="btn" id="dealRun">Generate recommended deals</button>
-<div class="summarybox tiny">Staff must approve every test deal. The 12-month automatic deal is protected from duplication and discount stacking.</div>
+<div class="summarybox tiny">Staff must approve every suggested deal. The 12-month automatic deal is protected from duplication and discount stacking.</div>
 </div>
 
 <div class="card"><h2>Recommended deals</h2>
 <div id="dealOut" class="muted">Run the engine to preview personalised offers.</div>
 <hr style="border:0;border-top:1px solid #ffffff17;margin:16px 0">
-<h2>Staff-approved test deals</h2>
-<div id="dealApproved" class="muted">No deals approved in this test.</div>
+<h2>Staff-approved deal drafts</h2>
+<div id="dealApproved" class="muted">No deal drafts approved.</div>
 <p class="tiny">Approved deals are still not sent automatically. Staff must press Send to customer.</p>
 </div>
 </div>
 </section>
 
 <section class="panel" id="challenges">
-<div class="card notice"><b>Digital Scratch Cards + Challenges</b><p class="muted">Challenges reward genuine customer activity. A scratch card can be earned when a challenge is completed, but rewards stay test-only until staff approve them.</p></div>
+<div class="card notice"><b>Digital Scratch Cards + Challenges</b><p class="muted">This planning area does not issue live customer rewards. Live rewards must be issued through the Loyalty App reward service.</p></div>
 <div class="grid">
 <div class="card"><h2>Customer challenge progress</h2>
 <div class="field">Customer name<input id="challengeName" value="Test Customer"></div>
@@ -1254,15 +1254,15 @@ body.pride-theme{background:#f7f3f8!important}
 <option value="Free 2oz Dexter's sauce">Free 2oz Dexter's sauce</option>
 <option value="Staff-selected reward">Staff-selected reward</option>
 </select></div>
-<button class="btn alt" id="challengeSave">Save test challenge rule</button>
+<button class="btn alt" id="challengeSave">Save draft challenge rule</button>
 </div>
-<div><div id="challengeRules" class="muted"></div><p class="tiny">Test only. No live points, prizes or customer rewards are changed.</p></div>
+<div><div id="challengeRules" class="muted"></div><p class="tiny">Draft rules are kept separate from live points, prizes and customer rewards.</p></div>
 </div>
 </div>
 </section>
 
 <section class="panel" id="staffdb">
-<div class="card notice"><b>Dexter's Staff Hub</b><p class="muted">PASS-style joined-up staff management layout for Dexter's. Access hierarchy: Super User → Manager → Team Leader → Staff. Only Super User has unrestricted access. Test only — no live staff records are changed.</p></div>
+<div class="card notice"><b>Dexter's Staff Management</b><p class="muted">Secure staff records shared with Dexter's Staff App. Access hierarchy: Super User → Manager → Team Leader → Staff. Only Super User has unrestricted access.</p><p><a class="btn alt small" href="/staff/" style="text-decoration:none">Open Staff App</a></p></div>
 <div class="staff-pass-shell">
 <aside class="staff-pass-nav">
 <div class="staff-pass-brand">DEXTER'S STAFF</div>
@@ -1508,7 +1508,7 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="payrolllegacy" style="display:none">
-<div class="card notice"><b>Dexter's Weekly Payroll</b><p class="muted">Workflow: weekly payroll is prepared from recorded shift times → Manager checks and approves → Super User verifies → payroll becomes Ready to Send. Test only; no HMRC or payroll-provider submission is made.</p></div>
+<div class="card notice"><b>Dexter's Weekly Payroll</b><p class="muted">Workflow: weekly payroll is prepared from recorded shift times → Manager checks and approves → Super User verifies → payroll becomes Ready to Send. This does not submit payroll to HMRC or a payroll provider.</p></div>
 
 <div class="grid">
 <div class="card">
@@ -1662,7 +1662,7 @@ body.pride-theme{background:#f7f3f8!important}
 </div>
 <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div><h2>Live device & printer health</h2><p class="muted">Read-only status from existing printer/device records.</p></div><button class="btn alt" id="refreshLiveDevices">Refresh</button></div><div id="liveDeviceHealth"></div></div>
 <div class="card" style="margin-top:14px"><h2>Owner daily summary</h2><div id="ownerDailySummary"></div></div>
-<div class="card" style="margin-top:14px"><h2>Backup & Restore</h2><p class="muted">Export a complete browser-test backup or restore a previous test backup.</p><div class="row"><button class="btn alt" id="backupExport">Create backup</button><label class="btn alt" style="cursor:pointer">Restore backup<input id="backupImport" type="file" accept="application/json" style="display:none"></label></div><textarea id="backupOutput" rows="5" readonly placeholder="Backup JSON appears here for the test build."></textarea></div>
+<div class="card" style="margin-top:14px"><h2>Local Planning Backup</h2><p class="muted">Export or restore locally stored planning records. Secure database records are not included.</p><div class="row"><button class="btn alt" id="backupExport">Create local backup</button><label class="btn alt" style="cursor:pointer">Restore local backup<input id="backupImport" type="file" accept="application/json" style="display:none"></label></div><textarea id="backupOutput" rows="5" readonly placeholder="Local planning backup appears here."></textarea></div>
 </section>
 
 <section class="panel" id="reports">
@@ -2498,7 +2498,7 @@ $('catSubmit').onclick=()=>{
  if(!$('catConfirm').checked){$('catCustomerStatus').innerHTML='<span class="bad">Please confirm the request details first.</span>';return}
  const unit=catPrice(),total=unit?(people*unit+paidDipsTotal+extrasTotalValue):null,id='CAT-'+String(Date.now()).slice(-6);
  cat.unshift({id,name,contact,phone,people,date,time,pack,notes,allergies:noAllergy?["No known allergies or dietary requirements"]:allergies,allergyConfirmed:true,contactForAllergy:true,total,choices,allocations,dips,paidDips,paidDipsTotal,extras,extrasTotal:extrasTotalValue,status:'Awaiting staff review',created:new Date().toISOString()});
- localStorage.setItem(CATKEY,JSON.stringify(cat));$('catCustomerStatus').innerHTML='<b>'+id+'</b><br><span class="ok">Request sent for staff review.</span><br><span class="muted">You can see its test status in the staff queue on this device.</span>';renderCat()
+ localStorage.setItem(CATKEY,JSON.stringify(cat));$('catCustomerStatus').innerHTML='<b>'+id+'</b><br><span class="ok">Draft saved for staff review on this device.</span><br><span class="muted">This is not a confirmed booking until it is recorded in the live ordering service.</span>';renderCat()
 };
 function saveCat(){localStorage.setItem(CATKEY,JSON.stringify(cat));renderCat()}
 function renderCat(){
@@ -3045,7 +3045,7 @@ function renderMenuAdmin(){
  dexManage.menuChanges=dexManage.menuChanges||[];
  dexManage.menuAvailability=dexManage.menuAvailability||[];
  $('menuChangeList').innerHTML=dexManage.menuChanges.map((x,i)=>'<div class="summarybox"><b>'+escLive(x.item||'Unnamed')+'</b><br><span class="badge">'+escLive(x.type)+'</span><span class="badge">'+escLive(x.priority)+'</span><br><span class="muted">'+escLive(x.note)+'</span><br><span class="tiny">Test request · '+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No test menu change requests.</span>';
- $('menuAvailList').innerHTML=dexManage.menuAvailability.map(x=>'<div class="summarybox"><b>'+escLive(x.item||'Unnamed')+'</b><br><span class="badge">'+escLive(x.status)+'</span>'+(x.reason?'<br><span class="muted">'+escLive(x.reason)+'</span>':'')+'<br><span class="tiny">Back Office test status only · '+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No test availability records.</span>';
+ $('menuAvailList').innerHTML=dexManage.menuAvailability.map(x=>'<div class="summarybox"><b>'+escLive(x.item||'Unnamed')+'</b><br><span class="badge">'+escLive(x.status)+'</span>'+(x.reason?'<br><span class="muted">'+escLive(x.reason)+'</span>':'')+'<br><span class="tiny">Internal planning status · '+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No availability planning records.</span>';
 }
 function renderReports(){
  if(!$('reportStaff'))return;
@@ -3483,10 +3483,10 @@ function renderApprovedDeals(){
  $('dealApproved').innerHTML=dealApproved.map((d,i)=>{
    const sent=d.status==='Sent to customer';
    return '<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.offer+'</span><br><span class="tiny">Customer: '+d.customer+' · Expires '+d.expiry+' · '+d.status+'</span><div class="row" style="margin-top:8px">'+(!sent?'<button class="btn small" onclick="sendApprovedDeal('+i+')">Send to customer</button>':'<span class="ok">Sent</span>')+'<button class="btn alt small" onclick="removeApprovedDeal('+i+')">Remove</button></div></div>';
- }).join('')||'No deals approved in this test.';
+ }).join('')||'No deal drafts approved.';
 }
 function renderDealCandidates(){
- $('dealOut').innerHTML=dealCandidates.map((d,i)=>'<div class="summarybox"><b>'+d.title+'</b><br>'+d.offer+'<br><span class="muted"><b>Why:</b> '+d.reason+'</span><br><span class="tiny">Suggested expiry: '+d.expiry+' · '+d.rule+'</span><div class="row" style="margin-top:8px"><button class="btn small" onclick="approveDeal('+i+')">Approve test deal</button><button class="btn alt small" onclick="rejectDeal('+i+')">Reject</button></div></div>').join('')||'<span class="muted">No deal rules matched this customer.</span>';
+ $('dealOut').innerHTML=dealCandidates.map((d,i)=>'<div class="summarybox"><b>'+d.title+'</b><br>'+d.offer+'<br><span class="muted"><b>Why:</b> '+d.reason+'</span><br><span class="tiny">Suggested expiry: '+d.expiry+' · '+d.rule+'</span><div class="row" style="margin-top:8px"><button class="btn small" onclick="approveDeal('+i+')">Approve deal draft</button><button class="btn alt small" onclick="rejectDeal('+i+')">Reject</button></div></div>').join('')||'<span class="muted">No deal rules matched this customer.</span>';
 }
 $('dealRun').onclick=()=>{
  const customer=$('dealName').value.trim()||'Test Customer',days=Math.max(0,Number($('dealDays').value||0)),visits=Math.max(0,Number($('dealVisits').value||0)),spend=Math.max(0,Number($('dealSpend').value||0)),fav=$('dealFav').value,bday=$('dealBirthday').value==='Yes',unused=$('dealUnused').value==='Yes',annual=$('dealAnnual').value==='Yes';
@@ -3877,7 +3877,7 @@ function renderStaffDirectory(){
   const due=(s.docs||[]).filter(d=>d.expiry&&new Date(d.expiry+'T12:00:00')<=new Date(Date.now()+30*86400000)).length;
   const abs=(s.absences||[]).length;
   const tr=s.training||{};
-  return '<button class="pass-staff-card" onclick="selectStaffRecord(&quot;'+s.id+'&quot;)">'+
+  return '<button type="button" class="pass-staff-card" data-staff-record="'+s.id+'">'+
     '<div class="pass-staff-card-top"><div class="pass-avatar large">'+custInitials(s.name)+'</div><span class="pass-status '+(s.status==='Active'?'active':'')+'">'+s.status+'</span></div>'+
     '<h3>'+s.name+'</h3><div class="pass-staff-role">'+s.role+'</div>'+
     '<div class="pass-staff-contact">'+(s.email||s.phone||'No contact details')+'</div>'+
@@ -3887,6 +3887,10 @@ function renderStaffDirectory(){
 }
 let STAFF_RECORD_OPEN=false;
 window.selectStaffRecord=id=>{staffDb.selected=id;STAFF_RECORD_OPEN=true;localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));renderStaffDb();window.scrollTo({top:0,behavior:'smooth'})};
+document.addEventListener('click',e=>{
+ const card=e.target.closest('[data-staff-record]');
+ if(card)window.selectStaffRecord(card.dataset.staffRecord);
+});
 window.closeStaffRecord=()=>{STAFF_RECORD_OPEN=false;renderStaffDb();window.scrollTo({top:0,behavior:'smooth'})};
 function fmtDate(d){if(!d)return '—';const x=new Date(d);return Number.isNaN(x.getTime())?d:x.toLocaleDateString()}
 function toggleLeavingFields(){
@@ -4485,7 +4489,7 @@ const FINAL_QUESTIONS=[
 function renderRefresherAndFinal(){
  const due=refresherDueDate(),now=new Date(),cert=trainState.certifiedAt?new Date(trainState.certifiedAt):null;
  const certExpiry=cert?new Date(cert.getTime()+Number(trainState.refreshDays||180)*86400000):null;
- let refreshHtml='<b>Refresher cycle:</b> every '+trainState.refreshDays+' days in this test setup.<br>';
+ let refreshHtml='<b>Refresher cycle:</b> every '+trainState.refreshDays+' days. Managers should also retrain after relevant process, equipment, menu, allergen or legal changes.<br>';
  if(cert){
   refreshHtml+='<span class="'+(certExpiry<=now?'bad':'ok')+'"><b>'+(certExpiry<=now?'Certification refresher due':'Certification current')+'</b></span><br><span class="tiny">Certified '+cert.toLocaleDateString()+' · refresher due '+certExpiry.toLocaleDateString()+'</span>';
  }else if(due){
