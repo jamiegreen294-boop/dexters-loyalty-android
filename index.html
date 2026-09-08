@@ -4956,5 +4956,190 @@ renderLessons();renderTrainingManager();
   try{renderLessons()}catch(e){}
 })();
 </script>
+
+<style id="dexters-scotland-training-animated-v2-20260908">
+.training-stage{position:relative;overflow:hidden;min-height:310px;border-radius:14px;background:linear-gradient(180deg,#f7f2fb,#fff);border:1px solid #e5dcec;padding:18px}
+.training-stage:before{content:"";position:absolute;inset:-35%;background:radial-gradient(circle at 30% 30%,#ffffffcc,transparent 28%),radial-gradient(circle at 70% 70%,#ede0f7aa,transparent 30%);animation:dexFloat 7s linear infinite}
+.training-scene{position:relative;z-index:1}
+.training-scene .emoji{display:inline-flex;width:62px;height:62px;align-items:center;justify-content:center;border-radius:18px;background:#fff;box-shadow:0 6px 24px #00000015;font-size:34px;animation:dexPop .55s ease}
+.training-scene h3{margin:10px 0 5px;font-size:21px}
+.training-scene p{margin:0 0 12px;line-height:1.5}
+.dex-law-chip{display:inline-block;margin:5px 0 10px;padding:5px 9px;border-radius:999px;background:#efe4f5;color:#5b0b7e;font-size:11px;font-weight:900}
+.dex-demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.dex-demo{border-radius:12px;padding:14px;min-height:110px;position:relative;overflow:hidden}
+.dex-demo.bad{background:#fff1f3;border:1px solid #f2c4cc}
+.dex-demo.good{background:#effaf1;border:1px solid #bfe3c7}
+.dex-demo .tag{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.dex-demo.bad .tag{color:#a52036}.dex-demo.good .tag{color:#23763a}
+.dex-demo .actor{font-size:28px;display:inline-block;margin:8px 0;animation:dexActor 1.5s ease-in-out infinite}
+.dex-demo.good .actor{animation:dexActorGood 1.5s ease-in-out infinite}
+.dex-stepbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.dex-stepbar span{padding:6px 9px;border-radius:999px;background:#fff;border:1px solid #e7e1ea;font-size:10px;font-weight:800;animation:dexStep .45s ease both}
+.dex-stepbar span:nth-child(2){animation-delay:.12s}.dex-stepbar span:nth-child(3){animation-delay:.24s}.dex-stepbar span:nth-child(4){animation-delay:.36s}
+@keyframes dexPop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes dexFloat{0%{transform:translate3d(-2%,0,0) rotate(0deg)}50%{transform:translate3d(2%,1%,0) rotate(2deg)}100%{transform:translate3d(-2%,0,0) rotate(0deg)}}
+@keyframes dexActor{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(8px) rotate(4deg)}}
+@keyframes dexActorGood{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes dexStep{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:640px){.dex-demo-grid{grid-template-columns:1fr}.training-stage{min-height:360px}}
+</style>
+<script>
+(function(){
+  function scene(title,text,law,bad,good,steps){return [title,text,{law:law||'',bad:bad||'',good:good||'',steps:steps||[]}]}
+  function replaceLesson(title,scenes,questions,group){
+    const l=lessons.find(x=>x.title===title);
+    if(!l)return;
+    if(group)l.group=group;
+    l.scenes=scenes;l.questions=questions;l.scotlandUkDepth=true;
+  }
+
+  replaceLesson("Manual handling & back safety",[
+    scene("Start with the legal order","Manual handling is not just about how you lift. First avoid hazardous handling where reasonably practicable, then assess unavoidable tasks, then reduce the remaining risk.","UK: Manual Handling Operations Regulations 1992","Picking up a heavy delivery because 'it should be fine'.","Stop first and decide whether the load can be split, moved with a trolley or handled another way.",["Avoid","Assess","Reduce"]),
+    scene("Assess the whole task","Think about the task, the load, the working environment and the individual doing it. There is no single legal maximum lifting weight.","HSE manual handling guidance","Judging safety only by the number printed on the box.","Check size, stability, grip, route, floor condition, space and your own capability.",["Task","Load","Environment","Individual"]),
+    scene("Plan the route before moving","Check where the load is going, clear trip hazards, open doors where practical and make sure the load will not block your view.","HSE practical control","Carrying a box through a cluttered back area with no clear view.","Clear the route first and use an aid or colleague if needed.",["Clear route","Good grip","Stable stance"]),
+    scene("Keep the load close","Use a stable position, keep the load close, move smoothly and turn with your feet instead of twisting through your back.","HSE practical control","Holding a crate at arm's length and twisting to put it down.","Keep it close, move your feet and lower in a controlled way.",["Close","Smooth","No twist"]),
+    scene("Stop and reassess","Pain, unusual strain, a slippery floor, damaged packaging or an unexpectedly heavy load are reasons to stop.","HSE risk reduction","Pushing through pain because service is busy.","Stop, make the area safe and use help or a handling aid.",["Stop","Reassess","Escalate"]),
+    scene("Training is not the control by itself","Training supports safe work but does not replace risk assessment, safer equipment or redesigning the task.","HSE duty","Relying on a 'safe lifting' poster while heavy unsafe tasks stay unchanged.","Report difficult tasks so the job itself can be made safer.",["Report","Review","Improve"])
+  ],[
+    ["What is the correct legal order for hazardous manual handling?",["Lift carefully first","Avoid, assess, then reduce the risk","Set one maximum weight for everybody"],1],
+    ["Is there one legal maximum lifting weight for everyone?",["Yes","No","Only for managers"],1],
+    ["What should a handling assessment consider?",["Task, load, environment and individual","Only the load weight","Only whether the worker is strong"],0],
+    ["A box is unexpectedly heavy. What is the safest action?",["Carry it quickly","Stop and reassess, using help or an aid if needed","Drag it"],1],
+    ["How should you turn with a load?",["Twist your back","Turn with your feet while keeping the load close","Hold it further away"],1],
+    ["Does training replace the need to control the risky task itself?",["Yes","No","Only for experienced staff"],1]
+  ],"Health & Safety");
+
+  replaceLesson("Slips, trips & safe floors",[
+    scene("Spills need immediate control","Slips and trips are a major workplace risk. Deal with spills promptly or isolate the area until it is safe.","UK: Health and Safety at Work etc. Act / Workplace Regulations","Walking past a wet floor because you are busy.","Stop, guard the area, clean using the correct method and remove the warning only when safe.",["Stop","Guard","Clean","Check"]),
+    scene("Keep routes clear","Floors, walkways and access routes should be maintained and kept clear enough for safe movement.","UK workplace safety","Leaving boxes, mop buckets or cables across a route.","Store items properly and keep escape/access routes clear.",["Clear","Store","Recheck"]),
+    scene("Use suitable footwear and cleaning methods","Controls should match the actual risk, including greasy kitchen floors and wet entrances.","HSE slips guidance","Using a cleaning method that leaves the floor wet during peak service.","Use the approved method and schedule cleaning so the risk is controlled.",["Right method","Right time","Dry/guard"])
+  ],[
+    ["What should happen after a spill?",["Ignore it","Make the area safe and clean/control it promptly","Wait until closing"],1],
+    ["Is a warning sign alone always enough?",["Yes","No, the hazard still needs controlling","Always"],1],
+    ["Should walkways be used for temporary stock storage?",["Yes","No","Only during lunch"],1]
+  ],"Health & Safety");
+
+  replaceLesson("Cleaning chemicals, COSHH & skin safety",[
+    scene("Know the COSHH controls","Hazardous cleaning substances must be assessed and exposure controlled. Follow Dexter's approved product instructions and COSHH controls.","UK: COSHH 2002","Using an unfamiliar chemical because the bottle is nearby.","Check the label, approved use, dilution, PPE and emergency information first.",["Identify","Assess","Control"]),
+    scene("Never improvise chemical mixing","Some cleaning products can react dangerously when mixed.","COSHH / product safety","Mixing products to make them 'stronger'.","Use only the approved product and dilution method.",["Correct product","Correct dilution","No mixing"]),
+    scene("Protect food and people","Chemicals must be stored and used so they do not contaminate food or expose staff unnecessarily.","COSHH + food safety","Putting cleaner in an unlabelled drinks bottle near food.","Keep it labelled, in controlled storage and away from food.",["Label","Store","Separate"]),
+    scene("Report skin or breathing problems","Wet work and chemicals can cause dermatitis or other health effects.","HSE occupational health","Ignoring cracked, sore skin from repeated cleaning.","Report symptoms early and follow the identified controls/PPE.",["Notice","Report","Review"])
+  ],[
+    ["Before using a hazardous cleaner, what should you check?",["Approved COSHH/product controls","Its colour only","Whether another worker likes it"],0],
+    ["Should cleaning chemicals be mixed to make them stronger?",["Yes","No","Only with hot water"],1],
+    ["Where should chemicals be stored?",["Controlled, labelled storage away from food","In drinks bottles","On the prep bench"],0],
+    ["What should happen to persistent skin irritation?",["Ignore it","Report it early","Cover it with perfume"],1]
+  ],"Health & Safety");
+
+  replaceLesson("Gas, fire & emergency action",[
+    scene("Scottish fire law applies","Dexter's workplace in Scotland is covered by the Fire (Scotland) Act 2005 and Fire Safety (Scotland) Regulations 2006. Staff need suitable information, instruction and training.","Scotland: Fire (Scotland) Act 2005 + 2006 Regulations","Assuming the English fire rules are the only rules that matter.","Follow Dexter's Scottish fire risk assessment, evacuation plan and staff instructions.",["Know alarm","Know exit","Know assembly"]),
+    scene("Raise the alarm and get out","On discovering fire, follow the alarm procedure and evacuate by the safe route.","Scottish fire safety guidance","Stopping to collect belongings or finish an order.","Leave promptly and go to the assembly point.",["Alarm","Evacuate","Assemble"]),
+    scene("Do not take unnecessary firefighting risks","Life safety comes first. Only use firefighting equipment when trained/authorised and it is safe to do so.","Scottish fire safety guidance","Trying to fight a growing fire with no clear escape route.","Evacuate and call for emergency help under the procedure.",["Life safety","Escape route","999 if required"]),
+    scene("Keep escape routes usable","Blocked exits and defective fire-safety equipment must be reported immediately.","Scottish fire safety duty","Stacking stock in front of an exit because it is temporary.","Keep exits clear and escalate defects.",["Clear exits","Report defects","No re-entry"])
+  ],[
+    ["Which fire law applies to Dexter's non-domestic premises in Scotland?",["Fire (Scotland) Act 2005 and Fire Safety (Scotland) Regulations 2006","Only English fire law","No workplace fire law"],0],
+    ["What should you do when evacuation is required?",["Finish serving","Evacuate by the safe route","Collect belongings"],1],
+    ["Should an untrained worker fight a fire?",["Yes","No","Always if small"],1],
+    ["What should happen to a blocked fire exit?",["Leave it","Clear/escalate it immediately","Use it for stock"],1]
+  ],"Scotland Fire Safety");
+
+  replaceLesson("Young workers & new starters",[
+    scene("Young workers may need extra protection","Under-18s can be at greater risk because of inexperience, immaturity and lack of risk awareness.","UK: young worker health & safety duties","Giving a young starter the same unsupervised risky tasks as an experienced adult.","Assess the person and task, then give suitable training and supervision.",["Assess","Train","Supervise"]),
+    scene("Competence before higher-risk work","Knives, fryers, hot equipment, chemicals and difficult manual handling need suitable instruction and supervision.","HSE young workers","Saying 'watch someone once and you'll be fine'.","Demonstrate, supervise practice and confirm competence before independent work.",["Show","Practice","Check"]),
+    scene("Working-time rules differ for under-18s","Young workers have additional working-time protections and cannot use an adult 48-hour opt-out.","UK Working Time rules","Using an adult opt-out form for a 17-year-old.","Apply the correct young-worker limits and rest rules.",["Check age","Use correct limits","Record"])
+  ],[
+    ["Why can young workers require extra controls?",["Less experience and risk awareness","They are banned from cafes","Only because of uniforms"],0],
+    ["Can an under-18 worker sign an adult 48-hour opt-out?",["Yes","No","Only weekends"],1],
+    ["What comes before independent higher-risk work?",["Competence, training and suitable supervision","Guessing","Customer instruction"],0]
+  ],"Health & Safety");
+
+  replaceLesson("Allergens & customer safety",[
+    scene("Allergen mistakes can be life-threatening","Food Standards Scotland says food businesses must ensure staff are trained in allergen management. Cooking does not remove allergens.","Scotland: Food Standards Scotland allergen guidance","Telling a customer 'it should be fine' from memory.","Check Dexter's current approved allergen information every time you are unsure.",["Never guess","Check","Be honest"]),
+    scene("Know the 14 regulated allergens","Allergen information must be provided correctly for the way food is sold, including non-prepacked food.","Scotland / UK food information rules","Assuming a product has not changed because the packaging looks the same.","Check ingredients, supplier changes and recipe substitutions.",["Ingredients","Supplier","Recipe"]),
+    scene("Prevent cross-contact","Separation, storage, cleaning, utensils and work practices all matter.","Food Standards Scotland","Using the same contaminated utensil for an allergen-sensitive order.","Use the approved clean/separate preparation procedure and escalate if safe preparation cannot be assured.",["Separate","Clean","Verify"]),
+    scene("Never hide uncertainty","All staff should know how to handle allergen queries and should not guess.","Food Standards Scotland","Saying 'no allergens' when you have not checked.","Tell the customer you need to check; ask the responsible person if needed.",["Stop","Check","Confirm"]),
+    scene("Training must be recorded","Food Standards Scotland recommends basic allergen training before relevant work, regular refreshers and accurate training records.","Food Standards Scotland","Letting a new starter answer allergen questions before training.","Complete the required allergen module and refresher before handling queries independently.",["Train","Record","Refresh"])
+  ],[
+    ["Can cooking remove a food allergen?",["Yes","No","Only frying"],1],
+    ["What should you do if you are unsure about an allergen?",["Guess","Check approved information or ask the responsible person","Say it is probably fine"],1],
+    ["Why can cross-contact matter?",["Very small amounts may trigger a serious reaction","Only for appearance","It never matters"],0],
+    ["When should relevant staff receive basic allergen training?",["Before they first start relevant work / at induction","After six months","Only managers"],0],
+    ["Should allergen training be recorded?",["Yes","No","Only if failed"],0]
+  ],"Food Safety & Scotland");
+
+  replaceLesson("Personal hygiene & illness reporting",[
+    scene("Report illness early","Food handlers must report symptoms and conditions that could contaminate food.","Scotland: CookSafe / food-handler fitness guidance","Hiding vomiting or diarrhoea because the shift is short staffed.","Tell the manager immediately and follow the exclusion procedure.",["Report","Exclude","Review"]),
+    scene("48-hour symptom-free rule","For vomiting/diarrhoea, food handlers are normally kept away from food handling until at least 48 hours after symptoms stop, unless specific advice requires longer.","Food Standards Scotland / CookSafe practice","Returning to food preparation the morning after symptoms stop.","Wait for the required symptom-free period and management clearance.",["Symptoms stop","48h minimum","Return safely"]),
+    scene("Wounds and hygiene","Infected wounds and poor personal hygiene can contaminate food.","Food safety control","Handling open food with an uncovered infected cut.","Report it and use the approved protective control or stay away from food handling as required.",["Report","Cover/control","Reassess"])
+  ],[
+    ["What should a food handler do after vomiting or diarrhoea?",["Keep working","Report it and follow exclusion rules","Only avoid cold food"],1],
+    ["What is the usual minimum symptom-free period before food handling resumes?",["12 hours","24 hours","48 hours"],2],
+    ["Should illness be hidden because the shop is busy?",["Yes","No","Only on weekends"],1]
+  ],"Food Safety & Scotland");
+
+  replaceLesson("Effective handwashing",[
+    scene("Use the handwash basin","Proper handwashing is a key food-safety control.","Scotland: CookSafe food hygiene","Washing hands quickly in a food-prep sink.","Use the designated handwash basin with soap, running water and hygienic drying.",["Wet","Soap","Rub","Rinse/Dry"]),
+    scene("Cover all hand surfaces","Fingertips, thumbs, between fingers and backs of hands are commonly missed.","Food hygiene practice","Rubbing palms for two seconds and stopping.","Use a thorough technique across all surfaces.",["Palms","Fingers","Thumbs","Backs"]),
+    scene("Wash again after contamination risks","Raw food, waste, cleaning, toilet use, face/hair touching and breaks can all require handwashing.","CookSafe practice","Putting on gloves over contaminated hands.","Wash properly first; gloves do not replace handwashing.",["Recognise risk","Wash","Resume safely"])
+  ],[
+    ["Can gloves replace handwashing?",["Yes","No","Only for raw food"],1],
+    ["Where should routine handwashing happen?",["Designated handwash basin","Any sink with dishes","Mop sink"],0],
+    ["After handling raw food, what should happen before ready-to-eat work?",["Wash hands correctly","Wipe them on apron","Nothing"],0]
+  ],"Food Safety & Scotland");
+
+  replaceLesson("Coffee machine, steam & hot drinks safety",[
+    scene("Authorised staff only","Hot water, steam, pressure and hot surfaces can cause serious burns and scalds.","UK workplace risk controls","Using the espresso machine without being shown the shutdown and steam controls.","Complete Dexter's equipment training and competency sign-off first.",["Train","Demonstrate","Authorise"]),
+    scene("Steam wand control","Steam can injure skin quickly and can eject hot liquid.","Equipment safety","Purging the wand toward your hand or another person.","Point it safely, use the approved purge/clean method and keep hands clear.",["Position","Purge safely","Wipe/control"]),
+    scene("Carry hot drinks safely","Customer and staff safety continues after preparation.","Workplace/customer safety","Overfilling cups and carrying too many at once.","Use secure lids/trays where appropriate and carry only what you can control.",["Fill safely","Secure","Carry steadily"]),
+    scene("Faults mean stop","Leaking, pressure, electrical or control faults need escalation.","PUWER/general workplace safety","Continuing to use a faulty machine during a rush.","Stop using it, isolate if trained/safe, mark it unavailable and report it.",["Stop","Isolate if safe","Report"])
+  ],[
+    ["Who should use the coffee machine?",["Anyone","Only trained/authorised staff","Customers"],1],
+    ["What should happen if the machine develops an unsafe fault?",["Keep using it","Stop and escalate/isolate as trained","Hit it"],1],
+    ["How should a steam wand be purged?",["Toward your hand","Using the approved safe direction/method","At a customer"],1]
+  ],"Cafe safety");
+
+  // Enhance every training scene visually, including Dexter's operational modules.
+  window.renderVideo=function(i){
+    const l=lessons[i],sceneIndex=videoScene[i]||0,watched=!!trainState.watched[i];
+    const max=Math.max(1,l.scenes.length-1),pct=watched?100:Math.round((sceneIndex/max)*100);
+    const stage=document.getElementById('trainVideo'+i);if(!stage)return;
+    const s=l.scenes[Math.min(sceneIndex,l.scenes.length-1)];
+    const meta=(s&&typeof s[2]==='object'&&s[2])?s[2]:{};
+    const law=meta.law||((l.scotlandUkDepth||['Health & Safety','Food Safety & Scotland','Scotland Fire Safety','People & HR'].includes(l.group))?'Scotland / UK workplace standard':'Dexter\'s procedure');
+    const bad=meta.bad||'Do not skip the approved procedure or guess.';
+    const good=meta.good||'Follow the approved Dexter\'s procedure and ask a manager if unsure.';
+    const steps=(Array.isArray(meta.steps)&&meta.steps.length?meta.steps:['Stop','Check','Do it safely']);
+    stage.innerHTML=
+      '<div class="training-stage"><div class="training-scene">'+
+      '<span class="emoji">'+l.icon+'</span>'+
+      '<div class="dex-law-chip">'+law+'</div>'+
+      '<h3>'+s[0]+'</h3><p>'+s[1]+'</p>'+
+      '<div class="dex-demo-grid">'+
+        '<div class="dex-demo bad"><div class="tag">❌ Don\'t do this</div><div class="actor">🙅</div><div>'+bad+'</div></div>'+
+        '<div class="dex-demo good"><div class="tag">✅ Do this instead</div><div class="actor">🧑‍🍳</div><div>'+good+'</div></div>'+
+      '</div>'+
+      '<div class="dex-stepbar">'+steps.map(x=>'<span>'+x+'</span>').join('')+'</div>'+
+      '</div></div>'+
+      '<div class="training-controls"><button class="btn small" onclick="playTrainingVideo('+i+')">'+(videoTimers[i]?'Playing…':'▶ Play training')+'</button><div class="video-progress"><i style="width:'+pct+'%"></i></div><span class="tiny">'+(Math.min(sceneIndex+1,l.scenes.length))+'/'+l.scenes.length+'</span></div>';
+  };
+
+  // Slightly slower scenes so staff can actually read the deeper material.
+  window.playTrainingVideo=function(i){
+    stopVideo(i);videoScene[i]=0;renderVideo(i);
+    videoTimers[i]=setInterval(()=>{
+      videoScene[i]++;
+      if(videoScene[i]>=lessons[i].scenes.length){
+        stopVideo(i);videoScene[i]=lessons[i].scenes.length-1;trainState.watched[i]=true;
+        localStorage.setItem(trainingStorageKey?trainingStorageKey():TRAINKEY,JSON.stringify(trainState));
+        localStorage.setItem(TRAINKEY,JSON.stringify(trainState));
+        renderLessons();return;
+      }
+      renderVideo(i);
+    },7000);
+  };
+
+  try{renderLessons();renderTrainingManager()}catch(e){}
+})();
+</script>
 </body>
 </html>
