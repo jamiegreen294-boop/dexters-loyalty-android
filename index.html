@@ -1996,13 +1996,16 @@ async function loadSecureCoreData(){
  else jobs.push(SB.from('backoffice_tasks').select('*').eq('assigned_staff_record_id',SECURE_ACCOUNT.staff_record_id||'__none__'));
  if(secureRoleRank(role)>=3) jobs.push(SB.from('backoffice_recruitment').select('*').order('created_at',{ascending:false}));
  else jobs.push(Promise.resolve({data:[],error:null}));
+ if(secureRoleRank(role)>=2) jobs.push(SB.from('backoffice_training_records').select('*').order('updated_at',{ascending:false}));
+ else jobs.push(SB.from('backoffice_training_records').select('*').eq('staff_record_id',SECURE_ACCOUNT.staff_record_id||'__none__').order('updated_at',{ascending:false}));
 
  const res=await Promise.all(jobs);
  const err=res.find(x=>x?.error)?.error;if(err)throw err;
 
- const [staffR,rotaR,leaveR,holidayR,payR,docsR,tasksR,recruitR]=res;
+ const [staffR,rotaR,leaveR,holidayR,payR,docsR,tasksR,recruitR,trainingR]=res;
  const staff=(staffR.data||[]).map(mapDbStaff);
  const docs=docsR.data||[];
+ const trainingRows=trainingR.data||[];
  staff.forEach(s=>{
    s.docs=docs.filter(d=>d.staff_record_id===s.id).map(d=>{
      const legacy=decodeStaffDocDetails(d.details),extra=(d.document_data&&typeof d.document_data==='object')?d.document_data:{};
@@ -2020,6 +2023,17 @@ async function loadSecureCoreData(){
        createdAt:d.created_at,updatedAt:d.updated_at
      };
    });
+   const tr=trainingRows.filter(r=>r.staff_record_id===s.id);
+   const final=tr.find(r=>r.module_key==='final-certification');
+   const modules=tr.filter(r=>r.module_key!=='final-certification'&&r.status==='Completed');
+   s.training={
+     completed:modules.length,
+     total:(typeof lessons!=='undefined'&&Array.isArray(lessons))?lessons.filter(l=>!l.managerOnly||['Team Leader','Manager','Super User'].includes(s.role)).length:modules.length,
+     finalScore:final?.score==null?null:Number(final.score),
+     certifiedAt:final?.completed_at||null,
+     refresherDue:final?.refresher_due_at||null,
+     records:tr
+   };
  });
  if(staff.length){
    staffDb.staff=staff;
@@ -2047,6 +2061,7 @@ async function loadSecureCoreData(){
  }));
  localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));
  CORE_DB_CONNECTED=true;
+ if(typeof loadSignedInTrainingFromDb==='function')await loadSignedInTrainingFromDb();
  renderStaffDb();renderDexManagement();syncLiveCustomers();if(!window.__DEXTERS_LIVE_CUSTOMER_TIMER)window.__DEXTERS_LIVE_CUSTOMER_TIMER=setInterval(()=>{if(SECURE_SESSION&&SECURE_ACCOUNT?.active)syncLiveCustomers()},30000);
  loadFormSecurityAlerts().catch(()=>{});
  const msg=$('secureAuthMessage');if(msg)msg.innerHTML='<span class="ok">Secure database connected.</span>';
@@ -4374,7 +4389,7 @@ lessons.forEach((l,i)=>{if(!l.group)l.group="Core"});
 let trainState={staffName:'Test Staff',role:'Staff',completed:{},attempts:{},watched:{},scores:{},completedAt:{},finalAttempts:0,finalScore:null,certifiedAt:null,refreshDays:180};
 try{const saved=JSON.parse(localStorage.getItem(TRAINKEY)||'null');if(saved)trainState={...trainState,...saved,completedAt:saved.completedAt||{}}}catch(e){}
 let videoScene={},videoTimers={};
-function saveTraining(){localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderLessons();renderTrainingManager()}
+function saveTraining(){localStorage.setItem(trainingStorageKey(),JSON.stringify(trainState));localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderLessons();renderTrainingManager();if(typeof applyMandatoryTrainingGate==='function')applyMandatoryTrainingGate()}
 function visibleLessonIndexes(){return lessons.map((l,i)=>({l,i})).filter(x=>!x.l.managerOnly||trainState.role==='Manager'||trainState.role==='Super User'||trainState.role==='Team Leader').map(x=>x.i)}
 function requiredLessonIndexes(){return visibleLessonIndexes()}
 function completedCount(){return requiredLessonIndexes().filter(i=>!!trainState.completed[i]).length}
@@ -4425,8 +4440,8 @@ window.checkLesson=i=>{
  const feedback=$('trainFeedback'+i);if(answered<l.questions.length){feedback.innerHTML='<span class="bad">Answer every question before submitting.</span>';return}
  trainState.attempts[i]=(trainState.attempts[i]||0)+1;
  const score=Math.round(correct/l.questions.length*100);trainState.scores[i]=score;
- if(score>=80){trainState.completed[i]=true;trainState.completedAt=trainState.completedAt||{};trainState.completedAt[i]=new Date().toISOString();trainState.certifiedAt=null;trainState.finalScore=null;saveTraining()}
- else{feedback.innerHTML='<span class="bad">Score '+score+'%. You need 80% to pass. Review the lesson and try again.</span>';localStorage.setItem(TRAINKEY,JSON.stringify(trainState))}
+ if(score>=80){trainState.completed[i]=true;trainState.completedAt=trainState.completedAt||{};trainState.completedAt[i]=new Date().toISOString();trainState.certifiedAt=null;trainState.finalScore=null;saveTraining();if(typeof persistSignedInTrainingModule==='function')persistSignedInTrainingModule(i).catch(e=>{feedback.innerHTML='<span class="bad">Training passed, but secure record save failed: '+e.message+'</span>'})}
+ else{feedback.innerHTML='<span class="bad">Score '+score+'%. You need 80% to pass. Review the lesson and try again.</span>';localStorage.setItem(trainingStorageKey(),JSON.stringify(trainState));localStorage.setItem(TRAINKEY,JSON.stringify(trainState))}
 };
 function renderTrainingManager(){
  const req=requiredLessonIndexes(),done=completedCount(),pct=req.length?Math.round(done/req.length*100):0;
@@ -4477,8 +4492,8 @@ window.submitFinalTraining=()=>{
  const fb=$('finalTrainingFeedback');if(answered<FINAL_QUESTIONS.length){fb.innerHTML='<span class="bad">Answer all 12 questions before submitting.</span>';return}
  trainState.finalAttempts=(trainState.finalAttempts||0)+1;
  const score=Math.round(correct/FINAL_QUESTIONS.length*100);trainState.finalScore=score;
- if(score>=80){trainState.certifiedAt=new Date().toISOString();localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderTrainingManager()}
- else{fb.innerHTML='<span class="bad">Score '+score+'%. You need 80% to pass. Review the modules and try again.</span>';localStorage.setItem(TRAINKEY,JSON.stringify(trainState))}
+ if(score>=80){trainState.certifiedAt=new Date().toISOString();localStorage.setItem(trainingStorageKey(),JSON.stringify(trainState));localStorage.setItem(TRAINKEY,JSON.stringify(trainState));renderTrainingManager();if(typeof persistSignedInFinalCertification==='function')persistSignedInFinalCertification().catch(e=>{fb.innerHTML='<span class="bad">Certification passed, but secure record save failed: '+e.message+'</span>'})}
+ else{fb.innerHTML='<span class="bad">Score '+score+'%. You need 80% to pass. Review the modules and try again.</span>';localStorage.setItem(trainingStorageKey(),JSON.stringify(trainState));localStorage.setItem(TRAINKEY,JSON.stringify(trainState))}
 };
 $('trainStaffName').addEventListener('change',()=>{trainState.staffName=$('trainStaffName').value.trim()||'Unnamed staff';saveTraining()});
 $('trainRole').addEventListener('change',()=>{trainState.role=$('trainRole').value;trainState.certifiedAt=null;trainState.finalScore=null;saveTraining()});
@@ -4744,6 +4759,130 @@ renderLessons();renderTrainingManager();
 
   try{populateStaffDocLibrary()}catch(e){}
   try{renderLessons();renderTrainingManager();renderRefresherAndFinal()}catch(e){}
+})();
+</script>
+
+<script id="dexters-mandatory-training-sync-20260908">
+(function(){
+  window.trainingStorageKey=function(){
+    const id=window.SECURE_ACCOUNT?.staff_record_id||SECURE_ACCOUNT?.staff_record_id||'local-test';
+    return 'dexters_training_'+id;
+  };
+  window.trainingModuleKey=function(title){
+    return 'module-'+String(title||'training').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,100);
+  };
+  window.loadSignedInTrainingFromDb=async function(){
+    if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.staff_record_id)return;
+    const staffId=SECURE_ACCOUNT.staff_record_id;
+    const {data,error}=await SB.from('backoffice_training_records').select('*').eq('staff_record_id',staffId).order('updated_at',{ascending:false});
+    if(error)throw error;
+    const rows=data||[];
+    const next={staffName:SECURE_ACCOUNT.staff_name||SECURE_SESSION.user.email||'Staff',role:SECURE_ACCOUNT.role||'Staff',completed:{},attempts:{},watched:{},scores:{},completedAt:{},finalAttempts:0,finalScore:null,certifiedAt:null,refreshDays:180};
+    try{
+      const local=JSON.parse(localStorage.getItem(trainingStorageKey())||'null');
+      if(local)Object.assign(next,local,{staffName:next.staffName,role:next.role,completedAt:local.completedAt||{}});
+    }catch(e){}
+    rows.forEach(r=>{
+      if(r.module_key==='final-certification'){
+        if(r.status==='Completed'){next.finalScore=r.score==null?null:Number(r.score);next.certifiedAt=r.completed_at||null}
+        if(r.training_data?.finalAttempts!=null)next.finalAttempts=Number(r.training_data.finalAttempts||0);
+        return;
+      }
+      const idx=lessons.findIndex(l=>trainingModuleKey(l.title)===r.module_key||l.title===r.module_title);
+      if(idx<0)return;
+      if(r.status==='Completed')next.completed[idx]=true;
+      if(r.score!=null)next.scores[idx]=Number(r.score);
+      if(r.completed_at)next.completedAt[idx]=r.completed_at;
+      next.watched[idx]=r.training_data?.watched!==false;
+      next.attempts[idx]=Number(r.training_data?.attempts||next.attempts[idx]||1);
+    });
+    trainState=next;
+    localStorage.setItem(trainingStorageKey(),JSON.stringify(trainState));
+    localStorage.setItem(TRAINKEY,JSON.stringify(trainState));
+    const nameEl=document.getElementById('trainStaffName'),roleEl=document.getElementById('trainRole');
+    if(nameEl){nameEl.value=trainState.staffName;nameEl.readOnly=true}
+    if(roleEl){roleEl.value=trainState.role;roleEl.disabled=true}
+    renderLessons();renderTrainingManager();applyMandatoryTrainingGate();
+  };
+  window.persistSignedInTrainingModule=async function(i){
+    if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.staff_record_id)return;
+    const l=lessons[i],completedAt=trainState.completedAt?.[i]||new Date().toISOString();
+    const due=new Date(new Date(completedAt).getTime()+Number(trainState.refreshDays||180)*86400000).toISOString();
+    const row={
+      staff_record_id:SECURE_ACCOUNT.staff_record_id,
+      module_key:trainingModuleKey(l.title),
+      module_title:l.title,
+      status:'Completed',
+      score:Number(trainState.scores[i]||0),
+      completed_at:completedAt,
+      refresher_due_at:due,
+      training_data:{watched:!!trainState.watched[i],attempts:Number(trainState.attempts[i]||1),group:l.group||'Core',mandatory:true,pass_mark:80},
+      updated_by:SECURE_SESSION.user.id,
+      updated_at:new Date().toISOString()
+    };
+    const {error}=await SB.from('backoffice_training_records').upsert(row,{onConflict:'staff_record_id,module_key'});
+    if(error)throw error;
+    await appendAuditDb('training',row.module_key,'Training module completed',null,{staff_record_id:row.staff_record_id,staff_name:trainState.staffName,module_title:l.title,score:row.score,completed_at:completedAt});
+  };
+  window.persistSignedInFinalCertification=async function(){
+    if(!SB||!SECURE_SESSION||!SECURE_ACCOUNT?.staff_record_id)return;
+    const staffId=SECURE_ACCOUNT.staff_record_id,at=trainState.certifiedAt||new Date().toISOString();
+    const due=new Date(new Date(at).getTime()+Number(trainState.refreshDays||180)*86400000).toISOString();
+    const key='cert-'+staffId+'-'+String(at).slice(0,10);
+    const finalRow={
+      staff_record_id:staffId,module_key:'final-certification',module_title:"Dexter's Mandatory Staff Training Certification",
+      status:'Completed',score:Number(trainState.finalScore||0),completed_at:at,refresher_due_at:due,
+      training_data:{mandatory:true,required_modules:requiredLessonIndexes().length,completed_modules:completedCount(),finalAttempts:Number(trainState.finalAttempts||1),alert_key:key,alert_sent:false},
+      updated_by:SECURE_SESSION.user.id,updated_at:new Date().toISOString()
+    };
+    const {error}=await SB.from('backoffice_training_records').upsert(finalRow,{onConflict:'staff_record_id,module_key'});
+    if(error)throw error;
+    const alertRow={
+      title:'Training completed · '+trainState.staffName,
+      assigned_staff_record_id:null,
+      task_type:'Training completion alert',
+      priority:'Normal',
+      due_date:null,
+      details:trainState.staffName+' completed all mandatory Dexter\'s staff training and passed the final certification at '+Number(trainState.finalScore||0)+'%.',
+      resolution:null,status:'Open',tags:['Training','Completed'],
+      task_data:{staff_record_id:staffId,staff_name:trainState.staffName,final_score:Number(trainState.finalScore||0),certified_at:at,refresher_due_at:due,alert_key:key},
+      created_by:SECURE_SESSION.user.id,updated_at:new Date().toISOString()
+    };
+    const {error:alertError}=await SB.from('backoffice_tasks').insert(alertRow);
+    if(alertError&&!String(alertError.message||'').toLowerCase().includes('duplicate'))throw alertError;
+    finalRow.training_data.alert_sent=true;
+    await SB.from('backoffice_training_records').update({training_data:finalRow.training_data,updated_by:SECURE_SESSION.user.id,updated_at:new Date().toISOString()}).eq('staff_record_id',staffId).eq('module_key','final-certification');
+    await appendAuditDb('training','final-certification','Mandatory training certification completed',null,{staff_record_id:staffId,staff_name:trainState.staffName,score:Number(trainState.finalScore||0),certified_at:at,refresher_due_at:due});
+    const own=staffDb.staff.find(s=>s.id===staffId);
+    if(own)own.training={...(own.training||{}),completed:completedCount(),total:requiredLessonIndexes().length,finalScore:Number(trainState.finalScore||0),certifiedAt:at,refresherDue:due};
+    applyMandatoryTrainingGate();
+    const fb=document.getElementById('finalTrainingFeedback');if(fb)fb.innerHTML='<span class="ok"><b>Certified ✓</b> Your manager has been alerted and your training record has been updated automatically.</span>';
+  };
+  window.applyMandatoryTrainingGate=function(){
+    if(!SECURE_ACCOUNT||!SECURE_SESSION)return;
+    const needsGate=['Staff','Team Leader'].includes(SECURE_ACCOUNT.role||'')&&!trainState.certifiedAt;
+    const allowed=new Set(['dashboard','training','rota','leave','inbox','policies']);
+    document.querySelectorAll('.dex-backoffice-nav .tab[data-tab]').forEach(b=>{
+      const roleAllowed=secureRoleRank(SECURE_ACCOUNT.role)>=secureRoleRank(b.dataset.minrole||'Staff');
+      if(!roleAllowed){b.style.display='none';return}
+      if(needsGate&&!allowed.has(b.dataset.tab)){b.style.display='none';b.dataset.trainingLocked='1'}
+      else if(b.dataset.trainingLocked==='1'){b.style.display='block';delete b.dataset.trainingLocked}
+    });
+    let banner=document.getElementById('mandatoryTrainingBanner');
+    if(!banner){
+      banner=document.createElement('div');banner.id='mandatoryTrainingBanner';banner.className='card notice';
+      const p=document.getElementById('training');if(p)p.insertBefore(banner,p.firstChild);
+    }
+    if(banner)banner.innerHTML=needsGate
+      ?'<b>Mandatory training required</b><p class="muted">Complete every required module and pass the final certification test at 80% or above. Operational Back Office sections unlock automatically when certification is complete.</p>'
+      :'<b>Mandatory training status</b><p class="ok">Required training certification is complete. Refresher training will be tracked automatically.</p>';
+    const active=document.querySelector('.dex-backoffice-nav .tab.active');
+    if(needsGate&&active&&!allowed.has(active.dataset.tab)){
+      document.querySelectorAll('.dex-backoffice-nav .tab,.dex-backoffice-main>.panel').forEach(x=>x.classList.remove('active'));
+      const t=document.querySelector('.dex-backoffice-nav .tab[data-tab="training"]');if(t)t.classList.add('active');
+      const p=document.getElementById('training');if(p)p.classList.add('active');
+    }
+  };
 })();
 </script>
 </body>
