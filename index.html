@@ -287,11 +287,33 @@ body.pride-theme{background:#f7f3f8!important}
 .pride-theme .card.notice{border-left:0!important;border-top:5px solid transparent!important;border-image:linear-gradient(90deg,#e40303,#ff8c00,#ffed00,#008026,#004dff,#750787) 1!important}
 .pride-theme .pass-avatar,.pride-theme .staff-avatar{background:linear-gradient(135deg,#ffdede,#fff0d6,#fffbd6,#e2f5e6,#dfe8ff,#f0def6)!important;color:#6b167f!important}
 .pride-theme .bo-kpi b,.pride-theme .staff-pass-kpi b,.pride-theme .pass-manager-kpi b,.pride-theme .pass-staff-metrics b{color:#750787!important}
+
+/* Mobile text clarity fix */
+.pride-nav .dex-backoffice-logo,
+.pride-nav .tab,
+.pride-nav .pass-nav-trigger,
+.pride-nav .pass-nav-user,
+.pride-nav .pass-nav-drop,
+.pride-nav .pass-nav-drop .tab{
+  text-shadow:none!important;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.pride-nav .pass-nav-drop .tab{
+  color:#4c4750!important;
+  font-weight:700!important;
+}
+@media(max-width:980px){
+  .pride-nav .pass-nav-drop .tab{
+    text-shadow:none!important;
+    filter:none!important;
+  }
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="pride-theme">
-<main class="wrap" data-build="2026-09-08-website-pass-24-live-customer-orders">
+<main class="wrap" data-build="2026-09-08-website-pass-25-text-clarity">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
