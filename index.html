@@ -204,11 +204,83 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
  .pass-nav-trigger{padding:0 10px;font-size:11px}
  .dex-backoffice-nav .pass-nav-home{padding:14px 9px!important}
 }
+
+/* Pride theme for Dexter's Back Office */
+:root{
+  --pass-purple:#7b2cbf;
+  --pass-purple-dark:#5a189a;
+  --pass-purple-soft:#f3e8ff;
+  --pride-red:#e40303;
+  --pride-orange:#ff8c00;
+  --pride-yellow:#ffed00;
+  --pride-green:#008026;
+  --pride-blue:#004dff;
+  --pride-violet:#750787;
+}
+.dex-backoffice-nav{
+  background:linear-gradient(90deg,
+    var(--pride-red) 0%,
+    var(--pride-orange) 18%,
+    var(--pride-yellow) 36%,
+    var(--pride-green) 54%,
+    var(--pride-blue) 72%,
+    var(--pride-violet) 100%)!important;
+}
+.dex-backoffice-nav .tab,
+.pass-nav-trigger,
+.dex-backoffice-logo,
+.pass-nav-user{color:#fff!important;text-shadow:0 1px 2px #0007}
+.dex-backoffice-nav .tab.active{
+  background:#00000026!important;
+  box-shadow:inset 0 -3px 0 #fff!important
+}
+.pass-nav-menu:hover .pass-nav-trigger,
+.pass-nav-menu.open .pass-nav-trigger{background:#00000020!important}
+.top .eyebrow{color:var(--pride-violet)!important}
+.top .pill{
+  background:linear-gradient(90deg,#ffe4e4,#fff1da,#fffbd8,#e4f6e9,#e3ebff,#f0e3f6)!important;
+  color:#4b235f!important;
+  border-color:#d8c8df!important
+}
+.card.notice{border-left:0!important;border-top:5px solid transparent!important;border-image:linear-gradient(90deg,var(--pride-red),var(--pride-orange),var(--pride-yellow),var(--pride-green),var(--pride-blue),var(--pride-violet)) 1!important}
+.bo-kpi b,.staff-pass-kpi b,.pass-manager-kpi b,.metric b,.pass-staff-metrics b{color:var(--pride-violet)!important}
+.btn{
+  background:linear-gradient(90deg,var(--pride-red),var(--pride-orange),var(--pride-yellow),var(--pride-green),var(--pride-blue),var(--pride-violet))!important;
+  color:#fff!important;
+  border:0!important;
+  text-shadow:0 1px 2px #0008
+}
+.btn.alt{
+  background:#fff!important;
+  color:var(--pride-violet)!important;
+  border:1px solid #cfc5d7!important;
+  text-shadow:none!important
+}
+.pass-avatar,.staff-avatar{
+  background:linear-gradient(135deg,#ffe5e5,#fff0dc,#fffbd8,#e6f6e9,#e6ecff,#f1e5f7)!important;
+  color:#5a189a!important
+}
+.pass-status.active{background:var(--pride-green)!important;color:#fff!important}
+.staff-subtabs button.active,.staff-profile-tabs button.active{
+  background:linear-gradient(90deg,var(--pride-blue),var(--pride-violet))!important;
+  color:#fff!important
+}
+.pass-staff-open{color:var(--pride-violet)!important}
+.pass-ring{
+  background:conic-gradient(
+    var(--pride-red) 0 16.6%,
+    var(--pride-orange) 16.6% 33.2%,
+    var(--pride-yellow) 33.2% 49.8%,
+    var(--pride-green) 49.8% 66.4%,
+    var(--pride-blue) 66.4% 83%,
+    var(--pride-violet) 83% 100%)!important
+}
+.pass-sign-box:hover{border-color:var(--pride-violet)!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main class="wrap" data-build="2026-09-08-website-pass-18-menu-hard-close">
+<main class="wrap" data-build="2026-09-08-website-pass-19-pride-theme">
 <a class="home" href="/">← Home</a>
 <header class="top">
 <div><p class="eyebrow">DEXTER'S PRIVATE TEST</p><h1>Dexter's Back Office</h1><p class="sub">PASS-style joined-up management test for Dexter's. Staff, training, HR, compliance, catering, loyalty, orders and management tools in one place. Nothing here changes live production data.</p></div>
