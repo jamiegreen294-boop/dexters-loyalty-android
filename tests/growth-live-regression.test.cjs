@@ -16,6 +16,9 @@ assert(sql.includes('revoke all'),'Tables must not be directly writable from cus
 for(const key of ['catering_enabled','deals_enabled','challenges_enabled'])assert(ui.includes(key),key+' staff control is required');
 assert(ui.includes("setInterval(timer")===false,'Invalid interval wiring');
 assert(ui.includes('30000'),'Refresh interval must remain low-frequency');
+assert(ui.includes('observeMounts'),'Growth UI must watch for customer/staff views that mount after initial load');
+assert(ui.includes('needsMount'),'Growth UI must remount Catering/Challenges if their host view is recreated');
+assert(ui.includes('rendering=false'),'Growth UI must guard against duplicate render loops');
 assert(catering.includes('48 hours'),'Customer catering page must explain notice period');
 assert(catering.includes("action,...p"),'Customer catering page must call the authenticated live API');
 assert(built.includes('dextersGrowthLiveLoader'),'Built app must include the growth integration');
