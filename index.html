@@ -925,7 +925,11 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="leave">
-<div class="card notice"><b>Leave, Availability & Shift Swaps</b><p class="muted">Staff self-service requests with manager approval, contract-based holiday entitlement and audit history.</p></div>
+<div class="card notice"><b>Leave, Availability & Shift Swaps</b><p class="muted">Staff self-service requests with manager approval, contract-based holiday entitlement and audit history.</p></div><div class="card" id="managerLeaveApprovalsCard" style="margin-bottom:14px">
+  <h2>Manager approvals</h2>
+  <p class="muted">Pending Staff App holiday and leave requests waiting for a decision.</p>
+  <div id="managerLeaveApprovals"></div>
+</div>
 <div class="card" style="margin-bottom:14px"><h2>Holiday entitlement & balance</h2><div class="field">Staff member<select id="holidayBalanceStaff"></select></div><div id="holidayBalanceCard"></div>
 <div class="summarybox"><b>Holiday adjustment</b><br><span class="muted">Manager/Super User only. Every adjustment is logged.</span></div>
 <div class="grid"><div class="field">Adjustment amount<input id="holidayAdjustAmount" type="number" step="0.01" placeholder="+ or -"></div><div class="field">Unit<select id="holidayAdjustUnit"><option>hours</option><option>days</option></select></div></div>
@@ -6372,6 +6376,20 @@ window.renderLeave=function(){if(typeof oldRenderLeave==='function')oldRenderLea
 setTimeout(loadTeamOffWeek,1200);
 })();
 </script>
-
+<script>
+// DEXTERS_MANAGER_LEAVE_APPROVALS_V1
+function renderManagerLeaveApprovals(){
+ const box=document.getElementById('managerLeaveApprovals'),card=document.getElementById('managerLeaveApprovalsCard');
+ if(!box||!card)return;
+ const rank=typeof roleRank==='function'?roleRank(CURRENT_STAFF_ROLE):0;
+ if(rank<3){card.style.display='none';return}
+ card.style.display='';
+ const rows=(dexManage.leaveRequests||[]).map((r,i)=>({r,i})).filter(x=>x.r.status==='Pending');
+ box.innerHTML=rows.length?rows.map(({r,i})=>'<div class="summarybox"><div class="row" style="justify-content:space-between;gap:10px"><div><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="muted">'+r.from+' → '+r.to+'</span>'+(r.note?'<br><span class="tiny">'+r.note+'</span>':'')+'</div><span class="badge">Pending</span></div><div class="row" style="margin-top:8px"><button class="btn small" onclick="decideLeave('+i+',true)">Approve</button><button class="btn alt small" onclick="decideLeave('+i+',false)">Reject</button></div></div>').join(''):'<span class="ok"><b>No pending leave requests.</b></span>';
+}
+const prevLeave=window.renderLeave;
+window.renderLeave=function(){if(typeof prevLeave==='function')prevLeave();renderManagerLeaveApprovals()};
+setTimeout(renderManagerLeaveApprovals,1200);
+</script>
 </body>
 </html>
