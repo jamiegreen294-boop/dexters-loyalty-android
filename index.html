@@ -6152,5 +6152,182 @@ setTimeout(()=>dxLoadTrainingV2(true),900);
 })();
 </script>
 
+<!-- DEXTERS_GDPR_GOVERNANCE_V1 -->
+<script>
+(function(){
+'use strict';
+let GDPR_POLICIES=[],GDPR_ACKS=[],GDPR_CASES=[];
+
+function gEsc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function gDate(v){return v?new Date(v).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';}
+function gRank(){try{return typeof secureRoleRank==='function'?secureRoleRank(SECURE_ACCOUNT?.role||CURRENT_STAFF_ROLE||'Staff'):0}catch(e){return 0}}
+function gOwnStaff(){try{return SECURE_ACCOUNT?.staff_record_id||''}catch(e){return ''}}
+
+function ensureGdprRegisterUi(){
+  const panel=document.getElementById('policies');if(!panel||document.getElementById('gdprRegisterCard'))return;
+  const card=document.createElement('div');
+  card.id='gdprRegisterCard';card.className='card';card.style.marginTop='14px';
+  card.innerHTML=
+    '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>Data Protection Register</h2><p class="muted">Log rights requests and personal-data breaches with deadlines and management decisions.</p></div><span class="badge">UK GDPR</span></div>'+
+    '<div class="grid">'+
+      '<div class="field">Case type<select id="gdprCaseType"><option>Subject Access Request</option><option>Rights Request</option><option>Personal Data Breach</option></select></div>'+
+      '<div class="field">Person / case name<input id="gdprCasePerson" placeholder="Customer, staff member or incident reference"></div>'+
+    '</div>'+
+    '<div class="field">Contact details / reference<input id="gdprCaseContact"></div>'+
+    '<div class="field">Details<textarea id="gdprCaseDetails" rows="4" placeholder="What was requested or what happened?"></textarea></div>'+
+    '<button class="btn" id="gdprCaseCreate">Open case</button>'+
+    '<div id="gdprCaseList" style="margin-top:12px"></div>';
+  panel.appendChild(card);
+  document.getElementById('gdprCaseCreate').onclick=createGdprCase;
+}
+
+async function loadGdprGovernance(){
+  if(!window.SB||!window.SECURE_SESSION)return;
+  ensureGdprRegisterUi();
+  const [p,a,c]=await Promise.all([
+    SB.from('backoffice_policies').select('*').eq('active',true).order('sort_order'),
+    SB.from('backoffice_policy_acknowledgements').select('*').order('acknowledged_at',{ascending:false}),
+    SB.from('backoffice_data_protection_cases').select('*').order('created_at',{ascending:false})
+  ]);
+  if(!p.error)GDPR_POLICIES=p.data||[];
+  if(!a.error)GDPR_ACKS=a.data||[];
+  if(!c.error)GDPR_CASES=c.data||[];
+  renderGdprPolicies();
+  renderGdprCases();
+}
+
+function renderGdprPolicies(){
+  const list=document.getElementById('policyList'),sel=document.getElementById('ackPolicy'),ackList=document.getElementById('ackList');
+  if(!list)return;
+  list.innerHTML=GDPR_POLICIES.map(p=>{
+    const ackCount=GDPR_ACKS.filter(a=>a.policy_id===p.id&&a.policy_version===p.version).length;
+    return '<details class="summarybox"><summary><b>'+gEsc(p.title)+'</b> <span class="badge">v'+gEsc(p.version)+'</span> <span class="badge">'+gEsc(p.audience)+'</span></summary>'+
+      '<div class="tiny muted" style="margin:8px 0">Category '+gEsc(p.category)+' · Review '+gDate(p.review_date)+' · '+ackCount+' acknowledgement'+(ackCount===1?'':'s')+'</div>'+
+      '<div style="white-space:pre-wrap;line-height:1.5">'+gEsc(p.content)+'</div></details>';
+  }).join('')||'<span class="muted">No published policies.</span>';
+  if(sel)sel.innerHTML=GDPR_POLICIES.map((p,i)=>'<option value="'+i+'">'+gEsc(p.title)+' · v'+gEsc(p.version)+'</option>').join('');
+  if(ackList)ackList.innerHTML=GDPR_ACKS.slice(0,50).map(a=>{
+    const p=GDPR_POLICIES.find(x=>x.id===a.policy_id);
+    let staff='Staff';
+    try{const s=staffDb?.staff?.find(x=>x.id===a.staff_record_id);if(s)staff=s.name}catch(e){}
+    return '<div class="summarybox"><b>'+gEsc(p?.title||'Policy')+' · '+gEsc(staff)+'</b><br><span class="ok">Acknowledged</span><br><span class="tiny">v'+gEsc(a.policy_version)+' · signed '+gEsc(a.signature_name)+' · '+new Date(a.acknowledged_at).toLocaleString()+'</span></div>';
+  }).join('')||'<span class="muted">No acknowledgements.</span>';
+}
+
+async function publishGdprPolicy(){
+  if(gRank()<3)return alert('Manager access required to publish policies.');
+  const title=document.getElementById('policyTitle')?.value.trim(),content=document.getElementById('policyContent')?.value.trim();
+  if(!title||!content)return alert('Add a title and policy content.');
+  const version=document.getElementById('policyVersion')?.value.trim()||'1.0';
+  const review=document.getElementById('policyReview')?.value||null;
+  const key='custom-'+title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,80)+'-'+Date.now();
+  const {error}=await SB.from('backoffice_policies').insert({
+    policy_key:key,title,audience:'Staff',category:'Custom',version,review_date:review,content,active:true,
+    sort_order:1000,published_by:SECURE_SESSION.user.id,updated_at:new Date().toISOString()
+  });
+  if(error)return alert('Could not publish policy: '+error.message);
+  try{if(typeof appendAuditDb==='function')await appendAuditDb('policy',key,'Policy published',null,{title,version})}catch(e){}
+  document.getElementById('policyTitle').value='';document.getElementById('policyContent').value='';
+  await loadGdprGovernance();
+}
+
+async function saveGdprAck(){
+  const idx=Number(document.getElementById('ackPolicy')?.value),p=GDPR_POLICIES[idx];
+  let staffId=document.getElementById('ackStaff')?.value||gOwnStaff();
+  const sig=document.getElementById('ackSignature')?.value.trim();
+  if(gRank()<3)staffId=gOwnStaff();
+  if(!p||!staffId||!sig||!document.getElementById('ackConfirm')?.checked)return alert('Choose the policy, confirm it and sign.');
+  const {error}=await SB.from('backoffice_policy_acknowledgements').upsert({
+    policy_id:p.id,staff_record_id:staffId,policy_version:p.version,signature_name:sig,
+    acknowledged_by:SECURE_SESSION.user.id,acknowledged_at:new Date().toISOString()
+  },{onConflict:'policy_id,staff_record_id,policy_version'});
+  if(error)return alert('Could not save acknowledgement: '+error.message);
+  try{if(typeof appendAuditDb==='function')await appendAuditDb('policy_ack',p.id,'Policy acknowledged',null,{policy:p.title,version:p.version,staff_record_id:staffId})}catch(e){}
+  document.getElementById('ackSignature').value='';document.getElementById('ackConfirm').checked=false;
+  await loadGdprGovernance();
+}
+
+async function createGdprCase(){
+  if(!window.SECURE_SESSION)return alert('Sign in first.');
+  const type=document.getElementById('gdprCaseType').value;
+  const person=document.getElementById('gdprCasePerson').value.trim();
+  const details=document.getElementById('gdprCaseDetails').value.trim();
+  if(!person||!details)return alert('Add the person/case name and details.');
+  const received=new Date();
+  let deadline=null;
+  if(type==='Subject Access Request'||type==='Rights Request'){
+    deadline=new Date(received);deadline.setMonth(deadline.getMonth()+1);
+  }else{
+    deadline=new Date(received.getTime()+72*60*60*1000);
+  }
+  const {data,error}=await SB.from('backoffice_data_protection_cases').insert({
+    case_type:type,title:type+' · '+person,data_subject_name:person,
+    contact_details:document.getElementById('gdprCaseContact').value.trim()||null,
+    received_at:received.toISOString(),deadline_at:deadline.toISOString(),status:'Open',
+    owner_staff_record_id:gOwnStaff()||null,details,created_by:SECURE_SESSION.user.id,updated_by:SECURE_SESSION.user.id
+  }).select().single();
+  if(error)return alert('Could not open case: '+error.message);
+  try{if(typeof appendAuditDb==='function')await appendAuditDb('data_protection_case',data.id,'Data protection case opened',null,{case_type:type,title:data.title,deadline_at:data.deadline_at})}catch(e){}
+  document.getElementById('gdprCasePerson').value='';document.getElementById('gdprCaseContact').value='';document.getElementById('gdprCaseDetails').value='';
+  await loadGdprGovernance();
+}
+
+function renderGdprCases(){
+  const box=document.getElementById('gdprCaseList');if(!box)return;
+  if(!GDPR_CASES.length){box.innerHTML='<span class="muted">No data-protection cases logged.</span>';return}
+  box.innerHTML=GDPR_CASES.map(r=>{
+    const overdue=r.status!=='Closed'&&r.deadline_at&&new Date(r.deadline_at)<new Date();
+    const breach=r.case_type==='Personal Data Breach';
+    return '<div class="summarybox"><div class="row" style="justify-content:space-between;gap:10px"><div><b>'+gEsc(r.title)+'</b><br><span class="badge">'+gEsc(r.case_type)+'</span> <span class="'+(overdue?'bad':'muted')+'">'+gEsc(r.status)+'</span></div>'+
+      (gRank()>=3&&r.status!=='Closed'?'<button class="btn alt small" data-gdpr-manage="'+r.id+'">Manage</button>':'')+
+      '</div><div class="tiny" style="margin-top:7px">Received '+gDate(r.received_at)+' · Deadline '+gDate(r.deadline_at)+(breach?' (72-hour assessment window)':'')+'</div><div class="tiny muted">'+gEsc(r.details||'')+'</div>'+
+      (r.risk_assessment?'<div class="tiny"><b>Assessment:</b> '+gEsc(r.risk_assessment)+'</div>':'')+
+      (r.ico_report_required!=null?'<div class="tiny"><b>ICO report required:</b> '+(r.ico_report_required?'Yes':'No')+(r.ico_reported_at?' · reported '+gDate(r.ico_reported_at):'')+'</div>':'')+
+      (r.outcome?'<div class="tiny"><b>Outcome:</b> '+gEsc(r.outcome)+'</div>':'')+
+      '</div>';
+  }).join('');
+  box.querySelectorAll('[data-gdpr-manage]').forEach(b=>b.onclick=()=>manageGdprCase(b.dataset.gdprManage));
+}
+
+async function manageGdprCase(id){
+  if(gRank()<3)return;
+  const r=GDPR_CASES.find(x=>x.id===id);if(!r)return;
+  const risk=prompt('Risk assessment / decision notes:',r.risk_assessment||'');if(risk===null)return;
+  let ico=r.ico_report_required;
+  if(r.case_type==='Personal Data Breach'){
+    const ans=prompt('ICO report required? Type YES, NO or REVIEW:',ico===true?'YES':ico===false?'NO':'REVIEW');
+    if(ans===null)return;
+    ico=/^yes$/i.test(ans)?true:/^no$/i.test(ans)?false:null;
+  }
+  const outcome=prompt('Outcome / action taken:',r.outcome||'');if(outcome===null)return;
+  const close=confirm('Close this case now?');
+  const upd={risk_assessment:risk||null,outcome:outcome||null,updated_by:SECURE_SESSION.user.id,updated_at:new Date().toISOString()};
+  if(r.case_type==='Personal Data Breach')upd.ico_report_required=ico;
+  if(close){upd.status='Closed';upd.closed_at=new Date().toISOString()}
+  const {error}=await SB.from('backoffice_data_protection_cases').update(upd).eq('id',id);
+  if(error)return alert('Could not update case: '+error.message);
+  try{if(typeof appendAuditDb==='function')await appendAuditDb('data_protection_case',id,close?'Data protection case closed':'Data protection case updated',r,upd)}catch(e){}
+  await loadGdprGovernance();
+}
+
+function bindGdprControls(){
+  const pub=document.getElementById('policyPublish');if(pub)pub.onclick=publishGdprPolicy;
+  const ack=document.getElementById('ackSave');if(ack)ack.onclick=saveGdprAck;
+}
+
+const oldRenderPolicies=window.renderPolicies;
+window.renderPolicies=function(){
+  try{if(typeof oldRenderPolicies==='function')oldRenderPolicies()}catch(e){}
+  ensureGdprRegisterUi();bindGdprControls();
+  if(window.SECURE_SESSION)loadGdprGovernance();
+};
+
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-tab="policies"]'))setTimeout(()=>{ensureGdprRegisterUi();bindGdprControls();loadGdprGovernance()},0);
+});
+setTimeout(()=>{ensureGdprRegisterUi();bindGdprControls();if(window.SECURE_SESSION)loadGdprGovernance()},1200);
+})();
+</script>
+
 </body>
 </html>
