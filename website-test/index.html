@@ -3,256 +3,150 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0f14">
-<title>Dexter's — Website Theme Test</title>
+<meta name="theme-color" content="#07111d">
+<title>Dexter's — Website Test</title>
 <style>
-:root{--navy:#0b0f14;--navy2:#222b36;--card:#161e2a;--yellow:#f2c94c;--orange:#e3af31;--white:#fff}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--navy);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-body{padding-bottom:80px}.wrap{width:min(100%,540px);margin:auto;padding:14px}.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px 4px}.brand strong{font-size:26px;letter-spacing:.08em;color:var(--yellow)}.brand small{color:#ffffffa8}
-#seasonBanner{margin:12px 0 18px}.hero-copy{font-size:15px;opacity:.88}
-#homePage{display:block}.card{background:var(--card);border:1px solid #ffffff1f;border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 10px 26px #0004}.card h2{margin:0 0 8px}.card p{margin:0 0 14px;color:#ffffffc9;line-height:1.5}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;width:100%;border:0;border-radius:12px;padding:12px 14px;text-decoration:none;font-weight:900}.btn.primary{background:linear-gradient(110deg,var(--yellow),var(--orange));color:#101010}.btn.secondary{background:#ffffff12;color:#fff;border:1px solid #ffffff24}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid .card{margin:0}.wide{grid-column:1/-1}
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:50;width:min(100%,540px);margin:auto;display:grid;grid-template-columns:repeat(4,1fr);background:#0a0d12f4;border-top:1px solid #ffffff1f;backdrop-filter:blur(12px)}.nav a{color:#fff;text-decoration:none;text-align:center;padding:12px 4px;font-size:12px}.nav a.active{color:var(--yellow)}
-.theme-test{margin:12px 0;display:flex;gap:6px;flex-wrap:wrap}.theme-test a{font-size:11px;padding:7px 9px;border:1px solid #ffffff26;border-radius:999px;color:#fff;text-decoration:none;background:#ffffff0a}
-@media(max-width:360px){.grid{grid-template-columns:1fr}}
-
-/* Dexter's illustrated themes v3. Presentation only; existing theme classes and controls remain authoritative. */
-body{background:radial-gradient(ellipse at 50% 0,var(--navy2),var(--navy) 75%)}
-:is(#authView,#homePage,#qrPage,#spinPage,#menuPage,#accountPage) .card{border-color:#ffffff1f;box-shadow:0 14px 34px #0004;background:linear-gradient(145deg,#ffffff07,#ffffff00),var(--card)}
-:is(#authView,#homePage,#qrPage,#spinPage,#menuPage,#accountPage) h2{letter-spacing:-.025em}
-body:not(.season-halloween):not(.season-christmas):not(.season-valentines){--navy:#0b0f14;--navy2:#222b36;--card:#161e2a;--yellow:#f2c94c;--orange:#e3af31}
-body.season-halloween{--navy:#030407;--navy2:#231020;--yellow:#ff813e;--orange:#ed5128;--card:#21101b}
-body.season-christmas{--navy:#03130e;--navy2:#16462d;--yellow:#ffedac;--orange:#d7aa4c;--card:#102b20}
-body.season-valentines{--navy:#300a21;--navy2:#7e2147;--yellow:#ffd0d9;--orange:#f6a9bc;--card:#53152f}
-#seasonBanner{max-width:440px;border-radius:28px 28px 12px 12px;padding:16px 12px 0;overflow:hidden;line-height:1.5;font-size:15px;box-shadow:0 15px 35px #0005}
-#seasonBanner::after{content:'';display:block;height:clamp(210px,65vw,310px);background-position:center;background-repeat:no-repeat;background-size:contain;pointer-events:none;margin:2px -8px 0}
-body.season-halloween #seasonBanner{background:radial-gradient(ellipse at 80% 45%,#421724,#08080e);border:1px solid #a7472e;border-radius:5px 30px 5px 30px;color:#ffd5b0;text-shadow:2px 2px #710a24}
-body.season-christmas #seasonBanner{background:radial-gradient(ellipse at 75% 45%,#4e3920,#082b22);border:3px solid #d2aa5a;color:#fff0c5;font-family:Georgia,serif;font-size:18px}
-body.season-valentines #seasonBanner{background:radial-gradient(ellipse at 80% 40%,#ad4264,#5a1231);border:3px double #e8aab5;border-radius:45px 45px 15px 15px;color:#ffe8df;font-family:Georgia,serif;font-size:18px}
-body.season-halloween :is(#authView,#homePage,#qrPage,#spinPage,#menuPage,#accountPage) .card{border-radius:5px 24px 5px 24px;border-top:4px solid #9e242b;background:linear-gradient(155deg,#35121b,#090b13)}
-body.season-christmas :is(#authView,#homePage,#qrPage,#spinPage,#menuPage,#accountPage) .card{border:1px solid #d2aa5a;background:linear-gradient(145deg,#801d30,#35101b);box-shadow:0 14px 30px #0005,inset 0 3px #e1ba6a}
-body.season-valentines :is(#authView,#homePage,#qrPage,#spinPage,#menuPage,#accountPage) .card{border:3px double #dc98ad;background:linear-gradient(145deg,#772341,#3c0b27);box-shadow:0 14px 30px #21000c66}
-body.season-valentines :is(#authView,#homePage,#qrPage,#spinPage,#menuPage,#accountPage) h2{color:#ffe0e6}
-body.season-halloween #seasonFx{background:radial-gradient(ellipse at 0 80%,#cad4e012,transparent 45%),radial-gradient(ellipse at 100% 90%,#b4c1da18,transparent 50%)}
-body.season-halloween .season-ghost,body.season-halloween .season-float{opacity:.18}
-body.season-christmas .season-snow{opacity:.6}
-body.season-valentines .season-heart{opacity:.45}
-body:has(#staffPage:not(.hidden)) #seasonBanner{display:none}
-@media(prefers-reduced-motion:reduce){.season-fx{display:none!important}}
-body.season-halloween #seasonBanner::after{background-image:url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20600%20480%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20aria-hidden%3D%22true%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22moon%22%3E%3Cstop%20stop-color%3D%22%23fff6cb%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23c87849%22%2F%3E%3C%2FradialGradient%3E%3ClinearGradient%20id%3D%22gold%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff2be%22%2F%3E%3Cstop%20offset%3D%22.5%22%20stop-color%3D%22%23d7a147%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff0c6%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22rose%22%3E%3Cstop%20stop-color%3D%22%23ffb6c8%22%2F%3E%3Cstop%20offset%3D%22.4%22%20stop-color%3D%22%23e52c61%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236c052b%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%22365%22%20cy%3D%22130%22%20r%3D%2298%22%20fill%3D%22url%28%23moon%29%22%2F%3E%3Cpath%20d%3D%22M0%20400Q150%20320%20300%20390T600%20360V480H0%22%20fill%3D%22%23030507%22%2F%3E%3Cg%20fill%3D%22%23050509%22%3E%3Cpath%20d%3D%22M245%20350V208L300%20130%20358%20208V350Z%22%2F%3E%3Cpath%20d%3D%22M195%20350V246L234%20193%20269%20246V350M343%20350V220L383%20158%20426%20220V350%22%2F%3E%3Cpath%20d%3D%22M292%20172V102L308%2072%20322%20102V172%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23ff5c23%22%3E%3Cpath%20d%3D%22M284%20226q18-38%2036%200v38h-36Z%22%2F%3E%3Cpath%20d%3D%22M224%20271h17v29h-17zM371%20245h20v31h-20z%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M290%20350V298Q307%20269%20325%20298V350%22%20fill%3D%22%23ad241a%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%2309080d%22%20stroke-width%3D%2214%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M68%20430L89%20230%2055%20155%2064%2067M84%20260L134%20192%20144%20102M553%20440L530%20269%20558%20178%20546%2078M532%20273L480%20206%20466%20124%22%2F%3E%3Cpath%20d%3D%22M56%20160L20%20124M141%20141L188%20103M552%20181L592%20151%22%20stroke-width%3D%227%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%2307060a%22%3E%3Cpath%20d%3D%22M137%2088q22-20%2037%203q17-17%2040-7l-28%2014-12%2021-11-21Z%22%2F%3E%3Cpath%20d%3D%22M400%2076q20-23%2035%200q20-16%2040-6l-26%2015-14%2016-12-17Z%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23393542%22%20stroke%3D%22%236f6369%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M128%20421V372q0-40%2040-40t40%2040v49Z%22%2F%3E%3Cpath%20d%3D%22M436%20429v-45q0-28%2028-28t28%2028v45Z%22%2F%3E%3C%2Fg%3E%3Cg%20stroke%3D%22%23a39a91%22%20stroke-width%3D%224%22%3E%3Cpath%20d%3D%22M168%20350v46m-16-27h32M462%20373v31m-11-18h22%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23da4b0b%22%3E%3Cellipse%20cx%3D%2290%22%20cy%3D%22426%22%20rx%3D%2244%22%20ry%3D%2235%22%2F%3E%3Cellipse%20cx%3D%22362%22%20cy%3D%22435%22%20rx%3D%2247%22%20ry%3D%2234%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23ffe49d%22%3E%3Cpath%20d%3D%22M63%20424l14-17%208%2019M99%20424l10-19%2015%2018M66%20435l20%208%2013-9%2019%203-16%2017-24-2Z%22%2F%3E%3Cpath%20d%3D%22M334%20431l17-16%207%2018M370%20433l12-17%2011%2017M337%20441l21%208%2019-9%2014%204-20%2015-21-3Z%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23d4dbe0%22%20opacity%3D%22.15%22%3E%3Cellipse%20cx%3D%22260%22%20cy%3D%22420%22%20rx%3D%22265%22%20ry%3D%2226%22%2F%3E%3Cellipse%20cx%3D%22420%22%20cy%3D%22380%22%20rx%3D%22210%22%20ry%3D%2220%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")}
-body.season-christmas #seasonBanner::after{background-image:url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20600%20480%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20aria-hidden%3D%22true%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22moon%22%3E%3Cstop%20stop-color%3D%22%23fff6cb%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23c87849%22%2F%3E%3C%2FradialGradient%3E%3ClinearGradient%20id%3D%22gold%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff2be%22%2F%3E%3Cstop%20offset%3D%22.5%22%20stop-color%3D%22%23d7a147%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff0c6%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22rose%22%3E%3Cstop%20stop-color%3D%22%23ffb6c8%22%2F%3E%3Cstop%20offset%3D%22.4%22%20stop-color%3D%22%23e52c61%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236c052b%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%22305%22%20cy%3D%22237%22%20r%3D%22214%22%20fill%3D%22%23c98d3320%22%2F%3E%3Cpath%20d%3D%22M40%20430V150Q300-80%20560%20150V430%22%20fill%3D%22%23571321%22%20stroke%3D%22url%28%23gold%29%22%20stroke-width%3D%2216%22%2F%3E%3Cpath%20d%3D%22M103%20430V166Q300%2012%20497%20166V430%22%20fill%3D%22%23092e25%22%20stroke%3D%22%23174e39%22%20stroke-width%3D%2226%22%2F%3E%3Cg%20fill%3D%22%2319593c%22%20stroke%3D%22%2332734b%22%20stroke-width%3D%223%22%3E%3Cpath%20d%3D%22M95%20380L173%20224h-45l67-123%2067%20123h-45l78%20156Z%22%2F%3E%3Cpath%20d%3D%22M351%20377l65-135h-36l57-110%2058%20110h-37l65%20135Z%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22url%28%23gold%29%22%3E%3Cpath%20d%3D%22M194%2069l8%2021%2023%201-18%2014%206%2023-19-13-20%2013%206-23-18-14%2023-1Z%22%2F%3E%3Ccircle%20cx%3D%22171%22%20cy%3D%22218%22%20r%3D%2210%22%2F%3E%3Ccircle%20cx%3D%22222%22%20cy%3D%22267%22%20r%3D%2211%22%2F%3E%3Ccircle%20cx%3D%22164%22%20cy%3D%22313%22%20r%3D%2212%22%2F%3E%3Ccircle%20cx%3D%22434%22%20cy%3D%22227%22%20r%3D%2210%22%2F%3E%3Ccircle%20cx%3D%22460%22%20cy%3D%22317%22%20r%3D%2212%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23d62645%22%3E%3Ccircle%20cx%3D%22210%22%20cy%3D%22198%22%20r%3D%2210%22%2F%3E%3Ccircle%20cx%3D%22177%22%20cy%3D%22271%22%20r%3D%2211%22%2F%3E%3Ccircle%20cx%3D%22223%22%20cy%3D%22342%22%20r%3D%2212%22%2F%3E%3Ccircle%20cx%3D%22422%22%20cy%3D%22300%22%20r%3D%2210%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M279%20398V280q0-26%2025-26h48q25%200%2025%2026v118%22%20fill%3D%22%23a41c35%22%20stroke%3D%22url%28%23gold%29%22%20stroke-width%3D%229%22%2F%3E%3Cpath%20d%3D%22M277%20330h100v39H277%22%20fill%3D%22%237a1124%22%2F%3E%3Cg%20fill%3D%22%23af1d36%22%20stroke%3D%22url%28%23gold%29%22%20stroke-width%3D%223%22%3E%3Crect%20x%3D%22103%22%20y%3D%22384%22%20width%3D%2286%22%20height%3D%2266%22%20rx%3D%225%22%2F%3E%3Crect%20x%3D%22379%22%20y%3D%22386%22%20width%3D%2285%22%20height%3D%2264%22%20rx%3D%225%22%2F%3E%3Crect%20x%3D%22463%22%20y%3D%22407%22%20width%3D%2263%22%20height%3D%2243%22%20rx%3D%224%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22url%28%23gold%29%22%3E%3Cpath%20d%3D%22M137%20383h16v68h-16M103%20400h87v12h-87M411%20385h17v65h-17M379%20400h85v12h-85M483%20407h13v43h-13%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M21%20455Q280%20422%20580%20452%22%20stroke%3D%22%23fff3da%22%20stroke-width%3D%2230%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M27%20167Q300-60%20573%20167%22%20fill%3D%22none%22%20stroke%3D%22%23194d33%22%20stroke-width%3D%2226%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%22145%22%20r%3D%228%22%20fill%3D%22%23ffce69%22%2F%3E%3Ccircle%20cx%3D%2295%22%20cy%3D%22114%22%20r%3D%228%22%20fill%3D%22%23ed4960%22%2F%3E%3Ccircle%20cx%3D%22140%22%20cy%3D%2289%22%20r%3D%228%22%20fill%3D%22%23fdf6d3%22%2F%3E%3Ccircle%20cx%3D%22185%22%20cy%3D%2271%22%20r%3D%228%22%20fill%3D%22%23ffce69%22%2F%3E%3Ccircle%20cx%3D%22230%22%20cy%3D%2258%22%20r%3D%228%22%20fill%3D%22%23ed4960%22%2F%3E%3Ccircle%20cx%3D%22275%22%20cy%3D%2252%22%20r%3D%228%22%20fill%3D%22%23fdf6d3%22%2F%3E%3Ccircle%20cx%3D%22320%22%20cy%3D%2252%22%20r%3D%228%22%20fill%3D%22%23ffce69%22%2F%3E%3Ccircle%20cx%3D%22365%22%20cy%3D%2258%22%20r%3D%228%22%20fill%3D%22%23ed4960%22%2F%3E%3Ccircle%20cx%3D%22410%22%20cy%3D%2271%22%20r%3D%228%22%20fill%3D%22%23fdf6d3%22%2F%3E%3Ccircle%20cx%3D%22455%22%20cy%3D%2289%22%20r%3D%228%22%20fill%3D%22%23ffce69%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22114%22%20r%3D%228%22%20fill%3D%22%23ed4960%22%2F%3E%3Ccircle%20cx%3D%22545%22%20cy%3D%22145%22%20r%3D%228%22%20fill%3D%22%23fdf6d3%22%2F%3E%3C%2Fsvg%3E")}
-body.season-valentines #seasonBanner::after{background-image:url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20600%20480%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20aria-hidden%3D%22true%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22moon%22%3E%3Cstop%20stop-color%3D%22%23fff6cb%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23c87849%22%2F%3E%3C%2FradialGradient%3E%3ClinearGradient%20id%3D%22gold%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff2be%22%2F%3E%3Cstop%20offset%3D%22.5%22%20stop-color%3D%22%23d7a147%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff0c6%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22rose%22%3E%3Cstop%20stop-color%3D%22%23ffb6c8%22%2F%3E%3Cstop%20offset%3D%22.4%22%20stop-color%3D%22%23e52c61%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236c052b%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22240%22%20r%3D%22211%22%20fill%3D%22%23f597b520%22%2F%3E%3Cpath%20d%3D%22M300%20373C40%20228%20163%2057%20300%20178C437%2057%20560%20228%20300%20373Z%22%20fill%3D%22%239f103e%22%20stroke%3D%22url%28%23gold%29%22%20stroke-width%3D%225%22%2F%3E%3Cpath%20d%3D%22M300%20324C120%20222%20202%20111%20300%20206C398%20111%20480%20222%20300%20324Z%22%20fill%3D%22%23d62c64%22%2F%3E%3Cpath%20d%3D%22M158%20292h281v143H158Z%22%20fill%3D%22%23ffe5e0%22%20stroke%3D%22%23d89595%22%20stroke-width%3D%223%22%2F%3E%3Cpath%20d%3D%22M158%20292l141%20100%20140-100M158%20435l102-93M439%20435l-103-93%22%20fill%3D%22none%22%20stroke%3D%22%23c77e8b%22%20stroke-width%3D%223%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22378%22%20r%3D%2224%22%20fill%3D%22%23b31c49%22%2F%3E%3Cpath%20d%3D%22M300%20391c-35-20-19-40%200-24%2019-16%2035%204%200%2024%22%20fill%3D%22url%28%23gold%29%22%2F%3E%3Cg%20transform%3D%22translate%28100%20175%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2244%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%2883%20264%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2239%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%28110%20345%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2247%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%28169%20102%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2242%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%28253%2074%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2234%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%28500%20175%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2244%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%28517%20264%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2239%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%28490%20345%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2247%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%28431%20102%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2242%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate%28347%2074%29%22%3E%3Cpath%20d%3D%22M0%2020q-66%200-44%2053Q-9%2068%200%2020M0%2020q66%200%2044%2053Q9%2068%200%2020%22%20fill%3D%22%23244d36%22%2F%3E%3Ccircle%20r%3D%2234%22%20fill%3D%22url%28%23rose%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%280%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%2872%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28216%29%22%2F%3E%3Cpath%20d%3D%22M0-25Q39-28%2022%208Q12%2027-5%2016Q17%201%200-25%22%20fill%3D%22none%22%20stroke%3D%22%23ff9eb6%22%20stroke-opacity%3D%22.6%22%20stroke-width%3D%223%22%20transform%3D%22rotate%28288%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")}
-
-
-/* Halloween layout v4: CSS only. Existing season classes switch this layer on/off. */
-body.season-halloween{--navy:#060708;--navy2:#20130d;--yellow:#ffd095;--orange:#e76623;--card:#171211;background:linear-gradient(180deg,#06070822,#060708b8 65%,#060708ef),url('https://app.dextersspot.co.uk/haunted-v4.webp') center top/cover fixed no-repeat}
-body.season-halloween .wrap{max-width:540px}
-body.season-halloween .wrap>.logo{position:relative;z-index:3}
-body.season-halloween #seasonBanner{width:calc(100% - 36px);max-width:504px;min-height:360px;margin:16px auto;padding:205px 20px 22px;text-align:left;border:1px solid #ab704944;border-radius:18px;background:linear-gradient(180deg,#06070800 15%,#06070825 45%,#060708f0 100%),url('https://app.dextersspot.co.uk/haunted-v4.webp') center 25%/cover no-repeat;font:700 12px/1.5 system-ui,sans-serif;color:#ffcb9a;text-shadow:0 2px 8px #000;box-shadow:0 18px 40px #0005;overflow:hidden}
-body.season-halloween #seasonBanner::before{content:'Good treats.\A Dark nights.';display:block;white-space:pre-line;font:700 clamp(38px,10vw,54px)/1.04 Georgia,serif;letter-spacing:-.045em;color:#fff0e3;margin-bottom:15px;text-shadow:0 4px 15px #000}
-body.season-halloween #seasonBanner::after{display:none;content:none}
-body.season-halloween #homePage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-body.season-halloween #homePage>.card{margin:0;min-width:0;padding:17px;border-radius:12px}
-body.season-halloween #homePage>.card:first-child{grid-column:1/-1;background:transparent;border:0;box-shadow:none;padding:8px 0 4px}
-body.season-halloween #homePage>.card:first-child .big{font-size:26px}
-body.season-halloween #homePage>.card:nth-child(2),body.season-halloween #homePage>.card:nth-child(n+5){grid-column:1/-1}
-body.season-halloween :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card{background:linear-gradient(145deg,#24170ff8,#100e0cf8);border:1px solid #ac683d66;box-shadow:inset 0 2px #b1703b33,0 10px 28px #0005;border-radius:12px;color:#fff0e5}
-body.season-halloween #homePage>.card:nth-child(2){background:linear-gradient(120deg,#332013f8,#17100df8);border-color:#d8884880}
-body.season-halloween #homePage h2{font-size:17px;line-height:1.35;margin-bottom:10px}
-body.season-halloween #homePage p{font-size:14px;line-height:1.55}
-body.season-halloween #homePage .stamps{grid-template-columns:repeat(9,minmax(0,1fr));gap:6px;margin:18px 0}
-body.season-halloween #homePage .stamp{min-width:0;border-width:1px;font-size:clamp(12px,3vw,20px);background:#ffffff05;color:#b9a495}
-body.season-halloween #homePage .stamp.on{background:linear-gradient(135deg,#ffd6a4,#df7b30);border-color:#e9a567;color:#190f08;box-shadow:0 0 12px #de7a2422}
-body.season-halloween #homePage .progress{height:6px}
-body.season-halloween #homePage .muted{color:#d2c0b5}
-body.season-halloween .nav{background:#100c09f5;border-top-color:#93582855}
-body.season-halloween .nav button.active{color:#ffc88c}
-body.season-halloween :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .btn.primary{background:linear-gradient(110deg,#ffd094,#e57934);box-shadow:0 4px 20px #de6e2518}
-body.season-halloween .season-fx{opacity:.12!important}
-body.season-halloween:has(#staffPage:not(.hidden)) .wrap{max-width:520px}
-@media(max-width:360px){body.season-halloween #homePage>.card{padding:12px}body.season-halloween #homePage .stamps{gap:4px}body.season-halloween #homePage>.card:nth-child(3),body.season-halloween #homePage>.card:nth-child(4){grid-column:1/-1}}
-@media(prefers-reduced-motion:reduce){body.season-halloween .season-fx{display:none!important}}
-
-
-/* Christmas layout v5: CSS only. Existing season classes switch this layer on/off. */
-body.season-christmas{--navy:#06140e;--navy2:#103422;--yellow:#ffdf88;--orange:#c7a34b;--card:#10271c;background:linear-gradient(180deg,#06140e22,#06140eb8 65%,#06140eef),url('https://app.dextersspot.co.uk/christmas-v5.webp') center top/cover fixed no-repeat}
-body.season-christmas .wrap{max-width:540px}
-body.season-christmas .wrap>.logo{position:relative;z-index:3}
-body.season-christmas #seasonBanner{width:calc(100% - 36px);max-width:504px;min-height:360px;margin:16px auto;padding:205px 20px 22px;text-align:left;border:1px solid #d6b66677;border-radius:18px;background:linear-gradient(180deg,#06140e00 15%,#06140e25 45%,#06140ef0 100%),url('https://app.dextersspot.co.uk/christmas-v5.webp') center 25%/cover no-repeat;font:700 12px/1.5 system-ui,sans-serif;color:#ffe8a6;text-shadow:0 2px 8px #000;box-shadow:0 18px 40px #0005;overflow:hidden}
-body.season-christmas #seasonBanner::before{content:'A little magic.\A Every visit.';display:block;white-space:pre-line;font:700 clamp(38px,10vw,54px)/1.04 Georgia,serif;letter-spacing:-.045em;color:#fff5d8;margin-bottom:15px;text-shadow:0 4px 15px #000}
-body.season-christmas #seasonBanner::after{display:none;content:none}
-body.season-christmas #homePage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-body.season-christmas #homePage>.card{margin:0;min-width:0;padding:17px;border-radius:12px}
-body.season-christmas #homePage>.card:first-child{grid-column:1/-1;background:transparent;border:0;box-shadow:none;padding:8px 0 4px}
-body.season-christmas #homePage>.card:first-child .big{font-size:26px}
-body.season-christmas #homePage>.card:nth-child(2),body.season-christmas #homePage>.card:nth-child(n+5){grid-column:1/-1}
-body.season-christmas :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card{background:linear-gradient(145deg,#24392af8,#081b13f8);border:1px solid #d1aa5b88;box-shadow:inset 0 2px #dfbd7133,0 10px 28px #0005;border-radius:12px;color:#fff4dd}
-body.season-christmas #homePage>.card:nth-child(2){background:linear-gradient(120deg,#51202bf8,#28111bf8);border-color:#dcb97299}
-body.season-christmas #homePage h2{font-size:17px;line-height:1.35;margin-bottom:10px}
-body.season-christmas #homePage p{font-size:14px;line-height:1.55}
-body.season-christmas #homePage .stamps{grid-template-columns:repeat(9,minmax(0,1fr));gap:6px;margin:18px 0}
-body.season-christmas #homePage .stamp{min-width:0;border-width:1px;font-size:clamp(12px,3vw,20px);background:#ffffff05;color:#bcbca0}
-body.season-christmas #homePage .stamp.on{background:linear-gradient(135deg,#fff2b7,#c7a14a);border-color:#ebcf83;color:#132017;box-shadow:0 0 12px #d4bd4522}
-body.season-christmas #homePage .progress{height:6px}
-body.season-christmas #homePage .muted{color:#dbd8c4}
-body.season-christmas .nav{background:#061a12f5;border-top-color:#c6a45177}
-body.season-christmas .nav button.active{color:#ffe395}
-body.season-christmas :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .btn.primary{background:linear-gradient(110deg,#ffecae,#d3ac4a);box-shadow:0 4px 20px #cfb14618}
-body.season-christmas .season-fx{opacity:.12!important}
-body.season-christmas:has(#staffPage:not(.hidden)) .wrap{max-width:520px}
-@media(max-width:360px){body.season-christmas #homePage>.card{padding:12px}body.season-christmas #homePage .stamps{gap:4px}body.season-christmas #homePage>.card:nth-child(3),body.season-christmas #homePage>.card:nth-child(4){grid-column:1/-1}}
-@media(prefers-reduced-motion:reduce){body.season-christmas .season-fx{display:none!important}}
-
-body.season-christmas #seasonBanner{border:2px solid #d6b66688;border-radius:32px 32px 12px 12px}body.season-christmas #homePage>.card{border-radius:8px 20px 8px 20px}
-
-/* Valentine layout v5: CSS only. Existing season classes switch this layer on/off. */
-body.season-valentines{--navy:#210916;--navy2:#4c1932;--yellow:#ffd5e0;--orange:#df779b;--card:#391026;background:linear-gradient(180deg,#21091622,#210916b8 65%,#210916ef),url('https://app.dextersspot.co.uk/valentines-v5.webp') center top/cover fixed no-repeat}
-body.season-valentines .wrap{max-width:540px}
-body.season-valentines .wrap>.logo{position:relative;z-index:3}
-body.season-valentines #seasonBanner{width:calc(100% - 36px);max-width:504px;min-height:360px;margin:16px auto;padding:205px 20px 22px;text-align:left;border:1px solid #e7a5bb66;border-radius:18px;background:linear-gradient(180deg,#21091600 15%,#21091625 45%,#210916f0 100%),url('https://app.dextersspot.co.uk/valentines-v5.webp') center 25%/cover no-repeat;font:700 12px/1.5 system-ui,sans-serif;color:#ffd1df;text-shadow:0 2px 8px #000;box-shadow:0 18px 40px #0005;overflow:hidden}
-body.season-valentines #seasonBanner::before{content:'Made with love.\A Shared with you.';display:block;white-space:pre-line;font:700 clamp(38px,10vw,54px)/1.04 Georgia,serif;letter-spacing:-.045em;color:#fff0f5;margin-bottom:15px;text-shadow:0 4px 15px #000}
-body.season-valentines #seasonBanner::after{display:none;content:none}
-body.season-valentines #homePage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-body.season-valentines #homePage>.card{margin:0;min-width:0;padding:17px;border-radius:12px}
-body.season-valentines #homePage>.card:first-child{grid-column:1/-1;background:transparent;border:0;box-shadow:none;padding:8px 0 4px}
-body.season-valentines #homePage>.card:first-child .big{font-size:26px}
-body.season-valentines #homePage>.card:nth-child(2),body.season-valentines #homePage>.card:nth-child(n+5){grid-column:1/-1}
-body.season-valentines :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card{background:linear-gradient(145deg,#63203df8,#2b0b20f8);border:1px solid #e6a0b888;box-shadow:inset 0 2px #e397b233,0 10px 28px #0005;border-radius:12px;color:#fff0f6}
-body.season-valentines #homePage>.card:nth-child(2){background:linear-gradient(120deg,#772543f8,#3e112af8);border-color:#e3a6be99}
-body.season-valentines #homePage h2{font-size:17px;line-height:1.35;margin-bottom:10px}
-body.season-valentines #homePage p{font-size:14px;line-height:1.55}
-body.season-valentines #homePage .stamps{grid-template-columns:repeat(9,minmax(0,1fr));gap:6px;margin:18px 0}
-body.season-valentines #homePage .stamp{min-width:0;border-width:1px;font-size:clamp(12px,3vw,20px);background:#ffffff05;color:#c5a3b3}
-body.season-valentines #homePage .stamp.on{background:linear-gradient(135deg,#ffe3ed,#de8aaa);border-color:#f0b7ce;color:#3f1028;box-shadow:0 0 12px #e68ab222}
-body.season-valentines #homePage .progress{height:6px}
-body.season-valentines #homePage .muted{color:#edccdb}
-body.season-valentines .nav{background:#280c1df5;border-top-color:#dc8fb077}
-body.season-valentines .nav button.active{color:#ffd5e5}
-body.season-valentines :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .btn.primary{background:linear-gradient(110deg,#ffe1ec,#e795b4);box-shadow:0 4px 20px #ed8db818}
-body.season-valentines .season-fx{opacity:.12!important}
-body.season-valentines:has(#staffPage:not(.hidden)) .wrap{max-width:520px}
-@media(max-width:360px){body.season-valentines #homePage>.card{padding:12px}body.season-valentines #homePage .stamps{gap:4px}body.season-valentines #homePage>.card:nth-child(3),body.season-valentines #homePage>.card:nth-child(4){grid-column:1/-1}}
-@media(prefers-reduced-motion:reduce){body.season-valentines .season-fx{display:none!important}}
-
-body.season-valentines #seasonBanner{border-radius:45px 45px 18px 18px}body.season-valentines #seasonBanner::before{font-style:italic}body.season-valentines #homePage>.card{border-radius:22px}
-
-/* Website layout v2 — clean restaurant landing page with transparent theme-first panels */
+:root{
+ --bg:#07111d;--bg2:#0e2033;--text:#fff;--muted:#d7dde4;--accent:#ffd338;
+ --glass:rgba(8,18,30,.46);--glass2:rgba(9,18,30,.67);--line:rgba(255,255,255,.24);
+ --hero:url("https://app.dextersspot.co.uk/haunted-v4.webp");
+}
+*{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{padding-bottom:0!important;background-attachment:fixed!important}
-.wrap,body.season-halloween .wrap,body.season-christmas .wrap,body.season-valentines .wrap{width:min(100% - 28px,1180px)!important;max-width:1180px!important;padding:0!important}
-.topbar{position:sticky;top:0;z-index:80;margin:0 -14px;padding:14px max(14px,calc((100vw - 1180px)/2));display:flex;align-items:center;justify-content:space-between;gap:18px;background:#06080bbd;border-bottom:1px solid #ffffff1b;backdrop-filter:blur(18px) saturate(130%)}
-.wordmark{font-size:clamp(24px,4vw,34px);font-weight:950;letter-spacing:.08em;color:var(--yellow);text-shadow:0 2px 12px #0008}
-.toplinks{display:flex;gap:18px;align-items:center}.toplinks a{color:#fff;text-decoration:none;font-weight:800;font-size:14px}.toplinks .order-mini{background:var(--yellow);color:#111;padding:10px 15px;border-radius:999px}
-.site-note{font-size:11px;color:#ffffffa0;margin-left:8px}
-#seasonBanner,body.season-halloween #seasonBanner,body.season-christmas #seasonBanner,body.season-valentines #seasonBanner{max-width:none!important;width:100%!important;min-height:clamp(430px,61vw,660px)!important;margin:18px 0 20px!important;border-radius:28px!important;padding:clamp(260px,43vw,470px) clamp(22px,5vw,56px) 38px!important;background-position:center 28%!important;box-shadow:0 22px 55px #0007!important}
-body:not(.season-halloween):not(.season-christmas):not(.season-valentines) #seasonBanner{min-height:500px!important;background:linear-gradient(180deg,#0d142000,#07101edc 76%),radial-gradient(circle at 75% 25%,#33445f,#101720 60%,#070b11)!important;border:1px solid #ffffff22!important}
-#seasonBanner .hero-copy{display:none}
-#seasonBanner::before{font-size:clamp(44px,7vw,78px)!important;max-width:720px!important;line-height:.98!important}
-.hero-overlay{margin-top:-165px;position:relative;z-index:5;padding:0 clamp(18px,4vw,44px) 34px;color:#fff;max-width:800px}
-.hero-overlay h1{font-size:clamp(38px,6vw,70px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em;text-shadow:0 4px 20px #000}
-.hero-overlay p{font-size:clamp(16px,2.2vw,21px);line-height:1.45;margin:0 0 22px;color:#fff;text-shadow:0 2px 12px #000}
-.hero-actions{display:flex;gap:10px;flex-wrap:wrap}.hero-actions .btn{width:auto;min-width:170px}
-.theme-test{justify-content:center;margin:8px 0 26px}.theme-test a{backdrop-filter:blur(12px);background:#05070a66;border-color:#ffffff2f}
-#homePage,body.season-halloween #homePage,body.season-christmas #homePage,body.season-valentines #homePage{display:block!important}
-.feature-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin:0 0 22px}
-.feature{grid-column:span 6;min-height:270px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden}
-.feature.wide{grid-column:span 12;min-height:310px}
-.card,.feature,body.season-halloween :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card,body.season-christmas :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card,body.season-valentines :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card{background:linear-gradient(180deg,#ffffff08,#05070a88)!important;border:1px solid #ffffff32!important;border-radius:24px!important;box-shadow:0 18px 38px #0004!important;backdrop-filter:blur(9px) saturate(115%)!important;color:#fff!important}
-.feature::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,#020305d9 100%);z-index:0;pointer-events:none}
-.feature>*{position:relative;z-index:1}
-.feature h2{font-size:clamp(25px,3vw,38px)!important;margin:0 0 8px!important;color:#fff!important}
-.feature p{font-size:16px!important;color:#ffffffdf!important;max-width:600px}
-.feature .btn{width:auto;align-self:flex-start;min-width:150px}
-.partner{display:grid;grid-template-columns:1.2fr .8fr;align-items:center;gap:28px;padding:clamp(24px,5vw,52px)!important;margin:20px 0 28px!important}
-.partner-badge{font-weight:950;font-size:clamp(30px,4vw,54px);line-height:1.02}.partner-badge span{display:block;color:var(--yellow)}
-.partner p{font-size:17px!important;line-height:1.6}
-.quicklinks{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}.quicklinks a{padding:18px;border-radius:18px;text-decoration:none;color:#fff;text-align:center;font-weight:850;background:#06080a75;border:1px solid #ffffff25;backdrop-filter:blur(10px)}
-.footer{margin-top:30px;padding:30px 8px 45px;border-top:1px solid #ffffff22;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:#ffffffaf;font-size:13px}.footer a{color:#fff}
-.nav{display:none!important}
-@media(max-width:760px){.toplinks a:not(.order-mini){display:none}.site-note{display:none}.feature,.feature.wide{grid-column:span 12;min-height:235px}.partner{grid-template-columns:1fr}.quicklinks{grid-template-columns:repeat(2,1fr)}#seasonBanner,body.season-halloween #seasonBanner,body.season-christmas #seasonBanner,body.season-valentines #seasonBanner{min-height:500px!important;padding-top:310px!important}.hero-overlay{margin-top:-190px;padding-bottom:30px}.hero-actions .btn{flex:1 1 150px}}
-
+body{margin:0;background:
+ linear-gradient(180deg,rgba(3,9,15,.08),rgba(3,9,15,.92) 82%),
+ var(--hero) center top/cover fixed no-repeat,
+ linear-gradient(180deg,var(--bg2),var(--bg));
+ color:var(--text);font-family:Arial,Helvetica,sans-serif}
+a{color:inherit}
+.site-header{position:sticky;top:0;z-index:100;background:rgba(3,12,21,.91);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.12)}
+.header-inner{max-width:1220px;margin:auto;height:78px;padding:0 22px;display:flex;align-items:center;gap:28px}
+.logo{font-weight:950;font-size:30px;letter-spacing:.06em;white-space:nowrap}.logo:after{content:"";display:block;width:76px;height:4px;background:var(--accent);margin-top:3px}.tagline{font-size:9px;letter-spacing:.18em;font-weight:800;margin-top:5px}
+.desktop-nav{display:flex;gap:24px;align-items:center;margin-left:auto}.desktop-nav a{text-decoration:none;font-weight:750;font-size:14px}
+.order-btn,.cta{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--accent);color:#111;text-decoration:none;font-weight:900;padding:14px 22px;min-height:48px;border:0}
+.order-btn{min-width:146px}
+.container{max-width:1220px;margin:auto;padding:20px 22px 44px}
+.theme-bar{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:13px 0 3px}
+.theme-bar button{border:1px solid var(--line);background:rgba(3,9,15,.48);backdrop-filter:blur(12px);color:#fff;border-radius:999px;padding:9px 13px;font-weight:800;cursor:pointer}
+.theme-bar button.active{background:var(--accent);color:#111;border-color:transparent}
+.hero{position:relative;min-height:520px;margin-top:14px;border-radius:26px;overflow:hidden;border:1px solid var(--line);box-shadow:0 26px 70px rgba(0,0,0,.35);background:
+ linear-gradient(90deg,rgba(1,5,9,.58) 0 38%,rgba(1,5,9,.08) 64%,rgba(1,5,9,.22)),
+ var(--hero) center/cover no-repeat}
+.hero-panel{position:absolute;left:36px;top:50%;transform:translateY(-50%);width:min(390px,calc(100% - 72px));padding:30px;border:1px solid rgba(255,255,255,.28);background:rgba(9,15,23,.42);backdrop-filter:blur(15px) saturate(120%);border-radius:20px}
+.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--accent);font-weight:900;text-transform:uppercase}
+.hero h1{font-size:clamp(44px,6vw,74px);line-height:.93;letter-spacing:-.055em;margin:14px 0 18px}
+.hero h1 span{color:var(--accent)}
+.hero p{font-size:18px;line-height:1.5;color:#fff;margin:0 0 22px;text-shadow:0 2px 12px #000}
+.section-title{font-size:clamp(30px,4vw,46px);margin:48px 0 16px;letter-spacing:-.035em}
+.card-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.card{min-height:330px;padding:24px 20px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:22px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(3,9,15,.66));backdrop-filter:blur(10px);box-shadow:0 18px 40px rgba(0,0,0,.18);position:relative;overflow:hidden}
+.card:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 5%,rgba(2,7,12,.06) 38%,rgba(2,7,12,.78) 100%);pointer-events:none}
+.card>*{position:relative;z-index:1}
+.card-icon{font-size:46px;margin-bottom:auto;filter:drop-shadow(0 3px 10px rgba(0,0,0,.3))}
+.card h2{font-size:24px;margin:14px 0 8px}.card p{color:var(--muted);line-height:1.48;margin:0 0 18px;font-size:14px}
+.card .cta{background:rgba(2,8,14,.42);border:1px solid rgba(255,255,255,.34);color:#fff;padding:11px 16px;min-height:42px}
+.card.primary .cta{background:var(--accent);color:#111;border-color:transparent}
+.partner{margin-top:20px;display:grid;grid-template-columns:210px 1fr 280px;gap:28px;align-items:center;padding:30px;border-radius:24px;border:1px solid var(--line);background:linear-gradient(90deg,rgba(2,40,34,.73),rgba(5,17,22,.55));backdrop-filter:blur(12px);overflow:hidden}
+.partner-logo{height:150px;border-radius:20px;background:#006b61;display:grid;place-items:center;text-align:center;font-weight:900;font-size:20px;padding:18px}
+.partner-logo .heart{font-size:56px;line-height:1}
+.partner h2{font-size:clamp(30px,4vw,50px);line-height:1;margin:8px 0 14px;letter-spacing:-.035em}.partner p{color:#e7ecec;font-size:16px;line-height:1.55}
+.partner-art{height:190px;border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(0,0,0,.22));display:flex;align-items:end;justify-content:center;font-size:86px;padding-bottom:14px}
+.values{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:24px;padding:26px 0;border-top:1px solid rgba(255,255,255,.15);border-bottom:1px solid rgba(255,255,255,.15)}
+.value{display:flex;gap:14px;align-items:flex-start;padding:12px}.value b{display:block;margin-bottom:6px;font-size:13px}.value span{color:var(--muted);font-size:13px;line-height:1.4}.value .vicon{font-size:34px;color:var(--accent)}
+.footer{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:24px;padding:40px 0 18px}.footer h3{margin:0 0 12px}.footer a{display:block;text-decoration:none;color:#e3e8ee;margin:9px 0;font-size:14px}.socials{display:flex;gap:10px;flex-wrap:wrap}.socials span{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center}
+.legal{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:#aeb7c1;font-size:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:18px}
+.mobile-menu{display:none}
+body.theme-default{--bg:#07111d;--bg2:#10253b;--accent:#ffd338;--hero:linear-gradient(135deg,#0d2134,#07111d)}
+body.theme-halloween{--bg:#08060d;--bg2:#211125;--accent:#ff862f;--hero:url("https://app.dextersspot.co.uk/haunted-v4.webp")}
+body.theme-christmas{--bg:#031a12;--bg2:#0f3b28;--accent:#ffdd69;--hero:url("https://app.dextersspot.co.uk/christmas-v5.webp")}
+body.theme-valentines{--bg:#260818;--bg2:#611b3c;--accent:#ff9dbb;--hero:url("https://app.dextersspot.co.uk/valentines-v5.webp")}
+body.theme-halloween .hero h1:before{content:"Spooky ";color:var(--accent)}
+body.theme-christmas .hero h1:before{content:"Christmas ";color:#fff}
+body.theme-valentines .hero h1:before{content:"Good Food ";color:#fff}
+body.theme-halloween .hero h1 .dynamic{font-size:0}body.theme-halloween .hero h1 .dynamic:after{content:"Good Flavours";font-size:inherit}
+body.theme-christmas .hero h1 .dynamic{font-size:0}body.theme-christmas .hero h1 .dynamic:after{content:"Brighter Together";font-size:inherit;color:var(--accent)}
+body.theme-valentines .hero h1 .dynamic{font-size:0}body.theme-valentines .hero h1 .dynamic:after{content:"Brings Us Closer";font-size:inherit;color:var(--accent)}
+@media(max-width:980px){.card-grid{grid-template-columns:repeat(2,1fr)}.card:last-child{grid-column:1/-1}.partner{grid-template-columns:160px 1fr}.partner-art{display:none}.values{grid-template-columns:repeat(2,1fr)}.footer{grid-template-columns:1.2fr 1fr 1fr}.desktop-nav a{display:none}}
+@media(max-width:640px){.header-inner{height:68px;padding:0 15px}.logo{font-size:23px}.tagline{display:none}.desktop-nav{display:none}.order-btn{margin-left:auto;min-width:116px;padding:11px 15px}.container{padding:10px 12px 34px}.hero{min-height:500px;border-radius:18px;background-position:center}.hero-panel{left:14px;right:14px;bottom:14px;top:auto;transform:none;width:auto;padding:22px}.hero h1{font-size:44px}.hero p{font-size:15px}.card-grid{grid-template-columns:1fr}.card:last-child{grid-column:auto}.card{min-height:240px}.partner{grid-template-columns:1fr;padding:22px}.partner-logo{height:120px}.values{grid-template-columns:1fr}.footer{grid-template-columns:1fr 1fr}.footer>div:first-child,.footer>div:last-child{grid-column:1/-1}.theme-bar{position:sticky;top:68px;z-index:90;background:rgba(3,9,15,.68);backdrop-filter:blur(12px);margin:0 -12px;padding:8px 10px}.theme-bar button{font-size:11px;padding:8px 9px}}
 </style>
 </head>
-<body>
-<header class="topbar">
-  <div><span class="wordmark">DEXTER’S</span><span class="site-note">website test</span></div>
-  <nav class="toplinks"><a href="#menu">Menu</a><a href="#loyalty">Loyalty</a><a href="#info">Info</a><a class="order-mini" href="https://app.dextersspot.co.uk/collection-order-test.html">Order now</a></nav>
+<body class="theme-halloween">
+<header class="site-header">
+  <div class="header-inner">
+    <div><div class="logo">DEXTER’S</div><div class="tagline">GOOD FOOD · BRIGHTER DAYS</div></div>
+    <nav class="desktop-nav">
+      <a href="#menu">Menu</a><a href="#loyalty">Loyalty</a><a href="#catering">Catering</a>
+      <a href="#about">About</a><a href="#partner">Sustainability</a><a href="#jobs">Jobs</a><a href="#info">Help</a>
+    </nav>
+    <a class="order-btn" href="https://app.dextersspot.co.uk/collection-order-test.html">Order now →</a>
+  </div>
 </header>
-<div class="wrap">
-  <div id="seasonBanner"><span class="hero-copy">Dexter’s seasonal theme</span></div>
-  <section class="hero-overlay">
-    <h1>Proper food. Dexter’s style.</h1>
-    <p>Order for collection, explore the menu, earn rewards and keep up with everything happening at Dexter’s.</p>
-    <div class="hero-actions">
-      <a class="btn primary" href="https://app.dextersspot.co.uk/collection-order-test.html">Order now</a>
-      <a class="btn secondary" href="https://app.dextersspot.co.uk/">Open loyalty app</a>
+
+<main class="container">
+  <div class="theme-bar">
+    <button data-theme="default">Normal</button>
+    <button data-theme="halloween" class="active">Halloween</button>
+    <button data-theme="christmas">Christmas</button>
+    <button data-theme="valentines">Valentine’s</button>
+  </div>
+
+  <section class="hero">
+    <div class="hero-panel">
+      <div class="eyebrow">A taste of the season</div>
+      <h1><span class="dynamic">Bigger Brighter <span>Flavours</span></span></h1>
+      <p>Proper Dexter’s food, seasonal favourites and easy collection ordering — all in one place.</p>
+      <a class="cta" href="https://app.dextersspot.co.uk/collection-order-test.html">Order now →</a>
     </div>
   </section>
 
-  <div class="theme-test" aria-label="Theme test controls">
-    <a href="?theme=default">Normal</a><a href="?theme=halloween">Halloween</a><a href="?theme=christmas">Christmas</a><a href="?theme=valentines">Valentine’s</a><a href="./">Use app setting</a>
-  </div>
+  <h2 class="section-title">Everything Dexter’s</h2>
+  <section class="card-grid">
+    <article id="menu" class="card"><div class="card-icon">🍔</div><h2>Menu & Collection</h2><p>Explore the Dexter’s menu and order ahead for collection.</p><a class="cta" href="https://app.dextersspot.co.uk/collection-order-test.html">View menu →</a></article>
+    <article id="loyalty" class="card primary"><div class="card-icon">👑</div><h2>Loyalty App</h2><p>Points, rewards, challenges, offers and app-only prizes.</p><a class="cta" href="https://app.dextersspot.co.uk/">Open loyalty app →</a></article>
+    <article id="catering" class="card"><div class="card-icon">🥡</div><h2>Catering</h2><p>Great Dexter’s food for meetings, parties and occasions.</p><a class="cta" href="https://app.dextersspot.co.uk/catering.html">View catering →</a></article>
+    <article id="info" class="card"><div class="card-icon">ⓘ</div><h2>Allergens</h2><p>Find allergen and ingredient information quickly and clearly.</p><a class="cta" href="https://app.dextersspot.co.uk/allergens.html">See allergens →</a></article>
+    <article id="jobs" class="card"><div class="card-icon">★</div><h2>Jobs at Dexter’s</h2><p>Great people. Brighter futures. See opportunities at Dexter’s.</p><a class="cta" href="https://backoffice.dextersspot.co.uk/jobs.html">View jobs →</a></article>
+  </section>
 
-  <main id="homePage">
-    <section class="feature-grid">
-      <article id="menu" class="card feature wide">
-        <h2>Menu & collection</h2>
-        <p>Browse the Dexter’s menu and order ahead for collection when ordering is open.</p>
-        <a class="btn primary" href="https://app.dextersspot.co.uk/collection-order-test.html">Start an order</a>
-      </article>
+  <section id="partner" class="partner">
+    <div class="partner-logo"><div><div class="heart">♡</div>Too Good To Go</div></div>
+    <div>
+      <div class="eyebrow">A less wasteful tomorrow</div>
+      <h2>Proud to partner with Too Good To Go</h2>
+      <p>Dexter’s is helping good food find a home instead of going to waste. Our partnership with Too Good To Go helps reduce food waste and gives surplus food a second chance.</p>
+      <a class="cta" href="https://www.toogoodtogo.com/en-gb" target="_blank" rel="noopener">Find out more →</a>
+    </div>
+    <div class="partner-art">🛍️</div>
+  </section>
 
-      <article id="loyalty" class="card feature">
-        <h2>Dexter’s Loyalty</h2>
-        <p>Points, rewards, challenges, offers and app-only prizes in one place.</p>
-        <a class="btn secondary" href="https://app.dextersspot.co.uk/">Open loyalty</a>
-      </article>
-
-      <article class="card feature">
-        <h2>Catering</h2>
-        <p>Planning food for a group, meeting or event? Explore Dexter’s catering.</p>
-        <a class="btn secondary" href="https://app.dextersspot.co.uk/catering.html">View catering</a>
-      </article>
-    </section>
-
-    <section class="card partner">
-      <div class="partner-badge">Fighting food waste <span>with Too Good To Go</span></div>
-      <div><p>Dexter’s is proud to be partnered with Too Good To Go, helping good food find a home instead of going to waste.</p></div>
-    </section>
-
-    <section id="info" class="quicklinks">
-      <a href="https://app.dextersspot.co.uk/allergens.html">Allergens</a>
-      <a href="https://backoffice.dextersspot.co.uk/jobs.html">Jobs at Dexter’s</a>
-      <a href="https://app.dextersspot.co.uk/catering.html">Catering</a>
-      <a href="https://app.dextersspot.co.uk/">Customer app</a>
-    </section>
-  </main>
+  <section id="about" class="values">
+    <div class="value"><div class="vicon">◒</div><div><b>GREAT FOOD</b><span>Quality ingredients and big Dexter’s flavours.</span></div></div>
+    <div class="value"><div class="vicon">♧</div><div><b>HAPPIER COMMUNITIES</b><span>Supporting local people and good causes.</span></div></div>
+    <div class="value"><div class="vicon">◎</div><div><b>A BRIGHTER TOMORROW</b><span>Working to waste less and make better choices.</span></div></div>
+    <div class="value"><div class="vicon">♡</div><div><b>GOOD PEOPLE</b><span>A place to grow, belong and thrive.</span></div></div>
+  </section>
 
   <footer class="footer">
-    <div><strong>DEXTER’S</strong><br>Website preview — not the live public website.</div>
-    <div><a href="https://app.dextersspot.co.uk/privacy.html">Privacy</a> · <a href="https://app.dextersspot.co.uk/cookie-policy.html">Cookies</a> · <a href="https://app.dextersspot.co.uk/terms.html">Terms</a></div>
+    <div><div class="logo">DEXTER’S</div><div class="tagline">GOOD FOOD · BRIGHTER DAYS</div></div>
+    <div><h3>Food</h3><a href="#menu">Menu</a><a href="#loyalty">Loyalty App</a><a href="#catering">Catering</a></div>
+    <div><h3>Info</h3><a href="https://app.dextersspot.co.uk/allergens.html">Allergens</a><a href="#jobs">Jobs</a><a href="#partner">Sustainability</a></div>
+    <div><h3>Help</h3><a href="https://app.dextersspot.co.uk/privacy.html">Privacy</a><a href="https://app.dextersspot.co.uk/terms.html">Terms</a><a href="https://app.dextersspot.co.uk/cookie-policy.html">Cookies</a></div>
+    <div><h3>Follow us</h3><div class="socials"><span>◎</span><span>♪</span><span>f</span><span>▶</span></div></div>
   </footer>
-</div>
+  <div class="legal"><span>Dexter’s website test — not live public website.</span><span>Privacy · Terms · Accessibility</span></div>
+</main>
+
 <script>
-(function(){
-  const allowed=['default','halloween','christmas','valentines'];
-  function apply(mode){
-    document.body.classList.remove('season-halloween','season-christmas','season-valentines');
-    if(mode==='halloween') document.body.classList.add('season-halloween');
-    if(mode==='christmas') document.body.classList.add('season-christmas');
-    if(mode==='valentines') document.body.classList.add('season-valentines');
-  }
-  const manual=new URLSearchParams(location.search).get('theme');
-  if(allowed.includes(manual)){apply(manual);return;}
-  const U='https://bpnkouymdvcogeaqjmxl.supabase.co';
-  const K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
-  fetch(U+'/rest/v1/rpc/app_theme_mode',{method:'POST',headers:{apikey:K,'Content-Type':'application/json'},body:'{}'})
-    .then(r=>r.ok?r.json():Promise.reject())
-    .then(d=>{
-      const raw=typeof d==='string'?d:(Array.isArray(d)?d[0]:d);
-      const val=String(raw?.mode??raw?.theme??raw?.app_theme_mode??raw??'default').toLowerCase();
-      apply(val.includes('halloween')?'halloween':val.includes('christmas')?'christmas':val.includes('valentine')?'valentines':'default');
-    }).catch(()=>apply('default'));
-})();
+const buttons=[...document.querySelectorAll('[data-theme]')];
+function setTheme(theme){
+  document.body.className='theme-'+theme;
+  buttons.forEach(b=>b.classList.toggle('active',b.dataset.theme===theme));
+  localStorage.setItem('dextersWebsiteTestTheme',theme);
+}
+buttons.forEach(b=>b.addEventListener('click',()=>setTheme(b.dataset.theme)));
+const q=new URLSearchParams(location.search).get('theme');
+const saved=localStorage.getItem('dextersWebsiteTestTheme');
+setTheme(['default','halloween','christmas','valentines'].includes(q)?q:(saved||'halloween'));
 </script>
-</body></html>
+</body>
+</html>
