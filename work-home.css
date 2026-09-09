@@ -1,58 +1,97 @@
-/* Geometry from test-work-layout-exact; colours from the existing app themes. */
-body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)){--work-card:var(--card);--work-ink:var(--white);--work-muted:var(--muted)}
-body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) .wrap{max-width:480px!important;padding:12px 14px 106px!important}
-body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) .wrap>.logo{display:none}
-#homePage.work-home{color:var(--white)}
-#homePage .work-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 -14px 12px;padding:12px 14px;background:color-mix(in srgb,var(--navy) 88%,transparent);border-bottom:1px solid #ffffff14;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-#homePage .work-brand{font-weight:900;font-size:28px;letter-spacing:-1px}
-#homePage .work-pill{font-size:11px;font-weight:800;border-radius:999px;background:var(--navy2);padding:7px 10px;max-width:145px}
-#homePage .work-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--card) 82%,var(--yellow) 18%),var(--card));border:1px solid #ffffff20;border-radius:24px;padding:20px;box-shadow:0 10px 26px #0003;margin-bottom:14px;overflow:hidden}
-#homePage .work-hello{font-size:15px;color:var(--muted)}
-#homePage .work-hero h1{font-size:28px;line-height:1.05;margin:6px 0 12px;color:var(--white)}
-#homePage .work-hero .progress{height:12px;margin:0;border-radius:999px;background:var(--navy2)}
-#homePage .work-hero .bar{background:var(--yellow)}
-#homePage .work-hero .work-count{font-size:13px;color:var(--muted);margin-top:8px}
-#homePage #stamps{display:none} /* The same live count is presented by the progress bar. */
-#homePage #rewardCard{margin:12px 0 0;padding:10px 0 0;border:0;background:transparent;box-shadow:none}
-#homePage #rewardCard h2{font-size:16px;margin:0 0 4px}#homePage #rewardCard p{font-size:13px;margin:0}
-#homePage #collectionOrderLiveCard{padding:0;margin:16px 0 0;border:0;background:transparent;box-shadow:none}
-#homePage #collectionOrderLiveCard>h2,#homePage #collectionOrderLiveCard>p,#homePage #collectionLiveState{display:none}
-#homePage #collectionLiveBtn{margin:0}
-#homePage .btn,#homePage .work-cta{display:block;width:100%;box-sizing:border-box;border:0;border-radius:16px;padding:15px 16px;font:inherit;font-weight:900;font-size:16px;background:var(--yellow);color:#111;text-align:center;text-decoration:none;cursor:pointer}
-#homePage button:disabled{opacity:.55;cursor:not-allowed}
-#workQuickActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
-#homePage .work-action{display:block;background:var(--card);color:var(--white);border:1px solid #ffffff16;border-radius:18px;padding:15px;box-shadow:0 6px 18px #0002;text-align:left;text-decoration:none;font:inherit;min-width:0;min-height:112px;cursor:pointer;transition:transform .15s ease,background .15s ease}
-#homePage .work-action:active{transform:scale(.98)}
-.work-action .wi{font-size:24px}.work-action .wt{font-weight:900;margin-top:7px}.work-action .wd{font-size:12px;color:var(--muted);margin-top:4px}
-#homePage .work-heading{margin:18px 2px 10px;font-weight:900;font-size:18px;color:var(--white)}
-#homePage .work-deals{margin:0;padding:0;background:transparent;box-shadow:none;border:0}
-#homePage .work-deals .offer,#homePage .work-row{background:var(--card);border-radius:18px;padding:14px;margin:0 0 10px;box-shadow:0 6px 18px #0001}
-#homePage .work-row{display:flex;gap:12px;align-items:center}#homePage .work-grow{flex:1;min-width:0}
-#homePage .work-desc{font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
-#homePage .work-small{display:inline-block;border:0;background:var(--navy2);color:var(--white);border-radius:12px;padding:9px 11px;font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
-#homePage .work-order{background:var(--card);border:1px solid #ffffff20;border-radius:20px;padding:17px}
-#homePage .work-steps{display:flex;gap:6px;margin-top:12px}#homePage .work-step{height:6px;flex:1;background:var(--navy2);border-radius:99px}#homePage .work-step.on{background:var(--yellow)}
-#qrPage #myIndividualOffersCard{border-radius:18px;background:var(--card);margin:14px 0;padding:14px}
-#workHomeNav{display:none}
+/* TEST BRANCH ONLY — master seasonal home shell based on the approved Pride reference. */
+body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)){
+  --master-bg:#071321;--master-panel:#0d1e31;--master-panel2:#10243a;--master-border:#243a51;
+  --master-cream:#f3eadb;--master-muted:#aebccc;--master-gold:#d7b06a;
+  --p-red:#e95262;--p-orange:#ef9b4b;--p-yellow:#edd765;--p-green:#58b77c;--p-blue:#508fd2;--p-violet:#8d6bd2;
+  background:#040a12!important;
+}
+body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) .wrap{max-width:480px!important;padding:0 14px 104px!important}
+body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) .wrap>.logo,
+body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #seasonBanner{display:none!important}
+#homePage.work-home{display:block!important;color:var(--master-cream);padding-top:8px}
+#homePage .master-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 10px}
+#homePage .master-status{font-size:12px;color:#85e4bd;background:#0b211f;border:1px solid #21463f;border-radius:999px;padding:7px 10px;font-weight:800}
+#homePage .master-tools{display:flex;gap:8px}
+#homePage .master-icon-btn{width:34px;height:34px;border-radius:50%;border:1px solid #ffffff1d;background:#0c1725;color:#dbe5ef;display:grid;place-items:center;padding:0}
+#homePage .master-brand{text-align:center;padding:1px 0 13px}
+#homePage .master-brand strong{display:block;font:700 32px/1 Georgia,serif;letter-spacing:.04em}
+#homePage .master-brand span{display:block;margin-top:4px;font-size:10px;letter-spacing:.34em;color:#c3cfdb}
+#homePage .master-brand i{display:block;width:74px;height:2px;margin:10px auto 0;background:linear-gradient(90deg,var(--p-red),var(--p-orange),var(--p-yellow),var(--p-green),var(--p-blue),var(--p-violet));border-radius:99px}
+
+#homePage .master-scene{height:164px;border-radius:24px;overflow:hidden;position:relative;border:1px solid #ffffff16;background:
+  radial-gradient(circle at 22% 24%,#284363 0,transparent 28%),
+  linear-gradient(155deg,#1b2c49 0%,#101d35 55%,#160f2c 100%);box-shadow:0 18px 40px #0004}
+#homePage .master-scene:before{content:"";position:absolute;left:25px;top:30px;width:74px;height:48px;border-radius:4px 11px 11px 4px;transform:rotate(-8deg);background:linear-gradient(#e40303 0 16.6%,#ff8c00 16.6% 33.2%,#ffed00 33.2% 49.8%,#008026 49.8% 66.4%,#004dff 66.4% 83%,#750787 83%);box-shadow:0 7px 20px #0005}
+#homePage .master-scene:after{content:"";position:absolute;inset:auto 0 0;height:74px;background:linear-gradient(90deg,#050a11 0 12%,transparent 12% 16%,#070e17 16% 28%,transparent 28% 31%,#050a11 31% 48%,transparent 48% 51%,#070e17 51% 68%,transparent 68% 71%,#050a11 71% 100%);clip-path:polygon(0 55%,7% 55%,7% 28%,14% 28%,14% 58%,22% 58%,22% 10%,29% 10%,29% 49%,38% 49%,38% 31%,47% 31%,47% 60%,56% 60%,56% 18%,64% 18%,64% 52%,73% 52%,73% 27%,82% 27%,82% 57%,91% 57%,91% 20%,100% 20%,100% 100%,0 100%)}
+#homePage .master-scene-copy{position:absolute;left:17px;bottom:15px;z-index:3;text-shadow:0 2px 8px #000}
+#homePage .master-scene-copy b{font:700 20px/1.05 Georgia,serif}.master-scene-copy small{display:block;margin-top:4px;color:#d4deea;font-size:10px}
+#homePage .master-welcome{position:absolute;right:14px;top:18px;width:98px;padding:9px 7px;border-radius:14px;border:1px solid #d7b06a66;background:#060d17a8;text-align:center;font-size:9px;line-height:1.4;letter-spacing:.06em}
+
+#homePage .master-hero{margin-top:12px;min-height:210px;border-radius:25px;border:1px solid #d7b06a88;background:linear-gradient(135deg,#0c1929,#102033 62%,#09121e);position:relative;overflow:hidden;padding:18px;box-shadow:0 14px 30px #0004}
+#homePage .master-hero h1{font:700 34px/.98 Georgia,serif;margin:0 0 8px;max-width:215px;color:var(--master-cream)}
+#homePage .master-hero h1 span{background:linear-gradient(90deg,var(--p-red),var(--p-orange),var(--p-yellow),var(--p-green),var(--p-blue),var(--p-violet));-webkit-background-clip:text;color:transparent}
+#homePage .master-hero p{margin:0;max-width:215px;color:#d5dfe9;font-size:10px;letter-spacing:.12em;line-height:1.5}
+#homePage .master-hero .master-order{position:absolute;left:18px;bottom:18px;border:1px solid var(--master-gold);background:#09111bc9;color:#f7ead2;border-radius:999px;padding:9px 12px;font-size:10px;font-weight:900;letter-spacing:.07em;text-decoration:none}
+#homePage .master-food{position:absolute;right:13px;top:46px;width:155px;height:110px}
+#homePage .master-burger{position:absolute;left:0;bottom:8px;width:112px;height:80px}
+#homePage .master-burger i{position:absolute;left:0;width:112px;border-radius:50%}
+#homePage .master-burger .b1{height:31px;top:0;background:linear-gradient(#d69a4b,#a96627)}
+#homePage .master-burger .l{height:13px;top:30px;background:#658c3f}
+#homePage .master-burger .c{height:12px;top:41px;background:#f0c34f;clip-path:polygon(0 0,100% 0,81% 100%,55% 52%,30% 100%,0 70%)}
+#homePage .master-burger .p{height:22px;top:49px;background:#582f21}
+#homePage .master-burger .b2{height:19px;top:64px;background:#b97837}
+#homePage .master-fries{position:absolute;right:0;top:12px;width:46px;height:80px;border-radius:7px 7px 16px 16px;background:linear-gradient(#a87948,#6f4a2c)}
+#homePage .master-fries:before{content:"";position:absolute;left:5px;right:5px;top:-20px;height:44px;background:repeating-linear-gradient(90deg,#f0b34b 0 5px,#c98231 5px 8px);clip-path:polygon(0 30%,8% 0,18% 35%,28% 4%,38% 32%,48% 2%,58% 27%,68% 0,78% 35%,88% 4%,100% 30%,100% 100%,0 100%)}
+#homePage .master-wave{position:absolute;right:-32px;bottom:-22px;width:225px;height:94px;border-radius:50%;background:repeating-radial-gradient(ellipse at center,var(--p-red) 0 7px,var(--p-orange) 8px 15px,var(--p-yellow) 16px 23px,var(--p-green) 24px 31px,var(--p-blue) 32px 39px,var(--p-violet) 40px 47px,transparent 48px 57px);opacity:.55;transform:rotate(-10deg)}
+
+#homePage .master-loyalty{margin-top:12px;border-radius:22px;border:1px solid #ffffff1a;background:linear-gradient(135deg,#0f2136,#091624);padding:16px;position:relative;overflow:hidden}
+#homePage .master-loyalty:after{content:"";position:absolute;right:-22px;top:-26px;width:128px;height:54px;transform:rotate(27deg);background:linear-gradient(var(--p-red),var(--p-orange),var(--p-yellow),var(--p-green),var(--p-blue),var(--p-violet));opacity:.68}
+#homePage .master-loyalty h2{font:700 20px/1 Georgia,serif;margin:0 0 4px;color:var(--master-cream)}
+#homePage .master-loyalty .sub{font-size:10px;color:var(--master-muted);letter-spacing:.08em}
+#homePage .master-loyalty-row{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-top:12px}
+#homePage .master-loyalty #stamps{display:flex!important;gap:5px;flex-wrap:wrap;margin:0!important}
+#homePage .master-loyalty .stamp{width:25px;height:25px;min-width:25px;border-radius:50%;display:grid;place-items:center;padding:0;font-size:11px;border:1px solid #718196;background:transparent}
+#homePage .master-loyalty .stamp.on{background:var(--master-gold);border-color:var(--master-gold);color:#15202b}
+#homePage .master-loyalty .progress,#homePage .master-loyalty #rewardCard{display:none!important}
+#homePage .master-count{color:var(--master-muted);font-size:10px;margin-top:5px}
+#homePage .master-points{font-size:22px;font-weight:900;text-align:right;white-space:nowrap}.master-points small{display:block;font-size:9px;color:var(--master-muted);font-weight:700}
+#homePage #collectionOrderLiveCard{display:none!important}
+
+#workQuickActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+#homePage .work-action{min-height:124px;border-radius:20px;border:1px solid #ffffff1a;background:linear-gradient(145deg,#102238,#0b1829);padding:14px;color:var(--master-cream);text-align:left;text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 8px 22px #0003;cursor:pointer}
+#homePage .work-action .wi{font-size:28px;margin:0}
+#homePage .work-action .wt{font:700 17px/1.05 Georgia,serif;margin:0}
+#homePage .work-action .wd{font-size:9px;line-height:1.35;letter-spacing:.05em;color:var(--master-muted);margin-top:4px}
+#homePage .work-action.master-ask .wi{width:49px;height:38px;border:2px solid var(--master-gold);border-radius:14px;display:grid;place-items:center;font-size:18px;position:relative}
+#homePage .work-action.master-ask .wi:after{content:"";position:absolute;right:-14px;bottom:-7px;width:30px;height:19px;border-radius:10px;background:linear-gradient(90deg,var(--p-red),var(--p-orange),var(--p-yellow),var(--p-green),var(--p-blue),var(--p-violet));opacity:.82}
+
+#homePage .master-bottom-banner{margin-top:12px;min-height:122px;border-radius:22px;border:1px solid #ffffff18;background:linear-gradient(110deg,#10203a,#16152d);padding:16px;position:relative;overflow:hidden}
+#homePage .master-bottom-banner h3{font:700 22px/1.02 Georgia,serif;margin:0;max-width:245px;color:var(--master-cream)}
+#homePage .master-bottom-banner small{display:block;margin-top:11px;color:#bac6d4;font-size:9px;letter-spacing:.12em}
+#homePage .master-bottom-banner:after{content:"🏳️‍🌈";position:absolute;right:18px;top:20px;font-size:58px;filter:saturate(.9);transform:rotate(-7deg)}
+
+#homePage .work-deals,#homePage .work-usual,#homePage .work-current,#homePage>.card,#homePage>.work-small{display:none!important}
+
+#workHomeNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(480px,100%);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 8px max(9px,env(safe-area-inset-bottom));background:#07101cf3;border-top:1px solid #ffffff19;backdrop-filter:blur(18px);z-index:100}
+#workHomeNav button,#workHomeNav a{border:0;background:none;color:#92a4b8;text-align:center;text-decoration:none;font:inherit;font-size:10px;padding:5px 1px;min-height:44px}
+#workHomeNav b{display:block;font-size:18px;margin-bottom:2px}
+#workHomeNav .active{color:var(--master-gold)}
+#workHomeNav a[href^="/collection-order"]{margin:0;background:none;box-shadow:none;color:#92a4b8;border-radius:0;padding:5px 1px}
+
 body:has(#appView:not(.hidden) :is(#homePage.work-home:not(.hidden),#qrPage.work-rewards:not(.hidden),#accountPage:not(.hidden))) #bottomNav{display:none!important}
-body:has(#appView:not(.hidden) :is(#homePage.work-home:not(.hidden),#qrPage.work-rewards:not(.hidden),#accountPage:not(.hidden))) #workHomeNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(480px,100%);box-sizing:border-box;background:color-mix(in srgb,var(--card) 94%,#000 6%);border:1px solid #ffffff18;border-bottom:0;border-radius:20px 20px 0 0;box-shadow:0 -12px 30px #0005;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px max(10px,env(safe-area-inset-bottom));z-index:100}
-#workHomeNav button,#workHomeNav a{background:none;border:0;color:var(--muted);text-align:center;text-decoration:none;font:inherit;font-size:11px;cursor:pointer;padding:0;min-height:43px}#workHomeNav b{display:block;font-size:19px;margin-bottom:2px}#workHomeNav .active{color:var(--yellow);font-weight:900}
-#workHomeNav a[href^="/collection-order"]{margin:-17px 2px 0;min-height:58px;padding:8px 3px 4px;border-radius:17px;background:linear-gradient(135deg,var(--yellow),var(--orange));color:#111;box-shadow:0 8px 20px #0005;font-weight:950}
-body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #seasonBanner{width:calc(100% - 32px)!important;max-width:430px!important;margin:0 auto 14px!important}
-#homePage button:focus-visible,#homePage a:focus-visible,#workHomeNav :focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
-#homePage dialog{width:min(390px,calc(100% - 32px));box-sizing:border-box;max-height:85vh;overflow:auto;background:var(--card);color:var(--white);border:1px solid #ffffff30;border-radius:22px;padding:20px}
-#homePage dialog::backdrop{background:#0009}#workCloseHistory{background:var(--yellow);color:#111;border:0;border-radius:12px;padding:12px;width:100%;font-weight:800}
-#homePage [hidden]{display:none!important}
-#homePage .work-hello #greeting{display:inline}
-
-#homePage.work-home:not(.hidden){display:block!important}
-
-body:has(#appView:not(.hidden) #qrPage.work-rewards:not(.hidden)) .wrap{padding-bottom:100px}
-
+body:has(#appView:not(.hidden) #qrPage.work-rewards:not(.hidden)) .wrap,
 body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:100px}
 
-/* Keep every seasonal theme, but limit compositing work on lower-powered phones. */
-#seasonFx>.season-fx:nth-child(n+9){display:none!important}
+#homePage dialog{width:min(390px,calc(100% - 32px));max-height:85vh;overflow:auto;background:#0c1a2b;color:#fff;border:1px solid #ffffff2a;border-radius:22px;padding:20px}
+#homePage dialog::backdrop{background:#000a}
+#homePage [hidden]{display:none!important}
+#homePage button:focus-visible,#homePage a:focus-visible,#workHomeNav :focus-visible{outline:3px solid var(--master-gold);outline-offset:3px}
+
+#seasonFx>.season-fx:nth-child(n+7){display:none!important}
 body.dexters-motion-paused #seasonFx .season-fx{animation-play-state:paused!important}
-#homePage.work-home>.work-usual,#homePage.work-home>.work-current,#homePage.work-home>.work-deals,#homePage.work-home>.card{content-visibility:auto;contain-intrinsic-size:1px 180px}
-@media(max-width:360px){#homePage .work-brand{font-size:24px}#homePage .work-action{padding:13px;min-height:104px}.work-action .wt{font-size:15px}}
+@media(max-width:360px){
+ #homePage .master-hero h1{font-size:30px}
+ #homePage .master-food{transform:scale(.88);transform-origin:right center;right:7px}
+ #homePage .master-welcome{width:88px;font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){#seasonFx .season-fx{display:none!important}}
