@@ -165,6 +165,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 .pass-nav-drop-wide{min-width:270px}
 .pass-nav-spacer{flex:1}
 .pass-nav-user{display:flex;align-items:center;color:#eadff0;font-size:11px;padding:0 10px;min-width:max-content}
+.pass-nav-toggle{display:none;border:1px solid #ffffff66;background:#ffffff18;color:#fff;border-radius:7px;padding:8px 11px;font-weight:900;cursor:pointer}
 
 .dex-backoffice-main>.panel>.card.notice:first-child{border:0!important;border-left:4px solid var(--pass-purple)!important;border-radius:4px!important;box-shadow:0 1px 4px #0000000a!important;margin-bottom:16px!important;padding:15px 18px!important;background:#fff!important}
 .dex-backoffice-main>.panel>.card.notice:first-child>b{display:block;font-size:18px;color:#413b44;margin-bottom:4px}
@@ -196,8 +197,15 @@ input:focus,select:focus,textarea:focus{outline:2px solid #d8bfe4;border-color:v
 .staff-profile-head{display:flex;gap:12px;align-items:center;margin:8px 0 12px}
 .staff-avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#eee5f2;color:#5b0b7e;font-weight:900}
 @media(max-width:980px){
- .dex-backoffice-nav{overflow-x:auto!important;overflow-y:visible!important}
+ .dex-backoffice-nav{overflow:visible!important;flex-wrap:wrap!important;padding:7px 10px!important}
+ .dex-backoffice-logo{display:block!important;margin:0!important;color:#fff}
+ .pass-nav-toggle{display:block;margin-left:auto}
+ .dex-backoffice-nav:not(.mobile-open)>.pass-nav-home,.dex-backoffice-nav:not(.mobile-open)>.pass-nav-menu,.dex-backoffice-nav:not(.mobile-open)>.pass-nav-spacer,.dex-backoffice-nav:not(.mobile-open)>.pass-nav-user{display:none!important}
+ .dex-backoffice-nav.mobile-open>.pass-nav-home,.dex-backoffice-nav.mobile-open>.pass-nav-menu{display:flex!important;width:100%!important;min-width:100%!important}
+ .dex-backoffice-nav.mobile-open>.pass-nav-home{padding:11px!important;text-align:left!important}
+ .dex-backoffice-nav.mobile-open .pass-nav-trigger{width:100%;padding:11px;text-align:left}
  .pass-nav-drop{position:fixed;top:47px;left:10px;right:10px;min-width:0;max-height:70vh;overflow:auto}
+ .dex-backoffice-nav.mobile-open .pass-nav-drop{position:static;width:100%;max-height:55vh;box-shadow:none;border-radius:4px}
  .pass-nav-user{display:none}
 }
 @media(max-width:680px){
@@ -558,6 +566,7 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="dex-backoffice-shell" id="secureBackOfficeShell" style="display:none">
 <aside class="dex-backoffice-nav pride-nav" style="background:linear-gradient(90deg,#e40303 0%,#ff8c00 18%,#ffed00 36%,#008026 54%,#004dff 72%,#750787 100%)!important">
 <div class="dex-backoffice-logo">DEXTER'S</div>
+<button type="button" class="pass-nav-toggle" aria-expanded="false" aria-label="Open Back Office menu">☰ Menu</button>
 <button class="tab active pass-nav-home" data-tab="dashboard" data-minrole="Staff">Dashboard</button>
 
 <div class="pass-nav-menu">
@@ -2239,6 +2248,14 @@ function closePassNavMenus(){
  document.querySelectorAll('.pass-nav-menu').forEach(x=>x.classList.remove('open'));
  document.querySelectorAll('.pass-nav-drop').forEach(x=>x.style.display='none');
 }
+const passNav=document.querySelector('.dex-backoffice-nav'),passNavToggle=document.querySelector('.pass-nav-toggle');
+if(passNavToggle)passNavToggle.onclick=(e)=>{
+ e.preventDefault();e.stopPropagation();
+ const open=passNav.classList.toggle('mobile-open');
+ passNavToggle.setAttribute('aria-expanded',String(open));
+ passNavToggle.textContent=open?'✕ Close':'☰ Menu';
+ if(!open)closePassNavMenus();
+};
 document.querySelectorAll('.pass-nav-trigger').forEach(t=>t.onclick=(e)=>{
  e.preventDefault();e.stopPropagation();
  const m=t.closest('.pass-nav-menu'),drop=m.querySelector('.pass-nav-drop');
@@ -2253,6 +2270,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
    if(secureRoleRank(SECURE_ACCOUNT.role)<secureRoleRank(b.dataset.minrole||'Staff'))return alert('Your account does not have access to this section.');
  }
  closePassNavMenus();document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active');if(document.activeElement&&typeof document.activeElement.blur==='function')document.activeElement.blur()
+ if(window.innerWidth<=980&&passNav){passNav.classList.remove('mobile-open');if(passNavToggle){passNavToggle.setAttribute('aria-expanded','false');passNavToggle.textContent='☰ Menu'}}
 });
 const today=new Date(), iso=d=>d.toISOString().slice(0,10);
 function cateringMinDateTime(){return new Date(Date.now()+48*60*60*1000)}
@@ -6178,6 +6196,14 @@ function dxSpeak(text){
   }catch(e){}
 }
 
+function dxOfficialVideo(m){
+  const url=String(m?.content?.video_url||'').trim();
+  if(!url)return '';
+  const match=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i);
+  if(match)return '<div class="summarybox" style="margin:12px 0"><b>Official training video</b><p class="tiny muted">Watch this real video from '+dxEsc(m.authority_name||'the official publisher')+'. Dexter\'s lesson and assessment remain required.</p><div style="position:relative;padding-top:56.25%;overflow:hidden;border-radius:10px;background:#000"><iframe src="https://www.youtube-nocookie.com/embed/'+match[1]+'" title="Official training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe></div></div>';
+  return '<div class="summarybox" style="margin:12px 0"><b>Official video course</b><p class="tiny muted">This publisher hosts its videos on its own training website.</p><a class="btn alt small" href="'+dxEsc(url)+'" target="_blank" rel="noopener noreferrer">Open official video course ↗</a></div>';
+}
+
 function dxStopTrainingVideo(){
   DX_TRAIN.playing=false;
   if(DX_TRAIN.playTimer){clearTimeout(DX_TRAIN.playTimer);DX_TRAIN.playTimer=null}
@@ -6220,6 +6246,7 @@ function dxRenderPlayer(){
       '<div class="training-stage dx-pro-stage"><div class="training-scene"><div class="dx-kicker">'+dxEsc(visual.label)+' · Scene '+(idx+1)+' of '+scenes.length+'</div><span class="emoji">'+visual.icon+'</span><h3>'+dxEsc(scene.title||('Scene '+(idx+1)))+'</h3><p>'+dxEsc(scene.narration||'')+'</p><div class="dx-takeaway">Key point: '+dxEsc(dxTakeaway(scene))+'</div><div class="dx-source">Source: '+dxEsc(source)+'</div></div></div>'+
       '<div class="training-controls"><button class="btn small" id="dxPlayCourse">'+(DX_TRAIN.playing?'⏸ Pause video':'▶ Play video')+'</button><span class="tiny">Scene '+(idx+1)+' of '+scenes.length+'</span><div class="video-progress"><i style="width:'+Math.round((idx+1)/Math.max(1,scenes.length)*100)+'%"></i></div><button class="btn alt small" id="dxSpeakScene">🔊 Replay narration</button>'+(videoUrl?'<a class="btn alt small" href="'+dxEsc(videoUrl)+'" target="_blank" rel="noopener noreferrer">Watch official video ↗</a>':(sourceUrl?'<a class="btn alt small" href="'+dxEsc(sourceUrl)+'" target="_blank" rel="noopener noreferrer">Official guidance ↗</a>':''))+'</div>'+
     '</div>'+
+    dxOfficialVideo(m)+
     '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap">'+
       '<button class="btn alt small" id="dxPrevScene" '+(idx===0?'disabled':'')+'>← Previous</button>'+
       (idx<scenes.length-1
