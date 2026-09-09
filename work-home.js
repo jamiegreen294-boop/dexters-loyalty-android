@@ -70,7 +70,18 @@ function start(){
  }
  const observeView=()=>{if($('appView').classList.contains('hidden'))clear();else refresh()};new MutationObserver(observeView).observe($('appView'),{attributes:true,attributeFilter:['class']});new MutationObserver(observeView).observe(home,{attributes:true,attributeFilter:['class']});
  window.addEventListener('storage',e=>{if(e.key==='sb-bpnkouymdvcogeaqjmxl-auth-token'){clear();refresh()}});document.addEventListener('visibilitychange',refresh);
- if(document.documentElement.dataset.layoutFixture==='true'){render([])}else{refresh();setInterval(refresh,15000)}
+ if(document.documentElement.dataset.layoutFixture==='true'){render([])}else{refresh();setInterval(refresh,30000)}
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+function optimiseMotion(){
+ document.body.classList.toggle('dexters-motion-paused',document.hidden);
+ const fx=document.getElementById('seasonFx');if(!fx)return;
+ Array.from(fx.children).slice(8).forEach(n=>n.remove());
+ if(fx.dataset.dextersTrimmed!=='1'){
+  fx.dataset.dextersTrimmed='1';
+  let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;Array.from(fx.children).slice(8).forEach(n=>n.remove())})}).observe(fx,{childList:true});
+ }
+}
+document.addEventListener('visibilitychange',optimiseMotion);
+window.addEventListener('pagehide',()=>document.body.classList.add('dexters-motion-paused'));
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{start();optimiseMotion()},{once:true});else{start();optimiseMotion()}
 })();

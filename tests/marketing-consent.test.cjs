@@ -1,0 +1,11 @@
+const fs=require('fs'),assert=require('assert');
+const html=fs.readFileSync('dist/index.html','utf8'),js=fs.readFileSync('dist/marketing-consent-live.js','utf8');
+assert(html.includes('dxMarketingConsentStyle'),'marketing consent styles missing');
+assert(html.includes('id="dxMarketingConsentLoader"'),'marketing consent startup missing');
+assert(js.includes("$('accountPage')"),'consent UI must mount in Account');
+assert(js.includes('Email offers')&&js.includes('Text message offers'),'separate channel choices missing');
+assert(js.includes('marketing_consent:email||sms'),'master consent must follow selected channels');
+assert(js.includes("consent_source:'loyalty_app_account'"),'consent source missing');
+assert(!js.includes('checked>'),'consent must not be selected by default');
+assert(js.includes('does not affect your account, orders or rewards'),'optional consent explanation missing');
+console.log('Marketing consent regression passed');

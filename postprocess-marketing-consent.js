@@ -1,0 +1,8 @@
+const fs=require('fs');
+const p='dist/index.html';let s=fs.readFileSync(p,'utf8');
+s=s.replace(/<style id="dxMarketingConsentStyle">[\s\S]*?<\/style>/g,'').replace(/<script id="dxMarketingConsentLoader"[^>]*><\/script>/g,'');
+const css='<style id="dxMarketingConsentStyle">#dxMarketingConsent{margin-top:12px}.dx-consent-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.dx-consent-heading h2{margin-bottom:5px}.dx-consent-heading p{margin:0 0 10px}.dx-consent-optional{flex:none;padding:5px 8px;border-radius:999px;background:#ffffff0d;border:1px solid #ffffff20;color:var(--yellow);font-size:10px;font-weight:900;letter-spacing:.08em}.dx-consent-choice{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-top:1px solid #ffffff18;cursor:pointer}.dx-consent-choice input{width:22px;height:22px;flex:none;margin:1px 0;accent-color:var(--yellow)}.dx-consent-choice span{display:grid;gap:3px}.dx-consent-choice strong{font-size:15px}.dx-consent-choice small{color:var(--muted);font-size:12px;line-height:1.45}.dx-consent-note{line-height:1.5;margin:4px 0 13px}.dx-consent-status{min-height:18px;margin-top:9px;text-align:center}@media(max-width:360px){.dx-consent-heading{display:block}.dx-consent-optional{display:inline-block;margin-bottom:10px}}</style>';
+if(!s.includes('</head>')||!s.includes('</body>'))throw Error('Missing app shell');
+s=s.replace('</head>',css+'</head>').replace('</body>','<script id="dxMarketingConsentLoader" src="/marketing-consent-live.js"></script></body>');
+fs.copyFileSync('web/marketing-consent-live.js','dist/marketing-consent-live.js');
+fs.writeFileSync(p,s);console.log('Customer marketing consent controls included');
