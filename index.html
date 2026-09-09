@@ -24,6 +24,10 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 .training-scene .emoji{font-size:44px;display:block;margin-bottom:10px;animation:floaty 2s ease-in-out infinite}
 .training-scene h3{margin:4px 0 8px;font-size:21px}.training-scene p{margin:0;color:#d8cce0}
 .training-controls{padding:12px;border-top:1px solid #ffffff17;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.training-group{margin:14px 0;border:1px solid #ded8e3;border-radius:8px;background:#fff;overflow:hidden}
+.training-group>summary{list-style:none;cursor:pointer;padding:15px 17px;font-weight:900;color:#4b4050;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f7f3f9}
+.training-group>summary::-webkit-details-marker{display:none}.training-group>summary:after{content:'＋';font-size:20px;color:#6f1688}.training-group[open]>summary:after{content:'−'}
+.training-group-body{padding:4px 16px 14px}.training-group-count{font-size:12px;color:#766d7b;font-weight:700}
 .video-progress{height:7px;background:#2c1f35;border-radius:999px;overflow:hidden;flex:1;min-width:120px}.video-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));transition:width .3s}
 @keyframes trainIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
@@ -6080,8 +6084,7 @@ function dxRenderLibrary(){
   root.innerHTML=groups.map(([phase,label])=>{
     const mods=DX_TRAIN.modules.filter(m=>Number(m.phase)===phase).sort((a,b)=>a.sort_order-b.sort_order);
     if(!mods.length)return '';
-    return '<h2 style="margin-top:22px">'+dxEsc(label)+'</h2>'+
-      '<div class="tiny" style="margin-bottom:8px">'+mods.length+' module'+(mods.length===1?'':'s')+'</div>'+
+    return '<details class="training-group" '+(phase===1?'open':'')+'><summary><span>'+dxEsc(label)+'</span><span class="training-group-count">'+mods.length+' module'+(mods.length===1?'':'s')+'</span></summary><div class="training-group-body">'+
       mods.map(m=>{
         const r=dxRecord(m.module_key),status=dxStatus(r),sc=dxScenes(m);
         const sceneDone=Math.min(Number(r?.training_data?.current_scene||0),sc.length);
@@ -6095,7 +6098,7 @@ function dxRenderLibrary(){
           '<div class="tiny" style="margin-top:6px">'+sceneDone+'/'+sc.length+' scenes'+(r?.score!=null?' · Score '+Number(r.score)+'%':'')+(r?.refresher_due_at?' · Refresher '+dxDate(r.refresher_due_at):'')+'</div>'+
           '<button class="btn small" style="margin-top:10px" data-dx-open="'+dxEsc(m.module_key)+'">'+(status==='Not Started'?'Start module':status==='Passed'?'Review module':'Continue module')+'</button>'+
         '</div>';
-      }).join('');
+      }).join('')+'</div></details>';
   }).join('');
   root.querySelectorAll('[data-dx-open]').forEach(b=>b.onclick=()=>dxOpenModule(b.dataset.dxOpen));
   dxRenderSummary();
