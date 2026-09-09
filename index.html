@@ -2411,6 +2411,8 @@ async function loadSecureCoreData(){
  ];
  if(secureRoleRank(role)>=3) jobs.push(SB.from('backoffice_payroll_runs').select('*').order('week_start',{ascending:false}));
  else jobs.push(Promise.resolve({data:[],error:null}));
+ if(secureRoleRank(role)>=3) jobs.push(SB.from('backoffice_payroll_settings').select('*').eq('id',1).maybeSingle());
+ else jobs.push(Promise.resolve({data:null,error:null}));
  if(secureRoleRank(role)>=3) jobs.push(SB.from('backoffice_staff_documents').select('*').order('created_at',{ascending:false}));
  else jobs.push(SB.from('backoffice_staff_documents').select('*').eq('staff_record_id',SECURE_ACCOUNT.staff_record_id||'__none__'));
  if(secureRoleRank(role)>=2) jobs.push(SB.from('backoffice_tasks').select('*').order('created_at',{ascending:false}));
@@ -2423,7 +2425,7 @@ async function loadSecureCoreData(){
  const res=await Promise.all(jobs);
  const err=res.find(x=>x?.error)?.error;if(err)throw err;
 
- const [staffR,rotaR,leaveR,holidayR,payR,docsR,tasksR,recruitR,trainingR]=res;
+ const [staffR,rotaR,leaveR,holidayR,payR,paySettingsR,docsR,tasksR,recruitR,trainingR]=res;
  const staff=(staffR.data||[]).map(mapDbStaff);
  const docs=docsR.data||[];
  const trainingRows=trainingR.data||[];
@@ -2465,6 +2467,15 @@ async function loadSecureCoreData(){
  dexManage.leaveRequests=(leaveR.data||[]).map(mapDbLeave);
  dexManage.holidayLedger=(holidayR.data||[]).map(mapDbHoliday);
  dexManage.payrollRuns=(payR.data||[]).map(mapDbPayroll);
+ if(paySettingsR?.data){
+   dexManage.hmrcSettings={
+     employerName:paySettingsR.data.employer_name||"Dexter's",
+     office:paySettingsR.data.hmrc_office||'',
+     payeRef:paySettingsR.data.paye_reference||'',
+     accountsRef:paySettingsR.data.accounts_office_reference||'',
+     payday:paySettingsR.data.payday||'Friday'
+   };
+ }
  dexManage.tasks=(tasksR.data||[]).map(t=>({
    dbId:t.id,title:t.title,assignee:t.assigned_staff_record_id||'',type:t.task_type||'Task',priority:t.priority||'Normal',
    due:t.due_date||'',details:t.details||'',resolution:t.resolution||'',status:t.status||'Open',
@@ -3141,25 +3152,45 @@ window.viewPayroll=i=>{
  const editable=r.status==='Draft'&&['Manager','Super User'].includes(CURRENT_STAFF_ROLE);
  $('payrollReview').innerHTML='<div class="summarybox"><b>'+r.weekStart+' → '+r.weekEnd+' · Pay date '+r.payDate+'</b><br><span class="badge">'+r.status+'</span></div>'+r.rows.map((x,ri)=>'<div class="summarybox"><b>'+x.name+'</b><br><span class="muted">'+x.shifts+' shift(s) · '+x.hours.toFixed(2)+'h × '+payMoney(x.rate)+' = '+payMoney(x.gross)+'</span><div class="grid"><div class="field">Tax deducted<input id="prTax'+ri+'" type="number" step="0.01" value="'+Number(x.taxDeducted||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div><div class="field">Employee NI<input id="prEni'+ri+'" type="number" step="0.01" value="'+Number(x.employeeNI||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div></div><div class="grid"><div class="field">Employer NI<input id="prErni'+ri+'" type="number" step="0.01" value="'+Number(x.employerNI||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div><div class="field">Employee pension<input id="prPen'+ri+'" type="number" step="0.01" value="'+Number(x.pensionEmployee||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div></div><div class="grid"><div class="field">Student loan<input id="prLoan'+ri+'" type="number" step="0.01" value="'+Number(x.studentLoan||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div><div class="field">Other deductions<input id="prOther'+ri+'" type="number" step="0.01" value="'+Number(x.otherDeductions||0).toFixed(2)+'" '+(editable?'':'disabled')+'></div></div><div class="field">Payroll notes<input id="prNotes'+ri+'" value="'+String(x.notes||'').replace(/"/g,'&quot;')+'" '+(editable?'':'disabled')+'></div><span class="tiny">Payroll ID '+(x.payrollId||'missing')+' · NINO '+(x.nino||'missing')+' · Tax code '+(x.taxCode||'missing')+' · NI category '+(x.niCategory||'missing')+'</span></div>').join('')+(editable?'<button class="btn" onclick="savePayrollReview('+i+')">Save Manager Review</button>':'');
 };
-window.savePayrollReview=i=>{
+window.savePayrollReview=async i=>{
  if(!['Manager','Super User'].includes(CURRENT_STAFF_ROLE))return alert('Manager or Super User access required.');
  const r=dexManage.payrollRuns[i];if(!r||r.status!=='Draft'||payrollRunLocked(r))return alert('This payroll is locked and cannot be edited.');
  r.rows.forEach((x,ri)=>{x.taxDeducted=Number($('prTax'+ri).value||0);x.employeeNI=Number($('prEni'+ri).value||0);x.employerNI=Number($('prErni'+ri).value||0);x.pensionEmployee=Number($('prPen'+ri).value||0);x.studentLoan=Number($('prLoan'+ri).value||0);x.otherDeductions=Number($('prOther'+ri).value||0);x.notes=$('prNotes'+ri).value.trim();recalcPayrollRow(x)});
- r.managerReviewedAt=new Date().toISOString();payAudit('Manager saved payroll review',r.id);saveDexManage();viewPayroll(i);
+ r.managerReviewedAt=new Date().toISOString();
+ if(CORE_DB_CONNECTED&&r.dbId){
+   const payload={...r};
+   const {error}=await SB.from('backoffice_payroll_runs').update({payroll_data:payload,updated_at:new Date().toISOString()}).eq('id',r.dbId);
+   if(error)return alert('Secure payroll review save failed: '+error.message);
+ }
+ payAudit('Manager saved payroll review',r.id);saveDexManage();viewPayroll(i);
 };
-window.managerApprovePay=i=>{
+window.managerApprovePay=async i=>{
  if(!['Manager','Super User'].includes(CURRENT_STAFF_ROLE))return alert('Manager or Super User access required for this approval stage.');
  const r=dexManage.payrollRuns[i];if(!r||r.status!=='Draft')return;
  const missing=r.rows.filter(x=>!x.payrollId||!x.taxCode||!x.niCategory);
  if(missing.length)return alert('Complete payroll ID, tax code and NI category on all staff files before approval.');
- r.status='Awaiting Super User Verification';r.managerApprovedAt=new Date().toISOString();r.managerApprovedBy=CURRENT_STAFF_ROLE;payAudit(CURRENT_STAFF_ROLE+' completed manager-stage payroll approval',r.id);addTimeline('Payroll','Weekly payroll '+r.weekStart+' completed manager-stage approval by '+CURRENT_STAFF_ROLE+' and sent for Super User verification');saveDexManage();
+ if(CORE_DB_CONNECTED&&r.dbId){
+   const {data,error}=await SB.rpc('backoffice_payroll_manager_approve',{p_run_id:r.dbId});
+   if(error)return alert('Secure payroll approval failed: '+error.message);
+   r.status=data.status;r.managerApprovedAt=data.manager_approved_at;r.managerApprovedBy='Manager';
+ }else{
+   r.status='Awaiting Super User Verification';r.managerApprovedAt=new Date().toISOString();r.managerApprovedBy=CURRENT_STAFF_ROLE;
+ }
+ payAudit(CURRENT_STAFF_ROLE+' completed manager-stage payroll approval',r.id);addTimeline('Payroll','Weekly payroll '+r.weekStart+' completed manager-stage approval by '+CURRENT_STAFF_ROLE+' and sent for Super User verification');saveDexManage();
 };
-window.superVerifyPay=i=>{
+window.superVerifyPay=async i=>{
  if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can perform final payroll verification.');
  const r=dexManage.payrollRuns[i];if(!r||r.status!=='Awaiting Super User Verification')return;
  const h=dexManage.hmrcSettings||{};
  if(!h.office||!h.payeRef||!h.accountsRef)return alert('Enter the employer PAYE and Accounts Office references first.');
- r.status='Ready for HMRC Submission';r.superVerifiedAt=new Date().toISOString();r.lockedAt=r.superVerifiedAt;r.lockedBy='Super User';payAudit('Super User verified and locked payroll for HMRC submission queue',r.id);addTimeline('Payroll','Payroll '+r.weekStart+' locked after Super User verification');saveDexManage();
+ if(CORE_DB_CONNECTED&&r.dbId){
+   const {data,error}=await SB.rpc('backoffice_payroll_super_verify',{p_run_id:r.dbId});
+   if(error)return alert('Secure payroll verification failed: '+error.message);
+   r.status=data.status;r.superVerifiedAt=data.super_verified_at;r.lockedAt=data.locked_at;r.lockedBy='Super User';
+ }else{
+   r.status='Ready for HMRC Submission';r.superVerifiedAt=new Date().toISOString();r.lockedAt=r.superVerifiedAt;r.lockedBy='Super User';
+ }
+ payAudit('Super User verified and locked payroll for HMRC submission queue',r.id);addTimeline('Payroll','Payroll '+r.weekStart+' locked after Super User verification');saveDexManage();
 };
 
 function addTimeline(type,text,meta=''){
@@ -3435,9 +3466,31 @@ function renderSystemHealth(){
  const today=new Date().toISOString().slice(0,10),sale=(dexManage.salesDays||[]).find(x=>x.date===today),sales=sale?Number(sale.till)+Number(sale.app)+Number(sale.catering)+Number(sale.other):0,lab=dailyLabourCost(today);
  $('ownerDailySummary').innerHTML='<div class="bo-kpis"><div class="bo-kpi"><span class="muted">Sales today</span><b>'+payMoney(sales)+'</b></div><div class="bo-kpi"><span class="muted">Labour today</span><b>'+payMoney(lab)+'</b></div><div class="bo-kpi"><span class="muted">Open tasks</span><b>'+dexManage.tasks.filter(t=>t.status!=='Completed').length+'</b></div><div class="bo-kpi"><span class="muted">Errors</span><b>'+dexManage.errorLog.filter(e=>e.severity==='Critical').length+'</b></div></div>';
 }
-function publishRotaWeek(){
+async function publishRotaWeek(){
  const start=$('rotaWeekStart')?.value;if(!start)return;const d=parseLocalDate(start),end=new Date(d);end.setDate(end.getDate()+6);const e=dateYMD(end);
- dexManage.rota.filter(r=>r.date>=start&&r.date<=e).forEach(r=>{r.published=true;notifyStaff(r.staffId,'Rota published',r.date+' · '+r.start+'–'+r.end,'Rota')});
+ const rows=dexManage.rota.filter(r=>r.date>=start&&r.date<=e);
+ if(CORE_DB_CONNECTED){
+   const ids=rows.map(r=>r.dbId).filter(Boolean);
+   if(ids.length){
+     const {error}=await SB.from('backoffice_rota_shifts').update({published:true,updated_at:new Date().toISOString()}).in('id',ids);
+     if(error)return alert('Secure rota publish failed: '+error.message);
+   }
+   const byStaff=new Map();
+   rows.forEach(r=>{
+     if(!r.staffId)return;
+     const list=byStaff.get(r.staffId)||[];list.push(r);byStaff.set(r.staffId,list);
+   });
+   for(const [staffId,list] of byStaff){
+     const message='Your rota has been published for '+start+' to '+e+'. '+list.length+' shift'+(list.length===1?'':'s')+' assigned.';
+     const {error}=await SB.from('backoffice_staff_notifications').insert({
+       staff_record_id:staffId,notification_type:'Rota Published',title:'New rota published',message,
+       related_entity_type:'Rota Week',related_entity_id:start
+     });
+     if(error)return alert('Rota published, but staff notification failed: '+error.message);
+   }
+   try{await appendAuditDb('rota_week',start,'Rota week published',null,{week_start:start,week_end:e,shift_count:rows.length})}catch(_){}
+ }
+ rows.forEach(r=>{r.published=true;notifyStaff(r.staffId,'Rota published',r.date+' · '+r.start+'–'+r.end,'Rota')});
  addTimeline('Rota','Rota published '+start+' → '+e);saveDexManage();
 }
 function payrollRunLocked(r){return ['Ready for HMRC Submission','Submitted to HMRC','Finalised'].includes(r.status)||!!r.lockedAt}
@@ -3642,10 +3695,17 @@ if($('taskAdd'))$('taskAdd').onclick=async()=>{if(roleRank(CURRENT_STAFF_ROLE)<2
 if($('eqAdd'))$('eqAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader access required.');const name=$('eqName').value.trim();if(!name)return;dexManage.equipment.unshift({name,asset:$('eqAsset').value.trim(),location:$('eqLocation').value.trim(),status:$('eqStatus').value,last:$('eqLast').value,due:$('eqDue').value,fault:$('eqFault').value.trim(),action:$('eqAction').value.trim(),assignee:$('eqAssignee').value,engineer:$('eqEngineer').value.trim(),tags:pickedTags('eqTags'),at:new Date().toISOString()});saveDexManage()};
 if($('masterCompAdd'))$('masterCompAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const title=$('masterCompTitle').value.trim();if(!title)return;dexManage.masterCompliance.unshift({type:$('masterCompType').value,title,date:$('masterCompDate').value,review:$('masterCompReview').value,owner:$('masterCompOwner').value.trim(),hazard:$('masterCompHazard').value.trim(),scope:$('masterCompScope').value.trim(),controls:$('masterCompControls').value.trim(),actions:$('masterCompActions').value.trim(),tags:pickedTags('masterCompTags'),at:new Date().toISOString()});saveDexManage()};
 
-if($('saveHmrcSettings'))$('saveHmrcSettings').onclick=()=>{
+if($('saveHmrcSettings'))$('saveHmrcSettings').onclick=async()=>{
  if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can change HMRC/PAYE settings.');
- dexManage.hmrcSettings={employerName:$('hmrcEmployerName').value.trim(),office:$('hmrcOffice').value.trim(),payeRef:$('hmrcPayeRef').value.trim(),accountsRef:$('hmrcAccountsRef').value.trim(),payday:$('hmrcPayday').value};
- payAudit('Employer PAYE settings updated');saveDexManage();
+ const h={employerName:$('hmrcEmployerName').value.trim(),office:$('hmrcOffice').value.trim(),payeRef:$('hmrcPayeRef').value.trim(),accountsRef:$('hmrcAccountsRef').value.trim(),payday:$('hmrcPayday').value};
+ if(CORE_DB_CONNECTED){
+   const {error}=await SB.from('backoffice_payroll_settings').upsert({
+     id:1,employer_name:h.employerName||"Dexter's",hmrc_office:h.office||null,paye_reference:h.payeRef||null,
+     accounts_office_reference:h.accountsRef||null,payday:h.payday||'Friday',updated_by:SECURE_SESSION.user.id,updated_at:new Date().toISOString()
+   },{onConflict:'id'});
+   if(error)return alert('Secure PAYE settings save failed: '+error.message);
+ }
+ dexManage.hmrcSettings=h;payAudit('Employer PAYE settings updated');saveDexManage();
 };
 if($('buildWeeklyPayroll'))$('buildWeeklyPayroll').onclick=async()=>{
  if(!['Manager','Super User'].includes(CURRENT_STAFF_ROLE))return alert('Manager or Super User access required.');
