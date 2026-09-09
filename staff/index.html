@@ -132,7 +132,7 @@ const SUPABASE_KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:localStorage,storageKey:'dexters-staff-auth-v1'}});
 let session=null,account=null,profile=null,shifts=[],leaveRows=[],modules=[],trainingRows=[],documents=[],notifications=[];
 let activeDocument=null,formSignatureData='';
-let activeCourse=null,activeScene=0;
+let activeCourse=null,activeScene=0,coursePlaying=false,coursePlayTimer=null;
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const fmtDate=v=>v?new Date(v+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}):'—';
@@ -292,7 +292,15 @@ function speakCourseScene(){
   speechSynthesis.speak(u);
  }catch(e){}
 }
+function stopCourseVideo(){coursePlaying=false;if(coursePlayTimer){clearTimeout(coursePlayTimer);coursePlayTimer=null}try{speechSynthesis.cancel()}catch(e){}}
+function scheduleCourseAdvance(){
+ const scenes=activeCourse?.content?.scenes||[],scene=scenes[activeScene]||{};
+ const delay=Math.max(6500,Math.min(16000,2600+String(scene.narration||'').split(/\s+/).length*360));
+ coursePlayTimer=setTimeout(async()=>{if(!coursePlaying)return;const last=activeScene>=scenes.length-1;const saved=await completeScene(true);if(saved===false)return;if(last){stopCourseVideo();renderCourse();return}scheduleCourseAdvance()},delay);
+}
+function toggleCourseVideo(){if(coursePlaying){stopCourseVideo();renderCourse();return}coursePlaying=true;renderCourse();speakCourseScene();scheduleCourseAdvance()}
 async function openCourse(key){
+ stopCourseVideo();
  activeCourse=modules.find(m=>m.module_key===key);if(!activeCourse)return;
  let r=recFor(key);const st=statusOf(r);
  if(!r||st==='Not Started'||st==='Refresher Due'){const x=await sb.rpc('backoffice_training_start',{p_module_key:key});if(x.error)return alert(x.error.message);await loadAll();r=recFor(key)}
@@ -300,20 +308,21 @@ async function openCourse(key){
 }
 function renderCourse(){
  const m=activeCourse,r=recFor(m.module_key),scenes=m.content?.scenes||[],scene=scenes[activeScene]||{},done=Math.min(Number(r?.training_data?.current_scene||0),scenes.length),allDone=done>=scenes.length;
- const visual=courseVisual(m),source=m.authority_name||'Dexter\'s approved procedure';
+ const visual=courseVisual(m),source=m.authority_name||'Dexter\'s approved procedure',videoUrl=m.content?.video_url||'',sourceUrl=m.authority_url||'';
  $('courseTitle').textContent=m.title;
- $('courseBody').innerHTML='<div class="course-tools"><span class="tiny muted">'+esc(source)+' · '+Number(m.duration_minutes||10)+' mins · Pass '+Number(m.pass_score||80)+'%</span><button class="btn alt" id="listenScene">🔊 Listen</button></div><div class="course-progress">'+scenes.map((_,i)=>'<i class="'+(i<=activeScene?'done':'')+'"></i>').join('')+'</div><div class="scene"><div class="scene-inner"><div class="scene-kicker">'+esc(visual.label)+' · Scene '+(activeScene+1)+' of '+scenes.length+'</div><div class="scene-icon">'+visual.icon+'</div><h2>'+esc(scene.title||('Scene '+(activeScene+1)))+'</h2><p>'+esc(scene.narration||'')+'</p><div class="scene-takeaway">Key point: '+esc(sceneTakeaway(scene))+'</div><div class="scene-source">Source: '+esc(source)+'</div></div></div><div class="row space"><button class="btn alt" id="prevScene" '+(activeScene===0?'disabled':'')+'>← Previous</button>'+(activeScene<scenes.length-1?'<button class="btn" id="nextScene">'+(activeScene<done?'Next scene →':'Mark complete →')+'</button>':(!allDone?'<button class="btn" id="nextScene">Complete final scene</button>':'<button class="btn" id="quizBtn">Start knowledge check</button>'))+'</div><div id="quizArea"></div>';
+ $('courseBody').innerHTML='<div class="course-tools"><span class="tiny muted">'+esc(source)+' · '+Number(m.duration_minutes||10)+' mins · Pass '+Number(m.pass_score||80)+'%</span><button class="btn" id="playCourse">'+(coursePlaying?'⏸ Pause video':'▶ Play video')+'</button><button class="btn alt" id="listenScene">🔊 Replay narration</button>'+(videoUrl?'<a class="btn alt" href="'+esc(videoUrl)+'" target="_blank" rel="noopener noreferrer">Watch official video ↗</a>':(sourceUrl?'<a class="btn alt" href="'+esc(sourceUrl)+'" target="_blank" rel="noopener noreferrer">Official guidance ↗</a>':''))+'</div><div class="course-progress">'+scenes.map((_,i)=>'<i class="'+(i<=activeScene?'done':'')+'"></i>').join('')+'</div><div class="scene"><div class="scene-inner"><div class="scene-kicker">'+esc(visual.label)+' · Scene '+(activeScene+1)+' of '+scenes.length+'</div><div class="scene-icon">'+visual.icon+'</div><h2>'+esc(scene.title||('Scene '+(activeScene+1)))+'</h2><p>'+esc(scene.narration||'')+'</p><div class="scene-takeaway">Key point: '+esc(sceneTakeaway(scene))+'</div><div class="scene-source">Source: '+esc(source)+'</div></div></div><div class="row space"><button class="btn alt" id="prevScene" '+(activeScene===0?'disabled':'')+'>← Previous</button>'+(activeScene<scenes.length-1?'<button class="btn" id="nextScene">'+(activeScene<done?'Next scene →':'Mark complete →')+'</button>':(!allDone?'<button class="btn" id="nextScene">Complete final scene</button>':'<button class="btn" id="quizBtn">Start knowledge check</button>'))+'</div><div id="quizArea"></div>';
+ if($('playCourse'))$('playCourse').onclick=toggleCourseVideo;
  if($('listenScene'))$('listenScene').onclick=speakCourseScene;
- if($('prevScene'))$('prevScene').onclick=()=>{activeScene--;renderCourse()};
- if($('nextScene'))$('nextScene').onclick=completeScene;
+ if($('prevScene'))$('prevScene').onclick=()=>{stopCourseVideo();activeScene--;renderCourse()};
+ if($('nextScene'))$('nextScene').onclick=()=>{stopCourseVideo();completeScene()};
  if($('quizBtn'))$('quizBtn').onclick=renderQuiz;
 }
-async function completeScene(){const {error}=await sb.rpc('backoffice_training_complete_scene',{p_module_key:activeCourse.module_key,p_scene:activeScene+1});if(error)return alert(error.message);await loadAll();const sc=activeCourse.content?.scenes||[];if(activeScene<sc.length-1)activeScene++;renderCourse();renderTraining();renderHome()}
+async function completeScene(fromPlayback=false){const {error}=await sb.rpc('backoffice_training_complete_scene',{p_module_key:activeCourse.module_key,p_scene:activeScene+1});if(error){stopCourseVideo();alert(error.message);return false}await loadAll();const sc=activeCourse.content?.scenes||[];if(activeScene<sc.length-1)activeScene++;renderCourse();renderTraining();renderHome();if(fromPlayback&&coursePlaying)speakCourseScene();return true}
 function renderQuiz(){
  const qs=Array.isArray(activeCourse.quiz)?activeCourse.quiz:[];$('quizArea').innerHTML='<div class="card"><h3>Scenario assessment</h3><p class="tiny muted"><b>'+qs.length+' questions · Pass mark '+Number(activeCourse.pass_score||80)+'%</b><br>Choose the safest, most complete response to each workplace scenario. Answer every question; if you do not pass, review the lesson before trying again.</p>'+qs.map((q,i)=>'<div class="quizq"><b>Question '+(i+1)+' of '+qs.length+': '+esc(q.question)+'</b><select id="q'+i+'"><option value="">Choose the best answer</option>'+q.options.map((o,j)=>'<option value="'+j+'">'+esc(o)+'</option>').join('')+'</select></div>').join('')+'<button class="btn" id="submitQuiz" style="margin-top:10px">Submit assessment</button><div id="quizMsg" class="tiny" style="margin-top:8px" aria-live="polite"></div></div>';$('submitQuiz').onclick=submitQuiz;
 }
 async function submitQuiz(){const qs=activeCourse.quiz||[],answers=[];for(let i=0;i<qs.length;i++){const e=$('q'+i);if(!e||e.value==='')return $('quizMsg').innerHTML='<span class="bad">Answer every question.</span>';answers.push(Number(e.value))}const {data,error}=await sb.rpc('backoffice_training_submit_quiz',{p_module_key:activeCourse.module_key,p_answers:answers});if(error)return $('quizMsg').innerHTML='<span class="bad">'+esc(error.message)+'</span>';const result=Array.isArray(data)?data[0]:data;await loadAll();if(result?.passed){$('quizMsg').innerHTML='<span class="ok"><b>Passed — '+Number(result.score)+'%</b></span>';renderTraining();renderHome()}else $('quizMsg').innerHTML='<span class="bad"><b>Score '+Number(result?.score||0)+'%. Review the course and try again.</b></span>'}
-$('courseClose').onclick=()=>{try{speechSynthesis.cancel()}catch(e){};$('trainingOverlay').style.display='none';activeCourse=null;renderTraining()};
+$('courseClose').onclick=()=>{stopCourseVideo();$('trainingOverlay').style.display='none';activeCourse=null;renderTraining()};
 
 function renderForms(){
  const pending=documents.filter(d=>!d.acknowledged).length;
