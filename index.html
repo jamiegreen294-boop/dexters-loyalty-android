@@ -888,26 +888,100 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="recruitment">
-<div class="card notice"><b>Recruitment & Onboarding</b><p class="muted">Track applicants, interviews, offers and onboarding into a Dexter's staff file.</p></div>
-<div class="grid">
-<div class="card"><h2>Applicants</h2><div id="recruitList"></div></div>
-<div class="card"><h2>Applicant form</h2>
-<div class="grid"><div class="field">Full name<input id="recName"></div><div class="field">Phone<input id="recPhone" inputmode="tel"></div></div>
-<div class="grid"><div class="field">Email<input id="recEmail" type="email"></div><div class="field">Role applied for<input id="recRole"></div></div>
-<div class="grid"><div class="field">Applied date<input id="recApplied" type="date"></div><div class="field">Stage<select id="recStage"><option>Applied</option><option>Shortlisted</option><option>Interview</option><option>Trial shift</option><option>Offer</option><option>Hired</option><option>Unsuccessful</option></select></div></div>
-<div class="field">Availability<textarea id="recAvailability" rows="3"></textarea></div>
-<div class="grid"><div class="field">Interview / trial date<input id="recInterviewDate" type="date"></div><div class="field">Interviewer<input id="recInterviewer"></div></div>
-<div class="field">Interview / trial notes<textarea id="recInterview" rows="4"></textarea></div>
-<div class="grid"><div class="field">Interview outcome<select id="recInterviewOutcome"><option>Pending</option><option>Proceed</option><option>Hold</option><option>Do not proceed</option></select></div><div class="field">Score / rating<input id="recScore" placeholder="e.g. 8/10"></div></div>
-<div class="field">Right-to-work status<select id="recRTW"><option>Not checked</option><option>Checked</option><option>Follow-up required</option></select></div>
-<div class="grid"><div class="field">RTW check method<select id="recRTWMethod"><option>Not recorded</option><option>Original documents</option><option>Online share code</option><option>Other permitted check</option></select></div><div class="field">RTW check date<input id="recRTWDate" type="date"></div></div>
-<div class="field">RTW document/share-code reference<input id="recRTWRef"></div>
-<div class="field">References / previous employment notes<textarea id="recReferences" rows="3"></textarea></div>
-<div class="field">Offer / onboarding actions<textarea id="recOnboarding" rows="4"></textarea></div>
-<div class="grid"><div class="field">Proposed start date<input id="recStartDate" type="date"></div><div class="field">Final decision<select id="recDecision"><option>Pending</option><option>Offer</option><option>Hired</option><option>Unsuccessful</option></select></div></div>
-<div class="field">Tags<div id="recTags" class="tag-picker"></div></div>
-<button class="btn" id="recAdd">Save applicant</button>
+<div class="pass-pagehead">
+  <div><h2>Recruitment & Onboarding</h2><div class="muted">Vacancies, applications, scoring, checks, offers, candidate documents and conversion into a Dexter's staff record.</div></div>
+  <div class="row" style="gap:8px;flex-wrap:wrap">
+    <a class="btn alt small" href="https://jamiegreen294-boop.github.io/dexters-recruitment-test/jobs.html" target="_blank" rel="noopener">Public Jobs Portal</a>
+    <a class="btn alt small" href="https://jamiegreen294-boop.github.io/dexters-recruitment-test/apply.html" target="_blank" rel="noopener">Application Form</a>
+    <a class="btn alt small" href="https://jamiegreen294-boop.github.io/dexters-recruitment-test/candidate-portal.html?token=TEST-ALEX-001" target="_blank" rel="noopener">Candidate Portal</a>
+  </div>
 </div>
+
+<div class="card notice">
+ <b>Recruitment safeguards</b>
+ <p class="muted">Use job-related criteria only. Right-to-work checks must be applied consistently. Scoring is advisory and requires a manager decision. Do not ask prohibited pre-employment health questions. Candidate information must only be kept as long as needed under the recruitment privacy/retention policy.</p>
+</div>
+
+<div class="grid four">
+ <div class="card"><div class="muted">Applications</div><div class="big" id="recKpiApplications">0</div></div>
+ <div class="card"><div class="muted">Interview</div><div class="big" id="recKpiInterview">0</div></div>
+ <div class="card"><div class="muted">Checks / offer</div><div class="big" id="recKpiChecks">0</div></div>
+ <div class="card"><div class="muted">Ready to appoint</div><div class="big" id="recKpiReady">0</div></div>
+</div>
+
+<div class="grid" style="margin-top:14px">
+ <div class="card">
+  <h2>Candidate pipeline</h2>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px">
+   <button class="btn alt small" id="recFilterAll">All</button>
+   <button class="btn alt small" id="recFilterApplied">Applications</button>
+   <button class="btn alt small" id="recFilterInterview">Interview</button>
+   <button class="btn alt small" id="recFilterChecks">Checks / Offer</button>
+   <button class="btn alt small" id="recFilterHired">Hired</button>
+  </div>
+  <div id="recruitList"></div>
+ </div>
+
+ <div class="card">
+  <h2>Applicant / candidate record</h2>
+  <div class="grid"><div class="field">Application type<select id="recType"><option>Vacancy</option><option>Speculative</option></select></div><div class="field">Vacancy / reference<input id="recVacancy" placeholder="e.g. VAC-001 or General application"></div></div>
+  <div class="grid"><div class="field">Full name<input id="recName"></div><div class="field">Phone<input id="recPhone" inputmode="tel"></div></div>
+  <div class="grid"><div class="field">Email<input id="recEmail" type="email"></div><div class="field">Role applied for<select id="recRole"><option>Café All-Rounder / Barista</option><option>Café Assistant / Barista</option><option>Front of House / Barista</option><option>Kitchen Assistant / Kitchen Porter</option><option>Food Preparation Assistant</option><option>Café Supervisor</option><option>Assistant Manager</option><option>Café Manager</option><option>Other</option></select></div></div>
+  <div class="grid"><div class="field">Applied date<input id="recApplied" type="date"></div><div class="field">Stage<select id="recStage"><option>Application received</option><option>Screening</option><option>Interview</option><option>References</option><option>RTW / checks</option><option>Conditional Offer</option><option>Candidate Portal</option><option>Ready to appoint</option><option>Hired</option><option>Unsuccessful</option></select></div></div>
+  <div class="field">Availability<textarea id="recAvailability" rows="3"></textarea></div>
+
+  <details class="flowstep" open>
+   <summary><span><span class="stepnum">1</span>Screening & scoring</span></summary>
+   <div class="flowbody">
+    <div class="grid"><div class="field">Screening score (0–17)<input id="recScreeningScore" type="number" min="0" max="17"></div><div class="field">Assessment score (0–15)<input id="recAssessmentScore" type="number" min="0" max="15"></div></div>
+    <div class="grid"><div class="field">Interview score (0–25)<input id="recInterviewScore" type="number" min="0" max="25"></div><div class="field">Combined score<input id="recCombinedScore" readonly placeholder="— / 57"></div></div>
+    <div class="field">Recommendation<input id="recRecommendation" readonly placeholder="Not enough scores yet"></div>
+    <p class="tiny muted">75%+ Recommend hire · 60–74% Manager review · below 60% Do not recommend. Final decision remains human.</p>
+   </div>
+  </details>
+
+  <details class="flowstep">
+   <summary><span><span class="stepnum">2</span>Interview</span></summary>
+   <div class="flowbody">
+    <div class="grid"><div class="field">Interview date<input id="recInterviewDate" type="date"></div><div class="field">Interviewer<input id="recInterviewer"></div></div>
+    <div class="field">Interview notes / transcript<textarea id="recInterview" rows="5"></textarea></div>
+    <div class="grid"><div class="field">Interview outcome<select id="recInterviewOutcome"><option>Pending</option><option>Proceed</option><option>Hold</option><option>Do not proceed</option></select></div><div class="field">Legacy score / rating<input id="recScore" placeholder="Optional note"></div></div>
+    <p class="tiny muted">Dexter's recruitment record stores notes/transcript only. Do not store interview audio.</p>
+   </div>
+  </details>
+
+  <details class="flowstep">
+   <summary><span><span class="stepnum">3</span>References & Right to Work</span></summary>
+   <div class="flowbody">
+    <div class="grid"><div class="field">Reference 1<select id="recRef1"><option>Not requested</option><option>Requested</option><option>Received</option><option>Unsatisfactory / review</option></select></div><div class="field">Reference 2<select id="recRef2"><option>Not requested</option><option>Requested</option><option>Received</option><option>Unsatisfactory / review</option></select></div></div>
+    <div class="field">References / previous employment notes<textarea id="recReferences" rows="3"></textarea></div>
+    <div class="field">Right-to-work status<select id="recRTW"><option>Not checked</option><option>Checked</option><option>Follow-up required</option></select></div>
+    <div class="grid"><div class="field">RTW check method<select id="recRTWMethod"><option>Not recorded</option><option>Original documents</option><option>Online share code</option><option>Other permitted check</option></select></div><div class="field">RTW check date<input id="recRTWDate" type="date"></div></div>
+    <div class="field">RTW document/share-code reference<input id="recRTWRef"></div>
+   </div>
+  </details>
+
+  <details class="flowstep">
+   <summary><span><span class="stepnum">4</span>Offer, candidate portal & documents</span></summary>
+   <div class="flowbody">
+    <div class="grid"><div class="field">Offer status<select id="recOfferStatus"><option>Not prepared</option><option>Draft</option><option>Conditional offer sent</option><option>Accepted</option><option>Declined</option></select></div><div class="field">Candidate portal<select id="recPortalStatus"><option>Not issued</option><option>Issued</option><option>Opened</option><option>Completed</option></select></div></div>
+    <div class="grid"><div class="field">Required documents<select id="recDocsStatus"><option>Not started</option><option>Issued</option><option>Part signed</option><option>All signed</option></select></div><div class="field">Second manager review<select id="recSecondApproval"><option>Pending</option><option>Approved to appoint</option><option>Do not appoint</option></select></div></div>
+    <div class="field">Offer / onboarding actions<textarea id="recOnboarding" rows="4"></textarea></div>
+    <div class="grid"><div class="field">Proposed start date<input id="recStartDate" type="date"></div><div class="field">Final decision<select id="recDecision"><option>Pending</option><option>Conditional Offer</option><option>Offer accepted</option><option>Hired</option><option>Unsuccessful</option></select></div></div>
+   </div>
+  </details>
+
+  <div class="field">Tags<div id="recTags" class="tag-picker"></div></div>
+  <div class="row" style="gap:8px;flex-wrap:wrap">
+   <button class="btn" id="recAdd">Save candidate</button>
+   <button class="btn alt" id="recClear">Clear form</button>
+  </div>
+ </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+ <h2>Recruitment portal connection</h2>
+ <p class="muted">The public portal remains the customer-facing application route. The Back Office is the manager control centre. Vacancy publishing and automatic public-form ingestion will be connected to the secure database as the next production step; the links above currently open the approved recruitment portal build.</p>
 </div>
 </section>
 
@@ -2197,7 +2271,7 @@ async function loadSecureCoreData(){
    rtwMethod:r.rtw_method||'',rtwDate:r.rtw_date||'',rtwRef:r.rtw_reference||'',
    references:r.references_note||'',onboarding:r.onboarding_note||'',startDate:r.start_date||'',
    decision:r.decision||'',tags:Array.isArray(r.tags)?r.tags:[],convertedStaffId:r.converted_staff_record_id||null,
-   convertedAt:r.converted_at||null,at:r.created_at
+   convertedAt:r.converted_at||null,applicationType:r.application_type||'Vacancy',vacancyId:r.vacancy_id||'',recruitmentData:(r.recruitment_data&&typeof r.recruitment_data==='object')?r.recruitment_data:{},candidatePortalToken:r.candidate_portal_token||'',retentionReviewDate:r.retention_review_date||'',at:r.created_at
  }));
  localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage));
  CORE_DB_CONNECTED=true;
@@ -3214,7 +3288,25 @@ function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
  staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();renderMenuAdmin();renderReports();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
- if($('recruitList'))$('recruitList').innerHTML=dexManage.recruitment.map((r,i)=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.phone||'no phone')+' · RTW '+(r.rtw||'Not checked')+'</span><br><span class="tiny">'+(r.interviewOutcome||r.stage||'')+(r.decision?' · Decision: '+r.decision:'')+(r.interview?' · '+r.interview:'')+'</span>'+((r.stage==='Hired'||r.decision==='Hired')&&!r.convertedStaffId?'<div class="row"><button class="btn small" onclick="convertApplicantToStaff('+i+')">Create staff card</button></div>':r.convertedStaffId?'<div class="tiny ok">Staff card created</div>':'')+'</div>').join('')||'<span class="muted">No applicants.</span>';
+ if($('recruitList')){
+ const filter=window.__DEXTERS_RECRUIT_FILTER||'all';
+ const rows=dexManage.recruitment.filter(r=>{
+   if(filter==='applied')return ['Application received','Screening','Applied','Shortlisted'].includes(r.stage);
+   if(filter==='interview')return r.stage==='Interview';
+   if(filter==='checks')return ['References','RTW / checks','Conditional Offer','Candidate Portal','Ready to appoint','Offer'].includes(r.stage);
+   if(filter==='hired')return r.stage==='Hired'||r.decision==='Hired';
+   return true;
+ });
+ $('recruitList').innerHTML=rows.map(r=>{
+   const i=dexManage.recruitment.indexOf(r),rd=r.recruitmentData||{},score=rd.totalScore==null?'—':rd.totalScore+'/57 ('+(rd.scorePercent||0)+'%)';
+   return '<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span><span class="badge">'+(r.applicationType||'Vacancy')+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.email||r.phone||'no contact')+' · RTW '+(r.rtw||'Not checked')+'</span><br><span class="tiny">Score '+score+' · '+(rd.recommendation||'Not enough scores yet')+' · Ref 1 '+(rd.ref1||'Not requested')+' · Ref 2 '+(rd.ref2||'Not requested')+'</span><br><span class="tiny">Offer '+(rd.offerStatus||'Not prepared')+' · Docs '+(rd.docsStatus||'Not started')+' · Review '+(rd.secondApproval||'Pending')+'</span>'+((r.stage==='Hired'||r.decision==='Hired')&&!r.convertedStaffId?'<div class="row"><button class="btn small" onclick="convertApplicantToStaff('+i+')">Create staff card</button></div>':r.convertedStaffId?'<div class="tiny ok">Staff card created</div>':'')+'</div>';
+ }).join('')||'<span class="muted">No applicants in this view.</span>';
+ const all=dexManage.recruitment||[];
+ if($('recKpiApplications'))$('recKpiApplications').textContent=all.length;
+ if($('recKpiInterview'))$('recKpiInterview').textContent=all.filter(r=>r.stage==='Interview').length;
+ if($('recKpiChecks'))$('recKpiChecks').textContent=all.filter(r=>['References','RTW / checks','Conditional Offer','Candidate Portal'].includes(r.stage)).length;
+ if($('recKpiReady'))$('recKpiReady').textContent=all.filter(r=>r.stage==='Ready to appoint'||(r.recruitmentData?.secondApproval==='Approved to appoint'&&r.recruitmentData?.docsStatus==='All signed'&&r.rtw==='Checked')).length;
+}
  if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
  if($('rotaList'))$('rotaList').innerHTML=dexManage.rota.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(r=>{
    const i=dexManage.rota.indexOf(r);
@@ -3247,6 +3339,10 @@ window.convertApplicantToStaff=async i=>{
  if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
  const r=dexManage.recruitment?.[i];if(!r)return;
  if(r.rtw!=='Checked')return alert('Right-to-work must be checked before creating a staff record.');
+ const rd=r.recruitmentData||{};
+ if(rd.ref1!=='Received'||rd.ref2!=='Received')return alert('Both references must be received before creating a staff record.');
+ if(rd.docsStatus!=='All signed')return alert('All required candidate documents must be signed before creating a staff record.');
+ if(rd.secondApproval!=='Approved to appoint')return alert('Second manager approval is required before creating a staff record.');
  if(r.convertedStaffId)return alert('A staff card has already been created for this applicant.');
  const role=['Staff','Team Leader','Manager','Super User'].includes(r.role)?r.role:'Staff';
  const id='staff-'+Date.now();
@@ -3277,7 +3373,35 @@ window.convertApplicantToStaff=async i=>{
  }
  addTimeline('Recruitment',r.name+' converted to staff record');saveDexManage();renderStaffDb();
 };
-if($('recAdd'))$('recAdd').onclick=async()=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const name=$('recName').value.trim();if(!name)return alert('Add the applicant name.');if($('recDecision').value==='Hired'&&$('recRTW').value!=='Checked')return alert('Complete the right-to-work check before marking the applicant Hired.');const item={name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value.trim(),applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interviewDate:$('recInterviewDate').value,interviewer:$('recInterviewer').value.trim(),interview:$('recInterview').value.trim(),interviewOutcome:$('recInterviewOutcome').value,score:$('recScore').value.trim(),rtw:$('recRTW').value,rtwMethod:$('recRTWMethod').value,rtwDate:$('recRTWDate').value,rtwRef:$('recRTWRef').value.trim(),references:$('recReferences').value.trim(),onboarding:$('recOnboarding').value.trim(),startDate:$('recStartDate').value,decision:$('recDecision').value,tags:pickedTags('recTags'),at:new Date().toISOString()};if(CORE_DB_CONNECTED){const {data,error}=await SB.from('backoffice_recruitment').insert({applicant_name:item.name,phone:item.phone||null,email:item.email||null,role_applied:item.role||null,applied_date:item.applied||null,stage:item.stage,availability:item.availability||null,interview_date:item.interviewDate||null,interviewer:item.interviewer||null,interview_notes:item.interview||null,interview_outcome:item.interviewOutcome||null,score:item.score||null,rtw_status:item.rtw||null,rtw_method:item.rtwMethod||null,rtw_date:item.rtwDate||null,rtw_reference:item.rtwRef||null,references_note:item.references||null,onboarding_note:item.onboarding||null,start_date:item.startDate||null,decision:item.decision||null,tags:item.tags||[],created_by:SECURE_SESSION.user.id}).select().single();if(error)return alert('Secure recruitment save failed: '+error.message);item.dbId=data.id;}dexManage.recruitment.unshift(item);saveDexManage()};
+if($('recAdd'))$('recAdd').onclick=async()=>{
+ if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
+ const name=$('recName').value.trim();if(!name)return alert('Add the applicant name.');
+ const scoreVal=id=>Math.max(0,Number($(id)?.value||0));
+ const screening=scoreVal('recScreeningScore'),assessment=scoreVal('recAssessmentScore'),interviewScore=scoreVal('recInterviewScore');
+ const anyScore=!!($('recScreeningScore').value||$('recAssessmentScore').value||$('recInterviewScore').value);
+ const total=screening+assessment+interviewScore,pct=anyScore?Math.round((total/57)*100):null;
+ const recommendation=pct==null?'Not enough scores yet':pct>=75?'RECOMMEND HIRE':pct>=60?'CONSIDER / MANAGER REVIEW':'DO NOT RECOMMEND';
+ const rd={screeningScore:screening,assessmentScore:assessment,interviewScore,totalScore:anyScore?total:null,scorePercent:pct,recommendation,ref1:$('recRef1').value,ref2:$('recRef2').value,offerStatus:$('recOfferStatus').value,portalStatus:$('recPortalStatus').value,docsStatus:$('recDocsStatus').value,secondApproval:$('recSecondApproval').value,recordAudio:false,transcriptionOnly:true};
+ if($('recDecision').value==='Hired'){
+   if($('recRTW').value!=='Checked')return alert('Complete the right-to-work check before marking the applicant Hired.');
+   if(rd.ref1!=='Received'||rd.ref2!=='Received')return alert('Both references must be received before marking Hired.');
+   if(rd.docsStatus!=='All signed')return alert('All required candidate documents must be signed before marking Hired.');
+   if(rd.secondApproval!=='Approved to appoint')return alert('Second manager approval is required before marking Hired.');
+ }
+ const item={name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value,applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interviewDate:$('recInterviewDate').value,interviewer:$('recInterviewer').value.trim(),interview:$('recInterview').value.trim(),interviewOutcome:$('recInterviewOutcome').value,score:$('recScore').value.trim(),rtw:$('recRTW').value,rtwMethod:$('recRTWMethod').value,rtwDate:$('recRTWDate').value,rtwRef:$('recRTWRef').value.trim(),references:$('recReferences').value.trim(),onboarding:$('recOnboarding').value.trim(),startDate:$('recStartDate').value,decision:$('recDecision').value,tags:pickedTags('recTags'),applicationType:$('recType').value,vacancyId:$('recVacancy').value.trim(),recruitmentData:rd,at:new Date().toISOString()};
+ if(CORE_DB_CONNECTED){
+   const {data,error}=await SB.from('backoffice_recruitment').insert({
+     applicant_name:item.name,phone:item.phone||null,email:item.email||null,role_applied:item.role||null,applied_date:item.applied||null,stage:item.stage,availability:item.availability||null,
+     interview_date:item.interviewDate||null,interviewer:item.interviewer||null,interview_notes:item.interview||null,interview_outcome:item.interviewOutcome||null,score:item.score||null,
+     rtw_status:item.rtw||null,rtw_method:item.rtwMethod||null,rtw_date:item.rtwDate||null,rtw_reference:item.rtwRef||null,references_note:item.references||null,onboarding_note:item.onboarding||null,
+     start_date:item.startDate||null,decision:item.decision||null,tags:item.tags||[],application_type:item.applicationType,vacancy_id:item.vacancyId||null,recruitment_data:item.recruitmentData,
+     created_by:SECURE_SESSION.user.id
+   }).select().single();
+   if(error)return alert('Secure recruitment save failed: '+error.message);item.dbId=data.id;
+   await appendAuditDb('recruitment',data.id,'Candidate record created',null,{applicant:item.name,stage:item.stage,application_type:item.applicationType,recommendation});
+ }
+ dexManage.recruitment.unshift(item);saveDexManage();renderDexManagement();
+};
 if($('appAdd'))$('appAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader access required.');if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
 if($('rotaAdd'))$('rotaAdd').onclick=async()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return alert('Choose staff and a shift date.');if($('rotaStart').value&&$('rotaEnd').value&&$('rotaStart').value>=$('rotaEnd').value)return alert('Shift finish time must be after the start time.');
  const item={staffId:$('rotaStaff').value,date:$('rotaDate').value,area:$('rotaArea').value.trim(),start:$('rotaStart').value,end:$('rotaEnd').value,status:$('rotaStatus').value,notes:$('rotaNotes').value.trim(),tags:pickedTags('rotaTags'),clockInAt:null,clockOutAt:null,timeAudit:[],createdAt:new Date().toISOString()};
@@ -6796,6 +6920,29 @@ setTimeout(renderManagerLeaveApprovals,1200);
    navigator.clipboard?.writeText(subject+'\n\n'+body);
    e.target.textContent='Copied';setTimeout(()=>e.target.textContent='Copy preview',1200);
   }
+ });
+})();
+</script><script id="dextersRecruitmentUpgrade">
+(function(){
+ function el(id){return document.getElementById(id)}
+ function score(){
+   const ids=['recScreeningScore','recAssessmentScore','recInterviewScore'];
+   if(!ids.some(id=>el(id)?.value)){if(el('recCombinedScore'))el('recCombinedScore').value='';if(el('recRecommendation'))el('recRecommendation').value='Not enough scores yet';return}
+   const a=Math.max(0,Math.min(17,Number(el('recScreeningScore')?.value||0)));
+   const b=Math.max(0,Math.min(15,Number(el('recAssessmentScore')?.value||0)));
+   const d=Math.max(0,Math.min(25,Number(el('recInterviewScore')?.value||0)));
+   const t=a+b+d,p=Math.round(t/57*100);
+   if(el('recCombinedScore'))el('recCombinedScore').value=t+' / 57 ('+p+'%)';
+   if(el('recRecommendation'))el('recRecommendation').value=p>=75?'RECOMMEND HIRE':p>=60?'CONSIDER / MANAGER REVIEW':'DO NOT RECOMMEND';
+ }
+ document.addEventListener('input',e=>{if(['recScreeningScore','recAssessmentScore','recInterviewScore'].includes(e.target?.id))score()});
+ document.addEventListener('click',e=>{
+   const map={recFilterAll:'all',recFilterApplied:'applied',recFilterInterview:'interview',recFilterChecks:'checks',recFilterHired:'hired'};
+   if(map[e.target?.id]){window.__DEXTERS_RECRUIT_FILTER=map[e.target.id];if(typeof renderDexManagement==='function')renderDexManagement()}
+   if(e.target?.id==='recClear'){
+     ['recVacancy','recName','recPhone','recEmail','recApplied','recAvailability','recScreeningScore','recAssessmentScore','recInterviewScore','recCombinedScore','recRecommendation','recInterviewDate','recInterviewer','recInterview','recScore','recRTWDate','recRTWRef','recReferences','recOnboarding','recStartDate'].forEach(id=>{if(el(id))el(id).value=''});
+     if(el('recType'))el('recType').value='Vacancy';if(el('recStage'))el('recStage').value='Application received';if(el('recRTW'))el('recRTW').value='Not checked';if(el('recRef1'))el('recRef1').value='Not requested';if(el('recRef2'))el('recRef2').value='Not requested';if(el('recOfferStatus'))el('recOfferStatus').value='Not prepared';if(el('recPortalStatus'))el('recPortalStatus').value='Not issued';if(el('recDocsStatus'))el('recDocsStatus').value='Not started';if(el('recSecondApproval'))el('recSecondApproval').value='Pending';if(el('recDecision'))el('recDecision').value='Pending';score();
+   }
  });
 })();
 </script></body>
