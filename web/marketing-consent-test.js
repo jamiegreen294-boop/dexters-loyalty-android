@@ -14,7 +14,13 @@
       if(!raw)return null;
       const j=JSON.parse(raw);
       const access_token=j.access_token||j.currentSession?.access_token||j.session?.access_token;
-      const user=j.user||j.currentSession?.user||j.session?.user;
+      let user=j.user||j.currentSession?.user||j.session?.user||null;
+      if(access_token&&!user?.id){
+        try{
+          const payload=JSON.parse(atob(access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+          if(payload?.sub)user={id:payload.sub};
+        }catch(e){}
+      }
       return access_token&&user?.id?{access_token,user}:null;
     }catch(e){return null}
   }
@@ -104,7 +110,7 @@
     try{msg.textContent='Saving…';await saveChoice(yes)}catch(e){msg.textContent=e.message||'Could not save your choice.'}
   }
 
-  function renderPreferenceCard(consent){
+  function renderPreferenceCard(consent,loading=false){
     const account=document.getElementById('accountPage'); if(!account)return;
     let card=document.getElementById('dextersMarketingPrefsCard');
     if(!card){
@@ -112,19 +118,22 @@
       account.appendChild(card);
     }
     const emailOn=!!(consent&&consent.marketing_consent&&consent.email_consent);
-    card.innerHTML='<h2>📧 Marketing Preferences</h2><p>Choose whether Dexter’s may email you offers, rewards, news and promotions.</p><div class="item"><b>Email marketing</b><div class="tiny muted">'+(emailOn?'ON — you can receive marketing emails.':'OFF — you will not receive marketing emails.')+'</div></div><p class="tiny muted">Changing this setting does not affect service messages such as order updates or account security messages.</p><button class="btn primary" id="dextersMarketingEnable">'+(emailOn?'KEEP EMAILS ON':'TURN EMAILS ON')+'</button><button class="btn" id="dextersMarketingDisable" style="margin-top:8px">'+(emailOn?'TURN EMAILS OFF':'KEEP EMAILS OFF')+'</button><div id="dextersMarketingPrefsMsg" class="tiny muted" style="margin-top:8px"></div>';
+    card.innerHTML='<h2>📧 Marketing Preferences</h2><p>Choose whether Dexter’s may email you offers, rewards, news and promotions.</p><div class="item"><b>Email marketing</b><div class="tiny muted">'+(loading?'Checking your current preference…':(emailOn?'ON — you can receive marketing emails.':'OFF — you will not receive marketing emails.'))+'</div></div><p class="tiny muted">Changing this setting does not affect service messages such as order updates or account security messages.</p><button class="btn primary" id="dextersMarketingEnable"'+(loading?' disabled':'')+'>'+(emailOn?'KEEP EMAILS ON':'TURN EMAILS ON')+'</button><button class="btn" id="dextersMarketingDisable" style="margin-top:8px"'+(loading?' disabled':'')+'>'+(emailOn?'TURN EMAILS OFF':'KEEP EMAILS OFF')+'</button><div id="dextersMarketingPrefsMsg" class="tiny muted" style="margin-top:8px"></div>';
     card.querySelector('#dextersMarketingEnable').onclick=()=>choose(true,card.querySelector('#dextersMarketingPrefsMsg'));
     card.querySelector('#dextersMarketingDisable').onclick=()=>choose(false,card.querySelector('#dextersMarketingPrefsMsg'));
   }
 
   async function refresh(){
     if(!authSession()){removePrompt();return}
+    renderPreferenceCard(null,true);
     try{
       const consent=await getConsent();
-      renderPreferenceCard(consent);
+      renderPreferenceCard(consent,false);
       if(!consent)addPrompt(); else removePrompt();
     }catch(e){
-      // Do not show a broken marketing prompt if the consent service is unavailable.
+      renderPreferenceCard(null,false);
+      const msg=document.getElementById('dextersMarketingPrefsMsg');
+      if(msg)msg.textContent='Could not load your current preference. You can still choose a setting below.';
     }
   }
 
@@ -132,7 +141,7 @@
     refresh();
     setTimeout(refresh,400);
     setTimeout(refresh,1400);
-    new MutationObserver(()=>setTimeout(refresh,0)).observe(document.body,{childList:true,subtree:false});
+    new MutationObserver(()=>setTimeout(refresh,0)).observe(document.body,{childList:true,subtree:true});
     window.addEventListener('storage',refresh);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
