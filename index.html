@@ -325,7 +325,37 @@ body.pride-theme{background:#f7f3f8!important}
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
+<style id="dextersMarketingMobileFix">
+#marketing{--mktext:#2f2935;--mkmuted:#6f6677}
+#marketing .pass-pagehead h2{color:#3b3440}
+#marketing .pass-pagehead .muted{color:#736a79}
+#marketing .pill{background:#f2e9fb!important;border:1px solid #c6a8df!important;color:#5a3975!important;font-weight:800}
+#marketing>.notice{background:#fff6e7!important;border:1px solid #e9bd78!important;color:#4a3824!important}
+#marketing>.notice b{color:#2f2418!important}
+#marketing .card{background:#fff!important;color:#332d38!important}
+#marketing .card .muted{color:#756d79!important}
+#marketing .card .big{color:#2f2935!important}
+#marketing .field{color:#443b49!important}
+#marketing input,#marketing textarea{background:#fff!important;color:#2c2630!important;border:1px solid #cfc4d6!important}
+#marketing .item{background:#faf7fc!important;border:1px solid #ddd1e4!important;color:#352e3a!important}
+#marketing .notice{color:#4a3824!important;background:#fff6e7!important;border-color:#e9bd78!important}
+#marketing .grid.four{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important}
+#marketing .grid.four>.card{margin:0!important;min-height:0!important;padding:16px!important}
+#marketing .grid.two{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:14px!important}
+@media(max-width:760px){
+ #marketing{padding:0 22px 28px!important}
+ #marketing .pass-pagehead{display:block!important}
+ #marketing .pass-pagehead .pill{display:inline-block!important;margin-top:10px!important;max-width:100%!important;white-space:normal!important}
+ #marketing .grid.four{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #marketing .grid.four>.card{min-height:112px!important}
+ #marketing .grid.two{grid-template-columns:1fr!important}
+}
+@media(max-width:420px){
+ #marketing .grid.four{grid-template-columns:1fr 1fr!important}
+ #marketing .grid.four>.card{padding:14px!important;min-height:104px!important}
+ #marketing .grid.four .big{font-size:28px!important}
+}
+</style></head>
 <body class="pride-theme">
 <main class="wrap" data-build="2026-09-08-website-pass-37-secure-customer-records">
 <a class="home" href="/">← Home</a>
