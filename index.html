@@ -3616,40 +3616,27 @@ window.openRecruitCandidate=i=>{
 window.convertApplicantToStaff=async i=>{
  if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
  const r=dexManage.recruitment?.[i];if(!r)return;
- if(r.rtw!=='Checked')return alert('Right-to-work must be checked before creating a staff record.');
+ if(r.convertedStaffId)return alert('A staff card has already been created for this applicant.');
  const rd=r.recruitmentData||{};
- if(rd.ref1!=='Received'||rd.ref2!=='Received')return alert('Both references must be received before creating a staff record.');
+ if(r.rtw!=='Checked')return alert('Right-to-work must be checked before creating a staff record.');
+ const ref1=rd.ref1||rd.references?.ref1,ref2=rd.ref2||rd.references?.ref2;
+ if(ref1!=='Received'||ref2!=='Received')return alert('Both references must be received before creating a staff record.');
  if(rd.docsStatus!=='All signed')return alert('All required candidate documents must be signed before creating a staff record.');
  if(rd.secondApproval!=='Approved to appoint')return alert('Second manager approval is required before creating a staff record.');
- if(r.convertedStaffId)return alert('A staff card has already been created for this applicant.');
- const role=['Staff','Team Leader','Manager','Super User'].includes(r.role)?r.role:'Staff';
- const id='staff-'+Date.now();
- const s={id,name:r.name,role,status:'Active',start:r.startDate||new Date().toISOString().slice(0,10),phone:r.phone||'',email:r.email||'',contractType:'Regular hours',contractDays:5,contractHours:0,leaveYearStart:new Date().getFullYear()+'-01-01',holidayWeeks:5.6,bankHolidaysIncluded:true,tags:r.tags||[],permissions:roleDefaultPerms(role),docs:[],absences:[],incidents:[],notes:[],checklists:[],training:{completed:0,total:0,finalScore:null,certifiedAt:null,refresherDue:null},audit:[{at:new Date().toISOString(),action:'Staff record created from recruitment'}]};
- if(r.rtw==='Checked')s.docs.push({category:'Employment & Onboarding',templateId:'right_to_work',type:'Right to Work Check',documentDate:r.rtwDate||new Date().toISOString().slice(0,10),expiry:'',completedBy:r.interviewer||CURRENT_STAFF_ROLE,note:'Recruitment RTW method: '+(r.rtwMethod||'')+(r.rtwRef?' · Reference: '+r.rtwRef:''),formData:{checkDate:r.rtwDate||'',method:r.rtwMethod||'',reference:r.rtwRef||'',checker:r.interviewer||'',outcome:'Checked'},signed:false,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
- staffDb.staff.push(s);staffDb.selected=id;r.convertedStaffId=id;r.stage='Hired';r.decision='Hired';r.convertedAt=new Date().toISOString();localStorage.setItem(STAFFDBKEY,JSON.stringify(staffDb));
- if(CORE_DB_CONNECTED){
-   try{
-     await persistStaffProfileDb(s);
-     const rtwDoc=s.docs?.[0];
-     if(rtwDoc){
-       const {error:docError}=await SB.from('backoffice_staff_documents').insert({
-         staff_record_id:s.id,category:rtwDoc.category,document_type:rtwDoc.type,document_date:rtwDoc.documentDate||null,
-         completed_by:rtwDoc.completedBy||null,acknowledged:false,details:rtwDoc.note||null,
-         document_data:{schemaVersion:2,templateId:rtwDoc.templateId,category:rtwDoc.category,note:rtwDoc.note,formData:rtwDoc.formData||{},signatureData:'',signatureName:'',signedAt:''},
-         created_by:SECURE_SESSION.user.id
-       });
-       if(docError)throw docError;
-     }
-     if(r.dbId){
-       const {error:recError}=await SB.from('backoffice_recruitment').update({
-         stage:'Hired',decision:'Hired',converted_staff_record_id:id,converted_at:new Date().toISOString(),updated_at:new Date().toISOString()
-       }).eq('id',r.dbId);
-       if(recError)throw recError;
-     }
-     await appendAuditDb('staff_profile',id,'Staff record created from recruitment',null,{applicant:r.name,recruitment_id:r.dbId||null});
-   }catch(e){alert('Staff card created locally, but secure recruitment conversion save failed: '+e.message)}
+ if(!CORE_DB_CONNECTED||!r.dbId)return alert('Secure database connection is required before converting a candidate to staff.');
+ if(!confirm('Create the Dexter\'s staff record for '+r.name+'?'))return;
+ try{
+   const {data,error}=await SB.rpc('backoffice_convert_recruitment_to_staff',{p_recruitment_id:r.dbId});
+   if(error)throw error;
+   await loadSecureCoreData();
+   const updated=dexManage.recruitment.find(x=>x.dbId===r.dbId);
+   if(updated){updated.convertedStaffId=data;updated.stage='Hired';updated.decision='Hired';updated.convertedAt=new Date().toISOString()}
+   addTimeline('Recruitment',r.name+' converted to staff record');
+   saveDexManage();renderStaffDb();
+   alert('Staff record created successfully.');
+ }catch(e){
+   alert('Staff record was not created: '+String(e.message||e));
  }
- addTimeline('Recruitment',r.name+' converted to staff record');saveDexManage();renderStaffDb();
 };
 if($('recAdd'))$('recAdd').onclick=async()=>{
  if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
