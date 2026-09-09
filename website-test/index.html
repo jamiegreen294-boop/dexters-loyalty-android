@@ -136,56 +136,103 @@ body.season-valentines:has(#staffPage:not(.hidden)) .wrap{max-width:520px}
 @media(prefers-reduced-motion:reduce){body.season-valentines .season-fx{display:none!important}}
 
 body.season-valentines #seasonBanner{border-radius:45px 45px 18px 18px}body.season-valentines #seasonBanner::before{font-style:italic}body.season-valentines #homePage>.card{border-radius:22px}
+
+/* Website layout v2 — clean restaurant landing page with transparent theme-first panels */
+html{scroll-behavior:smooth}
+body{padding-bottom:0!important;background-attachment:fixed!important}
+.wrap,body.season-halloween .wrap,body.season-christmas .wrap,body.season-valentines .wrap{width:min(100% - 28px,1180px)!important;max-width:1180px!important;padding:0!important}
+.topbar{position:sticky;top:0;z-index:80;margin:0 -14px;padding:14px max(14px,calc((100vw - 1180px)/2));display:flex;align-items:center;justify-content:space-between;gap:18px;background:#06080bbd;border-bottom:1px solid #ffffff1b;backdrop-filter:blur(18px) saturate(130%)}
+.wordmark{font-size:clamp(24px,4vw,34px);font-weight:950;letter-spacing:.08em;color:var(--yellow);text-shadow:0 2px 12px #0008}
+.toplinks{display:flex;gap:18px;align-items:center}.toplinks a{color:#fff;text-decoration:none;font-weight:800;font-size:14px}.toplinks .order-mini{background:var(--yellow);color:#111;padding:10px 15px;border-radius:999px}
+.site-note{font-size:11px;color:#ffffffa0;margin-left:8px}
+#seasonBanner,body.season-halloween #seasonBanner,body.season-christmas #seasonBanner,body.season-valentines #seasonBanner{max-width:none!important;width:100%!important;min-height:clamp(430px,61vw,660px)!important;margin:18px 0 20px!important;border-radius:28px!important;padding:clamp(260px,43vw,470px) clamp(22px,5vw,56px) 38px!important;background-position:center 28%!important;box-shadow:0 22px 55px #0007!important}
+body:not(.season-halloween):not(.season-christmas):not(.season-valentines) #seasonBanner{min-height:500px!important;background:linear-gradient(180deg,#0d142000,#07101edc 76%),radial-gradient(circle at 75% 25%,#33445f,#101720 60%,#070b11)!important;border:1px solid #ffffff22!important}
+#seasonBanner .hero-copy{display:none}
+#seasonBanner::before{font-size:clamp(44px,7vw,78px)!important;max-width:720px!important;line-height:.98!important}
+.hero-overlay{margin-top:-165px;position:relative;z-index:5;padding:0 clamp(18px,4vw,44px) 34px;color:#fff;max-width:800px}
+.hero-overlay h1{font-size:clamp(38px,6vw,70px);line-height:.98;margin:0 0 14px;letter-spacing:-.045em;text-shadow:0 4px 20px #000}
+.hero-overlay p{font-size:clamp(16px,2.2vw,21px);line-height:1.45;margin:0 0 22px;color:#fff;text-shadow:0 2px 12px #000}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}.hero-actions .btn{width:auto;min-width:170px}
+.theme-test{justify-content:center;margin:8px 0 26px}.theme-test a{backdrop-filter:blur(12px);background:#05070a66;border-color:#ffffff2f}
+#homePage,body.season-halloween #homePage,body.season-christmas #homePage,body.season-valentines #homePage{display:block!important}
+.feature-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin:0 0 22px}
+.feature{grid-column:span 6;min-height:270px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden}
+.feature.wide{grid-column:span 12;min-height:310px}
+.card,.feature,body.season-halloween :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card,body.season-christmas :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card,body.season-valentines :is(#homePage,#qrPage,#spinPage,#menuPage,#accountPage,#authView) .card{background:linear-gradient(180deg,#ffffff08,#05070a88)!important;border:1px solid #ffffff32!important;border-radius:24px!important;box-shadow:0 18px 38px #0004!important;backdrop-filter:blur(9px) saturate(115%)!important;color:#fff!important}
+.feature::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,#020305d9 100%);z-index:0;pointer-events:none}
+.feature>*{position:relative;z-index:1}
+.feature h2{font-size:clamp(25px,3vw,38px)!important;margin:0 0 8px!important;color:#fff!important}
+.feature p{font-size:16px!important;color:#ffffffdf!important;max-width:600px}
+.feature .btn{width:auto;align-self:flex-start;min-width:150px}
+.partner{display:grid;grid-template-columns:1.2fr .8fr;align-items:center;gap:28px;padding:clamp(24px,5vw,52px)!important;margin:20px 0 28px!important}
+.partner-badge{font-weight:950;font-size:clamp(30px,4vw,54px);line-height:1.02}.partner-badge span{display:block;color:var(--yellow)}
+.partner p{font-size:17px!important;line-height:1.6}
+.quicklinks{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}.quicklinks a{padding:18px;border-radius:18px;text-decoration:none;color:#fff;text-align:center;font-weight:850;background:#06080a75;border:1px solid #ffffff25;backdrop-filter:blur(10px)}
+.footer{margin-top:30px;padding:30px 8px 45px;border-top:1px solid #ffffff22;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:#ffffffaf;font-size:13px}.footer a{color:#fff}
+.nav{display:none!important}
+@media(max-width:760px){.toplinks a:not(.order-mini){display:none}.site-note{display:none}.feature,.feature.wide{grid-column:span 12;min-height:235px}.partner{grid-template-columns:1fr}.quicklinks{grid-template-columns:repeat(2,1fr)}#seasonBanner,body.season-halloween #seasonBanner,body.season-christmas #seasonBanner,body.season-valentines #seasonBanner{min-height:500px!important;padding-top:310px!important}.hero-overlay{margin-top:-190px;padding-bottom:30px}.hero-actions .btn{flex:1 1 150px}}
+
 </style>
 </head>
 <body>
+<header class="topbar">
+  <div><span class="wordmark">DEXTER’S</span><span class="site-note">website test</span></div>
+  <nav class="toplinks"><a href="#menu">Menu</a><a href="#loyalty">Loyalty</a><a href="#info">Info</a><a class="order-mini" href="https://app.dextersspot.co.uk/collection-order-test.html">Order now</a></nav>
+</header>
 <div class="wrap">
-  <header class="brand">
-    <div><strong>DEXTER’S</strong><div><small>Website test — not live</small></div></div>
-  </header>
-
-  <div id="seasonBanner"><span class="hero-copy">The same seasonal presentation layer used by the Dexter’s Loyalty App.</span></div>
+  <div id="seasonBanner"><span class="hero-copy">Dexter’s seasonal theme</span></div>
+  <section class="hero-overlay">
+    <h1>Proper food. Dexter’s style.</h1>
+    <p>Order for collection, explore the menu, earn rewards and keep up with everything happening at Dexter’s.</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="https://app.dextersspot.co.uk/collection-order-test.html">Order now</a>
+      <a class="btn secondary" href="https://app.dextersspot.co.uk/">Open loyalty app</a>
+    </div>
+  </section>
 
   <div class="theme-test" aria-label="Theme test controls">
-    <a href="?theme=default">Normal</a>
-    <a href="?theme=halloween">Halloween</a>
-    <a href="?theme=christmas">Christmas</a>
-    <a href="?theme=valentines">Valentine’s</a>
-    <a href="./">Use Loyalty App setting</a>
+    <a href="?theme=default">Normal</a><a href="?theme=halloween">Halloween</a><a href="?theme=christmas">Christmas</a><a href="?theme=valentines">Valentine’s</a><a href="./">Use app setting</a>
   </div>
 
   <main id="homePage">
-    <section class="card">
-      <div class="big">Welcome to Dexter’s</div>
-      <p>Everything Dexter’s in one place — menu, collection ordering, loyalty, catering and customer information.</p>
-      <a class="btn primary" href="https://app.dextersspot.co.uk/">Open Dexter’s Loyalty App</a>
+    <section class="feature-grid">
+      <article id="menu" class="card feature wide">
+        <h2>Menu & collection</h2>
+        <p>Browse the Dexter’s menu and order ahead for collection when ordering is open.</p>
+        <a class="btn primary" href="https://app.dextersspot.co.uk/collection-order-test.html">Start an order</a>
+      </article>
+
+      <article id="loyalty" class="card feature">
+        <h2>Dexter’s Loyalty</h2>
+        <p>Points, rewards, challenges, offers and app-only prizes in one place.</p>
+        <a class="btn secondary" href="https://app.dextersspot.co.uk/">Open loyalty</a>
+      </article>
+
+      <article class="card feature">
+        <h2>Catering</h2>
+        <p>Planning food for a group, meeting or event? Explore Dexter’s catering.</p>
+        <a class="btn secondary" href="https://app.dextersspot.co.uk/catering.html">View catering</a>
+      </article>
     </section>
 
-    <section class="card">
-      <h2>🍽️ Menu & Collection</h2>
-      <p>Browse the current Dexter’s menu and order for collection when ordering is open.</p>
-      <a class="btn primary" href="https://app.dextersspot.co.uk/collection-order-test.html">Order for Collection</a>
+    <section class="card partner">
+      <div class="partner-badge">Fighting food waste <span>with Too Good To Go</span></div>
+      <div><p>Dexter’s is proud to be partnered with Too Good To Go, helping good food find a home instead of going to waste.</p></div>
     </section>
 
-    <div class="grid">
-      <section class="card"><h2>🎁 Loyalty</h2><p>Points, rewards, challenges and Dexter’s customer offers.</p><a class="btn secondary" href="https://app.dextersspot.co.uk/">Open Loyalty</a></section>
-      <section class="card"><h2>🥪 Catering</h2><p>View Dexter’s catering and collection options.</p><a class="btn secondary" href="https://app.dextersspot.co.uk/catering.html">Catering</a></section>
-      <section class="card"><h2>ℹ️ Allergens</h2><p>Customer allergen and ingredient information.</p><a class="btn secondary" href="https://app.dextersspot.co.uk/allergens.html">Allergens</a></section>
-      <section class="card"><h2>💼 Jobs at Dexter’s</h2><p>See current vacancies and recruitment information.</p><a class="btn secondary" href="https://backoffice.dextersspot.co.uk/">Jobs</a></section>
-    </div>
-
-    <section class="card">
-      <h2>About Dexter’s</h2>
-      <p>This is the first website test shell. The seasonal visual system is sourced from the current Loyalty App production build rather than recreated.</p>
+    <section id="info" class="quicklinks">
+      <a href="https://app.dextersspot.co.uk/allergens.html">Allergens</a>
+      <a href="https://backoffice.dextersspot.co.uk/jobs.html">Jobs at Dexter’s</a>
+      <a href="https://app.dextersspot.co.uk/catering.html">Catering</a>
+      <a href="https://app.dextersspot.co.uk/">Customer app</a>
     </section>
   </main>
+
+  <footer class="footer">
+    <div><strong>DEXTER’S</strong><br>Website preview — not the live public website.</div>
+    <div><a href="https://app.dextersspot.co.uk/privacy.html">Privacy</a> · <a href="https://app.dextersspot.co.uk/cookie-policy.html">Cookies</a> · <a href="https://app.dextersspot.co.uk/terms.html">Terms</a></div>
+  </footer>
 </div>
-<nav class="nav">
-  <a class="active" href="#">Home</a>
-  <a href="https://app.dextersspot.co.uk/collection-order-test.html">Order</a>
-  <a href="https://app.dextersspot.co.uk/">Loyalty</a>
-  <a href="https://app.dextersspot.co.uk/allergens.html">Info</a>
-</nav>
 <script>
 (function(){
   const allowed=['default','halloween','christmas','valentines'];
