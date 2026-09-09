@@ -967,6 +967,13 @@ body.pride-theme{background:#f7f3f8!important}
    <div class="flowbody">
     <div class="grid"><div class="field">Offer status<select id="recOfferStatus"><option>Not prepared</option><option>Draft</option><option>Conditional offer sent</option><option>Accepted</option><option>Declined</option></select></div><div class="field">Candidate portal<select id="recPortalStatus"><option>Not issued</option><option>Issued</option><option>Opened</option><option>Completed</option></select></div></div>
     <div class="grid"><div class="field">Required documents<select id="recDocsStatus"><option>Not started</option><option>Issued</option><option>Part signed</option><option>All signed</option></select></div><div class="field">Second manager review<select id="recSecondApproval"><option>Pending</option><option>Approved to appoint</option><option>Do not appoint</option></select></div></div>
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin:8px 0">
+      <button class="btn alt small" type="button" id="recIssuePack">Issue candidate pack</button>
+      <button class="btn alt small" type="button" id="recIssueContract">Issue contract after checks</button>
+      <button class="btn alt small" type="button" id="recOpenPortal">Open candidate portal</button>
+    </div>
+    <div id="recDocumentStatus" class="tiny muted">Open an existing candidate to manage portal documents.</div>
+    <div class="notice" style="margin-top:8px"><b>Controlled test templates:</b> the current candidate pack is suitable for system testing. The Employment Contract / Written Particulars template remains clearly marked as requiring Dexter's final legal/terms approval before real employment use.</div>
     <div class="field">Offer / onboarding actions<textarea id="recOnboarding" rows="4"></textarea></div>
     <div class="grid"><div class="field">Proposed start date<input id="recStartDate" type="date"></div><div class="field">Final decision<select id="recDecision"><option>Pending</option><option>Conditional Offer</option><option>Offer accepted</option><option>Hired</option><option>Unsuccessful</option></select></div></div>
    </div>
@@ -982,7 +989,7 @@ body.pride-theme{background:#f7f3f8!important}
 
 <div class="card" style="margin-top:14px">
  <h2>Recruitment portal connection</h2>
- <p class="muted">The public portal remains the customer-facing application route. The Back Office is the manager control centre. Vacancy publishing and automatic public-form ingestion will be connected to the secure database as the next production step; the links above currently open the approved recruitment portal build.</p>
+ <p class="muted">The public application form now writes directly to the secure Recruitment database. New applications appear in this Back Office. Candidate portals use individual expiring tokens, and candidate documents/signatures are stored against the same recruitment record.</p>
 </div>
 </section>
 
@@ -3611,6 +3618,9 @@ window.openRecruitCandidate=i=>{
  set('recOfferStatus',rd.offerStatus||'Not prepared');set('recPortalStatus',rd.portalStatus||'Not issued');set('recDocsStatus',rd.docsStatus||'Not started');set('recSecondApproval',rd.secondApproval||'Pending');
  set('recOnboarding',r.onboarding);set('recStartDate',r.startDate);set('recDecision',r.decision||'Pending');
  if($('recEditStatus'))$('recEditStatus').innerHTML='<b>Editing:</b> '+r.name+(r.dbId?' · secure database record':'');
+ const docs=rd.documents||{},required=['offer','job','rota','privacy','starter','contract'];
+ const signed=required.filter(k=>docs[k]?.signed).length,issued=required.filter(k=>docs[k]).length;
+ if($('recDocumentStatus'))$('recDocumentStatus').innerHTML='<b>Candidate documents:</b> '+issued+' / 6 issued · '+signed+' / 6 signed'+(r.candidatePortalToken?' · secure portal available':' · portal token not available');
  window.scrollTo({top:$('recruitment').offsetTop,behavior:'smooth'});
 };
 window.convertApplicantToStaff=async i=>{
@@ -3633,7 +3643,16 @@ window.convertApplicantToStaff=async i=>{
    if(updated){updated.convertedStaffId=data;updated.stage='Hired';updated.decision='Hired';updated.convertedAt=new Date().toISOString()}
    addTimeline('Recruitment',r.name+' converted to staff record');
    saveDexManage();renderStaffDb();
-   alert('Staff record created successfully.');
+   let loginMessage='Staff record created successfully. Signed recruitment documents were transferred to the staff file.';
+   if(r.email&&confirm('Staff record created. Create the Staff App / Back Office login for '+r.name+' now?')){
+     try{
+       const account=await secureFunction('create_staff',{email:r.email,name:r.name,role:'Staff',staff_record_id:data});
+       loginMessage+='\n\nStaff login created.\nEmail: '+r.email+'\nTemporary password: '+account.temporary_password+'\nThey must change this password on first sign-in.';
+     }catch(loginErr){
+       loginMessage+='\n\nThe staff record is safe, but the login was not created: '+String(loginErr.message||loginErr)+'. You can create/reset the login from Staff Database / Security.';
+     }
+   }
+   alert(loginMessage);
  }catch(e){
    alert('Staff record was not created: '+String(e.message||e));
  }
@@ -3668,6 +3687,29 @@ if($('recAdd'))$('recAdd').onclick=async()=>{
  }
  if(existing){const idx=dexManage.recruitment.indexOf(existing);dexManage.recruitment[idx]=item}else dexManage.recruitment.unshift(item);
  saveDexManage();renderDexManagement();if($('recEditStatus'))$('recEditStatus').innerHTML='<b>Saved:</b> '+item.name;
+};
+if($('recIssuePack'))$('recIssuePack').onclick=async()=>{
+ if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
+ const id=$('recSelectedId')?.value;if(!id)return alert('Open and save a candidate first.');
+ if(!confirm('Issue the controlled Dexter\'s candidate test pack to this candidate portal?'))return;
+ const {data,error}=await SB.rpc('backoffice_recruitment_issue_candidate_pack',{p_recruitment_id:id});
+ if(error)return alert('Candidate pack was not issued: '+error.message);
+ await loadSecureCoreData();const r=dexManage.recruitment.find(x=>x.dbId===id);if(r)openRecruitCandidate(dexManage.recruitment.indexOf(r));
+ alert('Candidate pack issued to the secure candidate portal.');
+};
+if($('recIssueContract'))$('recIssueContract').onclick=async()=>{
+ if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
+ const id=$('recSelectedId')?.value;if(!id)return alert('Open and save a candidate first.');
+ if(!confirm('Issue the controlled test Employment Contract / Written Particulars snapshot? Right to Work and both references must already be complete.'))return;
+ const {data,error}=await SB.rpc('backoffice_recruitment_issue_contract',{p_recruitment_id:id});
+ if(error)return alert('Contract was not issued: '+error.message);
+ await loadSecureCoreData();const r=dexManage.recruitment.find(x=>x.dbId===id);if(r)openRecruitCandidate(dexManage.recruitment.indexOf(r));
+ alert('Contract snapshot issued. It remains a controlled TEST template until Dexter\'s final legal terms are approved.');
+};
+if($('recOpenPortal'))$('recOpenPortal').onclick=()=>{
+ const id=$('recSelectedId')?.value;if(!id)return alert('Open a candidate first.');
+ const r=dexManage.recruitment.find(x=>x.dbId===id);if(!r?.candidatePortalToken)return alert('No candidate portal token is available for this record.');
+ window.open('https://jamiegreen294-boop.github.io/dexters-recruitment-test/candidate-portal.html?token='+encodeURIComponent(r.candidatePortalToken),'_blank','noopener');
 };
 if($('appAdd'))$('appAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader access required.');if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
 if($('rotaAdd'))$('rotaAdd').onclick=async()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return alert('Choose staff and a shift date.');if($('rotaStart').value&&$('rotaEnd').value&&$('rotaStart').value>=$('rotaEnd').value)return alert('Shift finish time must be after the start time.');
