@@ -1,0 +1,75 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Apply to Dexter's TEST</title><style>
+:root{--bg:#f4f2ed;--ink:#171717;--line:#ddd7cd;--gold:#d9b14c;--ok:#e8f5ec;--warn:#fff5d8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.45}header{background:#101010;color:#fff;border-bottom:4px solid var(--gold)}.head{max-width:1100px;margin:auto;padding:18px;display:flex;gap:18px;align-items:center}.brandlogo{width:150px;max-height:92px;object-fit:contain}.wrap{max-width:1000px;margin:20px auto;padding:0 14px 60px}.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{display:inline-block;border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer;text-decoration:none}.primary{background:#111;color:#fff}.secondary{background:#e9e4da;color:#111}.good{background:var(--ok);border:1px solid #b9d5c2;border-radius:10px;padding:12px}.warn{background:var(--warn);border:1px solid #e4c465;border-radius:10px;padding:12px}.legal{background:#faf9f6;border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0}.check{display:flex;gap:9px;align-items:flex-start;margin:12px 0}.check input{width:auto;margin-top:4px}label{display:block;font-weight:700;margin:11px 0 5px}input,select,textarea{width:100%;padding:10px;border:1px solid #bdb7ad;border-radius:8px;font:inherit;background:#fff}textarea{min-height:90px}@media(max-width:760px){.grid{grid-template-columns:1fr}}
+</style><script src="recruitment-store.js"></script></head><body>
+<header><div class="head"><img class="brandlogo" src="https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo" alt="Dexters Sit-in and Take Away logo"><div><h1>Apply to work at Dexter's</h1><div>Public recruitment application • TEST</div></div></div></header>
+<div class="wrap">
+<div class="warn"><b>TEST ONLY.</b> Do not enter real personal information into this public demo.</div>
+<div class="panel"><div id="applicationType" class="good"></div></div>
+<div class="panel"><h2>Application form</h2>
+<div class="grid"><div><label>Full legal name</label><input id="name" value="Alex Morgan"></div><div><label>Preferred name</label><input id="preferred" value="Alex"></div></div>
+<div class="grid"><div><label>Email</label><input id="email" value="alex.morgan@example.test"></div><div><label>Mobile</label><input id="mobile" value="07123 456789"></div></div>
+<label>Address</label><input id="address" value="24 Example Street, Glasgow, G51 1AA">
+<div class="grid"><div><label>Date of birth</label><input id="dob" type="date" value="2007-11-18"></div><div><label>Role</label><select id="role"><option>Dexter's Café All-Rounder / Barista</option><option>Dexter's Café Assistant / Barista</option><option>Dexter's Front of House / Barista</option><option>Dexter's Kitchen Assistant / Kitchen Porter</option><option>Dexter's Food Preparation Assistant</option><option>Dexter's Café Supervisor</option><option>Dexter's Assistant Manager</option><option>Dexter's Café Manager</option></select></div></div>
+<label>Preferred hours</label><select id="hours"><option>16 hours/week</option><option selected>20 hours/week</option><option>24 hours/week</option><option>36 hours/week</option><option>40 hours/week</option></select>
+<label>Available start date</label><input id="start" type="date" value="2026-09-21">
+<label>Shift availability</label><textarea id="availability">Available Mon–Fri AM/back, Saturday AM/back and Sunday AM.</textarea>
+<label>Employment history</label><textarea id="employmentHistory">Example Café Glasgow — Café Assistant — March 2025 to August 2026.</textarea>
+<label>Employment gaps / explanation</label><textarea id="gaps">None.</textarea>
+<label>Relevant training / qualifications</label><textarea id="training">Food hygiene awareness; customer service experience.</textarea>
+<label>Why would you like to work at Dexter's?</label><textarea id="why">I enjoy fast-paced café work, customer service and working across different duties.</textarea>
+<label>Tell us about your relevant experience</label><textarea id="experience">Previous café experience with till work, drinks, food preparation, cleaning and customer service.</textarea>
+<h3>Role-related questions</h3>
+<label>A customer says their order is wrong and they are in a hurry. What would you do?</label><textarea id="answerCustomer">Listen, apologise, check the order and resolve it quickly, asking a supervisor if needed.</textarea>
+<label>A customer has a severe allergy and you are not sure about a sauce. What would you do?</label><textarea id="answerAllergen">I would stop and never guess, check allergen information and ask a manager before serving anything.</textarea>
+<label>The shop is very busy and a colleague is falling behind. What would you do?</label><textarea id="answerTeamwork">Communicate, help prioritise urgent work and support the team while keeping calm and following safety procedures.</textarea>
+
+<div class="legal"><h3>Recruitment privacy</h3><p>Dexter's uses the information you provide to administer your application, assess suitability, communicate with you, complete lawful recruitment checks and, if you are appointed, create your staff record. Access should be limited to people who need the information for recruitment or employment administration.</p><p>If this is a speculative application and there is no current vacancy, Dexter's may keep the application for a limited review period for suitable future opportunities. You can ask about, correct or request deletion of recruitment information subject to applicable legal obligations. Recruitment privacy contact: <b>recruitment@dextersspot.co.uk</b>.</p></div>
+
+<div class="legal"><h3>Fair recruitment and Right to Work</h3><p>Dexter's assesses candidates against job-related criteria and aims to provide reasonable adjustments during recruitment where needed. Any offer of employment is subject to the appropriate Right to Work check. Nationality itself is not used as a selection criterion.</p></div>
+
+<div class="check"><input id="accuracy" type="checkbox" checked><span>I confirm the information supplied is accurate to the best of my knowledge.</span></div>
+<div class="check"><input id="privacyAck" type="checkbox"><span>I have read the recruitment privacy information above and understand how my application information will be used.</span></div>
+<div><label>Do you need a reasonable adjustment for the recruitment process?</label><select id="adjustment"><option value="">Prefer not to say / none requested</option><option>Yes — please contact me</option></select></div>
+<div style="margin-top:14px"><button class="btn primary" onclick="submitApp()">Submit test application</button> <a class="btn secondary" href="jobs.html">Back to Jobs at Dexter's</a></div>
+<div id="status" class="good" style="margin-top:12px">Ready to submit the dummy application.</div>
+</div></div>
+<script>
+const API='https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/recruitment-public-api';
+const params=new URLSearchParams(location.search);
+const general=params.get('general')==='1';
+const r0=DexRecruit.load();
+if(general||r0.vacancy.status!=='Open'){
+ applicationType.innerHTML='<b>General / speculative application.</b> There is no active vacancy attached to this application. You can still apply and Dexter\'s may review your details for suitable future opportunities during the stated retention period.';
+}else{
+ applicationType.innerHTML='<b>Applying for:</b> '+r0.vacancy.title+' • '+r0.vacancy.hours+' • '+r0.vacancy.pay+' • Closing '+r0.vacancy.closeDate;
+ role.value=r0.vacancy.title;
+}
+async function submitApp(){
+ if(!accuracy.checked||!privacyAck.checked){
+   status.innerHTML='<b>Please confirm accuracy and acknowledge the recruitment privacy information before submitting.</b>';return;
+ }
+ const btn=document.querySelector('button[onclick="submitApp()"]');
+ btn.disabled=true;status.textContent='Submitting securely…';
+ const isGeneral=general||r0.vacancy.status!=='Open';
+ const payload={
+   action:'submit',website:'',
+   applicationType:isGeneral?'Speculative':'Vacancy',
+   vacancyId:isGeneral?null:r0.vacancy.id,
+   name:name.value.trim(),preferred:preferred.value.trim(),email:email.value.trim(),mobile:mobile.value.trim(),
+   address:address.value.trim(),dob:dob.value,role:role.value,hours:hours.value,start:start.value,
+   availability:availability.value,employmentHistory:employmentHistory.value,gaps:gaps.value,training:training.value,
+   why:why.value,experience:experience.value,
+   answers:{customer:answerCustomer.value,allergen:answerAllergen.value,teamwork:answerTeamwork.value},
+   reasonableAdjustment:adjustment.value,privacyAcknowledged:true,accuracyConfirmed:true
+ };
+ try{
+   const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+   const data=await res.json();
+   if(!res.ok||!data.ok)throw new Error(data.error||'Application could not be submitted.');
+   status.innerHTML='<b>✓ APPLICATION SUBMITTED SECURELY.</b><br>Recruitment reference <b>'+data.reference+'</b>.<br>Your application is now in Dexter\'s Back Office Recruitment.<br><a class="btn secondary" style="margin-top:10px" href="'+data.portalUrl+'">Open your candidate portal</a>';
+ }catch(e){
+   status.innerHTML='<b>Application was not submitted.</b> '+String(e.message||e);
+ }finally{btn.disabled=false}
+}
+</script></body></html>
