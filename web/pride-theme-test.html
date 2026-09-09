@@ -2,113 +2,133 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dexter's Pride Theme Test</title>
 <style>
 :root{
-  --ink:#101114;
-  --muted:#64676f;
-  --card:rgba(255,255,255,.92);
-  --line:rgba(16,17,20,.10);
-  --shadow:0 18px 45px rgba(16,17,20,.12);
-  --red:#e40303;
-  --orange:#ff8c00;
-  --yellow:#ffed00;
-  --green:#008026;
-  --blue:#004dff;
-  --violet:#750787;
+  --bg:#08090c;--panel:#15171c;--panel2:#0f1116;--text:#fff8f4;--muted:#c8c3c0;
+  --r:#e40303;--o:#ff8c00;--y:#ffed00;--g:#008026;--b:#004dff;--v:#750787;
 }
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f7f8;color:var(--ink)}
-body{
-  background:
-    radial-gradient(circle at 8% 5%, rgba(228,3,3,.12), transparent 26%),
-    radial-gradient(circle at 92% 12%, rgba(117,7,135,.12), transparent 26%),
-    radial-gradient(circle at 82% 88%, rgba(0,77,255,.10), transparent 30%),
-    linear-gradient(180deg,#fff 0%,#f5f5f7 100%);
-}
-.pride-bar{height:7px;background:linear-gradient(90deg,var(--red) 0 16.66%,var(--orange) 16.66% 33.32%,var(--yellow) 33.32% 49.98%,var(--green) 49.98% 66.64%,var(--blue) 66.64% 83.3%,var(--violet) 83.3% 100%)}
-.shell{width:min(430px,100%);min-height:100vh;margin:0 auto;background:rgba(255,255,255,.72);backdrop-filter:blur(18px);box-shadow:0 0 70px rgba(0,0,0,.08);position:relative;overflow:hidden}
-.header{padding:20px 20px 14px;position:relative}
-.brand{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.logo{display:flex;align-items:center;gap:12px}
-.mark{width:48px;height:48px;border-radius:16px;background:#111;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:900;box-shadow:0 10px 24px rgba(0,0,0,.16)}
-.logo h1{font-size:22px;line-height:1;margin:0}
-.logo p{margin:5px 0 0;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
-.badge{font-size:11px;font-weight:800;padding:8px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 20px rgba(0,0,0,.06)}
-.hero{margin:8px 16px 16px;border-radius:26px;overflow:hidden;position:relative;background:#111;color:#fff;box-shadow:var(--shadow)}
+html,body{margin:0;background:#000;color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{min-height:100vh;background:
+radial-gradient(circle at 12% 10%,#7b1028 0 8%,transparent 28%),
+radial-gradient(circle at 88% 6%,#123c8f 0 8%,transparent 30%),
+linear-gradient(180deg,#08090c,#050608 70%,#020203)}
+.app{max-width:540px;margin:auto;min-height:100vh;position:relative;overflow:hidden;padding-bottom:84px}
+.top{height:86px;display:flex;align-items:center;justify-content:center;padding:10px 18px 6px;position:relative;background:linear-gradient(180deg,#08090cf2,#08090ccf);border-bottom:1px solid #ffffff13}
+.menu{position:absolute;left:18px;top:30px;font-size:28px;color:#fff}
+.logo{text-align:center;line-height:1}
+.logo .dex{font:700 40px/1 "Brush Script MT","Segoe Script",cursive;letter-spacing:-1px}
+.logo .sub{font-size:11px;letter-spacing:.28em;font-weight:800;margin-top:6px}
+.top .right{position:absolute;right:18px;top:28px;display:flex;gap:12px;font-size:23px}
+.hero{margin:0 16px 14px;min-height:322px;border-radius:0 0 28px 28px;overflow:hidden;position:relative;border:1px solid #ffffff12;box-shadow:0 20px 50px #0008;background:
+linear-gradient(180deg,#02030800 12%,#05070b30 38%,#05070bd8 100%),
+radial-gradient(circle at 50% 34%,#ffcf4d 0 2%,#ff3a00 10%,#5d1520 28%,#18204b 48%,#07090d 72%);}
 .hero:before{content:"";position:absolute;inset:0;background:
-  linear-gradient(120deg,rgba(228,3,3,.75),rgba(255,140,0,.45) 20%,rgba(255,237,0,.30) 37%,rgba(0,128,38,.34) 54%,rgba(0,77,255,.46) 73%,rgba(117,7,135,.70));
-  mix-blend-mode:screen;opacity:.78}
-.hero:after{content:"";position:absolute;inset:-30% -10%;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.25) 50%,transparent 65%);transform:translateX(-55%);animation:shine 7s ease-in-out infinite}
-@keyframes shine{0%,60%{transform:translateX(-55%)}85%,100%{transform:translateX(55%)}}
-.hero-inner{position:relative;z-index:2;padding:28px 24px 26px}
-.kicker{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;opacity:.9}
-.hero h2{font-size:31px;line-height:1.02;margin:9px 0 9px;max-width:300px}
-.hero p{margin:0;max-width:310px;font-size:14px;line-height:1.5;color:rgba(255,255,255,.87)}
-.hero .flag{margin-top:18px;height:5px;border-radius:999px;background:linear-gradient(90deg,var(--red),var(--orange),var(--yellow),var(--green),var(--blue),var(--violet));box-shadow:0 0 22px rgba(255,255,255,.25)}
-.section{padding:0 16px 18px}
-.section-head{display:flex;align-items:center;justify-content:space-between;margin:8px 4px 12px}
-.section-head h3{margin:0;font-size:16px}
-.section-head span{font-size:12px;color:var(--muted);font-weight:700}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;min-height:126px;box-shadow:0 12px 28px rgba(16,17,20,.07)}
-.card:before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--red),var(--orange),var(--yellow),var(--green),var(--blue),var(--violet))}
-.icon{width:40px;height:40px;border-radius:13px;background:#111;color:#fff;display:grid;place-items:center;font-size:19px;margin-bottom:14px}
-.card h4{font-size:15px;margin:0 0 5px}
-.card p{font-size:12px;line-height:1.4;color:var(--muted);margin:0}
-.points{margin:0 16px 16px;padding:18px;border-radius:22px;background:#fff;border:1px solid var(--line);box-shadow:0 12px 28px rgba(16,17,20,.06);display:flex;align-items:center;justify-content:space-between}
-.points strong{display:block;font-size:24px}
-.points small{color:var(--muted);font-weight:600}
-.cta{margin:0 16px 24px;border:none;width:calc(100% - 32px);padding:16px 20px;border-radius:18px;background:#111;color:#fff;font-weight:900;font-size:15px;box-shadow:0 14px 28px rgba(0,0,0,.18);position:relative;overflow:hidden}
-.cta:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,var(--red),var(--orange),var(--yellow),var(--green),var(--blue),var(--violet))}
-.note{padding:0 20px 26px;text-align:center;font-size:11px;color:#7a7d84;line-height:1.45}
-.spark{position:absolute;width:120px;height:120px;border-radius:50%;filter:blur(28px);opacity:.20;pointer-events:none}
-.s1{background:#ff8c00;top:155px;left:-60px}
-.s2{background:#004dff;top:330px;right:-70px}
-@media (prefers-reduced-motion:reduce){.hero:after{animation:none}}
+repeating-linear-gradient(0deg,transparent 0 23px,#ffffff08 24px 25px),
+repeating-linear-gradient(90deg,transparent 0 44px,#ffffff05 45px 47px);mix-blend-mode:screen;opacity:.75}
+.hero:after{content:"";position:absolute;left:-10%;right:-10%;bottom:0;height:92px;background:
+linear-gradient(170deg,transparent 0 34%,var(--r) 35% 42%,var(--o) 42% 49%,var(--y) 49% 56%,var(--g) 56% 63%,var(--b) 63% 70%,var(--v) 70% 77%,transparent 78%);
+filter:drop-shadow(0 -2px 6px #0008)}
+.hero-copy{position:absolute;z-index:3;left:28px;right:28px;top:34px}
+.neon{font:700 42px/1.03 Georgia,serif;font-style:italic;text-shadow:
+0 0 8px #fff,0 0 18px #ff4d9d,0 0 30px #3be0ff;color:#fff;margin:0;max-width:300px}
+.hero-note{position:absolute;z-index:3;right:28px;top:82px;max-width:165px;text-align:right;font:600 18px/1.25 "Segoe Script",cursive;color:#fff7f4;text-shadow:0 3px 10px #000}
+.pride-label{position:absolute;z-index:3;left:28px;bottom:46px;font-size:14px;font-weight:900;letter-spacing:.2em}
+.pride-label span{display:block;font-size:12px;letter-spacing:.16em;color:#ffd89c;margin-top:5px}
+.dots{position:absolute;z-index:4;bottom:16px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:6px;color:#ffffff70}
+.dots b{color:#fff}
+.points{margin:0 16px 14px;padding:20px;border-radius:24px;border:1px solid #ffffff16;background:
+linear-gradient(120deg,#2a2347,#16242c 45%,#3a261e 75%,#3b1b28);box-shadow:0 14px 34px #0007;position:relative;overflow:hidden}
+.points:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--r),var(--o),var(--y),var(--g),var(--b),var(--v))}
+.points-row{display:flex;justify-content:space-between;align-items:end}
+.points small{display:block;color:#ddd6d2;margin-bottom:5px}
+.points strong{font-size:34px}
+.points .reward{text-align:right}
+.stamps{display:grid;grid-template-columns:repeat(9,1fr);gap:7px;margin-top:18px}
+.stamp{aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:17px;font-weight:900;background:#090a0d;border:1px solid #ffffff24;color:#777}
+.stamp.on{color:#071009;background:conic-gradient(var(--r),var(--o),var(--y),var(--g),var(--b),var(--v),var(--r));border-color:#fff7;box-shadow:0 0 16px #00d9ff22}
+.progress{height:5px;border-radius:99px;background:#ffffff14;margin-top:14px;overflow:hidden}
+.progress>i{display:block;width:55%;height:100%;background:linear-gradient(90deg,var(--r),var(--o),var(--y),var(--g),var(--b),var(--v))}
+.row{display:flex;gap:10px;margin:0 16px 14px}
+.card{flex:1;min-width:0;border-radius:18px;padding:16px;background:linear-gradient(145deg,#16191f,#0c0e12);border:1px solid #ffffff1d;box-shadow:0 10px 26px #0006;position:relative;overflow:hidden}
+.card:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--r),var(--o),var(--y),var(--g),var(--b),var(--v))}
+.card h3{font-size:15px;margin:6px 0 5px}.card p{font-size:12px;color:#bcb8b6;margin:0;line-height:1.4}.ico{font-size:25px}
+.banner{margin:0 16px 14px;padding:17px 18px;border-radius:19px;background:
+linear-gradient(120deg,#3b102c,#123d4c 52%,#522514);border:1px solid #ffffff24;box-shadow:0 10px 25px #0007;position:relative;overflow:hidden}
+.banner:after{content:"";position:absolute;right:-5px;top:-14px;width:120px;height:90px;background:
+linear-gradient(150deg,transparent 0 20%,var(--r) 21% 28%,var(--o) 28% 35%,var(--y) 35% 42%,var(--g) 42% 49%,var(--b) 49% 56%,var(--v) 56% 63%,transparent 64%);opacity:.95}
+.banner strong{font-size:17px}.banner p{margin:4px 0 0;color:#ece8e5;font-size:13px}
+.order-title{margin:2px 20px 10px;display:flex;justify-content:space-between;align-items:center}.order-title h2{margin:0;font-size:26px}
+.open{font-size:12px;border:1px solid #ffffff22;border-radius:99px;padding:8px 10px}.open b{color:#46ef6e}
+.foods{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 16px}
+.food{height:128px;border-radius:17px;overflow:hidden;border:1px solid #ffffff18;background:#111;position:relative}
+.food .pic{height:86px;background:
+radial-gradient(circle at 35% 38%,#ffb14a 0 9%,transparent 10%),
+radial-gradient(circle at 55% 48%,#e05a1e 0 14%,transparent 15%),
+radial-gradient(circle at 70% 28%,#ffe1a8 0 8%,transparent 9%),
+linear-gradient(145deg,#5b3519,#1d1a17)}
+.food:nth-child(2) .pic{background:linear-gradient(150deg,#b56a29,#f1bd74 36%,#603612 38%,#18320e 60%,#c06d25 62%,#4f2811)}
+.food:nth-child(3) .pic{background:radial-gradient(ellipse at center,#f7b648 0 19%,#c96421 20% 28%,#4d2a14 29% 42%,#1b120b 43%)}
+.food:nth-child(4) .pic{background:radial-gradient(circle at 40% 44%,#f2c26e 0 11%,transparent 12%),radial-gradient(circle at 62% 52%,#9a321d 0 12%,transparent 13%),linear-gradient(145deg,#5c3517,#d99844)}
+.food b{position:absolute;left:10px;bottom:10px;font-size:12px}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(540px,100%);height:76px;background:#090a0df5;border-top:1px solid #ffffff18;display:grid;grid-template-columns:repeat(5,1fr);z-index:20}
+.nav div{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#a6a4ad;font-size:11px;gap:3px}
+.nav .active{color:#fff}.nav .active:after{content:"";width:34px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--r),var(--o),var(--y),var(--g),var(--b),var(--v))}
+.nav i{font-style:normal;font-size:22px}
+@media(max-width:420px){.neon{font-size:34px}.hero-note{font-size:15px}.foods{grid-template-columns:repeat(2,1fr)}.food{height:120px}}
 </style>
 </head>
 <body>
-<div class="shell">
-  <div class="pride-bar"></div>
-  <div class="spark s1"></div><div class="spark s2"></div>
-  <header class="header">
-    <div class="brand">
-      <div class="logo">
-        <div class="mark">D</div>
-        <div><h1>Dexter's</h1><p>Loyalty & Collection</p></div>
-      </div>
-      <div class="badge">PRIDE THEME TEST</div>
-    </div>
+<div class="app">
+  <header class="top">
+    <div class="menu">☰</div>
+    <div class="logo"><div class="dex">Dexter's</div><div class="sub">LOYALTY & COLLECTION</div></div>
+    <div class="right"><span>🔔</span><span>◉</span></div>
   </header>
 
   <section class="hero">
-    <div class="hero-inner">
-      <div class="kicker">Pride at Dexter's</div>
-      <h2>Good food. Good people. Everyone welcome.</h2>
-      <p>A cleaner, premium seasonal treatment using Pride colour accents without changing Dexter's normal app layout.</p>
-      <div class="flag"></div>
-    </div>
+    <div class="hero-copy"><h1 class="neon">Good Food.<br>Brighter Together.</h1></div>
+    <div class="hero-note">Same Great Food<br>Same Great People<br>Everyone Welcome</div>
+    <div class="pride-label">PRIDE AT DEXTER'S<span>🏳️‍🌈 EVERYONE WELCOME 🏳️‍🌈</span></div>
+    <div class="dots"><b>●</b>●●●●</div>
   </section>
 
-  <div class="points">
-    <div><small>Your points</small><strong>1,248</strong></div>
-    <div style="text-align:right"><small>Current reward</small><strong style="font-size:18px">£12.48</strong></div>
+  <section class="points">
+    <div class="points-row">
+      <div><small>Your points</small><strong>1,248</strong></div>
+      <div class="reward"><small>Current reward</small><strong>£12.48</strong></div>
+    </div>
+    <div class="stamps">
+      <div class="stamp on">D</div><div class="stamp on">D</div><div class="stamp on">D</div><div class="stamp on">D</div><div class="stamp on">D</div>
+      <div class="stamp">D</div><div class="stamp">D</div><div class="stamp">D</div><div class="stamp">D</div>
+    </div>
+    <div class="progress"><i></i></div>
+  </section>
+
+  <div class="row">
+    <article class="card"><div class="ico">🎡</div><h3>Spin to Win</h3><p>Daily chance to win a reward.</p></article>
+    <article class="card"><div class="ico">🎁</div><h3>Your Rewards</h3><p>Points, rewards and offers.</p></article>
+  </div>
+  <div class="row">
+    <article class="card"><div class="ico">🍔</div><h3>Order Again</h3><p>Your usual favourites.</p></article>
+    <article class="card"><div class="ico">🤖</div><h3>Ask Dexter</h3><p>Got a question? I'm here to help.</p></article>
   </div>
 
-  <section class="section">
-    <div class="section-head"><h3>Welcome back</h3><span>Seasonal preview</span></div>
-    <div class="grid">
-      <article class="card"><div class="icon">✦</div><h4>Spin to Win</h4><p>Daily chance to win a Dexter's reward.</p></article>
-      <article class="card"><div class="icon">★</div><h4>Your Rewards</h4><p>Points, rewards and app-only prizes.</p></article>
-      <article class="card"><div class="icon">↻</div><h4>Order Again</h4><p>Quickly reorder one of your favourites.</p></article>
-      <article class="card"><div class="icon">D</div><h4>Ask Dexter</h4><p>Help, questions and Dexter's latest updates.</p></article>
-    </div>
-  </section>
+  <section class="banner"><strong>📣 Pride Month at Dexter's</strong><p>Good food. Good people. Everyone welcome.</p></section>
 
-  <button class="cta">Start a collection order</button>
-  <div class="note">GitHub-only concept preview. No production ordering, rewards, login or KDS behaviour is changed by this test page.</div>
+  <div class="order-title"><h2>Order Collection</h2><div class="open"><b>●</b> Collection Open</div></div>
+  <div class="foods">
+    <div class="food"><div class="pic"></div><b>Breakfast</b></div>
+    <div class="food"><div class="pic"></div><b>Street Subs</b></div>
+    <div class="food"><div class="pic"></div><b>Smash Burgers</b></div>
+    <div class="food"><div class="pic"></div><b>Loaded Fries</b></div>
+  </div>
+
+  <nav class="nav">
+    <div class="active"><i>⌂</i>Home</div><div><i>🍴</i>Order</div><div><i>🏆</i>Rewards</div><div><i>◉</i>Account</div><div><i>•••</i>More</div>
+  </nav>
 </div>
 </body>
 </html>
