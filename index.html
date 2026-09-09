@@ -923,7 +923,7 @@ body.pride-theme{background:#f7f3f8!important}
  </div>
 
  <div class="card">
-  <h2>Applicant / candidate record</h2>
+  <h2>Applicant / candidate record</h2><input id="recSelectedId" type="hidden"><div id="recEditStatus" class="tiny muted" style="margin-bottom:8px">New candidate record</div>
   <div class="grid"><div class="field">Application type<select id="recType"><option>Vacancy</option><option>Speculative</option></select></div><div class="field">Vacancy / reference<input id="recVacancy" placeholder="e.g. VAC-001 or General application"></div></div>
   <div class="grid"><div class="field">Full name<input id="recName"></div><div class="field">Phone<input id="recPhone" inputmode="tel"></div></div>
   <div class="grid"><div class="field">Email<input id="recEmail" type="email"></div><div class="field">Role applied for<select id="recRole"><option>Café All-Rounder / Barista</option><option>Café Assistant / Barista</option><option>Front of House / Barista</option><option>Kitchen Assistant / Kitchen Porter</option><option>Food Preparation Assistant</option><option>Café Supervisor</option><option>Assistant Manager</option><option>Café Manager</option><option>Other</option></select></div></div>
@@ -3299,15 +3299,15 @@ function renderDexManagement(){
  });
  $('recruitList').innerHTML=rows.map(r=>{
    const i=dexManage.recruitment.indexOf(r),rd=r.recruitmentData||{},score=rd.totalScore==null?'—':rd.totalScore+'/57 ('+(rd.scorePercent||0)+'%)';
-   return '<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span><span class="badge">'+(r.applicationType||'Vacancy')+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.email||r.phone||'no contact')+' · RTW '+(r.rtw||'Not checked')+'</span><br><span class="tiny">Score '+score+' · '+(rd.recommendation||'Not enough scores yet')+' · Ref 1 '+(rd.ref1||'Not requested')+' · Ref 2 '+(rd.ref2||'Not requested')+'</span><br><span class="tiny">Offer '+(rd.offerStatus||'Not prepared')+' · Docs '+(rd.docsStatus||'Not started')+' · Review '+(rd.secondApproval||'Pending')+'</span>'+((r.stage==='Hired'||r.decision==='Hired')&&!r.convertedStaffId?'<div class="row"><button class="btn small" onclick="convertApplicantToStaff('+i+')">Create staff card</button></div>':r.convertedStaffId?'<div class="tiny ok">Staff card created</div>':'')+'</div>';
+   const portal=r.candidatePortalToken?'<a class="btn alt small" target="_blank" rel="noopener" href="https://jamiegreen294-boop.github.io/dexters-recruitment-test/candidate-portal.html?token='+encodeURIComponent(r.candidatePortalToken)+'">Candidate portal</a>':'';
+   return '<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span><span class="badge">'+(r.applicationType||'Vacancy')+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.email||r.phone||'no contact')+' · RTW '+(r.rtw||'Not checked')+'</span><br><span class="tiny">Score '+score+' · '+(rd.recommendation||'Not enough scores yet')+' · Ref 1 '+(rd.ref1||'Not requested')+' · Ref 2 '+(rd.ref2||'Not requested')+'</span><br><span class="tiny">Offer '+(rd.offerStatus||'Not prepared')+' · Docs '+(rd.docsStatus||'Not started')+' · Review '+(rd.secondApproval||'Pending')+'</span><div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><button class="btn alt small" onclick="openRecruitCandidate('+i+')">Open / edit</button>'+portal+((r.stage==='Hired'||r.decision==='Hired')&&!r.convertedStaffId?'<button class="btn small" onclick="convertApplicantToStaff('+i+')">Create staff card</button>':r.convertedStaffId?'<span class="tiny ok">Staff card created</span>':'')+'</div></div>';
  }).join('')||'<span class="muted">No applicants in this view.</span>';
  const all=dexManage.recruitment||[];
  if($('recKpiApplications'))$('recKpiApplications').textContent=all.length;
  if($('recKpiInterview'))$('recKpiInterview').textContent=all.filter(r=>r.stage==='Interview').length;
  if($('recKpiChecks'))$('recKpiChecks').textContent=all.filter(r=>['References','RTW / checks','Conditional Offer','Candidate Portal'].includes(r.stage)).length;
  if($('recKpiReady'))$('recKpiReady').textContent=all.filter(r=>r.stage==='Ready to appoint'||(r.recruitmentData?.secondApproval==='Approved to appoint'&&r.recruitmentData?.docsStatus==='All signed'&&r.rtw==='Checked')).length;
-}
- if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
+} if($('appraisalList'))$('appraisalList').innerHTML=dexManage.appraisals.map(r=>'<div class="summarybox"><b>'+staffNameById(r.staffId)+' · '+r.type+'</b><br><span class="badge">'+r.outcome+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.date+(r.next?' · next '+r.next:'')+'</span><br><span class="tiny">'+r.actions+'</span></div>').join('')||'<span class="muted">No reviews recorded.</span>';
  if($('rotaList'))$('rotaList').innerHTML=dexManage.rota.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(r=>{
    const i=dexManage.rota.indexOf(r);
    const worked=shiftWorkedMinutes(r);
@@ -3335,6 +3335,24 @@ window.closeDexTask=async i=>{const t=dexManage.tasks[i];if(!t)return;t.status='
 window.editRotaShift=async i=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const r=dexManage.rota[i];if(!r)return;const date=prompt('Shift date (YYYY-MM-DD):',r.date);if(date===null)return;const start=prompt('Scheduled start (HH:MM):',r.start||'');if(start===null)return;const end=prompt('Scheduled finish (HH:MM):',r.end||'');if(end===null)return;if(start&&end&&start>=end)return alert('Finish time must be after start time.');const area=prompt('Area / station:',r.area||'');if(area===null)return;const status=prompt('Status:',r.status||'Scheduled');if(status===null)return;const notes=prompt('Manager notes:',r.notes||'');if(notes===null)return;const before={date:r.date,start:r.start,end:r.end,area:r.area,status:r.status,notes:r.notes};Object.assign(r,{date,start,end,area,status,notes});r.timeAudit=r.timeAudit||[];r.timeAudit.push({at:new Date().toISOString(),action:'Shift corrected by manager',staffId:r.staffId,before});if(CORE_DB_CONNECTED&&r.dbId){const {error}=await SB.from('backoffice_rota_shifts').update({shift_date:date,scheduled_start:start||null,scheduled_end:end||null,area:area||null,status,notes:notes||null,shift_data:{timeAudit:r.timeAudit},updated_at:new Date().toISOString()}).eq('id',r.dbId);if(error){Object.assign(r,before);return alert('Secure shift update failed: '+error.message)}await appendAuditDb('rota_shift',r.dbId,'Shift corrected',before,{date,start,end,area,status,notes})}addTimeline('Rota',staffNameById(r.staffId)+' shift corrected');saveDexManage()};
 window.deleteRotaShift=async i=>{if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');const r=dexManage.rota[i];if(!r||!confirm('Delete '+staffNameById(r.staffId)+' shift on '+r.date+'? This cannot be undone.'))return;if(CORE_DB_CONNECTED&&r.dbId){const snapshot={...r};const {error}=await SB.from('backoffice_rota_shifts').delete().eq('id',r.dbId);if(error)return alert('Secure shift delete failed: '+error.message);await appendAuditDb('rota_shift',r.dbId,'Shift deleted',snapshot,null)}dexManage.rota.splice(i,1);addTimeline('Rota',staffNameById(r.staffId)+' shift deleted for '+r.date);saveDexManage()};
 if($('addTagBtn'))$('addTagBtn').onclick=()=>{if(CURRENT_STAFF_ROLE!=='Super User')return alert('Only Super User can manage tags.');const name=$('newTagName').value.trim();if(!name||dexManage.tags.some(t=>t.name.toLowerCase()===name.toLowerCase()))return;dexManage.tags.push({name,system:false});$('newTagName').value='';saveDexManage()};
+window.openRecruitCandidate=i=>{
+ const r=dexManage.recruitment?.[i];if(!r)return;
+ const rd=r.recruitmentData||{},set=(id,v)=>{const e=$(id);if(e)e.value=v??''};
+ set('recSelectedId',r.dbId||'');set('recType',r.applicationType||'Vacancy');set('recVacancy',r.vacancyId||'');set('recName',r.name);set('recPhone',r.phone);set('recEmail',r.email);
+ if($('recRole')){
+   const val=r.role||'Other';if(![...$('recRole').options].some(o=>o.value===val))$('recRole').add(new Option(val,val));$('recRole').value=val;
+ }
+ set('recApplied',r.applied);set('recStage',r.stage);set('recAvailability',r.availability);
+ set('recScreeningScore',rd.screeningScore??rd.screening?.screeningScore??'');set('recAssessmentScore',rd.assessmentScore??rd.screening?.assessmentScore??'');set('recInterviewScore',rd.interviewScore??rd.screening?.interviewScore??'');
+ set('recCombinedScore',rd.totalScore==null?'':rd.totalScore+' / 57 ('+(rd.scorePercent||0)+'%)');set('recRecommendation',rd.recommendation||rd.screening?.recommendation||'Not enough scores yet');
+ set('recInterviewDate',r.interviewDate);set('recInterviewer',r.interviewer);set('recInterview',r.interview);set('recInterviewOutcome',r.interviewOutcome||'Pending');set('recScore',r.score);
+ set('recRef1',rd.ref1||rd.references?.ref1||'Not requested');set('recRef2',rd.ref2||rd.references?.ref2||'Not requested');
+ set('recReferences',r.references);set('recRTW',r.rtw||'Not checked');set('recRTWMethod',r.rtwMethod||'Not recorded');set('recRTWDate',r.rtwDate);set('recRTWRef',r.rtwRef);
+ set('recOfferStatus',rd.offerStatus||'Not prepared');set('recPortalStatus',rd.portalStatus||'Not issued');set('recDocsStatus',rd.docsStatus||'Not started');set('recSecondApproval',rd.secondApproval||'Pending');
+ set('recOnboarding',r.onboarding);set('recStartDate',r.startDate);set('recDecision',r.decision||'Pending');
+ if($('recEditStatus'))$('recEditStatus').innerHTML='<b>Editing:</b> '+r.name+(r.dbId?' · secure database record':'');
+ window.scrollTo({top:$('recruitment').offsetTop,behavior:'smooth'});
+};
 window.convertApplicantToStaff=async i=>{
  if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
  const r=dexManage.recruitment?.[i];if(!r)return;
@@ -3376,31 +3394,33 @@ window.convertApplicantToStaff=async i=>{
 if($('recAdd'))$('recAdd').onclick=async()=>{
  if(roleRank(CURRENT_STAFF_ROLE)<3)return alert('Manager access required.');
  const name=$('recName').value.trim();if(!name)return alert('Add the applicant name.');
- const scoreVal=id=>Math.max(0,Number($(id)?.value||0));
- const screening=scoreVal('recScreeningScore'),assessment=scoreVal('recAssessmentScore'),interviewScore=scoreVal('recInterviewScore');
+ const scoreVal=(id,max)=>Math.max(0,Math.min(max,Number($(id)?.value||0)));
+ const screening=scoreVal('recScreeningScore',17),assessment=scoreVal('recAssessmentScore',15),interviewScore=scoreVal('recInterviewScore',25);
  const anyScore=!!($('recScreeningScore').value||$('recAssessmentScore').value||$('recInterviewScore').value);
  const total=screening+assessment+interviewScore,pct=anyScore?Math.round((total/57)*100):null;
  const recommendation=pct==null?'Not enough scores yet':pct>=75?'RECOMMEND HIRE':pct>=60?'CONSIDER / MANAGER REVIEW':'DO NOT RECOMMEND';
- const rd={screeningScore:screening,assessmentScore:assessment,interviewScore,totalScore:anyScore?total:null,scorePercent:pct,recommendation,ref1:$('recRef1').value,ref2:$('recRef2').value,offerStatus:$('recOfferStatus').value,portalStatus:$('recPortalStatus').value,docsStatus:$('recDocsStatus').value,secondApproval:$('recSecondApproval').value,recordAudio:false,transcriptionOnly:true};
+ const selectedId=$('recSelectedId')?.value||'';
+ const existing=dexManage.recruitment.find(r=>r.dbId===selectedId)||null;
+ const existingRd=existing?.recruitmentData||{};
+ const rd={...existingRd,screeningScore:screening,assessmentScore:assessment,interviewScore,totalScore:anyScore?total:null,scorePercent:pct,recommendation,ref1:$('recRef1').value,ref2:$('recRef2').value,offerStatus:$('recOfferStatus').value,portalStatus:$('recPortalStatus').value,docsStatus:$('recDocsStatus').value,secondApproval:$('recSecondApproval').value,recordAudio:false,transcriptionOnly:true};
  if($('recDecision').value==='Hired'){
    if($('recRTW').value!=='Checked')return alert('Complete the right-to-work check before marking the applicant Hired.');
    if(rd.ref1!=='Received'||rd.ref2!=='Received')return alert('Both references must be received before marking Hired.');
    if(rd.docsStatus!=='All signed')return alert('All required candidate documents must be signed before marking Hired.');
    if(rd.secondApproval!=='Approved to appoint')return alert('Second manager approval is required before marking Hired.');
  }
- const item={name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value,applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interviewDate:$('recInterviewDate').value,interviewer:$('recInterviewer').value.trim(),interview:$('recInterview').value.trim(),interviewOutcome:$('recInterviewOutcome').value,score:$('recScore').value.trim(),rtw:$('recRTW').value,rtwMethod:$('recRTWMethod').value,rtwDate:$('recRTWDate').value,rtwRef:$('recRTWRef').value.trim(),references:$('recReferences').value.trim(),onboarding:$('recOnboarding').value.trim(),startDate:$('recStartDate').value,decision:$('recDecision').value,tags:pickedTags('recTags'),applicationType:$('recType').value,vacancyId:$('recVacancy').value.trim(),recruitmentData:rd,at:new Date().toISOString()};
+ const item={...(existing||{}),name,phone:$('recPhone').value.trim(),email:$('recEmail').value.trim(),role:$('recRole').value,applied:$('recApplied').value,stage:$('recStage').value,availability:$('recAvailability').value.trim(),interviewDate:$('recInterviewDate').value,interviewer:$('recInterviewer').value.trim(),interview:$('recInterview').value.trim(),interviewOutcome:$('recInterviewOutcome').value,score:$('recScore').value.trim(),rtw:$('recRTW').value,rtwMethod:$('recRTWMethod').value,rtwDate:$('recRTWDate').value,rtwRef:$('recRTWRef').value.trim(),references:$('recReferences').value.trim(),onboarding:$('recOnboarding').value.trim(),startDate:$('recStartDate').value,decision:$('recDecision').value,tags:pickedTags('recTags'),applicationType:$('recType').value,vacancyId:$('recVacancy').value.trim(),recruitmentData:rd,at:existing?.at||new Date().toISOString()};
+ const dbRow={applicant_name:item.name,phone:item.phone||null,email:item.email||null,role_applied:item.role||null,applied_date:item.applied||null,stage:item.stage,availability:item.availability||null,interview_date:item.interviewDate||null,interviewer:item.interviewer||null,interview_notes:item.interview||null,interview_outcome:item.interviewOutcome||null,score:item.score||null,rtw_status:item.rtw||null,rtw_method:item.rtwMethod||null,rtw_date:item.rtwDate||null,rtw_reference:item.rtwRef||null,references_note:item.references||null,onboarding_note:item.onboarding||null,start_date:item.startDate||null,decision:item.decision||null,tags:item.tags||[],application_type:item.applicationType,vacancy_id:item.vacancyId||null,recruitment_data:item.recruitmentData,updated_at:new Date().toISOString()};
  if(CORE_DB_CONNECTED){
-   const {data,error}=await SB.from('backoffice_recruitment').insert({
-     applicant_name:item.name,phone:item.phone||null,email:item.email||null,role_applied:item.role||null,applied_date:item.applied||null,stage:item.stage,availability:item.availability||null,
-     interview_date:item.interviewDate||null,interviewer:item.interviewer||null,interview_notes:item.interview||null,interview_outcome:item.interviewOutcome||null,score:item.score||null,
-     rtw_status:item.rtw||null,rtw_method:item.rtwMethod||null,rtw_date:item.rtwDate||null,rtw_reference:item.rtwRef||null,references_note:item.references||null,onboarding_note:item.onboarding||null,
-     start_date:item.startDate||null,decision:item.decision||null,tags:item.tags||[],application_type:item.applicationType,vacancy_id:item.vacancyId||null,recruitment_data:item.recruitmentData,
-     created_by:SECURE_SESSION.user.id
-   }).select().single();
-   if(error)return alert('Secure recruitment save failed: '+error.message);item.dbId=data.id;
-   await appendAuditDb('recruitment',data.id,'Candidate record created',null,{applicant:item.name,stage:item.stage,application_type:item.applicationType,recommendation});
+   let data,error;
+   if(selectedId){({data,error}=await SB.from('backoffice_recruitment').update(dbRow).eq('id',selectedId).select().single())}
+   else{({data,error}=await SB.from('backoffice_recruitment').insert({...dbRow,created_by:SECURE_SESSION.user.id}).select().single())}
+   if(error)return alert('Secure recruitment save failed: '+error.message);
+   item.dbId=data.id;item.candidatePortalToken=data.candidate_portal_token||existing?.candidatePortalToken||'';
+   await appendAuditDb('recruitment',data.id,selectedId?'Candidate record updated':'Candidate record created',null,{applicant:item.name,stage:item.stage,application_type:item.applicationType,recommendation});
  }
- dexManage.recruitment.unshift(item);saveDexManage();renderDexManagement();
+ if(existing){const idx=dexManage.recruitment.indexOf(existing);dexManage.recruitment[idx]=item}else dexManage.recruitment.unshift(item);
+ saveDexManage();renderDexManagement();if($('recEditStatus'))$('recEditStatus').innerHTML='<b>Saved:</b> '+item.name;
 };
 if($('appAdd'))$('appAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader access required.');if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
 if($('rotaAdd'))$('rotaAdd').onclick=async()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return alert('Choose staff and a shift date.');if($('rotaStart').value&&$('rotaEnd').value&&$('rotaStart').value>=$('rotaEnd').value)return alert('Shift finish time must be after the start time.');
@@ -6940,6 +6960,7 @@ setTimeout(renderManagerLeaveApprovals,1200);
    const map={recFilterAll:'all',recFilterApplied:'applied',recFilterInterview:'interview',recFilterChecks:'checks',recFilterHired:'hired'};
    if(map[e.target?.id]){window.__DEXTERS_RECRUIT_FILTER=map[e.target.id];if(typeof renderDexManagement==='function')renderDexManagement()}
    if(e.target?.id==='recClear'){
+     if(el('recSelectedId'))el('recSelectedId').value='';if(el('recEditStatus'))el('recEditStatus').textContent='New candidate record';
      ['recVacancy','recName','recPhone','recEmail','recApplied','recAvailability','recScreeningScore','recAssessmentScore','recInterviewScore','recCombinedScore','recRecommendation','recInterviewDate','recInterviewer','recInterview','recScore','recRTWDate','recRTWRef','recReferences','recOnboarding','recStartDate'].forEach(id=>{if(el(id))el(id).value=''});
      if(el('recType'))el('recType').value='Vacancy';if(el('recStage'))el('recStage').value='Application received';if(el('recRTW'))el('recRTW').value='Not checked';if(el('recRef1'))el('recRef1').value='Not requested';if(el('recRef2'))el('recRef2').value='Not requested';if(el('recOfferStatus'))el('recOfferStatus').value='Not prepared';if(el('recPortalStatus'))el('recPortalStatus').value='Not issued';if(el('recDocsStatus'))el('recDocsStatus').value='Not started';if(el('recSecondApproval'))el('recSecondApproval').value='Pending';if(el('recDecision'))el('recDecision').value='Pending';score();
    }
