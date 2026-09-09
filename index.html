@@ -6100,7 +6100,7 @@ function dxRenderLibrary(){
         '</div>';
       }).join('')+'</div></details>';
   }).join('');
-  root.querySelectorAll('[data-dx-open]').forEach(b=>b.onclick=()=>dxOpenModule(b.dataset.dxOpen));
+  root.querySelectorAll('[data-dx-open]').forEach(b=>b.setAttribute('aria-haspopup','dialog'));
   dxRenderSummary();
 }
 
@@ -6174,18 +6174,27 @@ async function dxOpenModule(key){
   dxStopTrainingVideo();
   const m=dxModule(key);if(!m)return;
   DX_TRAIN.activeKey=key;
+  const box=dxPlayerShell();
+  box.style.display='grid';
+  document.getElementById('dxTrainTitle').textContent=m.title;
+  document.getElementById('dxTrainBody').innerHTML='<div class="summarybox"><b>Opening training module…</b><p class="tiny muted">Loading your saved progress.</p></div>';
   let r=dxRecord(key);
   if(!r||dxStatus(r)==='Not Started'||dxStatus(r)==='Refresher Due'){
     const {data,error}=await SB.rpc('backoffice_training_start',{p_module_key:key});
-    if(error){alert('Could not start training: '+error.message);return}
+    if(error){document.getElementById('dxTrainBody').innerHTML='<div class="summarybox"><span class="bad"><b>Could not open this module.</b></span><p>'+dxEsc(error.message)+'</p><button class="btn small" id="dxRetryModule">Try again</button></div>';const retry=document.getElementById('dxRetryModule');if(retry)retry.onclick=()=>dxOpenModule(key);return}
     await dxLoadTrainingV2(false);
     r=dxRecord(key);
   }
   DX_TRAIN.activeScene=Math.max(0,Math.min(Number(r?.training_data?.current_scene||0),Math.max(0,dxScenes(m).length-1)));
-  const box=dxPlayerShell();
-  box.style.display='grid';
   dxRenderPlayer();
 }
+
+document.addEventListener('click',e=>{
+  const button=e.target.closest('[data-dx-open]');
+  if(!button)return;
+  e.preventDefault();e.stopPropagation();
+  dxOpenModule(button.dataset.dxOpen);
+},true);
 
 function dxSpeak(text){
   try{
