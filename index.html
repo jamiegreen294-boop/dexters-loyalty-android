@@ -608,6 +608,7 @@ body.pride-theme{background:#f7f3f8!important}
   <button type="button" class="pass-nav-trigger">Growth ▾</button>
   <div class="pass-nav-drop">
     <button class="tab" data-tab="deals" data-minrole="Team Leader">Deals Engine</button>
+    <button class="tab" data-tab="marketing" data-minrole="Manager">Customer Marketing</button>
     <button class="tab" data-tab="challenges" data-minrole="Team Leader">Challenges</button>
   </div>
 </div>
@@ -1235,6 +1236,43 @@ body.pride-theme{background:#f7f3f8!important}
 </div>
 </section>
 
+<section class="panel" id="marketing">
+<div class="pass-pagehead">
+  <div><h2>Customer Marketing</h2><div class="muted">Consent-safe email campaigns using current Dexter’s offers, rewards and challenges</div></div>
+  <div><span class="pill">Sender: offers@dextersspot.co.uk</span></div>
+</div>
+<div class="notice"><b>Marketing permission protection:</b> only customers with both <b>marketing consent = Yes</b> and <b>email consent = Yes</b> are eligible. Customers with no recorded choice or an opt-out are excluded automatically.</div>
+<div class="grid four" style="margin-top:14px">
+ <div class="card"><div class="muted">Customers</div><div class="big" id="mkCustomers">—</div></div>
+ <div class="card"><div class="muted">Eligible</div><div class="big" id="mkEligible">—</div></div>
+ <div class="card"><div class="muted">Opted out</div><div class="big" id="mkOptedOut">—</div></div>
+ <div class="card"><div class="muted">No choice yet</div><div class="big" id="mkNoChoice">—</div></div>
+</div>
+<div class="grid two" style="margin-top:14px">
+ <div class="card">
+  <h3>Current campaign content</h3>
+  <div id="mkContent"><span class="muted">Open this section to load current offers and challenges.</span></div>
+  <button class="btn alt" id="mkRefresh">Refresh current content</button>
+ </div>
+ <div class="card">
+  <h3>Email preview</h3>
+  <div class="field">Subject<input id="mkSubject" readonly></div>
+  <div class="field">Body<textarea id="mkBody" rows="16" readonly></textarea></div>
+  <div class="notice"><b>SAFE MODE:</b> recipient filtering and campaign generation are active, but bulk email sending is disabled until the outgoing mail sender is fully approved.</div>
+  <button class="btn" id="mkCopy">Copy preview</button>
+ </div>
+</div>
+<div class="card" style="margin-top:14px">
+ <h3>GDPR / marketing safeguards</h3>
+ <ul>
+  <li>Opt-in is optional and is not required for loyalty rewards.</li>
+  <li>No consent record = excluded from marketing sends.</li>
+  <li>Opted-out customers remain excluded.</li>
+  <li>Marketing messages are kept separate from service/order/security messages.</li>
+  <li>Customers can change their choice in Loyalty App → Account → Marketing Preferences.</li>
+ </ul>
+</div>
+</section>
 <section class="panel" id="challenges">
 <div class="card notice"><b>Live Digital Scratch Cards + Challenges</b><p class="muted">Challenge rules and revealed rewards below are linked to the live Loyalty App service.</p></div>
 <div class="grid">
@@ -6601,5 +6639,39 @@ const prevLeave=window.renderLeave;
 window.renderLeave=function(){if(typeof prevLeave==='function')prevLeave();renderManagerLeaveApprovals()};
 setTimeout(renderManagerLeaveApprovals,1200);
 </script>
-</body>
+<script id="dextersBackOfficeMarketingLive">
+(function(){
+ const FN='https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/backoffice-marketing-test';
+ function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+ async function loadMarketing(){
+  const msg=document.getElementById('mkContent'); if(!msg)return;
+  msg.innerHTML='<span class="muted">Loading consent-safe campaign data…</span>';
+  try{
+   const sess=(await SB.auth.getSession()).data.session;
+   if(!sess)throw new Error('Secure Back Office sign-in required');
+   const r=await fetch(FN,{method:'POST',headers:{Authorization:'Bearer '+sess.access_token,apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:'{}'});
+   const d=await r.json(); if(!r.ok)throw new Error(d.error||'Could not load marketing data');
+   document.getElementById('mkCustomers').textContent=d.counts.customers;
+   document.getElementById('mkEligible').textContent=d.counts.eligible;
+   document.getElementById('mkOptedOut').textContent=d.counts.opted_out;
+   document.getElementById('mkNoChoice').textContent=d.counts.no_choice;
+   document.getElementById('mkSubject').value=d.preview.subject;
+   document.getElementById('mkBody').value=d.preview.body;
+   const offers=(d.offers||[]).map(x=>'<div class="item"><b>'+esc(x.title)+'</b><div class="muted">'+esc(x.description||'Current offer')+'</div></div>').join('');
+   const challenges=(d.challenges||[]).map(x=>'<div class="item"><b>'+esc(x.title)+'</b><div class="muted">'+esc(x.reward_text||'')+'</div></div>').join('');
+   msg.innerHTML='<h4>Offers</h4>'+(offers||'<div class="muted">No active general offers just now.</div>')+'<h4 style="margin-top:12px">Challenges</h4>'+(challenges||'<div class="muted">No active challenges just now.</div>')+'<div class="muted" style="margin-top:12px">'+d.counts.eligible+' customer(s) eligible • '+d.counts.no_choice+' no choice • '+d.counts.opted_out+' opted out</div>';
+  }catch(e){msg.innerHTML='<span class="bad">'+esc(e.message||String(e))+'</span>'}
+ }
+ document.addEventListener('click',function(e){
+  if(e.target?.id==='mkRefresh')loadMarketing();
+  const tab=e.target?.closest?.('[data-tab="marketing"]');
+  if(tab)setTimeout(loadMarketing,120);
+  if(e.target?.id==='mkCopy'){
+   const subject=document.getElementById('mkSubject').value||'',body=document.getElementById('mkBody').value||'';
+   navigator.clipboard?.writeText(subject+'\n\n'+body);
+   e.target.textContent='Copied';setTimeout(()=>e.target.textContent='Copy preview',1200);
+  }
+ });
+})();
+</script></body>
 </html>
