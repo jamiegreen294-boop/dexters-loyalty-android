@@ -2034,11 +2034,16 @@ body.pride-theme{background:#f7f3f8!important}
 
  <div class="card">
   <h3>Email identities</h3>
-  <p class="muted">Sender/reply addresses shown in recruitment, marketing, order and general communications. Actual sending credentials remain in the secure email provider.</p>
+  <p class="muted">Sender/reply addresses shown across customer, recruitment, staff, accounts, marketing, order and system communications. Actual sending credentials remain in the secure email provider.</p>
   <div class="field">General From<input id="wlEmailGeneral"></div>
   <div class="field">Recruitment From<input id="wlEmailRecruitment"></div>
   <div class="field">Offers / Marketing From<input id="wlEmailOffers"></div>
   <div class="field">Orders From<input id="wlEmailOrders"></div>
+  <div class="field">Loyalty From<input id="wlEmailLoyalty"></div>
+  <div class="field">Accounts From<input id="wlEmailAccounts"></div>
+  <div class="field">Staff / HR From<input id="wlEmailStaff"></div>
+  <div class="field">Privacy From<input id="wlEmailPrivacy"></div>
+  <div class="field">System Notifications From<input id="wlEmailNotifications"></div>
   <div class="field">Reply-To<input id="wlEmailReplyTo"></div>
  </div>
 </div>
@@ -7297,7 +7302,7 @@ document.addEventListener('click',function(e){
   setv('wlBusinessName',co.businessName);setv('wlLegalName',co.legalName);setv('wlTradingName',co.tradingName);setv('wlAddress',co.address);setv('wlPhone',co.phone);setv('wlWebsite',co.website);setv('wlTimezone',co.timezone);setv('wlCurrency',co.currency);
   setv('wlLogoUrl',br.logoUrl);setv('wlCustomerAppName',br.customerAppName);setv('wlStaffAppName',br.staffAppName);setv('wlBackOfficeName',br.backOfficeName);setv('wlAccentName',br.accentName);
   setv('wlDomainWebsite',d.website);setv('wlDomainBackOffice',d.backOffice);setv('wlDomainJobs',d.jobs);setv('wlDomainCandidate',d.candidatePortal);
-  setv('wlEmailGeneral',em.generalFrom);setv('wlEmailRecruitment',em.recruitmentFrom);setv('wlEmailOffers',em.offersFrom);setv('wlEmailOrders',em.ordersFrom);setv('wlEmailReplyTo',em.replyTo);
+  setv('wlEmailGeneral',em.generalFrom);setv('wlEmailRecruitment',em.recruitmentFrom);setv('wlEmailOffers',em.offersFrom);setv('wlEmailOrders',em.ordersFrom);setv('wlEmailLoyalty',em.loyaltyFrom);setv('wlEmailAccounts',em.accountsFrom);setv('wlEmailStaff',em.staffFrom);setv('wlEmailPrivacy',em.privacyFrom);setv('wlEmailNotifications',em.notificationsFrom);setv('wlEmailReplyTo',em.replyTo);
   setb('wlRecEnabled',r.enabled);setb('wlRecSpeculative',r.allowSpeculativeApplications);setv('wlRecRetention',r.speculativeRetentionMonths||6);setb('wlRecTwoRefs',r.requireTwoReferences);setb('wlRecSecondApproval',r.requireSecondApproval);setv('wlRecPrivacyContact',r.privacyContact);
   setb('wlMkEnabled',m.enabled);setb('wlMkMarketingConsent',m.requireMarketingConsent);setb('wlMkEmailConsent',m.requireEmailConsent);setb('wlMkUnsubscribe',m.unsubscribeRequired);setv('wlMkSender',m.sender);
   setb('wlLoyaltyEnabled',l.enabled);setv('wlPointsPerPound',l.pointsPerPound??1);setv('wlPointValue',l.pointValuePence??1);setb('wlJobsLinkEnabled',l.jobsLinkEnabled);
@@ -7316,7 +7321,7 @@ document.addEventListener('click',function(e){
    company:{businessName:v('wlBusinessName'),legalName:v('wlLegalName'),tradingName:v('wlTradingName'),address:v('wlAddress'),phone:v('wlPhone'),website:v('wlWebsite'),timezone:v('wlTimezone'),currency:v('wlCurrency'),country:WL?.company?.country||'United Kingdom'},
    branding:{logoUrl:v('wlLogoUrl'),customerAppName:v('wlCustomerAppName'),staffAppName:v('wlStaffAppName'),backOfficeName:v('wlBackOfficeName'),accentName:v('wlAccentName')},
    domains:{website:v('wlDomainWebsite'),backOffice:v('wlDomainBackOffice'),jobs:v('wlDomainJobs'),candidatePortal:v('wlDomainCandidate')},
-   email:{generalFrom:v('wlEmailGeneral'),recruitmentFrom:v('wlEmailRecruitment'),offersFrom:v('wlEmailOffers'),ordersFrom:v('wlEmailOrders'),replyTo:v('wlEmailReplyTo')},
+   email:{generalFrom:v('wlEmailGeneral'),recruitmentFrom:v('wlEmailRecruitment'),offersFrom:v('wlEmailOffers'),ordersFrom:v('wlEmailOrders'),loyaltyFrom:v('wlEmailLoyalty'),accountsFrom:v('wlEmailAccounts'),staffFrom:v('wlEmailStaff'),privacyFrom:v('wlEmailPrivacy'),notificationsFrom:v('wlEmailNotifications'),replyTo:v('wlEmailReplyTo')},
    recruitment:{enabled:b('wlRecEnabled'),allowSpeculativeApplications:b('wlRecSpeculative'),speculativeRetentionMonths:Number(v('wlRecRetention')||6),requireTwoReferences:b('wlRecTwoRefs'),requireSecondApproval:b('wlRecSecondApproval'),privacyContact:v('wlRecPrivacyContact')},
    marketing:{enabled:b('wlMkEnabled'),requireMarketingConsent:b('wlMkMarketingConsent'),requireEmailConsent:b('wlMkEmailConsent'),unsubscribeRequired:b('wlMkUnsubscribe'),sender:v('wlMkSender')},
    loyalty:{enabled:b('wlLoyaltyEnabled'),pointsPerPound:Number(v('wlPointsPerPound')||0),pointValuePence:Number(v('wlPointValue')||0),jobsLinkEnabled:b('wlJobsLinkEnabled')},
