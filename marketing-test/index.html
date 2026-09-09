@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dexter's Back Office — Customer Marketing TEST</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0f0a15;--panel:#17101f;--line:#3b2a49;--text:#fff;--muted:#cbbfd4;--gold:#f3c75f;--orange:#ef8a35;--good:#173a2c;--bad:#4a1b28}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}.shell{min-height:100vh;display:grid;grid-template-columns:230px 1fr}.nav{background:#15101d;border-right:1px solid var(--line);padding:18px}.brand{font-weight:1000;font-size:23px;margin-bottom:22px}.nav .item{display:block;width:100%;padding:11px 12px;margin:6px 0;border-radius:10px;background:transparent;border:1px solid transparent;color:#ddd2e4;text-align:left;font-weight:800}.nav .active{background:#2b1d38;border-color:#4b315d;color:#fff}.main{padding:22px;min-width:0}.pagehead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}.grid{display:grid;gap:12px}.four{grid-template-columns:repeat(4,1fr)}.two{grid-template-columns:1fr 1fr}.big{font-size:30px;font-weight:1000;margin-top:5px}.muted{color:var(--muted)}.pill{display:inline-block;padding:7px 10px;border:1px solid #5e476e;border-radius:999px}.notice{padding:12px;border-radius:10px;background:#24192d;border:1px solid #4d365c}.good{background:var(--good);border-color:#2d6e55}.bad{background:var(--bad);border-color:#7c3046}.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:900;cursor:pointer;background:#2b2134;color:white}.btn.primary{background:linear-gradient(120deg,var(--gold),var(--orange));color:#17100a}.field{margin:10px 0;font-weight:800}.field input,.field textarea{width:100%;margin-top:6px;padding:10px;border-radius:8px;border:1px solid #5a4766;background:#0f0a15;color:white;font:inherit}.item{border:1px solid #3d2c49;border-radius:10px;padding:11px;margin:7px 0}.login{max-width:480px;margin:60px auto}.hidden{display:none!important}
+@media(max-width:900px){.shell{grid-template-columns:1fr}.nav{border-right:0;border-bottom:1px solid var(--line)}.four,.two{grid-template-columns:1fr 1fr}}@media(max-width:620px){.four,.two{grid-template-columns:1fr}.pagehead{display:block}}
+</style></head><body>
+<div id="login" class="login card"><h1>Dexter's Back Office</h1><p class="muted">Customer Marketing test area</p>
+<div class="field">Email<input id="email" type="email"></div><div class="field">Password<input id="password" type="password"></div>
+<button class="btn primary" id="signIn">Secure sign in</button><div id="loginMsg" class="muted" style="margin-top:10px"></div></div>
+
+<div id="app" class="shell hidden">
+<aside class="nav"><div class="brand">DEXTER'S</div>
+<button class="item">Dashboard</button><button class="item">Staff</button><button class="item">Training</button><button class="item">Recruitment</button><button class="item">Customers & Loyalty</button><button class="item active">Customer Marketing</button><button class="item">Deals Engine</button><button class="item">Challenges</button>
+<button class="item" id="signOut">Log out</button></aside>
+<main class="main">
+<div class="pagehead"><div><h1>Customer Marketing</h1><div class="muted">Consent-safe email campaigns using current Dexter's offers, rewards and challenges</div></div><span class="pill">TEST • offers@dextersspot.co.uk</span></div>
+<div class="notice good"><b>Marketing permission protection:</b> only customers with both <b>marketing consent = Yes</b> and <b>email consent = Yes</b> are eligible. No-choice and opted-out customers are excluded automatically.</div>
+
+<div class="grid four" style="margin-top:14px">
+<div class="card"><div class="muted">Customers</div><div class="big" id="customers">—</div></div>
+<div class="card"><div class="muted">Eligible</div><div class="big" id="eligible">—</div></div>
+<div class="card"><div class="muted">Opted out</div><div class="big" id="opted">—</div></div>
+<div class="card"><div class="muted">No choice yet</div><div class="big" id="nochoice">—</div></div>
+</div>
+
+<div class="grid two">
+<div class="card"><h2>Current Dexter's content</h2><div id="content"><span class="muted">Loading…</span></div><button class="btn" id="refresh">Refresh current offers & challenges</button></div>
+<div class="card"><h2>Email preview</h2><div class="field">Subject<input id="subject" readonly></div><div class="field">Body<textarea id="body" rows="18" readonly></textarea></div><button class="btn" id="copy">Copy preview</button></div>
+</div>
+
+<div class="card"><h2>Marketing safeguards</h2><ul>
+<li>Marketing opt-in is optional and does not affect loyalty rewards.</li><li>No consent record = excluded.</li><li>Opted-out customers remain excluded.</li><li>Service/order/security messages are separate from marketing.</li><li>Customers can change their choice in Loyalty App → Account → Marketing Preferences.</li><li>Bulk sending is disabled in this test until the outgoing sender is approved.</li></ul></div>
+<div class="notice bad"><b>TEST BUILD:</b> this screen reads live consent/offer/challenge status for authorised managers, but it does not send bulk customer emails.</div>
+</main></div>
+
+<script>
+const URL='https://bpnkouymdvcogeaqjmxl.supabase.co',KEY='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
+const SB=supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:localStorage,storageKey:'dexters-backoffice-auth-v1'}});
+const FN=URL+'/functions/v1/backoffice-marketing-test';
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function load(){
+ content.innerHTML='<span class="muted">Loading consent-safe campaign data…</span>';
+ const sess=(await SB.auth.getSession()).data.session;if(!sess)throw new Error('Secure Back Office sign-in required');
+ const r=await fetch(FN,{method:'POST',headers:{Authorization:'Bearer '+sess.access_token,apikey:KEY,'Content-Type':'application/json'},body:'{}'});
+ const d=await r.json();if(!r.ok)throw new Error(d.error||'Could not load marketing data');
+ customers.textContent=d.counts.customers;eligible.textContent=d.counts.eligible;opted.textContent=d.counts.opted_out;nochoice.textContent=d.counts.no_choice;subject.value=d.preview.subject;body.value=d.preview.body;
+ const offers=(d.offers||[]).map(x=>'<div class="item"><b>'+esc(x.title)+'</b><div class="muted">'+esc(x.description||'Current offer')+'</div></div>').join('');
+ const challenges=(d.challenges||[]).map(x=>'<div class="item"><b>'+esc(x.title)+'</b><div class="muted">'+esc(x.reward_text||'')+'</div></div>').join('');
+ content.innerHTML='<h3>Offers</h3>'+(offers||'<div class="muted">No active general offers just now.</div>')+'<h3>Challenges</h3>'+(challenges||'<div class="muted">No active challenges just now.</div>')+'<p class="muted">'+d.counts.eligible+' eligible • '+d.counts.no_choice+' no choice • '+d.counts.opted_out+' opted out</p>';
+}
+async function show(){
+ const sess=(await SB.auth.getSession()).data.session;
+ login.classList.toggle('hidden',!!sess);app.classList.toggle('hidden',!sess);
+ if(sess)try{await load()}catch(e){content.innerHTML='<span class="bad">'+esc(e.message)+'</span>'}
+}
+signIn.onclick=async()=>{loginMsg.textContent='Signing in…';const {error}=await SB.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error){loginMsg.textContent=error.message;return}loginMsg.textContent='';show()};
+signOut.onclick=async()=>{await SB.auth.signOut();show()};refresh.onclick=()=>load().catch(e=>content.innerHTML='<span class="bad">'+esc(e.message)+'</span>');
+copy.onclick=async()=>{await navigator.clipboard.writeText((subject.value||'')+'\n\n'+(body.value||''));copy.textContent='Copied';setTimeout(()=>copy.textContent='Copy preview',1200)};show();
+</script></body></html>
