@@ -107,7 +107,19 @@
   }
 
   async function choose(yes,msg){
-    try{msg.textContent='Saving…';await saveChoice(yes)}catch(e){msg.textContent=e.message||'Could not save your choice.'}
+    const buttons=[...document.querySelectorAll('#dextersMarketingConsentPrompt button,#dextersMarketingPrefsCard button')];
+    buttons.forEach(b=>b.disabled=true);
+    try{
+      msg.textContent='Saving…';
+      await Promise.race([
+        saveChoice(yes),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('Saving took too long. Please try again.')),8000))
+      ]);
+    }catch(e){
+      msg.textContent=e.message||'Could not save your choice.';
+    }finally{
+      buttons.forEach(b=>b.disabled=false);
+    }
   }
 
   function renderPreferenceCard(consent,loading=false){
@@ -123,8 +135,11 @@
     card.querySelector('#dextersMarketingDisable').onclick=()=>choose(false,card.querySelector('#dextersMarketingPrefsMsg'));
   }
 
+  let refreshing=false;
   async function refresh(){
+    if(refreshing)return;
     if(!authSession()){removePrompt();return}
+    refreshing=true;
     renderPreferenceCard(null,true);
     try{
       const consent=await getConsent();
@@ -134,14 +149,20 @@
       renderPreferenceCard(null,false);
       const msg=document.getElementById('dextersMarketingPrefsMsg');
       if(msg)msg.textContent='Could not load your current preference. You can still choose a setting below.';
+    }finally{
+      refreshing=false;
     }
   }
 
   function boot(){
     refresh();
-    setTimeout(refresh,400);
-    setTimeout(refresh,1400);
-    new MutationObserver(()=>setTimeout(refresh,0)).observe(document.body,{childList:true,subtree:true});
+    setTimeout(refresh,500);
+    setTimeout(refresh,1600);
+    document.addEventListener('click',function(e){
+      const b=e.target.closest&&e.target.closest('[data-page],button,a');
+      if(!b)return;
+      setTimeout(refresh,180);
+    },true);
     window.addEventListener('storage',refresh);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
