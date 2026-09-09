@@ -892,8 +892,8 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="pass-pagehead">
   <div><h2>Recruitment & Onboarding</h2><div class="muted">Vacancies, applications, scoring, checks, offers, candidate documents and conversion into a Dexter's staff record.</div></div>
   <div class="row" style="gap:8px;flex-wrap:wrap">
-    <a class="btn alt small" href="https://jamiegreen294-boop.github.io/dexters-recruitment-test/jobs.html" target="_blank" rel="noopener">Public Jobs Portal</a>
-    <a class="btn alt small" href="https://jamiegreen294-boop.github.io/dexters-recruitment-test/apply.html" target="_blank" rel="noopener">Application Form</a>
+    <a class="btn alt small" href="https://backoffice.dextersspot.co.uk/jobs.html" target="_blank" rel="noopener">Public Jobs Portal</a>
+    <a class="btn alt small" href="https://backoffice.dextersspot.co.uk/apply.html" target="_blank" rel="noopener">Application Form</a>
     <span class="btn alt small" style="cursor:default;opacity:.7">Candidate portals open from each candidate record</span>
   </div>
 </div>
@@ -3566,7 +3566,7 @@ function renderDexManagement(){
  });
  $('recruitList').innerHTML=rows.map(r=>{
    const i=dexManage.recruitment.indexOf(r),rd=r.recruitmentData||{},score=rd.totalScore==null?'—':rd.totalScore+'/57 ('+(rd.scorePercent||0)+'%)';
-   const portal=r.candidatePortalToken?'<a class="btn alt small" target="_blank" rel="noopener" href="https://jamiegreen294-boop.github.io/dexters-recruitment-test/candidate-portal.html?token='+encodeURIComponent(r.candidatePortalToken)+'">Candidate portal</a>':'';
+   const portal=r.candidatePortalToken?'<a class="btn alt small" target="_blank" rel="noopener" href="https://backoffice.dextersspot.co.uk/candidate-portal.html?token='+encodeURIComponent(r.candidatePortalToken)+'">Candidate portal</a>':'';
    return '<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+r.stage+'</span><span class="badge">'+(r.applicationType||'Vacancy')+'</span>'+tagChips(r.tags)+'<br><span class="muted">'+r.role+' · '+(r.email||r.phone||'no contact')+' · RTW '+(r.rtw||'Not checked')+'</span><br><span class="tiny">Score '+score+' · '+(rd.recommendation||'Not enough scores yet')+' · Ref 1 '+(rd.ref1||'Not requested')+' · Ref 2 '+(rd.ref2||'Not requested')+'</span><br><span class="tiny">Offer '+(rd.offerStatus||'Not prepared')+' · Docs '+(rd.docsStatus||'Not started')+' · Review '+(rd.secondApproval||'Pending')+'</span><div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap"><button class="btn alt small" onclick="openRecruitCandidate('+i+')">Open / edit</button>'+portal+((r.stage==='Hired'||r.decision==='Hired')&&!r.convertedStaffId?'<button class="btn small" onclick="convertApplicantToStaff('+i+')">Create staff card</button>':r.convertedStaffId?'<span class="tiny ok">Staff card created</span>':'')+'</div></div>';
  }).join('')||'<span class="muted">No applicants in this view.</span>';
  const all=dexManage.recruitment||[];
@@ -3709,7 +3709,7 @@ if($('recIssueContract'))$('recIssueContract').onclick=async()=>{
 if($('recOpenPortal'))$('recOpenPortal').onclick=()=>{
  const id=$('recSelectedId')?.value;if(!id)return alert('Open a candidate first.');
  const r=dexManage.recruitment.find(x=>x.dbId===id);if(!r?.candidatePortalToken)return alert('No candidate portal token is available for this record.');
- window.open('https://jamiegreen294-boop.github.io/dexters-recruitment-test/candidate-portal.html?token='+encodeURIComponent(r.candidatePortalToken),'_blank','noopener');
+ window.open('https://backoffice.dextersspot.co.uk/candidate-portal.html?token='+encodeURIComponent(r.candidatePortalToken),'_blank','noopener');
 };
 if($('appAdd'))$('appAdd').onclick=()=>{if(roleRank(CURRENT_STAFF_ROLE)<2)return alert('Team Leader access required.');if(!$('appStaff').value)return;dexManage.appraisals.unshift({staffId:$('appStaff').value,type:$('appType').value,date:$('appDate').value||new Date().toISOString().slice(0,10),strengths:$('appStrengths').value.trim(),concerns:$('appConcerns').value.trim(),actions:$('appActions').value.trim(),training:$('appTraining').value.trim(),staffComments:$('appStaffComments').value.trim(),outcome:$('appOutcome').value,next:$('appNext').value,tags:pickedTags('appTags'),at:new Date().toISOString()});saveDexManage()};
 if($('rotaAdd'))$('rotaAdd').onclick=async()=>{if(!$('rotaStaff').value||!$('rotaDate').value)return alert('Choose staff and a shift date.');if($('rotaStart').value&&$('rotaEnd').value&&$('rotaStart').value>=$('rotaEnd').value)return alert('Shift finish time must be after the start time.');
