@@ -28,6 +28,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px soli
 .training-group>summary{list-style:none;cursor:pointer;padding:15px 17px;font-weight:900;color:#4b4050;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f7f3f9}
 .training-group>summary::-webkit-details-marker{display:none}.training-group>summary:after{content:'＋';font-size:20px;color:#6f1688}.training-group[open]>summary:after{content:'−'}
 .training-group-body{padding:4px 16px 14px}.training-group-count{font-size:12px;color:#766d7b;font-weight:700}
+.modal-backdrop{position:fixed!important;inset:0!important;z-index:100000!important;background:#17101dcc!important;padding:14px!important;align-items:center!important;justify-items:center!important;overflow:auto!important}
+.modal-backdrop>.modal{width:min(760px,100%)!important;max-height:92vh!important;overflow:auto!important;background:#fff!important;color:#37343b!important;border-radius:14px!important;padding:18px!important;box-shadow:0 24px 80px #0008!important;position:relative!important}
 .video-progress{height:7px;background:#2c1f35;border-radius:999px;overflow:hidden;flex:1;min-width:120px}.video-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));transition:width .3s}
 @keyframes trainIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
@@ -6160,13 +6162,15 @@ function dxPlayerShell(){
   box=document.createElement('div');
   box.id='dxTrainingPlayer';
   box.className='modal-backdrop';
+  box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-labelledby','dxTrainTitle');
   box.style.display='none';
   box.innerHTML='<div class="modal" style="width:min(760px,100%);max-height:92vh;overflow:auto">'+
     '<div class="row" style="justify-content:space-between;align-items:center"><h3 id="dxTrainTitle" style="margin:0"></h3><button class="btn alt small" id="dxTrainClose">Close</button></div>'+
     '<div id="dxTrainBody" style="margin-top:14px"></div>'+
   '</div>';
   document.body.appendChild(box);
-  document.getElementById('dxTrainClose').onclick=()=>{dxStopTrainingVideo();box.style.display='none';dxLoadTrainingV2();};
+  document.getElementById('dxTrainClose').onclick=()=>{dxStopTrainingVideo();box.style.display='none';document.body.style.overflow='';dxLoadTrainingV2();};
+  box.addEventListener('click',e=>{if(e.target===box)document.getElementById('dxTrainClose').click()});
   return box;
 }
 
@@ -6176,6 +6180,7 @@ async function dxOpenModule(key){
   DX_TRAIN.activeKey=key;
   const box=dxPlayerShell();
   box.style.display='grid';
+  document.body.style.overflow='hidden';
   document.getElementById('dxTrainTitle').textContent=m.title;
   document.getElementById('dxTrainBody').innerHTML='<div class="summarybox"><b>Opening training module…</b><p class="tiny muted">Loading your saved progress.</p></div>';
   let r=dxRecord(key);
