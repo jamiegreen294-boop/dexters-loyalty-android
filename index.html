@@ -1905,10 +1905,152 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="settings">
-<div class="card notice"><b>Settings & Permissions</b><p class="muted">Super User-only area for roles, module access and back-office configuration.</p></div>
-<div class="summarybox"><b>Access hierarchy</b><br><span class="badge">Super User</span><span class="badge">Manager</span><span class="badge">Team Leader</span><span class="badge">Staff</span><p class="tiny">Only Super User can change another person's role or permissions.</p></div>
+<div class="pass-pagehead">
+  <div><h2>Settings & White Label Admin</h2><div class="muted">Super User-only configuration for business identity, branding, domains, email senders, recruitment, marketing, loyalty, modules, integrations and legal contacts.</div></div>
+  <div><span class="pill">Tenant: <b id="wlTenantLabel">default</b></span></div>
+</div>
+
+<div class="card notice"><b>White-label ready settings</b><p class="muted">These values are stored centrally in the secure Back Office database so another company can replace Dexter's branding, email addresses, domains and enabled modules without editing code. Secret API keys are not stored on this page; only safe labels/references are shown.</p></div>
+
+<div class="grid four">
+ <div class="card"><div class="muted">Business</div><div class="big" id="wlBusinessKpi">Dexter's</div></div>
+ <div class="card"><div class="muted">Enabled modules</div><div class="big" id="wlModulesKpi">—</div></div>
+ <div class="card"><div class="muted">Recruitment sender</div><div class="tiny" id="wlRecruitmentKpi">—</div></div>
+ <div class="card"><div class="muted">Marketing sender</div><div class="tiny" id="wlMarketingKpi">—</div></div>
+</div>
+
+<div class="grid two" style="margin-top:14px">
+ <div class="card">
+  <h3>Company identity</h3>
+  <p class="muted">Main organisation details used across customer, staff, recruitment and back-office areas.</p>
+  <div class="field">Business name<input id="wlBusinessName"></div>
+  <div class="field">Legal name<input id="wlLegalName"></div>
+  <div class="field">Trading name<input id="wlTradingName"></div>
+  <div class="field">Address<textarea id="wlAddress" rows="3"></textarea></div>
+  <div class="grid"><div class="field">Phone<input id="wlPhone"></div><div class="field">Website<input id="wlWebsite"></div></div>
+  <div class="grid"><div class="field">Timezone<input id="wlTimezone" placeholder="Europe/London"></div><div class="field">Currency<input id="wlCurrency" placeholder="GBP"></div></div>
+ </div>
+
+ <div class="card">
+  <h3>Branding</h3>
+  <p class="muted">Names and logo used across the white-label apps. Change these to rebrand the platform for another company.</p>
+  <div class="field">Logo URL<input id="wlLogoUrl"></div>
+  <div class="field">Customer app name<input id="wlCustomerAppName"></div>
+  <div class="field">Staff app name<input id="wlStaffAppName"></div>
+  <div class="field">Back Office name<input id="wlBackOfficeName"></div>
+  <div class="field">Brand / accent name<input id="wlAccentName"></div>
+ </div>
+</div>
+
+<div class="grid two">
+ <div class="card">
+  <h3>Domains & public links</h3>
+  <p class="muted">Public addresses used for each part of the system. These can be changed per company.</p>
+  <div class="field">Main website<input id="wlDomainWebsite"></div>
+  <div class="field">Back Office<input id="wlDomainBackOffice"></div>
+  <div class="field">Jobs portal<input id="wlDomainJobs"></div>
+  <div class="field">Candidate portal<input id="wlDomainCandidate"></div>
+ </div>
+
+ <div class="card">
+  <h3>Email identities</h3>
+  <p class="muted">Sender/reply addresses shown in recruitment, marketing, order and general communications. Actual sending credentials remain in the secure email provider.</p>
+  <div class="field">General From<input id="wlEmailGeneral"></div>
+  <div class="field">Recruitment From<input id="wlEmailRecruitment"></div>
+  <div class="field">Offers / Marketing From<input id="wlEmailOffers"></div>
+  <div class="field">Orders From<input id="wlEmailOrders"></div>
+  <div class="field">Reply-To<input id="wlEmailReplyTo"></div>
+ </div>
+</div>
+
+<div class="grid two">
+ <div class="card">
+  <h3>Recruitment settings</h3>
+  <p class="muted">Controls the public jobs/application flow and appointment safeguards.</p>
+  <label class="field"><input id="wlRecEnabled" type="checkbox" style="width:auto"> Recruitment enabled</label>
+  <label class="field"><input id="wlRecSpeculative" type="checkbox" style="width:auto"> Allow speculative applications</label>
+  <div class="field">Speculative retention (months)<input id="wlRecRetention" type="number" min="1" max="36"></div>
+  <label class="field"><input id="wlRecTwoRefs" type="checkbox" style="width:auto"> Require two references</label>
+  <label class="field"><input id="wlRecSecondApproval" type="checkbox" style="width:auto"> Require second-manager approval</label>
+  <div class="field">Recruitment privacy contact<input id="wlRecPrivacyContact"></div>
+ </div>
+
+ <div class="card">
+  <h3>Marketing & consent</h3>
+  <p class="muted">Controls promotional email eligibility and privacy safeguards.</p>
+  <label class="field"><input id="wlMkEnabled" type="checkbox" style="width:auto"> Customer marketing enabled</label>
+  <label class="field"><input id="wlMkMarketingConsent" type="checkbox" style="width:auto"> Require marketing consent</label>
+  <label class="field"><input id="wlMkEmailConsent" type="checkbox" style="width:auto"> Require email consent</label>
+  <label class="field"><input id="wlMkUnsubscribe" type="checkbox" style="width:auto"> Require unsubscribe / preference control</label>
+  <div class="field">Marketing sender<input id="wlMkSender"></div>
+ </div>
+</div>
+
+<div class="grid two">
+ <div class="card">
+  <h3>Loyalty configuration</h3>
+  <p class="muted">Core loyalty values that a white-label customer may want to change.</p>
+  <label class="field"><input id="wlLoyaltyEnabled" type="checkbox" style="width:auto"> Loyalty enabled</label>
+  <div class="grid"><div class="field">Points per £1<input id="wlPointsPerPound" type="number" min="0" step="1"></div><div class="field">Point value (pence)<input id="wlPointValue" type="number" min="0" step="1"></div></div>
+  <label class="field"><input id="wlJobsLinkEnabled" type="checkbox" style="width:auto"> Show Jobs link in customer app</label>
+ </div>
+
+ <div class="card">
+  <h3>Legal & privacy contacts</h3>
+  <p class="muted">Contact details and policy links shown to staff/candidates/customers.</p>
+  <div class="field">Privacy email<input id="wlPrivacyEmail"></div>
+  <div class="field">Data protection contact<input id="wlDpoContact"></div>
+  <div class="field">Terms URL<input id="wlTermsUrl"></div>
+  <div class="field">Privacy URL<input id="wlPrivacyUrl"></div>
+  <div class="field">Cookie URL<input id="wlCookieUrl"></div>
+ </div>
+</div>
+
+<div class="card">
+ <h3>Modules</h3>
+ <p class="muted">Turn product areas on/off for each white-label company. Disabled modules can later be hidden from navigation and apps.</p>
+ <div class="grid four" id="wlModules"></div>
+</div>
+
+<div class="card">
+ <h3>Integrations</h3>
+ <p class="muted">Safe integration configuration only. API keys/passwords should stay in secure server secrets and never be pasted into this page.</p>
+ <div class="grid two">
+  <label class="field"><input id="wlIntSupabase" type="checkbox" style="width:auto"> Database / Supabase enabled</label>
+  <label class="field"><input id="wlIntGmail" type="checkbox" style="width:auto"> Email provider enabled</label>
+  <label class="field"><input id="wlIntStripe" type="checkbox" style="width:auto"> Payments / Stripe enabled</label>
+  <label class="field"><input id="wlIntXepos" type="checkbox" style="width:auto"> EPOS integration enabled</label>
+ </div>
+ <div class="notice"><b>Secret handling:</b> connection secrets remain server-side. This settings page stores only whether an integration is enabled and the non-secret reference/label.</div>
+</div>
+
+<div class="card">
+ <h3>Notifications & automation</h3>
+ <p class="muted">Choose which automatic manager alerts the company wants enabled.</p>
+ <div class="grid two">
+  <label class="field"><input id="wlNotifyManagers" type="checkbox" style="width:auto"> Manager alerts</label>
+  <label class="field"><input id="wlNotifyTraining" type="checkbox" style="width:auto"> Training due alerts</label>
+  <label class="field"><input id="wlNotifyDocs" type="checkbox" style="width:auto"> Document expiry alerts</label>
+  <label class="field"><input id="wlNotifyIncident" type="checkbox" style="width:auto"> Incident follow-up alerts</label>
+  <label class="field"><input id="wlNotifyRecruitment" type="checkbox" style="width:auto"> New recruitment application alerts</label>
+ </div>
+</div>
+
+<div class="card">
+ <h3>Save / export configuration</h3>
+ <p class="muted">Save writes the configuration to the secure central database. Export downloads a non-secret JSON copy that can be used as a white-label setup template.</p>
+ <div class="row" style="gap:8px;flex-wrap:wrap">
+  <button class="btn" id="wlSave">Save company settings</button>
+  <button class="btn alt" id="wlReload">Reload saved settings</button>
+  <button class="btn alt" id="wlExport">Export non-secret settings JSON</button>
+ </div>
+ <div id="wlMessage" class="tiny" style="margin-top:8px"></div>
+</div>
+
+<div class="summarybox"><b>Access hierarchy</b><br><span class="badge">Super User</span><span class="badge">Manager</span><span class="badge">Team Leader</span><span class="badge">Staff</span><p class="tiny">Only Super User can change white-label/company settings, roles or permissions.</p></div>
+
 <div class="card" style="margin-top:14px"><h2>Workflow Automation</h2>
-<p class="muted">Automatic back-office actions generated from Dexter's records.</p>
+<p class="muted">Automatic back-office actions generated from company records.</p>
 <label class="field" style="display:flex;gap:8px;align-items:center"><input id="wfTraining" type="checkbox" style="width:auto;margin:0"> Create alert when training/refresher is due</label>
 <label class="field" style="display:flex;gap:8px;align-items:center"><input id="wfDocs" type="checkbox" style="width:auto;margin:0"> Create alert for staff document expiry/review</label>
 <label class="field" style="display:flex;gap:8px;align-items:center"><input id="wfIncidents" type="checkbox" style="width:auto;margin:0"> Create follow-up task when incident is recorded</label>
@@ -6972,5 +7114,90 @@ document.addEventListener('click',function(e){
     setTimeout(function(){if(typeof loadSecureCoreData==='function'&&SECURE_SESSION&&SECURE_ACCOUNT?.active)loadSecureCoreData().catch(()=>{})},120);
   }
 });
+</script><script id="dextersWhiteLabelSettingsV1">
+(function(){
+ const MODULE_KEYS=['staff','training','recruitment','marketing','loyalty','catering','foodSafety','payroll','finance','stock','reports'];
+ const MODULE_LABELS={staff:'Staff',training:'Training',recruitment:'Recruitment',marketing:'Customer Marketing',loyalty:'Loyalty',catering:'Catering',foodSafety:'Food Safety',payroll:'Payroll',finance:'Finance',stock:'Stock & Waste',reports:'Reports'};
+ let WL=null;
+ function E(id){return document.getElementById(id)}
+ function v(id){return E(id)?.value??''}
+ function b(id){return !!E(id)?.checked}
+ function setv(id,val){if(E(id))E(id).value=val??''}
+ function setb(id,val){if(E(id))E(id).checked=!!val}
+ function message(txt,ok=true){const e=E('wlMessage');if(e)e.innerHTML='<span class="'+(ok?'ok':'bad')+'">'+txt+'</span>'}
+ function renderModules(settings){
+  const box=E('wlModules');if(!box)return;
+  box.innerHTML=MODULE_KEYS.map(k=>'<label class="field" style="display:flex;gap:8px;align-items:center"><input data-wl-module="'+k+'" type="checkbox" style="width:auto;margin:0" '+(settings?.modules?.[k]?'checked':'')+'> '+MODULE_LABELS[k]+'</label>').join('');
+ }
+ function apply(s){
+  WL=s||{};
+  const co=WL.company||{},br=WL.branding||{},d=WL.domains||{},em=WL.email||{},r=WL.recruitment||{},m=WL.marketing||{},l=WL.loyalty||{},legal=WL.legal||{},i=WL.integrations||{},n=WL.notifications||{};
+  setv('wlBusinessName',co.businessName);setv('wlLegalName',co.legalName);setv('wlTradingName',co.tradingName);setv('wlAddress',co.address);setv('wlPhone',co.phone);setv('wlWebsite',co.website);setv('wlTimezone',co.timezone);setv('wlCurrency',co.currency);
+  setv('wlLogoUrl',br.logoUrl);setv('wlCustomerAppName',br.customerAppName);setv('wlStaffAppName',br.staffAppName);setv('wlBackOfficeName',br.backOfficeName);setv('wlAccentName',br.accentName);
+  setv('wlDomainWebsite',d.website);setv('wlDomainBackOffice',d.backOffice);setv('wlDomainJobs',d.jobs);setv('wlDomainCandidate',d.candidatePortal);
+  setv('wlEmailGeneral',em.generalFrom);setv('wlEmailRecruitment',em.recruitmentFrom);setv('wlEmailOffers',em.offersFrom);setv('wlEmailOrders',em.ordersFrom);setv('wlEmailReplyTo',em.replyTo);
+  setb('wlRecEnabled',r.enabled);setb('wlRecSpeculative',r.allowSpeculativeApplications);setv('wlRecRetention',r.speculativeRetentionMonths||6);setb('wlRecTwoRefs',r.requireTwoReferences);setb('wlRecSecondApproval',r.requireSecondApproval);setv('wlRecPrivacyContact',r.privacyContact);
+  setb('wlMkEnabled',m.enabled);setb('wlMkMarketingConsent',m.requireMarketingConsent);setb('wlMkEmailConsent',m.requireEmailConsent);setb('wlMkUnsubscribe',m.unsubscribeRequired);setv('wlMkSender',m.sender);
+  setb('wlLoyaltyEnabled',l.enabled);setv('wlPointsPerPound',l.pointsPerPound??1);setv('wlPointValue',l.pointValuePence??1);setb('wlJobsLinkEnabled',l.jobsLinkEnabled);
+  setv('wlPrivacyEmail',legal.privacyEmail);setv('wlDpoContact',legal.dataProtectionContact);setv('wlTermsUrl',legal.termsUrl);setv('wlPrivacyUrl',legal.privacyUrl);setv('wlCookieUrl',legal.cookieUrl);
+  setb('wlIntSupabase',i.supabase?.enabled);setb('wlIntGmail',i.gmail?.enabled);setb('wlIntStripe',i.stripe?.enabled);setb('wlIntXepos',i.xepos?.enabled);
+  setb('wlNotifyManagers',n.managerAlerts);setb('wlNotifyTraining',n.trainingDue);setb('wlNotifyDocs',n.documentExpiry);setb('wlNotifyIncident',n.incidentFollowUp);setb('wlNotifyRecruitment',n.recruitmentApplications);
+  renderModules(WL);
+  if(E('wlBusinessKpi'))E('wlBusinessKpi').textContent=co.businessName||'—';
+  if(E('wlModulesKpi'))E('wlModulesKpi').textContent=MODULE_KEYS.filter(k=>WL.modules?.[k]).length;
+  if(E('wlRecruitmentKpi'))E('wlRecruitmentKpi').textContent=em.recruitmentFrom||'Not set';
+  if(E('wlMarketingKpi'))E('wlMarketingKpi').textContent=em.offersFrom||m.sender||'Not set';
+ }
+ function collect(){
+  const modules={};document.querySelectorAll('[data-wl-module]').forEach(x=>modules[x.dataset.wlModule]=x.checked);
+  return {
+   company:{businessName:v('wlBusinessName'),legalName:v('wlLegalName'),tradingName:v('wlTradingName'),address:v('wlAddress'),phone:v('wlPhone'),website:v('wlWebsite'),timezone:v('wlTimezone'),currency:v('wlCurrency'),country:WL?.company?.country||'United Kingdom'},
+   branding:{logoUrl:v('wlLogoUrl'),customerAppName:v('wlCustomerAppName'),staffAppName:v('wlStaffAppName'),backOfficeName:v('wlBackOfficeName'),accentName:v('wlAccentName')},
+   domains:{website:v('wlDomainWebsite'),backOffice:v('wlDomainBackOffice'),jobs:v('wlDomainJobs'),candidatePortal:v('wlDomainCandidate')},
+   email:{generalFrom:v('wlEmailGeneral'),recruitmentFrom:v('wlEmailRecruitment'),offersFrom:v('wlEmailOffers'),ordersFrom:v('wlEmailOrders'),replyTo:v('wlEmailReplyTo')},
+   recruitment:{enabled:b('wlRecEnabled'),allowSpeculativeApplications:b('wlRecSpeculative'),speculativeRetentionMonths:Number(v('wlRecRetention')||6),requireTwoReferences:b('wlRecTwoRefs'),requireSecondApproval:b('wlRecSecondApproval'),privacyContact:v('wlRecPrivacyContact')},
+   marketing:{enabled:b('wlMkEnabled'),requireMarketingConsent:b('wlMkMarketingConsent'),requireEmailConsent:b('wlMkEmailConsent'),unsubscribeRequired:b('wlMkUnsubscribe'),sender:v('wlMkSender')},
+   loyalty:{enabled:b('wlLoyaltyEnabled'),pointsPerPound:Number(v('wlPointsPerPound')||0),pointValuePence:Number(v('wlPointValue')||0),jobsLinkEnabled:b('wlJobsLinkEnabled')},
+   modules,
+   legal:{privacyEmail:v('wlPrivacyEmail'),dataProtectionContact:v('wlDpoContact'),termsUrl:v('wlTermsUrl'),privacyUrl:v('wlPrivacyUrl'),cookieUrl:v('wlCookieUrl')},
+   integrations:{
+    supabase:{enabled:b('wlIntSupabase'),label:'Primary database',secretRef:'SUPABASE_PROJECT'},
+    gmail:{enabled:b('wlIntGmail'),label:'Email delivery',secretRef:'MAIL_PROVIDER'},
+    stripe:{enabled:b('wlIntStripe'),label:'Payments',secretRef:'STRIPE_SECRET_KEY'},
+    xepos:{enabled:b('wlIntXepos'),label:'EPOS',secretRef:'XEPOS_API_KEY'}
+   },
+   notifications:{managerAlerts:b('wlNotifyManagers'),trainingDue:b('wlNotifyTraining'),documentExpiry:b('wlNotifyDocs'),incidentFollowUp:b('wlNotifyIncident'),recruitmentApplications:b('wlNotifyRecruitment')}
+  };
+ }
+ async function load(){
+  if(!SECURE_SESSION||SECURE_ACCOUNT?.role!=='Super User')return;
+  message('Loading saved company settings…');
+  const {data,error}=await SB.from('backoffice_business_settings').select('tenant_key,settings').eq('tenant_key','default').maybeSingle();
+  if(error){message('Could not load settings: '+error.message,false);return}
+  WL=data?.settings||{};apply(WL);message('Company settings loaded.');
+ }
+ async function save(){
+  if(SECURE_ACCOUNT?.role!=='Super User')return alert('Super User access required.');
+  const settings=collect();
+  message('Saving company settings…');
+  const {error}=await SB.from('backoffice_business_settings').upsert({tenant_key:'default',settings,updated_by:SECURE_SESSION.user.id,updated_at:new Date().toISOString()},{onConflict:'tenant_key'});
+  if(error){message('Could not save settings: '+error.message,false);return}
+  WL=settings;apply(WL);message('Company settings saved securely.');
+  try{if(typeof appendAuditDb==='function')await appendAuditDb('business_settings','default','White-label/company settings updated',null,{businessName:settings.company.businessName,modules:settings.modules})}catch(e){}
+ }
+ function exportJson(){
+  const data=collect();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(data.company.businessName||'company').replace(/[^a-z0-9]+/gi,'-')+'-white-label-settings.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ }
+ document.addEventListener('click',e=>{
+  if(e.target?.id==='wlSave')save();
+  if(e.target?.id==='wlReload')load();
+  if(e.target?.id==='wlExport')exportJson();
+  if(e.target?.closest?.('[data-tab="settings"]'))setTimeout(load,100);
+ });
+ const oldRender=window.renderDexManagement;
+ window.renderDexManagement=function(){if(typeof oldRender==='function')oldRender();if(SECURE_ACCOUNT?.role==='Super User'&&document.getElementById('settings')?.classList.contains('active'))setTimeout(load,0)};
+})();
 </script></body>
 </html>
