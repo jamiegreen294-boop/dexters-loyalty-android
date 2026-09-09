@@ -6203,7 +6203,7 @@ function dxOfficialVideo(m){
   const url=String(m?.content?.video_url||'').trim();
   if(!url)return '';
   const match=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i);
-  if(match)return '<div class="summarybox" style="margin:12px 0"><b>Official training video</b><p class="tiny muted">Watch this real video from '+dxEsc(m.authority_name||'the official publisher')+'. Dexter\'s lesson and assessment remain required.</p><div style="position:relative;padding-top:56.25%;overflow:hidden;border-radius:10px;background:#000"><iframe src="https://www.youtube-nocookie.com/embed/'+match[1]+'" title="Official training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe></div></div>';
+  if(match)return '<div class="summarybox" style="margin:12px 0;position:relative;z-index:2"><b>Real official training video</b><p class="tiny muted">Press play below to watch this video from '+dxEsc(m.authority_name||'the official publisher')+'. Dexter\'s lesson and assessment remain required.</p><div style="position:relative;padding-top:56.25%;overflow:hidden;border-radius:10px;background:#000;pointer-events:auto"><iframe src="https://www.youtube-nocookie.com/embed/'+match[1]+'?playsinline=1&rel=0" title="Official training video" loading="eager" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:auto"></iframe></div></div>';
   return '<div class="summarybox" style="margin:12px 0"><b>Official video course</b><p class="tiny muted">This publisher hosts its videos on its own training website.</p><a class="btn alt small" href="'+dxEsc(url)+'" target="_blank" rel="noopener noreferrer">Open official video course ↗</a></div>';
 }
 
@@ -6244,12 +6244,13 @@ function dxRenderPlayer(){
   const allDone=completed>=scenes.length;
   body.innerHTML=
     '<div class="dx-course-meta"><span class="tiny muted">'+dxEsc(source)+' · '+Number(m.duration_minutes||10)+' mins · Pass '+Number(m.pass_score||80)+'%</span><span class="badge">'+dxEsc(dxStatus(r))+'</span></div>'+
+    dxOfficialVideo(m)+
+    '<div class="summarybox"><b>Dexter\'s narrated lesson</b><p class="tiny muted">This personalised animated lesson records progress and unlocks the assessment.</p></div>'+
     '<div class="dx-scene-track">'+scenes.map((_,i)=>'<i class="'+(i<=idx?'on':'')+'"></i>').join('')+'</div>'+
     '<div class="training-video">'+
       '<div class="training-stage dx-pro-stage"><div class="training-scene"><div class="dx-kicker">'+dxEsc(visual.label)+' · Scene '+(idx+1)+' of '+scenes.length+'</div><span class="emoji">'+visual.icon+'</span><h3>'+dxEsc(scene.title||('Scene '+(idx+1)))+'</h3><p>'+dxEsc(scene.narration||'')+'</p><div class="dx-takeaway">Key point: '+dxEsc(dxTakeaway(scene))+'</div><div class="dx-source">Source: '+dxEsc(source)+'</div></div></div>'+
-      '<div class="training-controls"><button class="btn small" id="dxPlayCourse">'+(DX_TRAIN.playing?'⏸ Pause video':'▶ Play video')+'</button><span class="tiny">Scene '+(idx+1)+' of '+scenes.length+'</span><div class="video-progress"><i style="width:'+Math.round((idx+1)/Math.max(1,scenes.length)*100)+'%"></i></div><button class="btn alt small" id="dxSpeakScene">🔊 Replay narration</button>'+(videoUrl?'<a class="btn alt small" href="'+dxEsc(videoUrl)+'" target="_blank" rel="noopener noreferrer">Watch official video ↗</a>':(sourceUrl?'<a class="btn alt small" href="'+dxEsc(sourceUrl)+'" target="_blank" rel="noopener noreferrer">Official guidance ↗</a>':''))+'</div>'+
+      '<div class="training-controls"><button class="btn small" id="dxPlayCourse">'+(DX_TRAIN.playing?'⏸ Pause narrated lesson':'▶ Play narrated lesson')+'</button><span class="tiny">Scene '+(idx+1)+' of '+scenes.length+'</span><div class="video-progress"><i style="width:'+Math.round((idx+1)/Math.max(1,scenes.length)*100)+'%"></i></div><button class="btn alt small" id="dxSpeakScene">🔊 Replay narration</button>'+(videoUrl?'<a class="btn alt small" href="'+dxEsc(videoUrl)+'" target="_blank" rel="noopener noreferrer">Open video separately ↗</a>':(sourceUrl?'<a class="btn alt small" href="'+dxEsc(sourceUrl)+'" target="_blank" rel="noopener noreferrer">Official guidance ↗</a>':''))+'</div>'+
     '</div>'+
-    dxOfficialVideo(m)+
     '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap">'+
       '<button class="btn alt small" id="dxPrevScene" '+(idx===0?'disabled':'')+'>← Previous</button>'+
       (idx<scenes.length-1
