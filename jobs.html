@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jobs at Dexter's TEST</title><style>
+:root{--bg:#f4f2ed;--ink:#171717;--line:#ddd7cd;--gold:#d9b14c;--ok:#e8f5ec;--warn:#fff5d8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5}header{background:#111;color:#fff;border-bottom:4px solid var(--gold)}.head{max-width:1050px;margin:auto;padding:18px;display:flex;gap:18px;align-items:center}.brandlogo{width:150px;max-height:92px;object-fit:contain}.wrap{max-width:1050px;margin:22px auto;padding:0 14px 60px}.hero,.card,.legal{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px}.job{border-left:5px solid #111}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.meta div{background:#faf9f6;border:1px solid var(--line);border-radius:10px;padding:10px}.meta b{display:block;font-size:12px;text-transform:uppercase;color:#6f6a63}.btn{display:inline-block;border-radius:9px;padding:10px 14px;font-weight:800;text-decoration:none}.primary{background:#111;color:#fff}.secondary{background:#e9e4da;color:#111}.warn{background:var(--warn);border:1px solid #e4c465;border-radius:10px;padding:12px}.good{background:var(--ok);border:1px solid #b9d5c2;border-radius:10px;padding:12px}@media(max-width:760px){.meta{grid-template-columns:1fr 1fr}}
+</style><script src="recruitment-store.js"></script></head><body>
+<header><div class="head"><img class="brandlogo" src="https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo" alt="Dexters Sit-in and Take Away logo"><div><h1>Jobs at Dexter's</h1><div>Public recruitment portal • TEST</div></div></div></header>
+<div class="wrap">
+<div class="warn"><b>TEST ONLY.</b> This demo uses dummy/local browser data. Do not submit real personal information.</div>
+<div class="hero"><h2>Come work with us</h2><p>Browse current vacancies below. Even when there are no live vacancies, you can still send Dexter's a general application for future opportunities.</p></div>
+<div id="jobs"></div>
+<div class="legal"><h3>Fair recruitment</h3><p>Dexter's assesses applicants against job-related criteria and aims to provide reasonable adjustments during the recruitment process where needed. Applicants are not selected or rejected simply because of nationality or another protected characteristic.</p></div>
+<div class="legal"><h3>Right to Work</h3><p>Any offer of employment is subject to the appropriate Right to Work check before employment starts. Checks are intended to be applied consistently to all candidates where required.</p></div>
+<div class="legal"><h3>Recruitment privacy</h3><p>Application information is used for recruitment administration, assessment, lawful pre-employment checks and, if appointed, staff onboarding. Speculative applications are kept only for a limited review period in the test design rather than indefinitely. Recruitment privacy contact: <b>recruitment@dextersspot.co.uk</b>.</p></div>
+</div>
+<script>
+function renderJobs(){
+ const r=DexRecruit.load(),v=r.vacancy||{},el=document.getElementById('jobs');
+ const live=v.status==='Open';
+ if(live){
+  el.innerHTML='<div class="card job"><div class="good"><b>Current vacancy</b></div><h2>'+v.title+'</h2><p>'+v.summary+'</p><div class="meta"><div><b>Hours</b>'+v.hours+'</div><div><b>Pay</b>'+v.pay+'</div><div><b>Closing date</b>'+v.closeDate+'</div><div><b>Positions</b>'+v.positions+'</div></div><h3>What you will do</h3><p>'+v.duties+'</p><h3>What we are looking for</h3><p>'+v.essential+'</p><h3>Shift pattern</h3><p>'+v.shiftPattern+'</p><a class="btn primary" href="apply.html?vacancy='+encodeURIComponent(v.id)+'">Apply for this job</a></div>'+
+  '<div class="card"><h2>Not the right vacancy?</h2><p>You can still send a general application and Dexter\'s can review it for suitable future opportunities during the recruitment retention period.</p><a class="btn secondary" href="apply.html?general=1">Send a general application</a></div>';
+ }else{
+  el.innerHTML='<div class="card"><h2>No current vacancies</h2><p>We do not have any live vacancies at the moment, but you are still welcome to apply. Your application will be recorded as a <b>General / Speculative Application</b> rather than being linked to a current job.</p><p>Dexter\'s can review your details for suitable future opportunities during the stated recruitment retention period.</p><a class="btn primary" href="apply.html?general=1">Submit a general application</a></div>';
+ }
+}
+renderJobs();
+</script></body></html>
