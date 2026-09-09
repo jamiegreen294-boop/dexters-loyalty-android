@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Dexter's Telephone Calls</title>
+  <link rel="stylesheet" href="/web/telephone-calls.css">
+</head>
+<body>
+<main>
+  <div class="notice"><strong>Phone events connected</strong><span>Calls from the Yealink phone are logged here. Call audio, AI ordering, KDS and printers remain disconnected.</span></div>
+  <section class="stats" aria-label="Call totals">
+    <article><span>Total calls</span><strong id="callsCount">—</strong></article>
+    <article><span>Missed calls</span><strong id="missedCount">—</strong></article>
+    <article><span>Callbacks required</span><strong id="callbackCount">—</strong></article>
+  </section>
+  <section class="card">
+    <div class="heading"><div><h3>Calls & callbacks</h3><p id="liveMessage">Checking staff session…</p></div><button id="refreshHistory" type="button">Refresh</button></div>
+    <label>Search calls<input id="historySearch" type="search" placeholder="Search name, number or call status"></label>
+    <div id="historyList" aria-live="polite"><p class="muted">Loading telephone events…</p></div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/web/telephone-calls.js"></script>
+</body>
+</html>
