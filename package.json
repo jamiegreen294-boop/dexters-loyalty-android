@@ -12,5 +12,5 @@
     "test:loyalty-flows": "node tests/loyalty-flows-regression.test.cjs",
     "test:growth-live": "node tests/growth-live-regression.test.cjs"
   },
-  "deploymentMarker": "pre-streamline-preview-trigger-20260907-1521"
+  "deploymentMarker": "loyalty-refresh-email-production-20260909-2339"
 }
