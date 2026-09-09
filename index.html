@@ -324,7 +324,8 @@ body.pride-theme{background:#f7f3f8!important}
   }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">document.addEventListener('input',function(e){if(e.target?.id==='mkSearch')renderRecipients()});document.addEventListener('change',function(e){if(e.target?.id==='mkGroup')renderRecipients()});
+</script>
 <style id="dextersMarketingMobileFix">
 #marketing{--mktext:#2f2935;--mkmuted:#6f6677}
 #marketing .pass-pagehead h2{color:#3b3440}
@@ -354,6 +355,23 @@ body.pride-theme{background:#f7f3f8!important}
  #marketing .grid.four{grid-template-columns:1fr 1fr!important}
  #marketing .grid.four>.card{padding:14px!important;min-height:104px!important}
  #marketing .grid.four .big{font-size:28px!important}
+}
+</style><style id="dextersMarketingRecipientsStyle">
+#marketing .mk-recipient-controls{grid-template-columns:1fr 1fr 1.2fr!important;gap:12px!important}
+#marketing .mk-recipient-list{margin-top:12px;border:1px solid #ded4e4;border-radius:12px;overflow:hidden;background:#fff}
+#marketing .mk-recipient-row{display:grid;grid-template-columns:42px minmax(150px,1.4fr) minmax(190px,1.6fr) 130px 110px 110px;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px solid #eee6f2;color:#342e39}
+#marketing .mk-recipient-row:last-child{border-bottom:0}
+#marketing .mk-recipient-row.head{background:#f7f2fa;font-weight:900;color:#514657}
+#marketing .mk-recipient-row input[type=checkbox]{width:20px!important;height:20px!important;margin:0!important}
+#marketing .mk-status{display:inline-block;padding:4px 7px;border-radius:999px;font-size:12px;font-weight:900}
+#marketing .mk-ok{background:#daf2e5;color:#1c5c3e}
+#marketing .mk-no{background:#f4dce2;color:#7a2841}
+#marketing .mk-wait{background:#fff0c9;color:#7a5a0c}
+#marketing #mkSendSelected[disabled]{opacity:.5;cursor:not-allowed}
+@media(max-width:900px){
+ #marketing .mk-recipient-controls{grid-template-columns:1fr!important}
+ #marketing .mk-recipient-list{overflow-x:auto}
+ #marketing .mk-recipient-row{min-width:760px}
 }
 </style></head>
 <body class="pride-theme">
@@ -1290,6 +1308,38 @@ body.pride-theme{background:#f7f3f8!important}
   <div class="field">Body<textarea id="mkBody" rows="16" readonly></textarea></div>
   <div class="notice"><b>SAFE MODE:</b> recipient filtering and campaign generation are active, but bulk email sending is disabled until the outgoing mail sender is fully approved.</div>
   <button class="btn" id="mkCopy">Copy preview</button>
+ </div>
+</div>
+<div class="card" id="mkRecipientsCard" style="margin-top:14px">
+ <div class="pass-pagehead" style="margin-bottom:10px">
+  <div><h3 style="margin:0">Recipients & groups</h3><div class="muted">View customers, filter them into groups, then select the eligible customers you want to email.</div></div>
+  <div><span class="pill"><span id="mkSelectedCount">0</span> selected</span></div>
+ </div>
+ <div class="grid three mk-recipient-controls">
+  <div class="field">Group
+   <select id="mkGroup">
+    <option value="all">All customers</option>
+    <option value="eligible">All eligible</option>
+    <option value="reward_ready">Reward ready</option>
+    <option value="points_holders">Has points</option>
+    <option value="challenge_rewards">Has challenge reward</option>
+    <option value="no_choice">No choice yet</option>
+    <option value="opted_out">Opted out</option>
+   </select>
+  </div>
+  <div class="field">Search<input id="mkSearch" placeholder="Name or email"></div>
+  <div class="field">Selection
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+    <button class="btn alt" id="mkSelectGroup">Select eligible in group</button>
+    <button class="btn" id="mkClearSelection">Clear</button>
+   </div>
+  </div>
+ </div>
+ <div id="mkRecipients" class="mk-recipient-list"><span class="muted">Open this section to load customers.</span></div>
+ <div class="notice" style="margin-top:12px"><b>Safety:</b> customers without valid email marketing permission can be viewed for consent status, but they cannot be selected for a promotional email.</div>
+ <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+  <button class="btn alt" id="mkSendSelected">SEND EMAIL TO SELECTED</button>
+  <span id="mkSendStatus" class="muted">Bulk sending is currently locked until the offers@ sender is connected.</span>
  </div>
 </div>
 <div class="card" style="margin-top:14px">
@@ -6672,7 +6722,33 @@ setTimeout(renderManagerLeaveApprovals,1200);
 <script id="dextersBackOfficeMarketingLive">
 (function(){
  const FN='https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/backoffice-marketing-test';
+ let MK_DATA=null;
+ const MK_SELECTED=new Set();
  function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+ function groupMatch(x,g){
+   if(g==='eligible')return x.eligible;
+   if(g==='reward_ready')return x.eligible&&x.reward_ready;
+   if(g==='points_holders')return x.eligible&&x.points>0;
+   if(g==='challenge_rewards')return x.eligible&&x.active_challenge_rewards>0;
+   if(g==='no_choice')return x.no_choice;
+   if(g==='opted_out')return x.opted_out;
+   return true;
+ }
+ function renderRecipients(){
+   const box=document.getElementById('mkRecipients'); if(!box||!MK_DATA)return;
+   const g=document.getElementById('mkGroup')?.value||'all';
+   const q=(document.getElementById('mkSearch')?.value||'').trim().toLowerCase();
+   const rows=(MK_DATA.customers||[]).filter(x=>groupMatch(x,g)&&(!q||String(x.name||'').toLowerCase().includes(q)||String(x.email||'').toLowerCase().includes(q)));
+   const head='<div class="mk-recipient-row head"><div></div><div>Customer</div><div>Email</div><div>Permission</div><div>Points</div><div>Rewards</div></div>';
+   const body=rows.map(x=>{
+     const status=x.eligible?'<span class="mk-status mk-ok">Eligible</span>':(x.no_choice?'<span class="mk-status mk-wait">No choice</span>':'<span class="mk-status mk-no">Opted out</span>');
+     const rewards=(x.reward_ready?'Coffee reward ':'')+(x.active_challenge_rewards?x.active_challenge_rewards+' challenge':'');
+     return '<div class="mk-recipient-row"><div><input class="mkPick" type="checkbox" data-id="'+esc(x.id)+'" '+(MK_SELECTED.has(x.id)?'checked ':'')+(x.eligible&&x.email?'':'disabled')+'></div><div><b>'+esc(x.name)+'</b></div><div>'+esc(x.email||'No email found')+'</div><div>'+status+'</div><div>'+Number(x.points||0)+'</div><div>'+esc(rewards||'—')+'</div></div>';
+   }).join('');
+   box.innerHTML=head+(body||'<div style="padding:14px" class="muted">No customers match this group/search.</div>');
+   const count=document.getElementById('mkSelectedCount');if(count)count.textContent=String(MK_SELECTED.size);
+   const send=document.getElementById('mkSendSelected');if(send)send.disabled=MK_SELECTED.size===0;
+ }
  async function loadMarketing(){
   const msg=document.getElementById('mkContent'); if(!msg)return;
   msg.innerHTML='<span class="muted">Loading consent-safe campaign data…</span>';
@@ -6689,11 +6765,30 @@ setTimeout(renderManagerLeaveApprovals,1200);
    document.getElementById('mkBody').value=d.preview.body;
    const offers=(d.offers||[]).map(x=>'<div class="item"><b>'+esc(x.title)+'</b><div class="muted">'+esc(x.description||'Current offer')+'</div></div>').join('');
    const challenges=(d.challenges||[]).map(x=>'<div class="item"><b>'+esc(x.title)+'</b><div class="muted">'+esc(x.reward_text||'')+'</div></div>').join('');
+   MK_DATA=d;
    msg.innerHTML='<h4>Offers</h4>'+(offers||'<div class="muted">No active general offers just now.</div>')+'<h4 style="margin-top:12px">Challenges</h4>'+(challenges||'<div class="muted">No active challenges just now.</div>')+'<div class="muted" style="margin-top:12px">'+d.counts.eligible+' customer(s) eligible • '+d.counts.no_choice+' no choice • '+d.counts.opted_out+' opted out</div>';
+   renderRecipients();
   }catch(e){msg.innerHTML='<span class="bad">'+esc(e.message||String(e))+'</span>'}
  }
  document.addEventListener('click',function(e){
   if(e.target?.id==='mkRefresh')loadMarketing();
+  if(e.target?.id==='mkSelectGroup'&&MK_DATA){
+    const g=document.getElementById('mkGroup')?.value||'all';
+    const q=(document.getElementById('mkSearch')?.value||'').trim().toLowerCase();
+    for(const x of MK_DATA.customers||[]){
+      if(groupMatch(x,g)&&x.eligible&&x.email&&(!q||String(x.name||'').toLowerCase().includes(q)||String(x.email||'').toLowerCase().includes(q)))MK_SELECTED.add(x.id);
+    }
+    renderRecipients();
+  }
+  if(e.target?.id==='mkClearSelection'){MK_SELECTED.clear();renderRecipients();}
+  if(e.target?.classList?.contains('mkPick')){
+    const id=e.target.dataset.id;if(e.target.checked)MK_SELECTED.add(id);else MK_SELECTED.delete(id);renderRecipients();
+  }
+  if(e.target?.id==='mkSendSelected'){
+    const s=document.getElementById('mkSendStatus');
+    if(!MK_SELECTED.size){if(s)s.textContent='Select at least one eligible customer.';return}
+    if(s)s.textContent='Ready: '+MK_SELECTED.size+' eligible customer(s) selected. Real sending is still locked until offers@dextersspot.co.uk is connected for outgoing mail.';
+  }
   const tab=e.target?.closest?.('[data-tab="marketing"]');
   if(tab)setTimeout(loadMarketing,120);
   if(e.target?.id==='mkCopy'){
