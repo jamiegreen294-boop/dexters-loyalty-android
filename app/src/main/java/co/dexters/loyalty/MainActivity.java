@@ -7,205 +7,191 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.CallLog;
+import android.provider.Settings;
+import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.CookieManager;
-import android.webkit.PermissionRequest;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends Activity {
-    private static final String HOME = "https://dexters-loyalty-v15.vercel.app";
-    private static final int CAMERA_REQUEST = 1001;
-    private WebView webView;
-    private View splashView;
-    private PermissionRequest pendingPermission;
+    private static final int REQ_PERMS = 44;
+    private static final int BG = Color.rgb(7, 16, 29);
+    private static final int PANEL = Color.rgb(16, 27, 45);
+    private static final int GOLD = Color.rgb(246, 183, 60);
+    private static final int TEXT = Color.WHITE;
+    private static final int MUTED = Color.rgb(159, 176, 200);
 
-    @Override public void onCreate(Bundle savedInstanceState) {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        enterImmersiveMode();
-
-        FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(Color.rgb(3, 4, 7));
-
-        webView = new WebView(this);
-        webView.setBackgroundColor(Color.rgb(3, 4, 7));
-        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        root.addView(webView, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-
-        splashView = buildSplash();
-        root.addView(splashView, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-        setContentView(root);
-
-        WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setDatabaseEnabled(true);
-        s.setMediaPlaybackRequiresUserGesture(false);
-        s.setAllowFileAccess(false);
-        s.setAllowContentAccess(false);
-        s.setSupportZoom(false);
-        s.setBuiltInZoomControls(false);
-        s.setDisplayZoomControls(false);
-        s.setLoadWithOverviewMode(false);
-        s.setUseWideViewPort(false);
-        s.setTextZoom(100);
-        s.setCacheMode(WebSettings.LOAD_DEFAULT);
-        s.setUserAgentString(s.getUserAgentString() + " DextersLoyaltyApp/1.1");
-
-        CookieManager cookies = CookieManager.getInstance();
-        cookies.setAcceptCookie(true);
-        cookies.setAcceptThirdPartyCookies(webView, true);
-
-        webView.setWebViewClient(new WebViewClient() {
-            @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return handleUrl(request.getUrl().toString());
-            }
-
-            @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return handleUrl(url);
-            }
-
-            @Override public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                forcePhoneLayout();
-                hideSplash();
-            }
-        });
-
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override public void onPermissionRequest(PermissionRequest request) {
-                runOnUiThread(() -> {
-                    for (String resource : request.getResources()) {
-                        if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)) {
-                            if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                                request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-                            } else {
-                                pendingPermission = request;
-                                requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST);
-                            }
-                            return;
-                        }
-                    }
-                    request.deny();
-                });
-            }
-        });
-
-        if (savedInstanceState == null) {
-            webView.loadUrl(HOME);
-        } else {
-            webView.restoreState(savedInstanceState);
-            hideSplash();
-        }
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setStatusBarColor(Color.rgb(10, 20, 35));
+        getWindow().setNavigationBarColor(Color.rgb(10, 20, 35));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setContentView(buildHome());
+        requestBusinessPermissions();
     }
 
-    private View buildSplash() {
-        FrameLayout splash = new FrameLayout(this);
-        splash.setBackgroundColor(Color.rgb(3, 4, 7));
-
-        TextView brand = new TextView(this);
-        brand.setText("♛\nDEXTER’S\nREWARDS");
-        brand.setTextColor(Color.WHITE);
-        brand.setTextSize(34);
-        brand.setGravity(android.view.Gravity.CENTER);
-        brand.setLineSpacing(6f, 1f);
-        brand.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
-        brand.setShadowLayer(18f, 0f, 0f, Color.rgb(255, 132, 35));
-        splash.addView(brand, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-        return splash;
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // If this app is selected as the Android Home app, pressing Home returns here.
     }
 
-    private boolean handleUrl(String url) {
-        if (url == null || url.isEmpty()) return false;
-        Uri uri = Uri.parse(url);
-        String scheme = uri.getScheme();
-        String host = uri.getHost();
+    private View buildHome() {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setBackgroundColor(BG);
 
-        if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
-            if (host != null && (host.equals("dexters-loyalty-v15.vercel.app") ||
-                    host.equals("app.dextersspot.co.uk") || host.endsWith(".dextersspot.co.uk") ||
-                    host.equals("dextersspot.co.uk"))) {
-                return false;
-            }
-        }
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(18), dp(22), dp(18), dp(28));
+        scroll.addView(root, new ScrollView.LayoutParams(-1, -1));
 
+        TextView eyebrow = text("DEXTER'S", 13, GOLD, true);
+        eyebrow.setLetterSpacing(.18f);
+        root.addView(eyebrow);
+
+        TextView title = text("Business Phone", 30, TEXT, true);
+        root.addView(title, lp(-1, -2, 0, 4, 0, 0));
+
+        TextView subtitle = text("Dedicated staff handset", 14, MUTED, false);
+        root.addView(subtitle, lp(-1, -2, 0, 0, 0, 22));
+
+        LinearLayout callCard = card();
+        callCard.addView(text("PHONE", 12, GOLD, true));
+        callCard.addView(text("Ready for Dexter's calls", 22, TEXT, true), lp(-1, -2, 0, 4, 0, 4));
+        callCard.addView(text("Use the normal phone network or the bOnline app. Orders and customer tools stay one tap away.", 14, MUTED, false));
+        root.addView(callCard, lp(-1, -2, 0, 0, 0, 14));
+
+        root.addView(action("☎  MAKE A CALL", v -> openDialer()), lp(-1, dp(58), 0, 0, 0, 10));
+        root.addView(action("↺  RECENT CALLS", v -> openRecentCalls()), lp(-1, dp(58), 0, 0, 0, 10));
+        root.addView(action("☁  bONLINE", v -> openUrl("https://www.bonline.com/")), lp(-1, dp(58), 0, 0, 0, 10));
+
+        TextView ops = text("DEXTER'S BUSINESS", 12, GOLD, true);
+        ops.setLetterSpacing(.12f);
+        root.addView(ops, lp(-1, -2, 0, 18, 0, 8));
+
+        root.addView(action("▣  BACK OFFICE", v -> openUrl("https://backoffice.dextersspot.co.uk/")), lp(-1, dp(58), 0, 0, 0, 10));
+        root.addView(action("✦  PHONE ORDER MODE", v -> showOrderMode()), lp(-1, dp(58), 0, 0, 0, 10));
+        root.addView(action("⚙  DEVICE SETTINGS", v -> openDeviceSettings()), lp(-1, dp(58), 0, 0, 0, 10));
+
+        TextView note = text("Test build • Meizu dedicated Dexter's handset", 12, MUTED, false);
+        note.setGravity(Gravity.CENTER);
+        root.addView(note, lp(-1, -2, 0, 22, 0, 0));
+        return scroll;
+    }
+
+    private LinearLayout card() {
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+        l.setPadding(dp(16), dp(16), dp(16), dp(16));
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+        g.setColor(PANEL);
+        g.setCornerRadius(dp(18));
+        g.setStroke(dp(1), Color.rgb(38, 55, 81));
+        l.setBackground(g);
+        return l;
+    }
+
+    private Button action(String label, View.OnClickListener listener) {
+        Button b = new Button(this);
+        b.setText(label);
+        b.setTextSize(16);
+        b.setTextColor(TEXT);
+        b.setAllCaps(false);
+        b.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        b.setPadding(dp(18), 0, dp(14), 0);
+        b.setOnClickListener(listener);
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+        g.setColor(PANEL);
+        g.setCornerRadius(dp(15));
+        g.setStroke(dp(1), Color.rgb(38, 55, 81));
+        b.setBackground(g);
+        return b;
+    }
+
+    private TextView text(String s, int sp, int colour, boolean bold) {
+        TextView t = new TextView(this);
+        t.setText(s);
+        t.setTextSize(sp);
+        t.setTextColor(colour);
+        if (bold) t.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        return t;
+    }
+
+    private LinearLayout.LayoutParams lp(int w, int h, int l, int t, int r, int b) {
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w, h);
+        p.setMargins(dp(l), dp(t), dp(r), dp(b));
+        return p;
+    }
+
+    private int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
+
+    private void openDialer() {
         try {
-            startActivity(new Intent(Intent.ACTION_VIEW, uri));
-            return true;
-        } catch (Exception ignored) {
-            return false;
+            startActivity(new Intent(Intent.ACTION_DIAL));
+        } catch (Exception e) {
+            toast("Phone app could not be opened.");
         }
     }
 
-    private void forcePhoneLayout() {
-        String js = "(function(){" +
-                "var m=document.querySelector('meta[name=viewport]');" +
-                "if(!m){m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);}" +
-                "m.content='width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover';" +
-                "document.documentElement.style.width='100%';document.documentElement.style.maxWidth='100%';" +
-                "document.documentElement.style.overflowX='hidden';" +
-                "document.body.style.width='100%';document.body.style.maxWidth='100%';document.body.style.margin='0';" +
-                "var w=document.querySelector('.wrap');if(w){w.style.width='100%';w.style.maxWidth='none';w.style.margin='0';w.style.boxSizing='border-box';}" +
-                "var n=document.getElementById('workHomeNav');if(n){n.style.width='100%';n.style.maxWidth='none';}" +
-                "document.documentElement.setAttribute('data-dexters-native-app','1');" +
-                "})();";
-        webView.evaluateJavascript(js, null);
-    }
-
-    private void hideSplash() {
-        if (splashView == null || splashView.getVisibility() != View.VISIBLE) return;
-        splashView.animate().alpha(0f).setDuration(220).withEndAction(() -> {
-            splashView.setVisibility(View.GONE);
-            splashView.setAlpha(1f);
-        }).start();
-    }
-
-    private void enterImmersiveMode() {
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
-        getWindow().setNavigationBarColor(Color.rgb(3, 4, 7));
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-                View.SYSTEM_UI_FLAG_FULLSCREEN |
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
-
-    @Override public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) enterImmersiveMode();
-    }
-
-    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == CAMERA_REQUEST && pendingPermission != null) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pendingPermission.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-            } else {
-                pendingPermission.deny();
-            }
-            pendingPermission = null;
+    private void openRecentCalls() {
+        try {
+            Intent i = new Intent(Intent.ACTION_VIEW, CallLog.Calls.CONTENT_URI);
+            startActivity(i);
+        } catch (Exception e) {
+            openDialer();
         }
     }
 
-    @Override public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) webView.goBack(); else super.onBackPressed();
+    private void openUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception e) {
+            toast("No browser is available on this handset.");
+        }
     }
 
-    @Override protected void onSaveInstanceState(Bundle outState) {
-        webView.saveState(outState);
-        super.onSaveInstanceState(outState);
+    private void openDeviceSettings() {
+        try {
+            startActivity(new Intent(Settings.ACTION_SETTINGS));
+        } catch (Exception e) {
+            toast("Settings unavailable.");
+        }
     }
+
+    private void showOrderMode() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Dexter's Phone Order Mode")
+                .setMessage("This handset is prepared for the next stage: caller matching, live order transcription, POS basket/modifiers and Send to KDS. Those services will connect to Dexter's existing order system rather than changing the live loyalty app.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    private void requestBusinessPermissions() {
+        if (android.os.Build.VERSION.SDK_INT < 23) return;
+        List<String> p = new ArrayList<>();
+        addIfMissing(p, Manifest.permission.READ_PHONE_STATE);
+        addIfMissing(p, Manifest.permission.READ_CALL_LOG);
+        addIfMissing(p, Manifest.permission.WRITE_CALL_LOG);
+        addIfMissing(p, Manifest.permission.READ_CONTACTS);
+        addIfMissing(p, Manifest.permission.RECORD_AUDIO);
+        if (!p.isEmpty()) requestPermissions(p.toArray(new String[0]), REQ_PERMS);
+    }
+
+    private void addIfMissing(List<String> list, String permission) {
+        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) list.add(permission);
+    }
+
+    private void toast(String s) { Toast.makeText(this, s, Toast.LENGTH_SHORT).show(); }
 }
