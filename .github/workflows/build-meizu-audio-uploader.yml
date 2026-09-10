@@ -1,0 +1,30 @@
+name: Build Meizu Audio Uploader
+
+on:
+  push:
+    branches:
+      - meizu-audio-listener-build
+    paths:
+      - 'meizu-audio-uploader/**'
+      - '.github/workflows/build-meizu-audio-uploader.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Build uploader APK
+        run: gradle -p meizu-audio-uploader assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dexters-Meizu-Test-Upload
+          path: meizu-audio-uploader/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
