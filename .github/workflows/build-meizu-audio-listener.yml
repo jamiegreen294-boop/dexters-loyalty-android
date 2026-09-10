@@ -4,6 +4,7 @@ on:
     branches: [ meizu-audio-listener-build ]
     paths:
       - 'meizu-audio-test/**'
+      - 'meizu-audio-uploader/**'
       - '.github/workflows/build-meizu-audio-listener.yml'
 jobs:
   build:
@@ -17,10 +18,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Build isolated Meizu APK
+      - name: Build isolated Meizu listener APK
         working-directory: meizu-audio-test
+        run: gradle --no-daemon assembleDebug
+      - name: Build manual Supabase uploader APK
+        working-directory: meizu-audio-uploader
         run: gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: Dexters-Meizu-Audio-Listener
           path: meizu-audio-test/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dexters-Meizu-Test-Upload
+          path: meizu-audio-uploader/app/build/outputs/apk/debug/app-debug.apk
