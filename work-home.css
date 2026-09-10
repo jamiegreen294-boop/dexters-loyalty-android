@@ -55,27 +55,4 @@ body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:1
 #seasonFx>.season-fx:nth-child(n+9){display:none!important}
 body.dexters-motion-paused #seasonFx .season-fx{animation-play-state:paused!important}
 #homePage.work-home>.work-usual,#homePage.work-home>.work-current,#homePage.work-home>.work-deals,#homePage.work-home>.card{content-visibility:auto;contain-intrinsic-size:1px 180px}
-
-/* Mobile layout fix: use the real device width and remove inherited narrow wrappers.
-   Presentation/theme colours/artwork are intentionally untouched. */
-@media(max-width:600px){
-  html,body{width:100%;max-width:100%;overflow-x:hidden}
-  body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) .wrap,
-  body:has(#appView:not(.hidden) #qrPage.work-rewards:not(.hidden)) .wrap,
-  body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{
-    width:100%!important;
-    max-width:none!important;
-    min-width:0!important;
-    margin-left:0!important;
-    margin-right:0!important;
-    box-sizing:border-box!important;
-  }
-  body:has(#appView:not(.hidden) :is(#homePage.work-home:not(.hidden),#qrPage.work-rewards:not(.hidden),#accountPage:not(.hidden))) #workHomeNav{
-    width:100%!important;
-    max-width:none!important;
-  }
-  #homePage.work-home,#qrPage.work-rewards,#accountPage{width:100%;max-width:100%;min-width:0}
-  #workQuickActions{width:100%}
-}
-
 @media(max-width:360px){#homePage .work-brand{font-size:24px}#homePage .work-action{padding:13px;min-height:104px}.work-action .wt{font-size:15px}}
