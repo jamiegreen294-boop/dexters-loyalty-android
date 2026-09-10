@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CallLog;
 import android.view.Gravity;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -27,11 +26,8 @@ public class CallLogActivity extends Activity {
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         buildUi();
-        if (checkSelfPermission(Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
-            loadCalls();
-        } else {
-            requestPermissions(new String[]{Manifest.permission.READ_CALL_LOG}, CALL_LOG_REQUEST);
-        }
+        if (checkSelfPermission(Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED) loadCalls();
+        else requestPermissions(new String[]{Manifest.permission.READ_CALL_LOG}, CALL_LOG_REQUEST);
     }
 
     private void buildUi() {
@@ -61,13 +57,16 @@ public class CallLogActivity extends Activity {
         scroll.addView(list, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         root.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
+        Button audio = new Button(this);
+        audio.setText("MEIZU AUDIO TEST");
+        audio.setAllCaps(false);
+        audio.setOnClickListener(v -> startActivity(new Intent(this, AudioCaptureTestActivity.class)));
+        root.addView(audio, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
         Button ai = new Button(this);
         ai.setText("AI ORDER SETUP");
         ai.setAllCaps(false);
-        ai.setOnClickListener(v -> {
-            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://backoffice.dextersspot.co.uk/"));
-            startActivity(i);
-        });
+        ai.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://backoffice.dextersspot.co.uk/"))));
         root.addView(ai, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         setContentView(root);
@@ -75,29 +74,20 @@ public class CallLogActivity extends Activity {
 
     private void loadCalls() {
         list.removeAllViews();
-        Cursor c = getContentResolver().query(
-                CallLog.Calls.CONTENT_URI,
+        Cursor c = getContentResolver().query(CallLog.Calls.CONTENT_URI,
                 new String[]{CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION},
-                null, null,
-                CallLog.Calls.DATE + " DESC");
+                null, null, CallLog.Calls.DATE + " DESC");
         if (c == null) return;
-
         int numberIndex = c.getColumnIndex(CallLog.Calls.NUMBER);
         int typeIndex = c.getColumnIndex(CallLog.Calls.TYPE);
         int dateIndex = c.getColumnIndex(CallLog.Calls.DATE);
         int durationIndex = c.getColumnIndex(CallLog.Calls.DURATION);
         int shown = 0;
-
         while (c.moveToNext() && shown < 50) {
-            String number = c.getString(numberIndex);
-            int type = c.getInt(typeIndex);
-            long date = c.getLong(dateIndex);
-            long duration = c.getLong(durationIndex);
-            addCallRow(number, type, date, duration);
+            addCallRow(c.getString(numberIndex), c.getInt(typeIndex), c.getLong(dateIndex), c.getLong(durationIndex));
             shown++;
         }
         c.close();
-
         if (shown == 0) {
             TextView empty = new TextView(this);
             empty.setText("No calls found yet.");
@@ -113,28 +103,20 @@ public class CallLogActivity extends Activity {
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(18, 18, 18, 18);
         row.setBackgroundColor(Color.rgb(20, 22, 27));
-
         TextView n = new TextView(this);
         n.setText(number == null || number.isEmpty() ? "Unknown number" : number);
         n.setTextColor(Color.WHITE);
         n.setTextSize(19);
         n.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
         row.addView(n);
-
-        String kind = type == CallLog.Calls.INCOMING_TYPE ? "Incoming" :
-                type == CallLog.Calls.OUTGOING_TYPE ? "Outgoing" :
-                type == CallLog.Calls.MISSED_TYPE ? "Missed" : "Call";
+        String kind = type == CallLog.Calls.INCOMING_TYPE ? "Incoming" : type == CallLog.Calls.OUTGOING_TYPE ? "Outgoing" : type == CallLog.Calls.MISSED_TYPE ? "Missed" : "Call";
         TextView meta = new TextView(this);
         meta.setText(kind + " • " + DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(date)) + " • " + duration + "s");
         meta.setTextColor(Color.LTGRAY);
         meta.setTextSize(13);
         meta.setPadding(0, 5, 0, 0);
         row.addView(meta);
-
-        if (number != null && !number.isEmpty()) {
-            row.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(number)))));
-        }
-
+        if (number != null && !number.isEmpty()) row.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(number)))));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.setMargins(0, 0, 0, 12);
         list.addView(row, lp);
