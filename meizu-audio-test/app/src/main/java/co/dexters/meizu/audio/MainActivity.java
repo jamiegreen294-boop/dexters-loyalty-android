@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.core.content.FileProvider;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -21,6 +23,7 @@ import java.net.URL;
 public class MainActivity extends Activity {
     private TextView status;
     private Button upload;
+    private Button share;
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable poll=new Runnable(){ @Override public void run(){ refreshStatus(); handler.postDelayed(this,500); } };
     private static final String UPLOAD_URL="https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/meizu-audio-upload";
@@ -38,7 +41,7 @@ public class MainActivity extends Activity {
         root.addView(title,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT));
 
         TextView info = new TextView(this);
-        info.setText("Meizu-only test. Start the AI listener BEFORE answering the bOnline call. Stop it after the test, then upload the saved test recording to Supabase manually.");
+        info.setText("Meizu-only test. Start the AI listener BEFORE answering the bOnline call. Stop it after the test, then upload or securely share the saved test recording.");
         info.setTextSize(16f);
         LinearLayout.LayoutParams ip=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT); ip.setMargins(0,24,0,24);
         root.addView(info,ip);
@@ -56,8 +59,11 @@ public class MainActivity extends Activity {
         upload=new Button(this); upload.setText("UPLOAD TEST TO SUPABASE"); upload.setEnabled(false); upload.setOnClickListener(v->uploadLastRecording());
         root.addView(upload,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        share=new Button(this); share.setText("SHARE LAST RECORDING"); share.setEnabled(false); share.setOnClickListener(v->shareLastRecording());
+        root.addView(share,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT));
+
         TextView note=new TextView(this);
-        note.setText("Test: 1) Start listener. 2) Answer bOnline call. 3) Speak for 15–30 seconds. 4) Stop listener. 5) Wait for 'Recording ready'. 6) Tap Upload Test to Supabase.");
+        note.setText("Test: 1) Start listener. 2) Answer bOnline call. 3) Speak for 15–30 seconds. 4) Stop listener. 5) Wait for 'Recording ready'. 6) Upload to Supabase or tap Share Last Recording to attach the exact newest WAV to ChatGPT.");
         note.setTextSize(14f);
         LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT); np.setMargins(0,24,0,0);
         root.addView(note,np);
@@ -66,12 +72,17 @@ public class MainActivity extends Activity {
     }
 
     private SharedPreferences prefs(){ return getSharedPreferences("dexteros_audio",MODE_PRIVATE); }
+    private File getLastRecording(){
+        String p=prefs().getString("last_path","");
+        return p.isEmpty()?null:new File(p);
+    }
     private void refreshStatus(){
         String s=prefs().getString("last_status","Stopped");
         status.setText("Status: "+s);
-        String p=prefs().getString("last_path","");
-        File f=p.isEmpty()?null:new File(p);
-        upload.setEnabled(f!=null && f.exists() && f.length()>44 && !s.startsWith("LISTENING") && !s.startsWith("Stopping"));
+        File f=getLastRecording();
+        boolean ready=f!=null && f.exists() && f.length()>44 && !s.startsWith("LISTENING") && !s.startsWith("Stopping");
+        upload.setEnabled(ready);
+        share.setEnabled(ready);
     }
 
     @Override protected void onResume(){ super.onResume(); handler.post(poll); }
@@ -87,8 +98,8 @@ public class MainActivity extends Activity {
     }
 
     private void uploadLastRecording(){
-        String p=prefs().getString("last_path",""); File f=new File(p);
-        if(!f.exists()){ prefs().edit().putString("last_status","ERROR: saved recording not found").apply(); refreshStatus(); return; }
+        File f=getLastRecording();
+        if(f==null || !f.exists()){ prefs().edit().putString("last_status","ERROR: saved recording not found").apply(); refreshStatus(); return; }
         upload.setEnabled(false); status.setText("Status: uploading test recording…");
         new Thread(()->{
             try{
@@ -105,6 +116,22 @@ public class MainActivity extends Activity {
             }catch(Exception e){ prefs().edit().putString("last_status","ERROR uploading: "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage())).apply(); }
             runOnUiThread(this::refreshStatus);
         },"DexterOS-Upload").start();
+    }
+
+    private void shareLastRecording(){
+        try {
+            File f=getLastRecording();
+            if(f==null || !f.exists()) throw new FileNotFoundException("saved recording not found");
+            Uri uri=FileProvider.getUriForFile(this,getPackageName()+".files",f);
+            Intent send=new Intent(Intent.ACTION_SEND);
+            send.setType("audio/wav");
+            send.putExtra(Intent.EXTRA_STREAM,uri);
+            send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(send,"Share DEXTEROS test recording"));
+        } catch(Exception e){
+            prefs().edit().putString("last_status","ERROR sharing recording: "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage())).apply();
+            refreshStatus();
+        }
     }
 
     @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] results){
