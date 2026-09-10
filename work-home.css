@@ -51,6 +51,13 @@ body:has(#appView:not(.hidden) #qrPage.work-rewards:not(.hidden)) .wrap{padding-
 
 body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:100px}
 
+/* Restore the installed PWA to the real phone width. Some Android standalone PWAs report a wider CSS viewport, so keep the mobile override through tablet-width rather than pinning the customer shell to 480px. */
+@media(max-width:900px){
+ body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) .wrap{width:100%!important;max-width:none!important;box-sizing:border-box!important;margin-left:0!important;margin-right:0!important}
+ body:has(#appView:not(.hidden) :is(#homePage.work-home:not(.hidden),#qrPage.work-rewards:not(.hidden),#accountPage:not(.hidden))) #workHomeNav{width:100%!important;max-width:none!important}
+ body:has(#appView:not(.hidden) #homePage.work-home:not(.hidden)) #seasonBanner{width:calc(100% - 28px)!important;max-width:none!important;box-sizing:border-box!important}
+}
+
 /* Keep every seasonal theme, but limit compositing work on lower-powered phones. */
 #seasonFx>.season-fx:nth-child(n+9){display:none!important}
 body.dexters-motion-paused #seasonFx .season-fx{animation-play-state:paused!important}
