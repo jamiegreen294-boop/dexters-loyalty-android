@@ -1,13 +1,18 @@
 package co.dexters.meizu.audio;
 
 import android.app.*;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import java.io.*;
 
 public class LiveAudioCaptureService extends Service {
@@ -61,17 +66,42 @@ public class LiveAudioCaptureService extends Service {
         try{ if(recorder!=null) recorder.release(); }catch(Exception ignored){}
         recorder=null;
         if(pcmFile!=null && pcmFile.exists()){
-            File dir=getExternalFilesDir(null); if(dir==null) dir=getFilesDir();
-            File wav=new File(dir,"dexteros-call-test-"+System.currentTimeMillis()+".wav");
-            try{ pcmToWav(pcmFile,wav); }catch(Exception ignored){}
+            String name="dexteros-call-test-"+System.currentTimeMillis()+".wav";
+            try{ saveWavToDownloads(pcmFile,name); }catch(Exception ignored){}
             pcmFile.delete();
         }
         stopForeground(true);
     }
 
-    private void pcmToWav(File pcm,File wav) throws IOException{
+    private void saveWavToDownloads(File pcm,String fileName) throws IOException {
+        if(Build.VERSION.SDK_INT>=29){
+            ContentResolver resolver=getContentResolver();
+            ContentValues values=new ContentValues();
+            values.put(MediaStore.Downloads.DISPLAY_NAME,fileName);
+            values.put(MediaStore.Downloads.MIME_TYPE,"audio/wav");
+            values.put(MediaStore.Downloads.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS+"/DEXTEROS");
+            values.put(MediaStore.Downloads.IS_PENDING,1);
+            Uri uri=resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI,values);
+            if(uri==null) throw new IOException("Unable to create Downloads file");
+            try(OutputStream out=resolver.openOutputStream(uri)){
+                if(out==null) throw new IOException("Unable to open Downloads file");
+                pcmToWav(pcm,out);
+            }
+            values.clear();
+            values.put(MediaStore.Downloads.IS_PENDING,0);
+            resolver.update(uri,values,null,null);
+        } else {
+            File downloads=Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File dir=new File(downloads,"DEXTEROS");
+            if(!dir.exists() && !dir.mkdirs()) throw new IOException("Unable to create DEXTEROS folder");
+            File wav=new File(dir,fileName);
+            try(FileOutputStream out=new FileOutputStream(wav)){ pcmToWav(pcm,out); }
+        }
+    }
+
+    private void pcmToWav(File pcm,OutputStream out) throws IOException{
         long audioLen=pcm.length(), dataLen=audioLen+36; int byteRate=RATE*2;
-        try(FileInputStream in=new FileInputStream(pcm); FileOutputStream out=new FileOutputStream(wav)){
+        try(FileInputStream in=new FileInputStream(pcm)){
             byte[] h=new byte[44];
             h[0]='R';h[1]='I';h[2]='F';h[3]='F'; putInt(h,4,(int)(dataLen)); h[8]='W';h[9]='A';h[10]='V';h[11]='E'; h[12]='f';h[13]='m';h[14]='t';h[15]=' '; putInt(h,16,16); h[20]=1;h[22]=1; putInt(h,24,RATE); putInt(h,28,byteRate); h[32]=2;h[34]=16; h[36]='d';h[37]='a';h[38]='t';h[39]='a'; putInt(h,40,(int)audioLen); out.write(h);
             byte[] b=new byte[8192]; int n; while((n=in.read(b))!=-1) out.write(b,0,n);
