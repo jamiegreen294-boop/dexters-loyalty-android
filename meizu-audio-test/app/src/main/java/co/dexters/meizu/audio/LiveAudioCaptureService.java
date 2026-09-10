@@ -15,10 +15,12 @@ public class LiveAudioCaptureService extends Service {
     public static final String ACTION_START="co.dexters.meizu.audio.START";
     public static final String ACTION_STOP="co.dexters.meizu.audio.STOP";
     private static final int RATE=16000;
+    private static final int SILENT_RESTART_CHUNKS=2;
     private volatile boolean running=false;
     private AudioRecord recorder;
     private Thread worker;
     private File pcmFile;
+    private int restartCount=0;
 
     @Override public void onCreate(){ super.onCreate(); createChannel(); }
 
@@ -45,27 +47,77 @@ public class LiveAudioCaptureService extends Service {
 
     private void createChannel(){ if(Build.VERSION.SDK_INT>=26){ NotificationChannel c=new NotificationChannel("dexteros_audio","DEXTEROS Audio",NotificationManager.IMPORTANCE_LOW); ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(c);} }
 
+    private AudioRecord createRecorder(int buf) throws Exception {
+        AudioRecord r=new AudioRecord(MediaRecorder.AudioSource.MIC,RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT,buf);
+        if(r.getState()!=AudioRecord.STATE_INITIALIZED){ try{r.release();}catch(Exception ignored){} throw new IOException("microphone could not initialise"); }
+        r.startRecording();
+        return r;
+    }
+
+    private boolean isAllZero(byte[] data,int n){
+        for(int i=0;i<n;i++) if(data[i]!=0) return false;
+        return true;
+    }
+
+    private synchronized boolean restartRecorder(int buf,String reason){
+        if(!running) return false;
+        try{ if(recorder!=null) recorder.stop(); }catch(Exception ignored){}
+        try{ if(recorder!=null) recorder.release(); }catch(Exception ignored){}
+        recorder=null;
+        try{ Thread.sleep(250); }catch(InterruptedException ignored){}
+        if(!running) return false;
+        try{
+            recorder=createRecorder(buf);
+            restartCount++;
+            setStatus("LISTENING — audio recovered "+restartCount+" time"+(restartCount==1?"":"s"));
+            return true;
+        }catch(Exception e){
+            setStatus("ERROR: audio restart failed after "+reason+": "+e.getClass().getSimpleName());
+            return false;
+        }
+    }
+
     private void startCapture(){
         try {
             int min=AudioRecord.getMinBufferSize(RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
-            int buf=Math.max(min, RATE*2);
-            recorder=new AudioRecord(MediaRecorder.AudioSource.MIC,RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT,buf);
-            if(recorder.getState()!=AudioRecord.STATE_INITIALIZED){ setStatus("ERROR: microphone could not initialise"); stopSelf(); return; }
+            final int buf=Math.max(min, RATE*2);
+            recorder=createRecorder(buf);
             pcmFile=new File(getCacheDir(),"dexteros-live.pcm");
             if(pcmFile.exists()) pcmFile.delete();
+            restartCount=0;
             running=true;
-            recorder.startRecording();
             setStatus("LISTENING — answer bOnline call now");
             worker=new Thread(() -> {
                 byte[] data=new byte[buf];
+                int silentChunks=0;
                 try(FileOutputStream out=new FileOutputStream(pcmFile,false)){
                     while(running){
-                        int n=recorder.read(data,0,data.length);
-                        if(n>0) out.write(data,0,n);
-                        else if(n<0) { setStatus("ERROR: microphone read failed ("+n+")"); break; }
+                        AudioRecord local=recorder;
+                        if(local==null){
+                            if(!restartRecorder(buf,"missing recorder")) break;
+                            silentChunks=0;
+                            continue;
+                        }
+                        int n;
+                        try{ n=local.read(data,0,data.length); }
+                        catch(Exception e){ n=AudioRecord.ERROR_DEAD_OBJECT; }
+
+                        if(n>0){
+                            out.write(data,0,n);
+                            if(isAllZero(data,n)) silentChunks++; else silentChunks=0;
+                            if(silentChunks>=SILENT_RESTART_CHUNKS && running){
+                                out.flush();
+                                if(!restartRecorder(buf,"sustained zero audio")) break;
+                                silentChunks=0;
+                            }
+                        } else if(n==AudioRecord.ERROR_DEAD_OBJECT || n==AudioRecord.ERROR_INVALID_OPERATION || n==AudioRecord.ERROR_BAD_VALUE || n<0){
+                            out.flush();
+                            if(!restartRecorder(buf,"microphone read "+n)) break;
+                            silentChunks=0;
+                        }
                     }
                     out.flush();
-                }catch(Exception e){ setStatus("ERROR: recording failed: "+e.getClass().getSimpleName()); }
+                }catch(Exception e){ setStatus("ERROR: recording failed: "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage())); }
             },"DexterOS-Audio"); worker.start();
         } catch(Exception e){ setStatus("ERROR: "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage())); }
     }
@@ -85,7 +137,7 @@ public class LiveAudioCaptureService extends Service {
             File wav=new File(getFilesDir(),"last-test-recording.wav");
             try(FileOutputStream out=new FileOutputStream(wav,false)){ pcmToWav(pcmFile,out); }
             long wavBytes=wav.length();
-            prefs().edit().putString("last_path",wav.getAbsolutePath()).putLong("last_bytes",wavBytes).putString("last_status","Recording ready — "+wavBytes+" bytes").apply();
+            prefs().edit().putString("last_path",wav.getAbsolutePath()).putLong("last_bytes",wavBytes).putInt("restart_count",restartCount).putString("last_status","Recording ready — "+wavBytes+" bytes — recoveries: "+restartCount).apply();
         } catch(Exception e){ setStatus("ERROR saving recording: "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage())); }
         try{ if(pcmFile!=null) pcmFile.delete(); }catch(Exception ignored){}
         stopForeground(true);
