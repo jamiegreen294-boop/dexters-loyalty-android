@@ -1,8 +1,8 @@
-name: Build Dexters Loyalty APK
+name: Build Dexters Business Phone APK
 
 on:
   push:
-    branches: [ main, fix-mobile-full-width-20260910 ]
+    branches: [ meizu-dedicated-dexters-phone ]
   workflow_dispatch:
 
 permissions:
@@ -30,11 +30,11 @@ jobs:
         run: gradle --no-daemon assembleDebug
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk Dexters-Loyalty-Test.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk Dexters-Business-Phone-Meizu-Test.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Dexters-Loyalty-Test-APK
-          path: Dexters-Loyalty-Test.apk
+          name: Dexters-Business-Phone-Meizu-Test-APK
+          path: Dexters-Business-Phone-Meizu-Test.apk
           if-no-files-found: error
