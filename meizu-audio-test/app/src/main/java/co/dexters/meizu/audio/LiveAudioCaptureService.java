@@ -1,18 +1,14 @@
 package co.dexters.meizu.audio;
 
 import android.app.*;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import java.io.*;
 
 public class LiveAudioCaptureService extends Service {
@@ -28,11 +24,17 @@ public class LiveAudioCaptureService extends Service {
 
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         String a=intent==null?ACTION_START:intent.getAction();
-        if(ACTION_STOP.equals(a)){ stopCapture(); stopSelf(); return START_NOT_STICKY; }
+        if(ACTION_STOP.equals(a)){
+            new Thread(() -> { stopCapture(); stopSelf(); }, "DexterOS-Stop").start();
+            return START_NOT_STICKY;
+        }
         startForegroundCompat();
         if(!running) startCapture();
         return START_STICKY;
     }
+
+    private SharedPreferences prefs(){ return getSharedPreferences("dexteros_audio",MODE_PRIVATE); }
+    private void setStatus(String s){ prefs().edit().putString("last_status",s).apply(); }
 
     private void startForegroundCompat(){
         Notification.Builder b = Build.VERSION.SDK_INT>=26 ? new Notification.Builder(this,"dexteros_audio") : new Notification.Builder(this);
@@ -44,59 +46,49 @@ public class LiveAudioCaptureService extends Service {
     private void createChannel(){ if(Build.VERSION.SDK_INT>=26){ NotificationChannel c=new NotificationChannel("dexteros_audio","DEXTEROS Audio",NotificationManager.IMPORTANCE_LOW); ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(c);} }
 
     private void startCapture(){
-        int min=AudioRecord.getMinBufferSize(RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
-        int buf=Math.max(min, RATE*2);
-        recorder=new AudioRecord(MediaRecorder.AudioSource.MIC,RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT,buf);
-        if(recorder.getState()!=AudioRecord.STATE_INITIALIZED){ stopSelf(); return; }
-        pcmFile=new File(getCacheDir(),"dexteros-live.pcm");
-        running=true;
-        recorder.startRecording();
-        worker=new Thread(() -> {
-            byte[] data=new byte[buf];
-            try(FileOutputStream out=new FileOutputStream(pcmFile,false)){
-                while(running){ int n=recorder.read(data,0,data.length); if(n>0) out.write(data,0,n); }
-            }catch(Exception ignored){}
-        },"DexterOS-Audio"); worker.start();
+        try {
+            int min=AudioRecord.getMinBufferSize(RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
+            int buf=Math.max(min, RATE*2);
+            recorder=new AudioRecord(MediaRecorder.AudioSource.MIC,RATE,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT,buf);
+            if(recorder.getState()!=AudioRecord.STATE_INITIALIZED){ setStatus("ERROR: microphone could not initialise"); stopSelf(); return; }
+            pcmFile=new File(getCacheDir(),"dexteros-live.pcm");
+            if(pcmFile.exists()) pcmFile.delete();
+            running=true;
+            recorder.startRecording();
+            setStatus("LISTENING — answer bOnline call now");
+            worker=new Thread(() -> {
+                byte[] data=new byte[buf];
+                try(FileOutputStream out=new FileOutputStream(pcmFile,false)){
+                    while(running){
+                        int n=recorder.read(data,0,data.length);
+                        if(n>0) out.write(data,0,n);
+                        else if(n<0) { setStatus("ERROR: microphone read failed ("+n+")"); break; }
+                    }
+                    out.flush();
+                }catch(Exception e){ setStatus("ERROR: recording failed: "+e.getClass().getSimpleName()); }
+            },"DexterOS-Audio"); worker.start();
+        } catch(Exception e){ setStatus("ERROR: "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage())); }
     }
 
     private synchronized void stopCapture(){
-        if(!running) return; running=false;
+        if(!running){ setStatus("Stopped — no active recording"); stopForeground(true); return; }
+        setStatus("Stopping recording…");
+        running=false;
         try{ if(recorder!=null) recorder.stop(); }catch(Exception ignored){}
-        try{ if(worker!=null) worker.join(1200); }catch(Exception ignored){}
+        try{ if(worker!=null) worker.join(2500); }catch(Exception ignored){}
         try{ if(recorder!=null) recorder.release(); }catch(Exception ignored){}
         recorder=null;
-        if(pcmFile!=null && pcmFile.exists()){
-            String name="dexteros-call-test-"+System.currentTimeMillis()+".wav";
-            try{ saveWavToDownloads(pcmFile,name); }catch(Exception ignored){}
-            pcmFile.delete();
-        }
+        try {
+            if(pcmFile==null || !pcmFile.exists()) throw new IOException("PCM file missing");
+            long pcmBytes=pcmFile.length();
+            if(pcmBytes<=0) throw new IOException("No audio data captured");
+            File wav=new File(getFilesDir(),"last-test-recording.wav");
+            try(FileOutputStream out=new FileOutputStream(wav,false)){ pcmToWav(pcmFile,out); }
+            long wavBytes=wav.length();
+            prefs().edit().putString("last_path",wav.getAbsolutePath()).putLong("last_bytes",wavBytes).putString("last_status","Recording ready — "+wavBytes+" bytes").apply();
+        } catch(Exception e){ setStatus("ERROR saving recording: "+e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage())); }
+        try{ if(pcmFile!=null) pcmFile.delete(); }catch(Exception ignored){}
         stopForeground(true);
-    }
-
-    private void saveWavToDownloads(File pcm,String fileName) throws IOException {
-        if(Build.VERSION.SDK_INT>=29){
-            ContentResolver resolver=getContentResolver();
-            ContentValues values=new ContentValues();
-            values.put(MediaStore.Downloads.DISPLAY_NAME,fileName);
-            values.put(MediaStore.Downloads.MIME_TYPE,"audio/wav");
-            values.put(MediaStore.Downloads.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS+"/DEXTEROS");
-            values.put(MediaStore.Downloads.IS_PENDING,1);
-            Uri uri=resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI,values);
-            if(uri==null) throw new IOException("Unable to create Downloads file");
-            try(OutputStream out=resolver.openOutputStream(uri)){
-                if(out==null) throw new IOException("Unable to open Downloads file");
-                pcmToWav(pcm,out);
-            }
-            values.clear();
-            values.put(MediaStore.Downloads.IS_PENDING,0);
-            resolver.update(uri,values,null,null);
-        } else {
-            File downloads=Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            File dir=new File(downloads,"DEXTEROS");
-            if(!dir.exists() && !dir.mkdirs()) throw new IOException("Unable to create DEXTEROS folder");
-            File wav=new File(dir,fileName);
-            try(FileOutputStream out=new FileOutputStream(wav)){ pcmToWav(pcm,out); }
-        }
     }
 
     private void pcmToWav(File pcm,OutputStream out) throws IOException{
@@ -104,10 +96,10 @@ public class LiveAudioCaptureService extends Service {
         try(FileInputStream in=new FileInputStream(pcm)){
             byte[] h=new byte[44];
             h[0]='R';h[1]='I';h[2]='F';h[3]='F'; putInt(h,4,(int)(dataLen)); h[8]='W';h[9]='A';h[10]='V';h[11]='E'; h[12]='f';h[13]='m';h[14]='t';h[15]=' '; putInt(h,16,16); h[20]=1;h[22]=1; putInt(h,24,RATE); putInt(h,28,byteRate); h[32]=2;h[34]=16; h[36]='d';h[37]='a';h[38]='t';h[39]='a'; putInt(h,40,(int)audioLen); out.write(h);
-            byte[] b=new byte[8192]; int n; while((n=in.read(b))!=-1) out.write(b,0,n);
+            byte[] b=new byte[8192]; int n; while((n=in.read(b))!=-1) out.write(b,0,n); out.flush();
         }
     }
     private void putInt(byte[] a,int p,int v){a[p]=(byte)v;a[p+1]=(byte)(v>>8);a[p+2]=(byte)(v>>16);a[p+3]=(byte)(v>>24);}
-    @Override public void onDestroy(){ stopCapture(); super.onDestroy(); }
+    @Override public void onDestroy(){ if(running) stopCapture(); super.onDestroy(); }
     @Override public IBinder onBind(Intent i){ return null; }
 }
