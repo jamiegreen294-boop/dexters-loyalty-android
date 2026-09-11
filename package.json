@@ -12,5 +12,5 @@
     "test:loyalty-flows": "node tests/loyalty-flows-regression.test.cjs",
     "test:growth-live": "node tests/growth-live-regression.test.cjs"
   },
-  "deploymentMarker": "pos-sunday-live-20260910"
+  "deploymentMarker": "pos-sunday-live-retry-20260911-1237"
 }
