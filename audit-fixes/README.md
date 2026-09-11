@@ -11,7 +11,7 @@ This branch is intentionally isolated from production. Do not merge or deploy un
    - Rotate the production secret only at the deployment step, after callers are updated together.
 
 2. Authentication hardening
-   - Enable leaked-password protection in Supabase Auth at the production-change step.
+   - Keep Supabase leaked-password protection OFF unless Jamie explicitly changes this instruction later.
    - Review privileged `SECURITY DEFINER` functions before changing grants.
    - Require explicit role checks in every privileged function.
 
