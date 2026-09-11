@@ -38,3 +38,4 @@ jobs:
           name: dexters-proper-cafe-game-v2-alpha1-apk
           path: game/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 7
+# native v2 alpha-1 build trigger
