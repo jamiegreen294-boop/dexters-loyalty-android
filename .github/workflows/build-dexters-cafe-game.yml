@@ -25,6 +25,13 @@ jobs:
           test -f cafe-game-retail/app/build.gradle.kts
           test -f cafe-game-retail/app/src/main/AndroidManifest.xml
           test -f cafe-game-retail/app/src/main/assets/game/index.html
+          cat > cafe-game-retail/app/src/main/res/drawable/splash_background.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:drawable="@color/dexters_background" />
+              <item android:gravity="center" android:width="180dp" android:height="180dp" android:drawable="@drawable/app_icon" />
+          </layer-list>
+          EOF
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -34,6 +41,9 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Install Android 35 platform
+        run: yes | sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
