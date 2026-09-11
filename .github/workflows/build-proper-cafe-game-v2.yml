@@ -12,10 +12,10 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Verify Alpha 1C source archive
-        run: echo "bdf1636d40b93164ef2735048ceb23e47949fe90ea14567e30850a12ace3f3b1  proper-game-v2-alpha1c.zip" | sha256sum -c -
+      - name: Verify Alpha 1D source archive
+        run: echo "d764c551240e41d23816a63220a49efca472eb0f9b3649c423de887c7275669e  proper-game-v2-alpha1d.zip" | sha256sum -c -
       - name: Extract game
-        run: mkdir game && unzip -q proper-game-v2-alpha1c.zip -d game
+        run: mkdir game && unzip -q proper-game-v2-alpha1d.zip -d game
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -36,7 +36,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: dexters-proper-cafe-game-v2-alpha1c-apk
+          name: dexters-proper-cafe-game-v2-alpha1d-apk
           path: game/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 7
       - name: Emulator launch smoke test
