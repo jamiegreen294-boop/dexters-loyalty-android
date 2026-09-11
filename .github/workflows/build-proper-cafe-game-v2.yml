@@ -12,10 +12,10 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Verify source archive
-        run: echo "09338bcd59741e33dacda6600fd05e2f59f5a5e4e797f1973ca53a22d0885e1a  proper-game-v2-alpha1.zip" | sha256sum -c -
+      - name: Verify corrected source archive
+        run: echo "a3d35292b0d81d57c4b536231bd995731fb40140dd9533bdf9a41e885393d95f  proper-game-v2-alpha1b.zip" | sha256sum -c -
       - name: Extract game
-        run: mkdir game && unzip -q proper-game-v2-alpha1.zip -d game
+        run: mkdir game && unzip -q proper-game-v2-alpha1b.zip -d game
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -35,7 +35,6 @@ jobs:
           sha256sum game/app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: dexters-proper-cafe-game-v2-alpha1-apk
+          name: dexters-proper-cafe-game-v2-alpha1b-apk
           path: game/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 7
-# native v2 alpha-1 build trigger
