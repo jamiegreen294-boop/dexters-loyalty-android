@@ -22,20 +22,24 @@ jobs:
         run: |
           mkdir -p /github/home/.local/share/godot/export_templates/4.4.stable
           cp -r /root/.local/share/godot/export_templates/4.4.stable/* /github/home/.local/share/godot/export_templates/4.4.stable/
-          mkdir -p /github/home/.config/godot
-          mkdir -p /github/home/.android
+          mkdir -p /github/home/.config/godot /github/home/.android
           if [ ! -f /github/home/.android/debug.keystore ]; then
             keytool -genkeypair -v -keystore /github/home/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Dexters,C=GB"
           fi
           cp /root/.config/godot/editor_settings-4.4.tres /github/home/.config/godot/editor_settings-4.4.tres || true
           echo 'export/android/java_sdk_path = "/usr/lib/jvm/java-17-openjdk-amd64"' >> /github/home/.config/godot/editor_settings-4.4.tres
           echo 'export/android/android_sdk_path = "/usr/lib/android-sdk"' >> /github/home/.config/godot/editor_settings-4.4.tres
+          yes | sdkmanager "platforms;android-34" "build-tools;34.0.0" >/dev/null || true
           mkdir -p build
 
       - name: Parse-check project
         run: godot --headless --editor --quit
 
       - name: Export Android debug APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /github/home/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: godot --headless --verbose --export-debug "Android" build/Dexters-Cafe-3D.apk
 
       - name: Verify APK
