@@ -17,7 +17,8 @@ jobs:
       - name: Recreate Dexter's Cafe Manager project
         shell: bash
         run: |
-          cat cafe-game-buildsrc.part00 cafe-game-buildsrc.part01 cafe-game-buildsrc.part02 | base64 -d > /tmp/dexters-cafe-game.zip
+          cat cafe-game-src.bin00 cafe-game-src.bin01 cafe-game-src.bin02 cafe-game-src.bin03 cafe-game-src.bin04 cafe-game-src.bin05 cafe-game-src.bin06 > /tmp/dexters-cafe-game.zip
+          echo "8e691544d872448412798962b2dc52b6cf50c3bea7da5b6e97e256b1e65e3a70  /tmp/dexters-cafe-game.zip" | sha256sum -c -
           mkdir -p cafe-game-retail
           unzip -q /tmp/dexters-cafe-game.zip -d cafe-game-retail
           test -f cafe-game-retail/settings.gradle.kts
