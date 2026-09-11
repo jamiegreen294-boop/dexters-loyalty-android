@@ -1,0 +1,52 @@
+import { createClient } from 'jsr:@supabase/supabase-js@2.95.0';
+
+const SOURCE_KEY = Deno.env.get('DEXTERS_ORDER_SOURCE_KEY') || '';
+const allowedOrigin='https://dexters-kds.vercel.app';
+const cors={'Access-Control-Allow-Origin':allowedOrigin,'Access-Control-Allow-Headers':'content-type,x-dexters-source-key','Access-Control-Allow-Methods':'GET,POST,PATCH,OPTIONS','Vary':'Origin'};
+const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
+const secretKeys=JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')||'{}');
+const serviceKey=secretKeys.default||Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
+const supabase=createClient(Deno.env.get('SUPABASE_URL')||'',serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
+const sourceOk=(r:Request)=>!!SOURCE_KEY && r.headers.get('x-dexters-source-key')===SOURCE_KEY;
+
+function customerStatusMessage(status:string,orderNo:number){if(status==='new')return `✅ Your Dexter's order #${orderNo} has been sent to the kitchen.`;if(status==='accepted')return `✅ Your Dexter's order #${orderNo} has been accepted and is in the queue.`;if(status==='cooking')return `👨‍🍳 Your Dexter's order #${orderNo} is now being prepared.`;if(status==='ready')return `✅ Your Dexter's order #${orderNo} is ready for collection. See you soon!`;if(status==='cancelled')return `Your Dexter's order #${orderNo} has been cancelled. Please message us if you need help.`;return ''}
+
+async function queueStatus(orderId:string,status:string,orderNo:number){const body=customerStatusMessage(status,orderNo);if(!body)return;const {data:contact}=await supabase.from('dexters_order_contacts').select('recipient_ref').eq('order_id',orderId).maybeSingle();if(!contact?.recipient_ref)return;await supabase.from('dexters_outbound_messages').insert({order_id:orderId,recipient_ref:contact.recipient_ref,body,message_type:status,status:'pending'})}
+
+async function listOrders(){const {data,error}=await supabase.from('dexters_orders').select('id,order_number,source,customer_name,order_type,status,notes,requested_for,created_at,updated_at,completed_at,dexters_order_items(line_no,quantity,item_name,modifier)').neq('status','cancelled').order('created_at',{ascending:false}).limit(100);if(error)throw error;const core=(data||[]).map((o:any)=>({id:o.id,number:o.order_number,source:o.source,customer:o.customer_name,type:o.order_type,status:o.status,notes:o.notes,requestedFor:o.requested_for,createdAt:new Date(o.created_at).getTime(),updatedAt:o.updated_at?new Date(o.updated_at).getTime():undefined,completedAt:o.completed_at?new Date(o.completed_at).getTime():undefined,items:(o.dexters_order_items||[]).sort((a:any,b:any)=>a.line_no-b.line_no).map((i:any)=>({name:`${Number(i.quantity)%1===0?Number(i.quantity):i.quantity} × ${i.item_name}`,modifier:i.modifier||''}))}));const {data:loyalty,error:le}=await supabase.from('collection_orders').select('*').in('status',['pending','accepted','preparing','ready']).order('created_at',{ascending:false}).limit(100);if(le)throw le;const extra=(loyalty||[]).map((o:any)=>({id:o.id,number:`L${o.order_number}`,source:'loyalty',customer:o.customer_name||'Loyalty customer',type:`Collection · ${o.collection_time||'ASAP'}`,status:o.status==='pending'?'new':o.status==='preparing'?'cooking':o.status,notes:o.order_notes||'',createdAt:new Date(o.created_at).getTime(),updatedAt:o.updated_at?new Date(o.updated_at).getTime():undefined,items:(o.items||[]).map((i:any)=>({name:`${Number(i.qty)||1} × ${i.name}`,modifier:Array.isArray(i.removed)&&i.removed.length?i.removed.map((v:any)=>`NO ${String(v).toUpperCase()}`).join(' · '):''}))}));return [...core,...extra].sort((a:any,b:any)=>b.createdAt-a.createdAt)}
+
+async function createOrder(req:Request){const b=await req.json();if(!Array.isArray(b.items)||!b.items.length)return json({error:'items required'},400);if(b.externalId){const {data:existing}=await supabase.from('dexters_orders').select('id,order_number,status').eq('external_id',String(b.externalId)).maybeSingle();if(existing)return json({ok:true,duplicate:true,order:existing})}const row={external_id:b.externalId?String(b.externalId):null,source:b.source==='xepos'?'xepos':b.source==='test'?'test':'whatsapp',customer_name:String(b.customer||'Customer').slice(0,120),order_type:String(b.type||'Collection').slice(0,40),status:'new',notes:String(b.notes||'').slice(0,1000),requested_for:b.requestedFor||null,source_payload:b.sourcePayload||{}};const {data:o,error}=await supabase.from('dexters_orders').insert(row).select('id,order_number,status').single();if(error)throw error;const items=b.items.map((i:any,idx:number)=>({order_id:o.id,line_no:idx+1,quantity:Number(i.quantity||1),item_name:String(i.name||i.item_name||'Item').slice(0,300),modifier:String(i.modifier||'').slice(0,500)}));const {error:ie}=await supabase.from('dexters_order_items').insert(items);if(ie)throw ie;if(b.recipientRef)await supabase.from('dexters_order_contacts').insert({order_id:o.id,channel:'whatsapp',recipient_ref:String(b.recipientRef).slice(0,200),thread_ref:b.threadRef?String(b.threadRef).slice(0,200):null});await supabase.from('dexters_order_events').insert({order_id:o.id,event_type:'order_created',to_status:'new',source:row.source,payload:{externalId:b.externalId||null}});await queueStatus(o.id,'new',o.order_number);return json({ok:true,order:{id:o.id,number:o.order_number,status:o.status}},201)}
+
+async function updateStatus(orderId:string,req:Request){const b=await req.json();const next=String(b.status||'');if(!['new','accepted','cooking','ready','done','cancelled'].includes(next))return json({error:'invalid status'},400);const {data:loyalty}=await supabase.from('collection_orders').select('id,order_number,status').eq('id',orderId).maybeSingle();if(loyalty){const map:any={new:'pending',accepted:'accepted',cooking:'preparing',ready:'ready',done:'collected',cancelled:'rejected'};const target=map[next];const patch:any={status:target,updated_at:new Date().toISOString()};if(target==='accepted')patch.accepted_at=new Date().toISOString();if(target==='ready')patch.ready_at=new Date().toISOString();if(target==='collected')patch.collected_at=new Date().toISOString();if(target==='rejected'){const reason=String(b.reason||'').trim();if(!reason)return json({error:'rejection reason required'},400);patch.rejection_reason=reason.slice(0,300);patch.rejected_at=new Date().toISOString()}const {error}=await supabase.from('collection_orders').update(patch).eq('id',orderId);if(error)throw error;return json({ok:true,id:orderId,status:next,source:'loyalty',reason:patch.rejection_reason||null})}const {data:old,error:oe}=await supabase.from('dexters_orders').select('id,order_number,status').eq('id',orderId).single();if(oe)throw oe;const patch:any={status:next};if(next==='done')patch.completed_at=new Date().toISOString();else if(old.status==='done')patch.completed_at=null;const {error}=await supabase.from('dexters_orders').update(patch).eq('id',orderId);if(error)throw error;await supabase.from('dexters_order_events').insert({order_id:orderId,event_type:'status_changed',from_status:old.status,to_status:next,source:'kds'});await queueStatus(orderId,next,old.order_number);return json({ok:true,id:orderId,status:next})}
+
+async function collectionStatus(){const {data,error}=await supabase.from('collection_ordering_settings').select('enabled,updated_at').eq('id',1).single();if(error)throw error;return json({enabled:!!data.enabled,updatedAt:data.updated_at})}
+
+async function setCollectionStatus(req:Request){const b=await req.json();if(typeof b.enabled!=='boolean')return json({error:'enabled must be boolean'},400);const {data,error}=await supabase.from('collection_ordering_settings').update({enabled:b.enabled,updated_at:new Date().toISOString()}).eq('id',1).select('enabled,updated_at').single();if(error)throw error;return json({ok:true,enabled:!!data.enabled,updatedAt:data.updated_at})}
+
+async function flushMessages(){const token=Deno.env.get('META_WHATSAPP_TOKEN');const phoneId=Deno.env.get('META_PHONE_NUMBER_ID');if(!token||!phoneId)return json({ok:false,connected:false,reason:'Meta credentials not connected',queued:(await supabase.from('dexters_outbound_messages').select('id',{count:'exact',head:true}).eq('status','pending')).count||0});const {data:msgs,error}=await supabase.from('dexters_outbound_messages').select('*').eq('status','pending').order('created_at').limit(20);if(error)throw error;let sent=0,failed=0;for(const m of msgs||[]){try{const r=await fetch(`https://graph.facebook.com/v23.0/${phoneId}/messages`,{method:'POST',headers:{'authorization':`Bearer ${token}`,'content-type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:m.recipient_ref,type:'text',text:{body:m.body}})});const t=await r.json();if(!r.ok)throw new Error(JSON.stringify(t));await supabase.from('dexters_outbound_messages').update({status:'sent',sent_at:new Date().toISOString(),provider_message_id:t?.messages?.[0]?.id||null}).eq('id',m.id);sent++}catch(e){await supabase.from('dexters_outbound_messages').update({status:'failed',last_error:String(e).slice(0,1000)}).eq('id',m.id);failed++}}return json({ok:true,connected:true,sent,failed})}
+
+Deno.serve(async(req:Request)=>{
+  if(req.method==='OPTIONS') return new Response('ok',{headers:cors});
+  try{
+    const u=new URL(req.url);
+    const path=u.pathname.replace(/^.*\/dexters-order-api/,'')||'/';
+    if(req.method==='GET'&&path==='/health') return json({ok:true});
+    if(req.method==='GET'&&path==='/orders') return json({error:'Legacy KDS route disabled'},410);
+    if(req.method==='GET'&&path==='/collection/status') return json({error:'Legacy KDS route disabled'},410);
+    if(req.method==='PATCH'&&path==='/collection/status') return json({error:'Legacy KDS route disabled'},410);
+    if(req.method==='POST'&&path==='/orders'){
+      if(!sourceOk(req)) return json({error:'unauthorized'},401);
+      return await createOrder(req);
+    }
+    const m=path.match(/^\/orders\/([0-9a-f-]+)\/status$/i);
+    if(req.method==='PATCH'&&m) return json({error:'Legacy KDS route disabled'},410);
+    if(req.method==='POST'&&path==='/messages/flush'){
+      if(!sourceOk(req)) return json({error:'unauthorized'},401);
+      return await flushMessages();
+    }
+    return json({error:'not found'},404);
+  }catch(e){
+    console.error(e);
+    return json({error:String((e as Error)?.message||e)},500);
+  }
+});
