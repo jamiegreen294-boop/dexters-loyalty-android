@@ -1,0 +1,40 @@
+name: Build Dexter's Proper Cafe Game v2
+
+on:
+  push:
+    branches:
+      - dexters-proper-cafe-game-v2
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source archive
+        run: echo "09338bcd59741e33dacda6600fd05e2f59f5a5e4e797f1973ca53a22d0885e1a  proper-game-v2-alpha1.zip" | sha256sum -c -
+      - name: Extract game
+        run: mkdir game && unzip -q proper-game-v2-alpha1.zip -d game
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android 35
+        run: yes | sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Build APK
+        working-directory: game
+        run: gradle :app:assembleDebug --stacktrace
+      - name: Verify APK
+        run: |
+          test -s game/app/build/outputs/apk/debug/app-debug.apk
+          sha256sum game/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dexters-proper-cafe-game-v2-alpha1-apk
+          path: game/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
