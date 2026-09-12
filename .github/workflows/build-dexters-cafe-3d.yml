@@ -28,8 +28,14 @@ jobs:
           mv /root/.config/godot /github/home/.config/godot
           mv /root/.local/share/godot/export_templates/4.4.stable /github/home/.local/share/godot/export_templates/4.4.stable
           mkdir -p /github/home/.android build
+
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+          SETTINGS=/github/home/.config/godot/editor_settings-4.4.tres
+          printf '\nexport/android/android_sdk_path = "/usr/lib/android-sdk"\n' >> "$SETTINGS"
+          printf 'export/android/java_sdk_path = "/usr/lib/jvm/java-17-openjdk-amd64"\n' >> "$SETTINGS"
+
           if [ ! -f /github/home/.android/debug.keystore ]; then
             keytool -genkeypair -v \
               -keystore /github/home/.android/debug.keystore \
@@ -41,9 +47,12 @@ jobs:
               -validity 10000 \
               -dname "CN=Android Debug,O=Dexters,C=GB"
           fi
+
           test -x "$ANDROID_HOME/platform-tools/adb"
           test -d "$ANDROID_HOME/platforms/android-34"
           test -d "$ANDROID_HOME/build-tools/34.0.0"
+          test -x /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+          grep -E 'export/android/(android_sdk_path|java_sdk_path)' "$SETTINGS"
           java -version
           godot --version
 
