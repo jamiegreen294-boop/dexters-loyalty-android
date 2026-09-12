@@ -34,6 +34,39 @@ const bootstrap=`
 <script id="dextersStartupBootstrap">
 (function(){
   'use strict';
+  const SESSION_KEY='sb-bpnkouymdvcogeaqjmxl-auth-token';
+  function hasStoredSession(){
+    try{
+      const raw=localStorage.getItem(SESSION_KEY);
+      if(!raw)return false;
+      const j=JSON.parse(raw);
+      return !!(j?.access_token||j?.currentSession?.access_token||j?.session?.access_token);
+    }catch{return false}
+  }
+  function visible(el){return !!el&&!el.classList.contains('hidden')}
+  async function waitForAuthView(){
+    const auth=document.getElementById('authView'),app=document.getElementById('appView');
+    if(!auth||!app)return;
+    const expectedApp=hasStoredSession();
+    const started=Date.now();
+    while(Date.now()-started<2800){
+      const a=visible(auth),p=visible(app);
+      if(expectedApp?p&&!a:a&&!p){
+        await new Promise(r=>setTimeout(r,90));
+        const a2=visible(auth),p2=visible(app);
+        if(expectedApp?p2&&!a2:a2&&!p2)return;
+      }
+      await new Promise(r=>setTimeout(r,40));
+    }
+    // A stale stored token can legitimately resolve back to Sign In. In that
+    // case, wait only until the UI has reached one unambiguous final view.
+    const fallbackStarted=Date.now();
+    while(Date.now()-fallbackStarted<900){
+      const a=visible(auth),p=visible(app);
+      if(a!==p){await new Promise(r=>setTimeout(r,90));return}
+      await new Promise(r=>setTimeout(r,40));
+    }
+  }
   async function run(){
     const queued=Array.from(document.querySelectorAll('script[type="application/x-dexters-startup"]'))
       .sort((a,b)=>Number(a.dataset.dexOrder)-Number(b.dataset.dexOrder));
@@ -64,6 +97,10 @@ const bootstrap=`
         await new Promise(r=>setTimeout(r,0));
       }
     }
+    // Some app scripts start async auth work and return immediately. Keep the
+    // branded startup cover in place until Supabase has settled on exactly one
+    // of Sign In or the logged-in app, preventing the auth/home screen flash.
+    await waitForAuthView();
     document.documentElement.dataset.dextersStartup='complete';
     window.dispatchEvent(new Event('dexters:startup-complete'));
   }
