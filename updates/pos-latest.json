@@ -1,6 +1,6 @@
 {
-  "versionCode": 1010,
-  "versionName": "1.010-pos",
+  "versionCode": 1011,
+  "versionName": "1.011-pos",
   "apkUrl": "https://github.com/jamiegreen294-boop/dexters-loyalty-android/releases/latest/download/Dexters-POS-Tablet.apk",
-  "notes": "Dexter's POS stable-update signing build."
+  "notes": "Adds Sunday Roast manual entry and edit to the live table-service POS."
 }
