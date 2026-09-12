@@ -1,6 +1,6 @@
 {
-  "versionCode": 1012,
-  "versionName": "1.012-pos",
+  "versionCode": 1013,
+  "versionName": "1.013-pos",
   "apkUrl": "https://github.com/jamiegreen294-boop/dexters-loyalty-android/releases/latest/download/Dexters-POS-Tablet.apk",
-  "notes": "Shows menu categories in the POS basket and carries category labels through to the KDS."
+  "notes": "Final shell update: POS interface now refreshes automatically from the live source, with the current 1.012 POS kept inside the app as a fallback backup."
 }
