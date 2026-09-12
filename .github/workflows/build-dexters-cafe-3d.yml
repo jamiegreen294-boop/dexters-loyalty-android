@@ -13,6 +13,7 @@ jobs:
       image: barichello/godot-ci:4.4
     defaults:
       run:
+        shell: bash
         working-directory: dexters-cafe-3d
     steps:
       - name: Checkout
@@ -28,35 +29,22 @@ jobs:
           mv /root/.config/godot /github/home/.config/godot
           mv /root/.local/share/godot/export_templates/4.4.stable /github/home/.local/share/godot/export_templates/4.4.stable
           mkdir -p /github/home/.android build android/build
-
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-
           SETTINGS=/github/home/.config/godot/editor_settings-4.4.tres
           printf '\nexport/android/android_sdk_path = "/usr/lib/android-sdk"\n' >> "$SETTINGS"
           printf 'export/android/java_sdk_path = "/usr/lib/jvm/java-17-openjdk-amd64"\n' >> "$SETTINGS"
           printf 'export/android/debug_keystore = "/github/home/.android/debug.keystore"\n' >> "$SETTINGS"
           printf 'export/android/debug_keystore_user = "androiddebugkey"\n' >> "$SETTINGS"
           printf 'export/android/debug_keystore_pass = "android"\n' >> "$SETTINGS"
-
           if [ ! -f /github/home/.android/debug.keystore ]; then
-            keytool -genkeypair -v \
-              -keystore /github/home/.android/debug.keystore \
-              -storepass android \
-              -alias androiddebugkey \
-              -keypass android \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -dname "CN=Android Debug,O=Dexters,C=GB"
+            keytool -genkeypair -v -keystore /github/home/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Dexters,C=GB"
           fi
-
           rm -rf android/build
           mkdir -p android/build
           unzip -q /github/home/.local/share/godot/export_templates/4.4.stable/android_source.zip -d android/build
           touch android/build/.gdignore
           printf '4.4.stable\n' > android/.build_version
-
           test -x "$ANDROID_HOME/platform-tools/adb"
           test -d "$ANDROID_HOME/platforms/android-34"
           test -d "$ANDROID_HOME/build-tools/34.0.0"
@@ -66,13 +54,13 @@ jobs:
           godot --version
 
       - name: Parse-check project
-        run: godot --headless --editor --quit
+        run: godot --headless --editor --quit 2>&1 | tee /tmp/cafe-parse.log
 
       - name: Runtime smoke test
         run: |
           set -o pipefail
-          godot --headless --path . --quit-after 8 2>&1 | tee /tmp/cafe-runtime.log
-          ! grep -E "SCRIPT ERROR|Invalid call|Invalid access|ERROR:.*(script|scene|resource)" /tmp/cafe-runtime.log
+          timeout 12s godot --headless --path . --quit-after 8 2>&1 | tee /tmp/cafe-runtime.log
+          ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script|Invalid call|Invalid access|ERROR:.*(script|scene|resource)" /tmp/cafe-runtime.log
 
       - name: Export Android debug APK
         run: godot --headless --verbose --export-debug "Android" build/Dexters-Cafe-3D.apk
