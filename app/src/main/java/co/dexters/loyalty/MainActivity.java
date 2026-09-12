@@ -54,15 +54,20 @@ public class MainActivity extends Activity {
         new Thread(this::checkForUpdate).start();
     }
 
-    private void injectPosEnhancements(WebView view) {
+    private void injectAsset(WebView view, String assetName) {
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("sunday-roast-pos.js"), "UTF-8"));
+            BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open(assetName), "UTF-8"));
             StringBuilder js = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) js.append(line).append('\n');
             br.close();
             view.evaluateJavascript(js.toString(), null);
         } catch (Exception ignored) {}
+    }
+
+    private void injectPosEnhancements(WebView view) {
+        injectAsset(view, "sunday-roast-pos.js");
+        injectAsset(view, "pos-category-labels.js");
     }
 
     private void enterKiosk() {
