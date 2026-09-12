@@ -1,29 +1,23 @@
 package co.dexters.loyalty;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.DownloadManager;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.Settings;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.JavascriptInterface;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class MainActivity extends Activity {
-    private static final String HOME = "file:///android_asset/index.html";
-    private static final String UPDATE_JSON = "https://raw.githubusercontent.com/jamiegreen294-boop/dexters-loyalty-android/dexters-pos-tablet-live/updates/pos-latest.json";
+    private static final String REMOTE_HOME = "https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-pos-live-ui";
+    private static final String BACKUP_HOME = "file:///android_asset/index.html";
     private WebView webView;
+    private boolean usingBackup = false;
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,18 +34,42 @@ public class MainActivity extends Activity {
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webView.clearCache(true);
+        webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                if (url != null && url.startsWith("file:///android_asset/index.html")) injectPosEnhancements(view);
+                if (url != null && url.startsWith(BACKUP_HOME)) injectBackupEnhancements(view);
+            }
+
+            @Override public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
+                super.onReceivedError(view, request, error);
+                if (request != null && request.isForMainFrame() && !usingBackup) loadBackup();
+            }
+
+            @Override public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+                super.onReceivedHttpError(view, request, errorResponse);
+                if (request != null && request.isForMainFrame() && !usingBackup && errorResponse != null && errorResponse.getStatusCode() >= 500) loadBackup();
             }
         });
-        webView.setWebChromeClient(new WebChromeClient());
         webView.addJavascriptInterface(new Object() {
-            @JavascriptInterface public void checkForUpdates() { new Thread(MainActivity.this::checkForUpdate).start(); }
+            @JavascriptInterface public void checkForUpdates() { runOnUiThread(() -> loadRemote(true)); }
         }, "DextersUpdater");
-        if (savedInstanceState == null) webView.loadUrl(HOME); else webView.restoreState(savedInstanceState);
-        new Thread(this::checkForUpdate).start();
+        if (savedInstanceState == null) loadRemote(false); else webView.restoreState(savedInstanceState);
+    }
+
+    private void loadRemote(boolean manual) {
+        usingBackup = false;
+        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webView.clearCache(true);
+        String url = REMOTE_HOME + "?t=" + System.currentTimeMillis();
+        webView.loadUrl(url);
+    }
+
+    private void loadBackup() {
+        usingBackup = true;
+        webView.loadUrl(BACKUP_HOME);
     }
 
     private void injectAsset(WebView view, String assetName) {
@@ -65,7 +83,7 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) {}
     }
 
-    private void injectPosEnhancements(WebView view) {
+    private void injectBackupEnhancements(WebView view) {
         injectAsset(view, "sunday-roast-pos.js");
         injectAsset(view, "pos-category-labels.js");
     }
@@ -81,83 +99,23 @@ public class MainActivity extends Activity {
         );
     }
 
-    private void checkForUpdate() {
-        try {
-            URL u = new URL(UPDATE_JSON);
-            HttpURLConnection c = (HttpURLConnection) u.openConnection();
-            c.setConnectTimeout(5000);
-            c.setReadTimeout(5000);
-            BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) sb.append(line);
-            br.close();
-            String json = sb.toString();
-            int v = parseInt(json, "versionCode");
-            String apk = parseString(json, "apkUrl");
-            String notes = parseString(json, "notes");
-            int current = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-            if (v > current && apk != null && !apk.isEmpty()) runOnUiThread(() -> showUpdate(apk, notes));
-        } catch (Exception ignored) {}
+    @Override protected void onResume() {
+        super.onResume();
+        enterKiosk();
+        if (webView != null && usingBackup) loadRemote(false);
     }
 
-    private int parseInt(String j, String key) {
-        try {
-            String p = "\"" + key + "\"";
-            int i = j.indexOf(p); if (i < 0) return 0;
-            i = j.indexOf(':', i) + 1;
-            while (i < j.length() && Character.isWhitespace(j.charAt(i))) i++;
-            int e = i; while (e < j.length() && Character.isDigit(j.charAt(e))) e++;
-            return Integer.parseInt(j.substring(i, e));
-        } catch (Exception e) { return 0; }
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) enterKiosk();
     }
 
-    private String parseString(String j, String key) {
-        try {
-            String p = "\"" + key + "\"";
-            int i = j.indexOf(p); if (i < 0) return null;
-            i = j.indexOf('"', j.indexOf(':', i)) + 1;
-            int e = j.indexOf('"', i);
-            return j.substring(i, e);
-        } catch (Exception e) { return null; }
+    @Override public void onBackPressed() {
+        if (webView != null && webView.canGoBack()) webView.goBack(); else super.onBackPressed();
     }
 
-    private void showUpdate(String apkUrl, String notes) {
-        new AlertDialog.Builder(this)
-            .setTitle("Dexter's POS update available")
-            .setMessage((notes == null || notes.isEmpty()) ? "A new POS update is ready to download over Wi-Fi." : notes)
-            .setCancelable(true)
-            .setPositiveButton("Update now", (d, w) -> startUpdate(apkUrl))
-            .setNegativeButton("Later", null)
-            .show();
+    @Override protected void onSaveInstanceState(Bundle outState) {
+        webView.saveState(outState);
+        super.onSaveInstanceState(outState);
     }
-
-    private void startUpdate(String apkUrl) {
-        try {
-            if (android.os.Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
-                Intent i = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()));
-                startActivity(i);
-                return;
-            }
-            DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            DownloadManager.Request r = new DownloadManager.Request(Uri.parse(apkUrl));
-            r.setTitle("Dexter's POS update");
-            r.setDescription("Downloading latest version");
-            r.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            r.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Dexters-POS-Tablet-latest.apk");
-            dm.enqueue(r);
-            new AlertDialog.Builder(this)
-                .setTitle("Update downloading")
-                .setMessage("When the download finishes, tap the notification and approve the install.")
-                .setPositiveButton("OK", null).show();
-        } catch (Exception e) {
-            new AlertDialog.Builder(this).setTitle("Update failed").setMessage(e.getMessage()).setPositiveButton("OK", null).show();
-        }
-    }
-
-    @Override protected void onResume() { super.onResume(); new Thread(this::checkForUpdate).start(); }
-
-    @Override public void onWindowFocusChanged(boolean hasFocus) { super.onWindowFocusChanged(hasFocus); if (hasFocus) enterKiosk(); }
-    @Override public void onBackPressed() { if (webView != null && webView.canGoBack()) webView.goBack(); else super.onBackPressed(); }
-    @Override protected void onSaveInstanceState(Bundle outState) { webView.saveState(outState); super.onSaveInstanceState(outState); }
 }
