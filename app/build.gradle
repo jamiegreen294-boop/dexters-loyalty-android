@@ -8,7 +8,7 @@ android {
         applicationId 'co.dexters.livepos'
         minSdk 26
         targetSdk 35
-        versionCode 1012
-        versionName '1.012-pos'
+        versionCode 1013
+        versionName '1.013-pos'
     }
 }
