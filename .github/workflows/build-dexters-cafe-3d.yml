@@ -68,6 +68,12 @@ jobs:
       - name: Parse-check project
         run: godot --headless --editor --quit
 
+      - name: Runtime smoke test
+        run: |
+          set -o pipefail
+          godot --headless --path . --quit-after 8 2>&1 | tee /tmp/cafe-runtime.log
+          ! grep -E "SCRIPT ERROR|Invalid call|Invalid access|ERROR:.*(script|scene|resource)" /tmp/cafe-runtime.log
+
       - name: Export Android debug APK
         run: godot --headless --verbose --export-debug "Android" build/Dexters-Cafe-3D.apk
 
