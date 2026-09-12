@@ -1,6 +1,6 @@
 {
-  "versionCode": 1011,
-  "versionName": "1.011-pos",
+  "versionCode": 1012,
+  "versionName": "1.012-pos",
   "apkUrl": "https://github.com/jamiegreen294-boop/dexters-loyalty-android/releases/latest/download/Dexters-POS-Tablet.apk",
-  "notes": "Adds Sunday Roast manual entry and edit to the live table-service POS."
+  "notes": "Shows menu categories in the POS basket and carries category labels through to the KDS."
 }
