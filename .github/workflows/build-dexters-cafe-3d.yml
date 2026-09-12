@@ -29,7 +29,7 @@ jobs:
           mv /root/.local/share/godot/export_templates/4.4.stable /github/home/.local/share/godot/export_templates/4.4.stable
           mkdir -p /github/home/.android build
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.1"
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
           if [ ! -f /github/home/.android/debug.keystore ]; then
             keytool -genkeypair -v \
               -keystore /github/home/.android/debug.keystore \
@@ -42,8 +42,8 @@ jobs:
               -dname "CN=Android Debug,O=Dexters,C=GB"
           fi
           test -x "$ANDROID_HOME/platform-tools/adb"
-          test -d "$ANDROID_HOME/platforms/android-35"
-          test -d "$ANDROID_HOME/build-tools/35.0.1"
+          test -d "$ANDROID_HOME/platforms/android-34"
+          test -d "$ANDROID_HOME/build-tools/34.0.0"
           java -version
           godot --version
 
