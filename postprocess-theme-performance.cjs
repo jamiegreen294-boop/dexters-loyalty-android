@@ -28,3 +28,5 @@ if(fs.existsSync(sundayPath)){
 
 if(!html.includes('dextersEarlyThemeBootstrap'))throw new Error('Early theme bootstrap injection failed');
 console.log('Theme startup and polling performance fixes applied');
+
+require('./postprocess-website-theme-mirror.cjs');
