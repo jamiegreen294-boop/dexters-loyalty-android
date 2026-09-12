@@ -1,0 +1,1 @@
+Trigger Android export after Godot preset fix 2026-09-12
