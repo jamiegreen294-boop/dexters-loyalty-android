@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
                         "var b=document.createElement('button');b.setAttribute('data-custtab','moneyowed');b.textContent='Money Owed';" +
                         "var audit=tabs.querySelector('[data-custtab=audit]');if(audit)tabs.insertBefore(b,audit);else tabs.appendChild(b);" +
                         "var pane=document.getElementById('custPane-moneyowed');if(!pane){pane=document.createElement('div');pane.className='staff-tabpane';pane.id='custPane-moneyowed';pane.innerHTML='<div class=\"card\" style=\"padding:0;overflow:hidden\"><iframe id=\"custMoneyOwedFrame\" title=\"Money Owed\" style=\"width:100%;height:760px;border:0;background:#fff\"></iframe></div>';tabs.parentNode.appendChild(pane);}" +
-                        "b.addEventListener('click',function(){document.querySelectorAll('#customerRecordView .staff-subtabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('#customerRecordView .staff-tabpane').forEach(function(x){x.classList.remove('active')});b.classList.add('active');pane.classList.add('active');var n=(document.getElementById('cuEmail')||{}).value||(document.getElementById('cuPhone')||{}).value||(document.getElementById('cuName')||{}).value||'';var f=document.getElementById('custMoneyOwedFrame');if(f)f.src='/money-owed.html?embed=1&v=20260913-3&q='+encodeURIComponent(n);});" +
+                        "b.addEventListener('click',function(){document.querySelectorAll('#customerRecordView .staff-subtabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('#customerRecordView .staff-tabpane').forEach(function(x){x.classList.remove('active')});b.classList.add('active');pane.classList.add('active');var n=(document.getElementById('cuPhone')||{}).value||(document.getElementById('cuName')||{}).value||(document.getElementById('cuEmail')||{}).value||'';var f=document.getElementById('custMoneyOwedFrame');if(f)f.src='/money-owed.html?embed=1&v=20260913-4&q='+encodeURIComponent(n);});" +
                         "return true;}" +
                         "installMoneyOwed();" +
                         "if(window.__DEX_MONEY_OWED_TIMER)clearInterval(window.__DEX_MONEY_OWED_TIMER);" +
@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        if (savedInstanceState == null) webView.loadUrl(HOME + "?appv=1.2"); else webView.restoreState(savedInstanceState);
+        if (savedInstanceState == null) webView.loadUrl(HOME + "?appv=1.3"); else webView.restoreState(savedInstanceState);
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
