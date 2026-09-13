@@ -38,6 +38,9 @@ public class MainActivity extends Activity {
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
+
+        webView.clearCache(true);
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
@@ -59,8 +62,8 @@ public class MainActivity extends Activity {
                         "var old=document.getElementById('dexMoneyOwedAppShortcut');if(old)old.remove();" +
                         "function install(){var tabs=document.querySelector('#customerRecordView .staff-subtabs');if(!tabs)return false;if(document.querySelector('[data-custtab=moneyowed]'))return true;" +
                         "var b=document.createElement('button');b.setAttribute('data-custtab','moneyowed');b.textContent='Money Owed';tabs.appendChild(b);" +
-                        "var pane=document.createElement('div');pane.className='staff-tabpane';pane.id='custPane-moneyowed';pane.innerHTML='<div class=\"card\" style=\"padding:0;overflow:hidden\"><iframe id=\"custMoneyOwedFrame\" title=\"Money Owed\" style=\"width:100%;height:620px;border:0;background:#fff\"></iframe></div>';tabs.parentNode.appendChild(pane);" +
-                        "b.addEventListener('click',function(){document.querySelectorAll('#customerRecordView .staff-subtabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('#customerRecordView .staff-tabpane').forEach(function(x){x.classList.remove('active')});b.classList.add('active');pane.classList.add('active');var n=(document.getElementById('cuEmail')||{}).value||(document.getElementById('cuPhone')||{}).value||(document.getElementById('cuName')||{}).value||'';document.getElementById('custMoneyOwedFrame').src='/money-owed.html?embed=1&q='+encodeURIComponent(n);});return true;}" +
+                        "var pane=document.createElement('div');pane.className='staff-tabpane';pane.id='custPane-moneyowed';pane.innerHTML='<div class=\"card\" style=\"padding:0;overflow:hidden\"><iframe id=\"custMoneyOwedFrame\" title=\"Money Owed\" style=\"width:100%;height:760px;border:0;background:#fff\"></iframe></div>';tabs.parentNode.appendChild(pane);" +
+                        "b.addEventListener('click',function(){document.querySelectorAll('#customerRecordView .staff-subtabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('#customerRecordView .staff-tabpane').forEach(function(x){x.classList.remove('active')});b.classList.add('active');pane.classList.add('active');var n=(document.getElementById('cuEmail')||{}).value||(document.getElementById('cuPhone')||{}).value||(document.getElementById('cuName')||{}).value||'';document.getElementById('custMoneyOwedFrame').src='/money-owed.html?embed=1&v=20260913-2&q='+encodeURIComponent(n);});return true;}" +
                         "if(!install()){var tries=0;var t=setInterval(function(){tries++;if(install()||tries>30)clearInterval(t)},500);}" +
                         "})();";
                     view.evaluateJavascript(js, null);
@@ -94,7 +97,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        if (savedInstanceState == null) webView.loadUrl(HOME); else webView.restoreState(savedInstanceState);
+        if (savedInstanceState == null) webView.loadUrl(HOME + "?appv=1.1"); else webView.restoreState(savedInstanceState);
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
