@@ -7,9 +7,8 @@
   const getMap=()=>{try{return JSON.parse(localStorage.getItem(MAP_KEY)||'{}')}catch{return {}}};
   const saveMap=m=>localStorage.setItem(MAP_KEY,JSON.stringify(m));
   const status=msg=>{const el=$('status');if(el)el.textContent=msg};
+  const itemForId=id=>typeof window.itemById==='function'?window.itemById(id):null;
 
-  function allItems(){const out=[];for(const c of (window.S?.cats||[]))for(const i of(c.items||[]))out.push(i);return out}
-  function itemForId(id){return allItems().find(i=>String(i.id||i.name)===String(id))||null}
   function addMappedProduct(item){
     if(!item)return false;
     if(typeof window.chooseItem==='function'){window.chooseItem(item);return true}
@@ -19,8 +18,6 @@
     const code=String(value||'').trim();if(!code)return;
     const map=getMap(),mapped=map[code];
     if(mapped){const item=itemForId(mapped);if(item){pendingBarcode='';addMappedProduct(item);status('Barcode '+code+' · '+(item.name||'item')+' added');return}}
-    const direct=allItems().find(i=>[i.barcode,i.ean,i.upc,i.sku].some(v=>v!=null&&String(v)===code));
-    if(direct){map[code]=String(direct.id||direct.name);saveMap(map);addMappedProduct(direct);status('Barcode '+code+' · '+(direct.name||'item')+' added');return}
     pendingBarcode=code;
     const search=$('search');if(search){search.value='';search.placeholder='Unknown barcode '+code+' — tap matching product';}
     status('Unknown barcode '+code+' · tap the matching product once to link it');
