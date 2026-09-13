@@ -47,13 +47,20 @@ public class MainActivity extends Activity {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 String scheme = uri.getScheme();
-                if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
-                    return false;
-                }
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                } catch (Exception ignored) { }
+                if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) return false;
+                try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) { }
                 return true;
+            }
+
+            @Override public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (url != null && url.startsWith(HOME) && !url.contains("money-owed.html")) {
+                    String js = "(function(){if(document.getElementById('dexMoneyOwedAppShortcut'))return;" +
+                        "var a=document.createElement('a');a.id='dexMoneyOwedAppShortcut';a.href='/money-owed.html';a.textContent='Money Owed';" +
+                        "a.style.cssText='position:fixed;right:14px;bottom:14px;z-index:2147483647;background:#5b0b7e;color:#fff;padding:12px 15px;border-radius:12px;text-decoration:none;font:800 14px system-ui;box-shadow:0 8px 24px #0005';" +
+                        "document.body.appendChild(a);})();";
+                    view.evaluateJavascript(js, null);
+                }
             }
         });
 
@@ -79,13 +86,8 @@ public class MainActivity extends Activity {
                 if (pendingFiles != null) pendingFiles.onReceiveValue(null);
                 pendingFiles = filePathCallback;
                 Intent intent = fileChooserParams.createIntent();
-                try {
-                    startActivityForResult(intent, FILE_REQUEST);
-                    return true;
-                } catch (Exception e) {
-                    pendingFiles = null;
-                    return false;
-                }
+                try { startActivityForResult(intent, FILE_REQUEST); return true; }
+                catch (Exception e) { pendingFiles = null; return false; }
             }
         });
 
@@ -104,9 +106,8 @@ public class MainActivity extends Activity {
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == CAMERA_REQUEST && pendingPermission != null) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pendingPermission.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-            } else pendingPermission.deny();
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) pendingPermission.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+            else pendingPermission.deny();
             pendingPermission = null;
         }
     }
