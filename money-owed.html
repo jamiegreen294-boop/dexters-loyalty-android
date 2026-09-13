@@ -86,8 +86,6 @@ th,td{
   .grid{grid-template-columns:1fr}
 }
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -100,7 +98,7 @@ th,td{
 <main class="wrap">
 
 <h1>Money Owed / Customer Credit</h1>
-<p class="muted">Customer credit account, balance, charges and payments.</p>
+<p class="muted">Customer credit account, balance, charges, payments and reminders.</p>
 
 <div class="card">
   <h2>Customer account</h2>
@@ -124,6 +122,11 @@ th,td{
 
     <p class="muted">Bank payment reference</p>
     <div class="ref" id="reference">—</div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn light" id="emailReminder">Email reminder</button>
+      <button class="btn green" id="whatsappReminder">WhatsApp reminder</button>
+    </div>
   </div>
 
   <div class="grid">
@@ -257,6 +260,28 @@ function showMsg(text,bad=false){
   $('msg').textContent=text || '';
 }
 
+function digitsPhone(s){
+  let d=String(s||'').replace(/\D/g,'');
+  if(d.startsWith('0')) d='44'+d.slice(1);
+  if(d.startsWith('0044')) d='44'+d.slice(4);
+  return d;
+}
+
+function reminderText(){
+  if(!currentAccount) return '';
+
+  return `Hi ${currentAccount.customer_name || 'there'},
+
+Just a friendly reminder from Dexter’s that your current outstanding balance is ${moneyPence(currentAccount.balance_pence)}.
+
+When making a bank transfer, please use payment reference ${currentAccount.payment_reference || 'shown on your account'} so we can match it correctly.
+
+If you’ve already paid, please ignore this message. If you need to check anything with us, just get in touch.
+
+Thank you,
+Dexter’s Accounts`;
+}
+
 async function search(){
   try{
     showMsg('Searching...');
@@ -328,9 +353,11 @@ async function loadAccount(accountId){
 
   $('detail').style.display='block';
 
-  $('customerName').textContent=currentAccount.customer_name || 'Customer';
+  $('customerName').textContent=
+    currentAccount.customer_name || 'Customer';
 
-  $('balance').textContent=moneyPence(currentAccount.balance_pence);
+  $('balance').textContent=
+    moneyPence(currentAccount.balance_pence);
 
   $('reference').textContent=
     currentAccount.payment_reference || 'Not assigned';
@@ -461,6 +488,43 @@ async function recordPayment(){
   }
 }
 
+$('emailReminder').onclick=()=>{
+  if(!currentAccount){
+    showMsg('Open a customer account first.',true);
+    return;
+  }
+
+  if(!currentAccount.email){
+    showMsg('This customer has no email address saved.',true);
+    return;
+  }
+
+  const subject=
+    `Dexter’s outstanding balance ${moneyPence(currentAccount.balance_pence)}`;
+
+  location.href=
+    `mailto:${encodeURIComponent(currentAccount.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(reminderText())}`;
+};
+
+$('whatsappReminder').onclick=()=>{
+  if(!currentAccount){
+    showMsg('Open a customer account first.',true);
+    return;
+  }
+
+  const phone=digitsPhone(currentAccount.phone);
+
+  if(!phone){
+    showMsg('This customer has no phone number saved.',true);
+    return;
+  }
+
+  window.open(
+    `https://wa.me/${phone}?text=${encodeURIComponent(reminderText())}`,
+    '_blank'
+  );
+};
+
 $('go').onclick=search;
 
 $('q').addEventListener(
@@ -489,4 +553,4 @@ if(preset){
 </script>
 
 </body>
-</html>
+  </html>
