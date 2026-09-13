@@ -188,7 +188,7 @@ let currentAccount=null;
 function session(){
   try{
     const x=JSON.parse(
-      localStorage.getItem('sb-bpnkouymdvcogeaqjmxl-auth-token') || 'null'
+      localStorage.getItem('dexters-backoffice-auth-v1') || 'null'
     );
 
     return x?.currentSession || x?.session || x || null;
