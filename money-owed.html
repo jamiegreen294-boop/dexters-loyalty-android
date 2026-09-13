@@ -1,1 +1,492 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Money Owed | Dexter's Back Office</title><style>body{margin:0;background:#f3f3f5;color:#37343b;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}.top{background:#5b0b7e;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;gap:12px}.top a{color:#fff;text-decoration:none;font-weight:800}.wrap{max-width:1000px;margin:auto;padding:14px}.card{background:#fff;border:1px solid #dedde3;border-radius:14px;padding:16px;margin:12px 0}.row{display:flex;gap:8px;flex-wrap:wrap}input{flex:1;min-width:220px;padding:11px;border:1px solid #cfcbd3;border-radius:9px;font:inherit}.btn{border:0;border-radius:9px;padding:11px 14px;font-weight:800;background:#5b0b7e;color:#fff}.muted{color:#74707a}.item{padding:12px;border:1px solid #e2dfe5;border-radius:10px;margin:8px 0}.bad{color:#a5162f}.embedded .top{display:none}.embedded .wrap{padding:0}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body><div class="top"><b>DEXTER'S BACK OFFICE · MONEY OWED</b><a href="./">← Back Office</a></div><main class="wrap"><h1>Money Owed / Customer Credit</h1><p class="muted">Customer credit account and current outstanding balance.</p><div class="card"><h2>Customer account</h2><div class="row"><input id="q" placeholder="Name, phone, email or reference"><button class="btn" id="go">Search</button></div><div id="results" style="margin-top:12px"></div></div><div class="card"><h2>Account management</h2><p class="muted">This customer record currently shows the live account balance and reference. Charge, payment and reminder controls remain protected.</p></div></main><script>const sb=supabase.createClient('https://bpnkouymdvcogeaqjmxl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6ImJwbmtvdXltZHZjb2dlYXFqbXhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzMzY2MzUsImV4cCI6MjA3MDkxMjYzNX0.XQWvQkT7G5KBkgCDseggUmLeBS09gwQyXY81wJQsrQo');const $=id=>document.getElementById(id),money=n=>'£'+Number(n||0).toFixed(2);async function run(){const q=$('q').value.trim();$('results').innerHTML='<span class="muted">Searching…</span>';const {data,error}=await sb.rpc('credit_search_customers',{p_query:q});if(error){$('results').innerHTML='<span class="bad">Unable to load accounts.</span>';return}const rows=Array.isArray(data)?data:[];$('results').innerHTML=rows.map(r=>'<div class="item"><b>'+(r.customer_name||r.name||'Customer')+'</b><br><span class="muted">Balance: '+money(r.balance||r.current_balance)+' · Reference: '+(r.account_reference||r.reference||'—')+'</span></div>').join('')||'<span class="muted">No matching account.</span>'} $('go').onclick=run;$('q').addEventListener('keydown',e=>{if(e.key==='Enter')run()});const p=new URLSearchParams(location.search);if(p.get('embed')==='1')document.body.classList.add('embedded');const preset=p.get('q')||'';if(preset){$('q').value=preset;run()}</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Money Owed | Dexter's Back Office</title>
+
+<style>
+body{
+  margin:0;
+  background:#f3f3f5;
+  color:#37343b;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif
+}
+.top{
+  background:#5b0b7e;
+  color:#fff;
+  padding:14px 16px;
+  display:flex;
+  justify-content:space-between;
+  gap:12px
+}
+.top a{color:#fff;text-decoration:none;font-weight:800}
+.wrap{max-width:1000px;margin:auto;padding:14px}
+.card{
+  background:#fff;
+  border:1px solid #dedde3;
+  border-radius:14px;
+  padding:16px;
+  margin:12px 0
+}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input,textarea{
+  width:100%;
+  box-sizing:border-box;
+  padding:11px;
+  border:1px solid #cfcbd3;
+  border-radius:9px;
+  font:inherit
+}
+.btn{
+  border:0;
+  border-radius:9px;
+  padding:11px 14px;
+  font-weight:800;
+  background:#5b0b7e;
+  color:#fff
+}
+.btn.green{background:#16803b}
+.btn.light{background:#ece7ef;color:#423747}
+.muted{color:#74707a}
+.bad{color:#a5162f}
+.good{color:#16803b}
+.item{
+  padding:12px;
+  border:1px solid #e2dfe5;
+  border-radius:10px;
+  margin:8px 0
+}
+.balance{
+  font-size:36px;
+  font-weight:900;
+  margin:6px 0
+}
+.ref{
+  font-size:20px;
+  font-weight:900;
+  color:#5b0b7e
+}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px
+}
+table{width:100%;border-collapse:collapse}
+th,td{
+  padding:8px;
+  border-bottom:1px solid #eee;
+  text-align:left;
+  font-size:13px
+}
+.embedded .top{display:none}
+.embedded .wrap{padding:0}
+@media(max-width:700px){
+  .grid{grid-template-columns:1fr}
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<div class="top">
+  <b>DEXTER'S BACK OFFICE · MONEY OWED</b>
+  <a href="./">← Back Office</a>
+</div>
+
+<main class="wrap">
+
+<h1>Money Owed / Customer Credit</h1>
+<p class="muted">Customer credit account, balance, charges and payments.</p>
+
+<div class="card">
+  <h2>Customer account</h2>
+
+  <div class="row">
+    <input id="q" placeholder="Name, phone, email or reference">
+    <button class="btn" id="go">Search</button>
+  </div>
+
+  <div id="msg" style="margin-top:10px"></div>
+  <div id="results" style="margin-top:12px"></div>
+</div>
+
+<div id="detail" style="display:none">
+
+  <div class="card">
+    <h2 id="customerName">Customer</h2>
+
+    <div class="balance" id="balance">£0.00</div>
+    <div class="muted">Outstanding balance</div>
+
+    <p class="muted">Bank payment reference</p>
+    <div class="ref" id="reference">—</div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <h2>Add charge</h2>
+
+      <input id="chargeAmount" inputmode="decimal" placeholder="Amount £">
+
+      <br><br>
+
+      <input id="chargeDescription" placeholder="What is the balance for?">
+
+      <br><br>
+
+      <label>
+        Due date
+        <input id="chargeDue" type="date">
+      </label>
+
+      <br>
+
+      <button class="btn" id="addCharge">Add to balance</button>
+    </div>
+
+    <div class="card">
+      <h2>Record payment</h2>
+
+      <input id="paymentAmount" inputmode="decimal" placeholder="Amount £">
+
+      <br><br>
+
+      <input id="paymentDescription" placeholder="Payment note">
+
+      <br>
+
+      <button class="btn green" id="recordPayment">Record payment</button>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <h2>Transaction history</h2>
+    <div id="history"></div>
+  </div>
+
+</div>
+
+</main>
+
+<script>
+const U='https://bpnkouymdvcogeaqjmxl.supabase.co';
+const K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa';
+
+const $=id=>document.getElementById(id);
+
+let currentAccount=null;
+
+function session(){
+  try{
+    const x=JSON.parse(
+      localStorage.getItem('sb-bpnkouymdvcogeaqjmxl-auth-token') || 'null'
+    );
+
+    return x?.currentSession || x?.session || x || null;
+  }catch{
+    return null;
+  }
+}
+
+function moneyPence(p){
+  return '£'+(Number(p||0)/100).toFixed(2);
+}
+
+function escapeHtml(s){
+  return String(s??'').replace(
+    /[&<>"']/g,
+    c=>({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    }[c])
+  );
+}
+
+async function rpc(name,body={}){
+  const s=session();
+
+  if(!s?.access_token){
+    throw new Error('Please sign in to the Back Office again.');
+  }
+
+  const r=await fetch(
+    `${U}/rest/v1/rpc/${name}`,
+    {
+      method:'POST',
+      headers:{
+        apikey:K,
+        Authorization:'Bearer '+s.access_token,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify(body)
+    }
+  );
+
+  const text=await r.text();
+
+  let data=null;
+
+  try{
+    data=text ? JSON.parse(text) : null;
+  }catch{
+    data=text;
+  }
+
+  if(!r.ok){
+    throw new Error(
+      data?.message ||
+      data?.error ||
+      'Money Owed request failed'
+    );
+  }
+
+  return data;
+}
+
+function showMsg(text,bad=false){
+  $('msg').className=bad ? 'bad' : 'good';
+  $('msg').textContent=text || '';
+}
+
+async function search(){
+  try{
+    showMsg('Searching...');
+
+    const rows=await rpc(
+      'credit_search_customers',
+      {
+        p_query:$('q').value.trim() || null,
+        p_limit:50
+      }
+    );
+
+    const list=Array.isArray(rows) ? rows : [];
+
+    $('results').innerHTML=list.map((r,i)=>`
+      <div class="item">
+        <b>${escapeHtml(r.customer_name || 'Customer')}</b>
+
+        <div class="muted">
+          ${escapeHtml(r.email || '')}
+          ${r.phone ? ' · '+escapeHtml(r.phone) : ''}
+        </div>
+
+        <div>
+          <b>${moneyPence(r.balance_pence)}</b> owed
+        </div>
+
+        <button class="btn light" data-open="${i}">
+          Open account
+        </button>
+      </div>
+    `).join('') || '<span class="muted">No matching account.</span>';
+
+    [...document.querySelectorAll('[data-open]')].forEach(btn=>{
+      btn.onclick=()=>{
+        openAccount(list[Number(btn.dataset.open)]);
+      };
+    });
+
+    showMsg('');
+  }catch(e){
+    showMsg(e.message,true);
+  }
+}
+
+async function openAccount(row){
+  try{
+    if(!row.account_id){
+      throw new Error('This customer does not yet have a Money Owed account.');
+    }
+
+    await loadAccount(row.account_id);
+  }catch(e){
+    showMsg(e.message,true);
+  }
+}
+
+async function loadAccount(accountId){
+  const data=await rpc(
+    'credit_account_detail',
+    {p_account_id:accountId}
+  );
+
+  currentAccount=data?.account;
+
+  if(!currentAccount){
+    throw new Error('Account not found.');
+  }
+
+  $('detail').style.display='block';
+
+  $('customerName').textContent=currentAccount.customer_name || 'Customer';
+
+  $('balance').textContent=moneyPence(currentAccount.balance_pence);
+
+  $('reference').textContent=
+    currentAccount.payment_reference || 'Not assigned';
+
+  const tx=Array.isArray(data.transactions)
+    ? data.transactions
+    : [];
+
+  $('history').innerHTML=`
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Outstanding</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          tx.map(x=>`
+            <tr>
+              <td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td>
+              <td>${escapeHtml(x.transaction_type)}</td>
+              <td>${escapeHtml(x.description || '')}</td>
+              <td>${moneyPence(x.amount_pence)}</td>
+              <td>${
+                x.remaining_pence===null ||
+                x.remaining_pence===undefined
+                ? '—'
+                : moneyPence(x.remaining_pence)
+              }</td>
+            </tr>
+          `).join('') ||
+          '<tr><td colspan="5">No transactions yet.</td></tr>'
+        }
+      </tbody>
+    </table>
+  `;
+}
+
+async function addCharge(){
+  try{
+    if(!currentAccount){
+      throw new Error('Open a customer account first.');
+    }
+
+    const pounds=Number($('chargeAmount').value);
+    const amount=Math.round(pounds*100);
+    const description=$('chargeDescription').value.trim();
+
+    if(!amount || amount<=0){
+      throw new Error('Enter the amount to add.');
+    }
+
+    if(!description){
+      throw new Error('Enter what the charge is for.');
+    }
+
+    showMsg('Adding charge...');
+
+    await rpc(
+      'credit_add_charge',
+      {
+        p_account_id:currentAccount.id,
+        p_amount_pence:amount,
+        p_description:description,
+        p_due_date:$('chargeDue').value || null,
+        p_source:'backoffice',
+        p_order_ref:null,
+        p_metadata:{
+          entered_from:'backoffice_money_owed'
+        }
+      }
+    );
+
+    $('chargeAmount').value='';
+    $('chargeDescription').value='';
+    $('chargeDue').value='';
+
+    await loadAccount(currentAccount.id);
+
+    showMsg('Charge added.');
+  }catch(e){
+    showMsg(e.message,true);
+  }
+}
+
+async function recordPayment(){
+  try{
+    if(!currentAccount){
+      throw new Error('Open a customer account first.');
+    }
+
+    const pounds=Number($('paymentAmount').value);
+    const amount=Math.round(pounds*100);
+
+    if(!amount || amount<=0){
+      throw new Error('Enter the payment amount.');
+    }
+
+    showMsg('Recording payment...');
+
+    await rpc(
+      'credit_record_payment',
+      {
+        p_account_id:currentAccount.id,
+        p_amount_pence:amount,
+        p_description:
+          $('paymentDescription').value.trim() ||
+          'Customer payment',
+        p_source:'backoffice',
+        p_metadata:{
+          entered_from:'backoffice_money_owed'
+        }
+      }
+    );
+
+    $('paymentAmount').value='';
+    $('paymentDescription').value='';
+
+    await loadAccount(currentAccount.id);
+
+    showMsg('Payment recorded.');
+  }catch(e){
+    showMsg(e.message,true);
+  }
+}
+
+$('go').onclick=search;
+
+$('q').addEventListener(
+  'keydown',
+  e=>{
+    if(e.key==='Enter')search();
+  }
+);
+
+$('addCharge').onclick=addCharge;
+
+$('recordPayment').onclick=recordPayment;
+
+const params=new URLSearchParams(location.search);
+
+if(params.get('embed')==='1'){
+  document.body.classList.add('embedded');
+}
+
+const preset=params.get('q') || '';
+
+if(preset){
+  $('q').value=preset;
+  search();
+}
+</script>
+
+</body>
+</html>
