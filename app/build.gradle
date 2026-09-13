@@ -1,11 +1,11 @@
 plugins { id 'com.android.application' }
 
 android {
-    namespace 'co.dexters.loyalty'
+    namespace 'co.dexters.backoffice'
     compileSdk 35
 
     defaultConfig {
-        applicationId 'co.dexters.loyalty'
+        applicationId 'co.dexters.backoffice'
         minSdk 26
         targetSdk 35
         versionCode 1
