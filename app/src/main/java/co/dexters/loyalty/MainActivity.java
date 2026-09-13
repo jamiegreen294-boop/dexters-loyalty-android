@@ -55,10 +55,14 @@ public class MainActivity extends Activity {
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 if (url != null && url.startsWith(HOME) && !url.contains("money-owed.html")) {
-                    String js = "(function(){if(document.getElementById('dexMoneyOwedAppShortcut'))return;" +
-                        "var a=document.createElement('a');a.id='dexMoneyOwedAppShortcut';a.href='/money-owed.html';a.textContent='Money Owed';" +
-                        "a.style.cssText='position:fixed;right:14px;bottom:14px;z-index:2147483647;background:#5b0b7e;color:#fff;padding:12px 15px;border-radius:12px;text-decoration:none;font:800 14px system-ui;box-shadow:0 8px 24px #0005';" +
-                        "document.body.appendChild(a);})();";
+                    String js = "(function(){" +
+                        "var old=document.getElementById('dexMoneyOwedAppShortcut');if(old)old.remove();" +
+                        "function install(){var tabs=document.querySelector('#customerRecordView .staff-subtabs');if(!tabs)return false;if(document.querySelector('[data-custtab=moneyowed]'))return true;" +
+                        "var b=document.createElement('button');b.setAttribute('data-custtab','moneyowed');b.textContent='Money Owed';tabs.appendChild(b);" +
+                        "var pane=document.createElement('div');pane.className='staff-tabpane';pane.id='custPane-moneyowed';pane.innerHTML='<div class=\"card\" style=\"padding:0;overflow:hidden\"><iframe id=\"custMoneyOwedFrame\" title=\"Money Owed\" style=\"width:100%;height:620px;border:0;background:#fff\"></iframe></div>';tabs.parentNode.appendChild(pane);" +
+                        "b.addEventListener('click',function(){document.querySelectorAll('#customerRecordView .staff-subtabs button').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('#customerRecordView .staff-tabpane').forEach(function(x){x.classList.remove('active')});b.classList.add('active');pane.classList.add('active');var n=(document.getElementById('cuEmail')||{}).value||(document.getElementById('cuPhone')||{}).value||(document.getElementById('cuName')||{}).value||'';document.getElementById('custMoneyOwedFrame').src='/money-owed.html?embed=1&q='+encodeURIComponent(n);});return true;}" +
+                        "if(!install()){var tries=0;var t=setInterval(function(){tries++;if(install()||tries>30)clearInterval(t)},500);}" +
+                        "})();";
                     view.evaluateJavascript(js, null);
                 }
             }
@@ -69,9 +73,8 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     for (String resource : request.getResources()) {
                         if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)) {
-                            if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                                request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-                            } else {
+                            if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                            else {
                                 pendingPermission = request;
                                 requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST);
                             }
