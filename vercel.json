@@ -1,1 +1,1 @@
-{"buildCommand":"npm run build","outputDirectory":"dist","framework":null}
+{"buildCommand":"npm run build && node postprocess-pos-money-owed-tablet.cjs","outputDirectory":"dist","framework":null}
