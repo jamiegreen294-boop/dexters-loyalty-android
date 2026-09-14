@@ -2,6 +2,8 @@ const fs=require('fs');
 
 const inner='dist/pos-test.html';
 const outer='dist/pos.html';
+const sundaySource='dist/pos-sunday-test.html';
+const sundayPc='dist/pos-sunday-pc.html';
 
 if(fs.existsSync(inner)){
   let s=fs.readFileSync(inner,'utf8');
@@ -20,8 +22,18 @@ if(fs.existsSync(inner)){
       btn.style.cssText='position:static;z-index:auto;box-shadow:none;margin:0;border:0;border-radius:12px;padding:10px 12px;font-weight:900;background:#162a45;color:#fff';
     }
     alignMoneyOwed();
-    window.addEventListener('load',()=>{alignMoneyOwed();setTimeout(alignMoneyOwed,100);setTimeout(alignMoneyOwed,500);setTimeout(alignMoneyOwed,1200)});
+    window.addEventListener('load',()=>{alignMoneyOwed();setTimeout(alignMoneyOwed,100);setTimeout(alignMoneyOwed,500)});
     new MutationObserver(alignMoneyOwed).observe(document.documentElement,{childList:true,subtree:true});
+  })();</script>\n</body>`);
+
+  if(!s.includes('pc-test-sunday-button')) s=s.replace('</body>',`<script id="pc-test-sunday-button">(function(){
+    function addSunday(){
+      const top=document.querySelector('.top');if(!top||document.getElementById('pcSundayRoastBtn'))return;
+      const b=document.createElement('button');b.id='pcSundayRoastBtn';b.textContent='Sunday Roast';b.title='Sunday Roast orders';
+      const staff=document.getElementById('staffBtn');top.insertBefore(b,staff||null);
+      b.onclick=()=>window.open('/pos-sunday-pc.html','_blank','noopener');
+    }
+    addSunday();window.addEventListener('load',addSunday);setTimeout(addSunday,300);
   })();</script>\n</body>`);
 
   if(!s.includes('pc-test-no-sw-cache')) s=s.replace('</body>',`<script id="pc-test-no-sw-cache">(async()=>{try{if('serviceWorker' in navigator){for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}if('caches' in window){for(const k of await caches.keys())if(k.startsWith('dexters-pos-shell-'))await caches.delete(k)}}catch(e){}})();</script>\n</body>`);
@@ -31,36 +43,17 @@ if(fs.existsSync(inner)){
 
   s=s.replace('DEXTER\'S TERMINAL','PC TEST · DEXTER\'S TERMINAL');
   fs.writeFileSync(inner,s);
+  fs.writeFileSync(outer,s);
 }
 
-if(fs.existsSync(outer)){
-  let s=fs.readFileSync(outer,'utf8');
-  // The live Sunday Roast wrapper floats its launch button over the iframe.
-  // In the PC test, hide that launcher and recreate it inside the actual POS top bar.
-  if(!s.includes('pc-test-wrapper-layout')) s=s.replace('</body>',`<script id="pc-test-wrapper-layout">(function(){
-    const launch=document.getElementById('srLaunch');
-    if(launch){launch.style.display='none';launch.setAttribute('aria-hidden','true')}
-    const frame=document.getElementById('pos');
-    function wireTopBar(){
-      try{
-        const d=frame&&frame.contentDocument;if(!d)return;
-        const top=d.querySelector('.top');if(!top)return;
-        let b=d.getElementById('pcSundayRoastBtn');
-        if(!b){
-          b=d.createElement('button');b.id='pcSundayRoastBtn';b.textContent='Sunday Roast';b.title='Sunday Roast orders';
-          const staff=d.getElementById('staffBtn');top.insertBefore(b,staff||null);
-          b.onclick=()=>launch&&launch.click();
-        }
-        b.style.cssText='position:static;border:0;border-radius:12px;padding:10px 12px;font-weight:900;background:#162a45;color:#fff';
-      }catch(e){}
-    }
-    if(frame){frame.addEventListener('load',()=>{wireTopBar();setTimeout(wireTopBar,250);setTimeout(wireTopBar,900)})}
-    window.addEventListener('load',()=>{wireTopBar();setTimeout(wireTopBar,400)});
-  })();</script>\n</body>`);
-  s=s.replace(/<title>Dexter's POS — Sunday Roast Test<\/title>/,"<title>Dexter's POS — PC Test</title>");
-  fs.writeFileSync(outer,s);
+if(fs.existsSync(sundaySource)){
+  let r=fs.readFileSync(sundaySource,'utf8');
+  r=r.replace(/<iframe id="pos"[\s\S]*?<\/iframe>/,'');
+  r=r.replace('<title>Dexter\'s POS — Sunday Roast Test</title>',"<title>Dexter's POS — Sunday Roast PC Test</title>");
+  r=r.replace('</body>',`<script id="pc-sunday-auto-open">window.addEventListener('load',()=>setTimeout(()=>document.getElementById('srLaunch')?.click(),150));</script>\n</body>`);
+  fs.writeFileSync(sundayPc,r);
 }
 
 fs.copyFileSync('web/pos-pc-scanner.js','dist/pos-pc-scanner.js');
 fs.copyFileSync('web/pos-pc-loyalty-test.js','dist/pos-pc-loyalty-test.js');
-console.log('PC POS final layer applied: iframe layout, scanner, loyalty test and safety');
+console.log('PC POS final layer applied: direct POS page, scanner, loyalty test, Sunday Roast direct page and safety');
