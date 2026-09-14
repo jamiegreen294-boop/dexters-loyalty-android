@@ -4,7 +4,8 @@ const pos=fs.readFileSync('dist/pos.html','utf8');
 const sunday=fs.readFileSync('dist/pos-sunday-pc.html','utf8');
 
 must(!pos.includes('<iframe id="pos"'),'Main PC POS loads directly with no blocked iframe');
-for(const label of ['Sales','Cash up','Held orders','Back Office','KDS','Staff','Full screen','Clear sale']) must(pos.includes('>'+label+'<'),'Current POS control '+label+' is present');
+for(const label of ['Sales','Cash up','Held orders','Staff','Full screen','Clear sale']) must(pos.includes('>'+label+'<'),'Tablet POS control '+label+' is present');
+must(pos.includes('#backOfficeBtn,#kdsBtn{display:none!important}'),'Later main-only Back Office/KDS controls are hidden to match tablet layout');
 must(pos.includes('PC TEST · DEXTER\'S TERMINAL'),'PC test marker is present');
 must(pos.includes('pos-money-owed.js'),'Money Owed feature is loaded');
 must(pos.includes('pc-test-money-owed-layout'),'Money Owed is aligned into the POS top bar');
@@ -13,7 +14,7 @@ must(pos.includes('/pos-sunday-pc.html'),'Sunday Roast button opens direct PC Su
 must(pos.includes('/pos-pc-scanner.js'),'Foodhub/PC scanner layer is loaded');
 must(pos.includes('/pos-pc-loyalty-test.js'),'Loyalty/coffee test layer is loaded');
 must(pos.includes('KDS TEST DISABLED'),'Live KDS send is blocked in PC test');
-must(pos.includes('directSignIn') && pos.includes('/auth/v1/token?grant_type=password'),'Direct staff sign-in fallback is present');
+must(pos.includes('pc-login-recovery') && pos.includes('/auth/v1/token?grant_type=password'),'Independent PC login recovery is present');
 must(!pos.includes("navigator.serviceWorker.register('/pos-sw.js')"),'POS service-worker cache is disabled for PC test');
 must(pos.includes('Takeaway') && pos.includes('Eat in') && pos.includes('Collection'),'Order modes are present');
 must(pos.includes('CASH') && pos.includes('CARD'),'Cash and card payment buttons are present');
@@ -24,4 +25,4 @@ must(sunday.includes('id="srLaunch"') && sunday.includes('New order') && sunday.
 must(sunday.includes('pc-sunday-auto-open'),'Sunday Roast PC page auto-opens the order UI');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('PC POS direct-page regression check passed');
+console.log('PC POS tablet-mirror regression check passed');
