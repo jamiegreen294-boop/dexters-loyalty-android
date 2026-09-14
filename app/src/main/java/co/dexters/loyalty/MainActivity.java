@@ -102,11 +102,38 @@ public class MainActivity extends Activity {
         });
 
         if (savedInstanceState == null) {
-            webView.loadUrl(HOME);
+            webView.loadUrl(resolveLaunchUrl(getIntent()));
         } else {
             webView.restoreState(savedInstanceState);
             hideSplash();
+            handleIncomingIntent(getIntent());
         }
+    }
+
+    private String resolveLaunchUrl(Intent intent) {
+        if (intent == null || intent.getData() == null) return HOME;
+        Uri data = intent.getData();
+        String scheme = data.getScheme();
+        String host = data.getHost();
+        if ("dexters".equalsIgnoreCase(scheme) && "account".equalsIgnoreCase(host)) {
+            return HOME + "/?open=account";
+        }
+        if ("https".equalsIgnoreCase(scheme) && "app.dextersspot.co.uk".equalsIgnoreCase(host)) {
+            String query = data.getEncodedQuery();
+            return HOME + (query == null || query.isEmpty() ? "/" : "/?" + query);
+        }
+        return HOME;
+    }
+
+    private void handleIncomingIntent(Intent intent) {
+        if (intent == null || intent.getData() == null || webView == null) return;
+        webView.loadUrl(resolveLaunchUrl(intent));
+    }
+
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIncomingIntent(intent);
     }
 
     private View buildSplash() {
