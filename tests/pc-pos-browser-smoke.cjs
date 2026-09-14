@@ -3,6 +3,7 @@ const fs=require('fs');
 const path=require('path');
 const { chromium }=require('playwright');
 
+const hard=setTimeout(()=>{console.error('HARD TIMEOUT: POS browser smoke did not finish within 35 seconds');process.exit(124)},35000);
 const root=path.resolve('_site');
 const requested=process.env.POS_TEST_URL||'';
 let server=null;
@@ -23,16 +24,20 @@ async function localUrl(){
 }
 (async()=>{
   const url=requested||await localUrl();
+  console.log('SMOKE URL',url);
   const browser=await chromium.launch({headless:true});
   const context=await browser.newContext();
   const page=await context.newPage();
   const pageErrors=[]; const consoleErrors=[]; const failed=[];
-  page.on('pageerror',e=>pageErrors.push(String(e.message||e)));
-  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});
-  page.on('requestfailed',r=>failed.push(`${r.method()} ${r.url()} :: ${r.failure()?.errorText||'failed'}`));
+  page.on('pageerror',e=>{const s=String(e.message||e);pageErrors.push(s);console.error('PAGEERROR',s)});
+  page.on('console',m=>{if(m.type()==='error'){consoleErrors.push(m.text());console.error('CONSOLE',m.text())}});
+  page.on('requestfailed',r=>{const s=`${r.method()} ${r.url()} :: ${r.failure()?.errorText||'failed'}`;failed.push(s);console.error('REQUESTFAILED',s)});
   page.setDefaultTimeout(8000);
+  console.log('GOTO');
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:15000});
+  console.log('DOMCONTENTLOADED');
   await page.waitForFunction(()=>document.body&&document.body.innerText.includes('Set Up Dexter’s POS PIN'),null,{timeout:6000});
+  console.log('PIN SETUP VISIBLE');
   const state=await page.evaluate(async()=>{
     const before=performance.now();
     await new Promise(r=>setTimeout(r,250));
@@ -52,5 +57,5 @@ async function localUrl(){
   }
   if(pageErrors.length)throw new Error('Browser page errors: '+pageErrors.join(' | '));
   console.log('PASS PC POS browser smoke',JSON.stringify({url,state,consoleErrors,failed:failed.slice(0,8)}));
-  await browser.close();if(server)await new Promise(r=>server.close(r));
-})().catch(async e=>{console.error(e);try{if(server)await new Promise(r=>server.close(r))}catch{}process.exit(1)});
+  await browser.close();if(server)server.closeAllConnections?.();if(server)await new Promise(r=>server.close(r));clearTimeout(hard);
+})().catch(async e=>{console.error(e);try{if(server)server.closeAllConnections?.();if(server)await new Promise(r=>server.close(r))}catch{}clearTimeout(hard);process.exit(1)});
