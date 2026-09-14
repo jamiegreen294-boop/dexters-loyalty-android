@@ -2,16 +2,22 @@ extends Control
 
 @onready var status_label: Label = $SafeArea/Card/Status
 @onready var progress: ProgressBar = $SafeArea/Card/Progress
+@onready var start_button: Button = $SafeArea/Card/Start
 
 func _ready() -> void:
-    status_label.text = "Starting Dexter's Cafe..."
-    progress.value = 20
-    await get_tree().process_frame
-    await get_tree().create_timer(0.15).timeout
-    _start_game()
+    status_label.text = "Build 15 loaded successfully\nTap START CAFE to enter Dexter's"
+    progress.value = 100
+    start_button.disabled = false
+    start_button.visible = true
+    start_button.pressed.connect(_start_game)
 
 func _start_game() -> void:
-    progress.value = 55
+    start_button.disabled = true
+    start_button.text = "LOADING..."
+    status_label.text = "Loading Dexter's Cafe..."
+    progress.value = 35
+    await get_tree().process_frame
+
     var packed := load("res://Main.tscn") as PackedScene
     if packed == null:
         _show_error("Game scene could not be loaded")
@@ -26,8 +32,7 @@ func _start_game() -> void:
         _show_error("Game script did not load")
         return
 
-    status_label.text = "Loading cafe..."
-    progress.value = 80
+    progress.value = 65
     get_tree().root.add_child(game)
     await get_tree().process_frame
     await get_tree().process_frame
@@ -47,3 +52,6 @@ func _start_game() -> void:
 func _show_error(message: String) -> void:
     progress.value = 0
     status_label.text = message + "\nPlease send a screenshot of this message."
+    start_button.disabled = false
+    start_button.text = "TRY AGAIN"
+    start_button.visible = true
