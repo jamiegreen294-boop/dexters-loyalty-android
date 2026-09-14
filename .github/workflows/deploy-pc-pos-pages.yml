@@ -36,19 +36,29 @@ jobs:
       - name: Build GitHub Pages site
         run: node build-pc-pos-pages.cjs
 
-      - name: Verify Pages output and account-management screens
+      - name: Verify Pages output and POS controls
         run: |
           test -f _site/index.html
           test -f _site/pos-pc-v3-addon.js
           test -f _site/pos-pc-category-home.js
           test -f _site/pos-order-management.js
+          test -f _site/pos-pc-manager.js
+          test -f _site/pos-pc-table-payments.js
           grep -q "pos-order-management.js" _site/index.html
           grep -q "pos-pc-category-home.js" _site/index.html
+          grep -q "pos-pc-manager.js" _site/index.html
+          grep -q "pos-pc-table-payments.js" _site/index.html
           grep -q "uber-table-service-pc-test-api" _site/index.html
           grep -q "Held Orders" _site/pos-order-management.js
           grep -q "Table Orders" _site/pos-order-management.js
           grep -q "QR Orders" _site/pos-order-management.js
-          grep -q "Close Account" _site/pos-order-management.js
+          grep -q "Square Payment" _site/pos-pc-manager.js
+          grep -q "Refunds / Voids" _site/pos-pc-manager.js
+          grep -q "Manager PIN" _site/pos-pc-manager.js
+          grep -q "Cash Drawer" _site/pos-pc-manager.js
+          grep -q "PART PAY / SPLIT BILL" _site/pos-pc-table-payments.js
+          grep -q "PAYMENT HISTORY" _site/pos-pc-table-payments.js
+          grep -q "CLOSE ACCOUNT" _site/pos-pc-table-payments.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
