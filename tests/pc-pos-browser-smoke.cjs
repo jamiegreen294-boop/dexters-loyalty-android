@@ -29,13 +29,22 @@ async function localUrl(){
   const context=await browser.newContext();
   const page=await context.newPage();
   const pageErrors=[]; const consoleErrors=[]; const failed=[];
-  page.on('pageerror',e=>{const s=String(e.message||e);pageErrors.push(s);console.error('PAGEERROR',s)});
+  page.on('pageerror',e=>{const s=String(e.stack||e.message||e);pageErrors.push(s);console.error('PAGEERROR',s)});
   page.on('console',m=>{if(m.type()==='error'){consoleErrors.push(m.text());console.error('CONSOLE',m.text())}});
   page.on('requestfailed',r=>{const s=`${r.method()} ${r.url()} :: ${r.failure()?.errorText||'failed'}`;failed.push(s);console.error('REQUESTFAILED',s)});
   page.setDefaultTimeout(8000);
   console.log('GOTO');
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:15000});
   console.log('DOMCONTENTLOADED');
+  const early=await page.evaluate(()=>({
+    pinBootstrap:typeof window.DextersPinLogin,
+    authGate:document.getElementById('authGate')?.innerText||null,
+    pinMount:document.getElementById('pcPinLoginMount')?.innerText||null,
+    setupCode:!!document.getElementById('pcSetupCode'),
+    scripts:[...document.scripts].map(s=>s.src||'[inline]').slice(-30),
+    bodyText:(document.body?.innerText||'').slice(0,1200)
+  }));
+  console.log('EARLY STATE',JSON.stringify(early));
   await page.waitForFunction(()=>document.body&&document.body.innerText.includes('Set Up Dexter’s POS PIN'),null,{timeout:6000});
   console.log('PIN SETUP VISIBLE');
   const state=await page.evaluate(async()=>{
