@@ -57,6 +57,9 @@ jobs:
           grep -q "Ingredient Recipes" _site/pos-pc-recipes.js
           grep -q "Money Owed · Statements" _site/pos-pc-account-statements.js
 
+      - name: Check built JavaScript parses
+        run: node tests/pc-pos-static-js-check.cjs
+
       - name: Install Chromium smoke-test browser
         run: |
           npm install --no-save playwright@1.55.0 --no-audit --no-fund
