@@ -17,4 +17,4 @@ for(const x of ['cashBtn','cardBtn','Money Owed','Sunday Roast','Cash up','Sales
 const cats=fs.readFileSync('dist/pos-pc-category-home.js','utf8');
 for(const x of ['pcCatCard','Menu categories','← Categories','pcCatGrid'])if(!cats.includes(x))throw new Error('PC category home missing: '+x);
 console.log('PASS PC POS v3: tablet UI, category-card menu, table/QR, auth, cash/card, money owed, Sunday Roast, scanner and loyalty test layers present; live table API blocked');
-// category-card preview verification trigger
+// verified category-card preview deployment
