@@ -1,4 +1,4 @@
-name: Build PC POS Test
+name: Build and Publish PC POS Test
 
 on:
   push:
@@ -7,18 +7,20 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: pc-pos-test-build
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PC POS test branch
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -54,3 +56,21 @@ jobs:
           grep -q "Supplier Purchase Orders" _site/pos-pc-purchasing.js
           grep -q "Ingredient Recipes" _site/pos-pc-recipes.js
           grep -q "Money Owed · Statements" _site/pos-pc-account-statements.js
+
+      - name: Publish test bundle to gh-pages
+        run: |
+          git fetch origin gh-pages
+          git worktree add /tmp/gh-pages origin/gh-pages
+          rm -rf /tmp/gh-pages/pc-pos-test
+          mkdir -p /tmp/gh-pages/pc-pos-test
+          cp -a _site/. /tmp/gh-pages/pc-pos-test/
+          cd /tmp/gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pc-pos-test
+          if git diff --cached --quiet; then
+            echo "No PC POS Pages changes to publish"
+          else
+            git commit -m "Publish Dexter's PC POS test"
+            git push origin HEAD:gh-pages
+          fi
