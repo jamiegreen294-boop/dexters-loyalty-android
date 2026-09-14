@@ -1,0 +1,14 @@
+const fs=require('fs');
+const src='app/src/main/assets/index.html';
+if(!fs.existsSync(src))throw new Error('Android tablet POS source missing');
+let html=fs.readFileSync(src,'utf8');
+html=html.replaceAll('/functions/v1/uber-table-service-api','/functions/v1/uber-table-service-pc-test-api');
+html=html.replaceAll('/functions/v1/dexters-table-order','/functions/v1/dexters-table-order-pc-test');
+html=html.replace('</head>','<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>\n</head>');
+html=html.replace('</body>','<script src="/pos-pc-v3-addon.js"></script>\n<script src="/pos-pc-scanner.js"></script>\n<script src="/pos-pc-loyalty-test.js"></script>\n</body>');
+html=html.replace("Live POS · connected to Dexter's order system.","PC TEST · isolated POS/table/KDS data");
+html=html.replace('DEXTER\'S · TABLE SERVICE','PC TEST · TABLE SERVICE');
+fs.writeFileSync('dist/pos.html',html);
+fs.writeFileSync('dist/pos-test.html',html);
+for(const f of ['pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js'])fs.copyFileSync('web/'+f,'dist/'+f);
+console.log('PC POS v3 built from actual Android tablet UI with safe test APIs');
