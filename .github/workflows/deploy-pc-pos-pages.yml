@@ -44,10 +44,17 @@ jobs:
           test -f _site/pos-order-management.js
           test -f _site/pos-pc-manager.js
           test -f _site/pos-pc-table-payments.js
+          test -f _site/pos-pc-session-security.js
+          test -f _site/pos-pc-offline.js
+          test -f _site/pos-pc-xepos-plus.js
+          test -f _site/pos-pc-promotions-auto.js
+          test -f _site/pos-pc-recipes.js
+          test -f _site/pos-pc-purchasing.js
+          test -f _site/customer-display.html
           grep -q "pos-order-management.js" _site/index.html
-          grep -q "pos-pc-category-home.js" _site/index.html
-          grep -q "pos-pc-manager.js" _site/index.html
-          grep -q "pos-pc-table-payments.js" _site/index.html
+          grep -q "pos-pc-session-security.js" _site/index.html
+          grep -q "pos-pc-offline.js" _site/index.html
+          grep -q "pos-pc-xepos-plus.js" _site/index.html
           grep -q "uber-table-service-pc-test-api" _site/index.html
           grep -q "Held Orders" _site/pos-order-management.js
           grep -q "Table Orders" _site/pos-order-management.js
@@ -59,6 +66,8 @@ jobs:
           grep -q "PART PAY / SPLIT BILL" _site/pos-pc-table-payments.js
           grep -q "PAYMENT HISTORY" _site/pos-pc-table-payments.js
           grep -q "CLOSE ACCOUNT" _site/pos-pc-table-payments.js
+          grep -q "Supplier Purchase Orders" _site/pos-pc-purchasing.js
+          grep -q "Ingredient Recipes" _site/pos-pc-recipes.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -69,11 +78,11 @@ jobs:
           path: _site
 
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      pages: write
+      id-token: write
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
