@@ -1,11 +1,11 @@
 extends Control
 
-@onready var status_label: Label = $SafeArea/Card/Status
-@onready var progress: ProgressBar = $SafeArea/Card/Progress
-@onready var start_button: Button = $SafeArea/Card/Start
+@onready var status_label: Label = $SafeArea/Card/Content/Status
+@onready var progress: ProgressBar = $SafeArea/Card/Content/Progress
+@onready var start_button: Button = $SafeArea/Card/Content/Start
 
 func _ready() -> void:
-    status_label.text = "Build 15 loaded successfully\nTap START CAFE to enter Dexter's"
+    status_label.text = "New cafe graphics + interactive station movement\nTap ENTER DEXTER'S to play"
     progress.value = 100
     start_button.disabled = false
     start_button.visible = true
@@ -13,8 +13,8 @@ func _ready() -> void:
 
 func _start_game() -> void:
     start_button.disabled = true
-    start_button.text = "LOADING..."
-    status_label.text = "Loading Dexter's Cafe..."
+    start_button.text = "LOADING CAFE..."
+    status_label.text = "Building Dexter's Cafe..."
     progress.value = 35
     await get_tree().process_frame
 
@@ -22,26 +22,18 @@ func _start_game() -> void:
     if packed == null:
         _show_error("Game scene could not be loaded")
         return
-
     var game := packed.instantiate()
-    if game == null:
-        _show_error("Game could not be started")
-        return
-    if game.get_script() == null:
-        game.queue_free()
+    if game == null or game.get_script() == null:
+        if game != null: game.queue_free()
         _show_error("Game script did not load")
         return
 
-    progress.value = 65
+    progress.value = 70
     get_tree().root.add_child(game)
     await get_tree().process_frame
     await get_tree().process_frame
-
-    if not is_instance_valid(game):
-        _show_error("Game stopped during startup")
-        return
-    if game.get_child_count() < 5:
-        game.queue_free()
+    if not is_instance_valid(game) or game.get_child_count() < 5:
+        if is_instance_valid(game): game.queue_free()
         _show_error("Cafe failed to build")
         return
 
@@ -51,7 +43,7 @@ func _start_game() -> void:
 
 func _show_error(message: String) -> void:
     progress.value = 0
-    status_label.text = message + "\nPlease send a screenshot of this message."
+    status_label.text = message + "\nSend me a screenshot of this message."
     start_button.disabled = false
     start_button.text = "TRY AGAIN"
     start_button.visible = true
