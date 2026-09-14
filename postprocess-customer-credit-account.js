@@ -1,0 +1,1 @@
+const fs=require('fs');const p='dist/index.html';let h=fs.readFileSync(p,'utf8');if(!h.includes('customer-credit-account.js'))h=h.replace('</body>','<script src="/customer-credit-account.js"></script></body>');fs.writeFileSync(p,h);
