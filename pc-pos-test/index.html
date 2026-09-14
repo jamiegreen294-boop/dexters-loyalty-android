@@ -71,7 +71,7 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 
 <div id="modifierModal" class="modal hide"><div class="box"><h2 id="modTitle">Choose options</h2><div id="modGroups"></div><div class="actions"><button class="cancel" id="modCancel">Cancel</button><button class="confirm" id="modAdd">Add to order</button></div><div id="modError" class="bad"></div></div></div>
 <div id="simpleModal" class="modal hide"><div class="box"><h2 id="simpleTitle"></h2><div id="simpleBody"></div><div class="actions"><button class="cancel" id="simpleCancel">Cancel</button><button class="confirm" id="simpleSave">Save</button></div></div></div>
-<div id="authGate" class="modal"><div class="box" style="max-width:430px"><h2>Dexter's POS Staff Sign In</h2><p style="color:#9eb0c5">Use a Dexter's staff or admin account. This POS stays locked until a valid Dexter's staff or admin account signs in.</p><input id="staffEmail" class="field" type="email" autocomplete="username" placeholder="Email"><input id="staffPassword" class="field" type="password" autocomplete="current-password" placeholder="Password"><button id="loginBtn" type="button" class="confirm" onclick="posLogin();return false" ontouchend="event.preventDefault();posLogin();return false" style="width:100%;border:0;border-radius:12px;padding:13px;font-weight:1000;touch-action:manipulation">SIGN IN</button><div id="loginMsg" class="bad" style="margin-top:10px"></div></div></div>
+<div id="authGate" class="modal"><div class="box" style="max-width:430px"><h2>Dexter’s POS</h2><div id="pcPinLoginMount" style="color:#9eb0c5">Loading secure PIN login…</div></div></div>
 
 <script>
 const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',TABLE_API=U+'/functions/v1/uber-table-service-pc-test-api';let TABLE_STATE={orders:[],bill_requests:[]};
@@ -139,6 +139,7 @@ let POS_LOGIN_BUSY=false;async function posLogin(){if(POS_LOGIN_BUSY)return;POS_
 try{const saved=JSON.parse(localStorage.getItem('dexters-pos-session')||'null');applySession(saved)}catch{applySession(null)}
 renderCart();
 </script>
+<script src="./pos-pc-pin-login.js"></script>
 <script src="./pos-pc-offline.js"></script>
 <script src="./pos-pc-session-security.js"></script>
 <script src="./pos-pc-v3-addon.js"></script>
