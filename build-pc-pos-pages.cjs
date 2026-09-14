@@ -5,7 +5,7 @@ if(!fs.existsSync('dist/pos.html')) throw new Error('dist/pos.html missing - run
 fs.rmSync(out,{recursive:true,force:true});
 fs.mkdirSync(out,{recursive:true});
 let html=fs.readFileSync('dist/pos.html','utf8');
-for(const f of ['pos-pc-offline.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-security-audit.js']){
+for(const f of ['pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-security-audit.js']){
   if(!fs.existsSync('dist/'+f)) throw new Error('Missing '+f);
   fs.copyFileSync('dist/'+f,path.join(out,f));
   html=html.replaceAll('src="/'+f+'"','src="./'+f+'"');
@@ -20,10 +20,11 @@ fs.writeFileSync(path.join(out,'pos.html'),html);
 fs.writeFileSync(path.join(out,'.nojekyll'),'');
 fs.writeFileSync(path.join(out,'build-info.json'),JSON.stringify({build:'pc-pos-github-pages',generatedAt:new Date().toISOString(),branch:'dexters-pos-pc-test-v3'},null,2));
 const check=fs.readFileSync(path.join(out,'index.html'),'utf8');
-for(const required of ['pos-pc-offline.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-security-audit.js','dexters-table-order-pc-test','uber-table-service-pc-test-api','customer_phone:S.phone','discount_pence']){
+for(const required of ['pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-security-audit.js','dexters-table-order-pc-test','uber-table-service-pc-test-api','customer_phone:S.phone','discount_pence']){
   if(!check.includes(required)) throw new Error('GitHub Pages PC POS missing '+required);
 }
 for(const bad of ['src="/pos-pc-','src="/pos-order-management.js"','src="/pos-sunday-roast.js"']) if(check.includes(bad)) throw new Error('Root-relative PC POS asset path leaked into GitHub Pages build: '+bad);
+const session=fs.readFileSync(path.join(out,'pos-pc-session-security.js'),'utf8');for(const required of ['Set Staff PIN','Dexter’s POS Locked','UNLOCK','refresh_token','SHA-256','staffRole'])if(!session.includes(required))throw new Error('Session security layer missing '+required);
 const manager=fs.readFileSync(path.join(out,'pos-pc-manager.js'),'utf8');
 for(const required of ['Square Payment','Refunds / Voids','Cash Up','Manager PIN','Cash Drawer']) if(!manager.includes(required)) throw new Error('Manager layer missing '+required);
 const table=fs.readFileSync(path.join(out,'pos-pc-table-payments.js'),'utf8');
@@ -45,4 +46,4 @@ const sec=fs.readFileSync(path.join(out,'pos-pc-security-audit.js'),'utf8');
 for(const required of ['Staff Security / Audit','manual_drawer_open','audit_add','audit_list']) if(!sec.includes(required)) throw new Error('Security audit layer missing '+required);
 const off=fs.readFileSync(path.join(out,'pos-pc-offline.js'),'utf8');
 for(const required of ['Offline Queue','client_request_id','queued_offline','replay','dexters-pc-order-sent']) if(!off.includes(required)) throw new Error('Offline queue layer missing '+required);
-console.log('PASS GitHub Pages PC POS build: core POS, offline retry/dedupe, scheduled promotions, recipe ingredient deduction, supplier purchasing/receiving, customer phone, loyalty, phone, WhatsApp, customer 360, split/merge, ingredient stock, digital receipts/invoices, customer display, manager and security audit controls present');
+console.log('PASS GitHub Pages PC POS build: staff PIN/session security, core POS, offline retry/dedupe, scheduled promotions, recipe ingredient deduction, supplier purchasing/receiving, customer phone, loyalty, phone, WhatsApp, customer 360, split/merge, ingredient stock, digital receipts/invoices, customer display, manager and security audit controls present');
