@@ -57,6 +57,14 @@ jobs:
           grep -q "Ingredient Recipes" _site/pos-pc-recipes.js
           grep -q "Money Owed · Statements" _site/pos-pc-account-statements.js
 
+      - name: Install Chromium smoke-test browser
+        run: |
+          npm install --no-save playwright@1.55.0 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Browser smoke test built POS
+        run: node tests/pc-pos-browser-smoke.cjs
+
       - name: Publish test bundle to gh-pages
         run: |
           git fetch origin gh-pages
@@ -74,3 +82,14 @@ jobs:
             git commit -m "Publish Dexter's PC POS test"
             git push origin HEAD:gh-pages
           fi
+
+      - name: Browser smoke test published Dexter's URL
+        run: |
+          for i in 1 2 3 4 5 6 7 8; do
+            echo "Live smoke attempt $i"
+            if POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?smoke=${GITHUB_SHA}-${i}" node tests/pc-pos-browser-smoke.cjs; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
