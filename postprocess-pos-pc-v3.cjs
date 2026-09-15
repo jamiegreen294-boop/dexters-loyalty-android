@@ -34,6 +34,12 @@ const payOld="b.onclick=choosePay";
 const payNew="b.type='button';b.onclick=e=>{e.preventDefault();e.stopPropagation();choosePay()}";
 if(!addonJs.includes(payOld))throw new Error('PC PAY handler signature missing');
 addonJs=addonJs.replace(payOld,payNew);
+// Later feature modules can reorganise/recreate top toolbar controls. Rebind the core test
+// actions after every deferred feature has loaded so Sales/Cash Up/Money Owed/Sunday stay live.
+const initOld="window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();";
+const initNew="window.addEventListener('dexters-pos-features-ready',()=>{installTop();forceTestRoutes()});window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();";
+if(!addonJs.includes(initOld))throw new Error('PC v3 init handler signature missing');
+addonJs=addonJs.replace(initOld,initNew);
 fs.writeFileSync(addonPath,addonJs);
 // The original category photos were embedded as one large data URI. Chromium rendered the card
 // structure but left that data-URI background blank on the actual POS. Decode the same generated
@@ -49,4 +55,4 @@ catJs=catJs.replace(/const SPRITE='data:image\/jpeg;base64,[^']+';/,"const SPRIT
 if(!catJs.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('PC category photo sprite URL replacement failed');
 fs.writeFileSync(catPath,catJs);
 fs.copyFileSync('web/customer-display.html','dist/customer-display.html');
-console.log('PC POS v3 built with PIN-only startup; PAY click guarded; category food photos exported as JPG; operational modules deferred until authenticated staff session');
+console.log('PC POS v3 built with PIN-only startup; PAY click guarded; core toolbar rebound after feature load; category food photos exported as JPG; operational modules deferred until authenticated staff session');
