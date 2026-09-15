@@ -70,7 +70,7 @@
     h=document.createElement('div');
     h.id='pcCategoryHeader';
     h.className='pcCategoryHeader';
-    h.innerHTML='<button id="pcBackBtn" class="pcBackBtn" style="display:none">← Categories</button><h2 id="pcCategoryTitle">Menu Categories</h2><button id="pcHomeBtn" class="pcHomeBtn">Categories</button>';
+    h.innerHTML='<button id="pcBackBtn" class="pcBackBtn" style="display:none">← Categories</button><h2 id="pcCategoryTitle">Menu categories</h2><button id="pcHomeBtn" class="pcHomeBtn">Categories</button>';
     center.insertBefore(h,search);
     h.querySelector('#pcBackBtn').onclick=()=>showHome();
     h.querySelector('#pcHomeBtn').onclick=()=>showHome();
@@ -85,7 +85,7 @@
     const items=$('items');
     const title=$('pcCategoryTitle');
     const back=$('pcBackBtn');
-    if(title) title.textContent='Menu Categories';
+    if(title) title.textContent='Menu categories';
     if(back) back.style.display='none';
     if(!items) return false;
     items.className='grid pcCatGrid';
