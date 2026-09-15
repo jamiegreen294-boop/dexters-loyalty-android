@@ -10,6 +10,7 @@ const saveSales=a=>localStorage.setItem(SALES_KEY,JSON.stringify(a.slice(0,2000)
 const token=()=>S?.session?.access_token||'';
 function topButton(id,text,before='staffBtn'){let b=$x(id);if(b)return b;const top=document.querySelector('.top');if(!top)return null;b=document.createElement('button');b.id=id;b.textContent=text;top.insertBefore(b,$x(before)||null);return b}
 function modal(title,html,wide=false){const d=document.createElement('div');d.className='modal';d.innerHTML='<div class="box" style="'+(wide?'width:min(900px,96vw);':'')+'"><h2>'+title+'</h2><div class="pcBody">'+html+'</div><div class="actions"><button class="cancel pcClose">Close</button></div></div>';document.body.appendChild(d);d.querySelector('.pcClose').onclick=()=>d.remove();return d}
+window.DextersPosModal=modal;
 function cartTotal(){return Number(String($x('total')?.textContent||'0').replace(/[^0-9.]/g,''))||0}
 function cartSnapshot(){return (S.cart||[]).map(x=>({name:x.name,qty:Number(x.qty)||1,unit:Number(x.unit)||0,mods:x.mods||x.modifiers||[]}))}
 async function kitchenSend(){const b=$x('sendBtn');if(!b)return;try{b.click()}catch{}}
