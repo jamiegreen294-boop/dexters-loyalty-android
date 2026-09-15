@@ -8,7 +8,7 @@ const h=()=>({apikey:K,Authorization:'Bearer '+(S?.session?.access_token||''),'C
 async function call(url,action,extra={}){const r=await fetch(url,{method:'POST',headers:h(),body:JSON.stringify({action,...extra})});const x=await r.json().catch(()=>({}));if(!r.ok)throw Error(x.error||'Request failed');return x}
 const api=(action,extra={})=>call(API,action,extra);
 const rem=(action,extra={})=>call(REM,action,extra);
-function mod(t,b,wide=true){return typeof modal==='function'?modal(t,b,wide):null}
+function mod(t,b,wide=true){return window.DextersPosModal(t,b,wide)}
 function statementText(a,tx){return ['DEXTER’S','10a Dundasvale Court, Glasgow, G4 0JS','ACCOUNT STATEMENT',new Date().toLocaleString(),'','Customer: '+(a.customer_name||''),'Phone: '+(a.phone||''),'Email: '+(a.email||''),'Payment reference: '+(a.payment_reference||''),'','Current balance: '+mp(a.balance_pence),'Credit limit: '+mp(a.credit_limit_pence),'','Transactions:',...tx.map(t=>new Date(t.created_at).toLocaleDateString()+'  '+String(t.transaction_type||'').toUpperCase()+'  '+mp(t.amount_pence)+'  '+(t.description||'')+(t.order_ref?'  Ref '+t.order_ref:'')),'','BALANCE DUE: '+mp(a.balance_pence)].join('\n')}
 function when(v){if(!v)return '—';try{return new Date(v).toLocaleString()}catch{return String(v)}}
 function histHtml(rows){return rows.length?rows.map(r=>'<div class="held"><b>'+esc(String(r.channel||'').toUpperCase())+'</b> · <b>'+esc(String(r.status||'').toUpperCase())+'</b><br><small>'+esc(when(r.sent_at||r.created_at))+'</small>'+(r.last_error?'<br><span class="bad">'+esc(r.last_error)+'</span>':'')+'</div>').join(''):'<p>No reminders sent from the account system yet.</p>'}
