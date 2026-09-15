@@ -48,5 +48,17 @@ function installTop(){const sales=topButton('pcSalesBtn','Sales');if(sales)sales
 function forceTestRoutes(){const q=$x('qrCodesBtn');if(q)q.onclick=qrCodes}
 function initV3(){ensurePayCss();installPay();installTop();forceTestRoutes();const tag=document.querySelector('.tag');if(tag)tag.textContent='PC TEST · TABLE SERVICE';const st=$x('status');if(st)st.textContent='PC TEST · safe table/KDS/payment data'}
 window.addEventListener('dexters-pos-features-ready',()=>{installTop();forceTestRoutes()});window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();
+if(!window.__dextersPcCoreToolbarCapture){
+ window.__dextersPcCoreToolbarCapture=true;
+ document.addEventListener('click',e=>{
+  const b=e.target?.closest?.('#pcSalesBtn,#pcCashupBtn,#qrOrdersBtn');if(!b)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  if(b.id==='pcSalesBtn'){salesView();return}
+  if(b.id==='pcCashupBtn'){cashup();return}
+  if(typeof window.showQrOrders==='function'){window.showQrOrders();return}
+  modal('Customer QR orders · PC TEST','<p>No QR table orders yet.</p>',true);
+ },true);
+}
+
 })();
 
