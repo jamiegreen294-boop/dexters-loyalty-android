@@ -108,10 +108,10 @@
     const tryHome=()=>{if(showHome()) return true;return false};
     if(!tryHome()){
       let n=0;
-      const t=setInterval(()=>{n++;if(tryHome()||n>40)clearInterval(t)},250);
+      const t=setInterval(()=>{n++;if(tryHome()||n>120)clearInterval(t)},250);
     }
   }
 
   window.addEventListener('load',install);
-  if(document.readyState==='complete') install();
+  if(document.readyState!=='loading') install();
 })();
