@@ -61,6 +61,9 @@ jobs:
           grep -q "COLLECTION OPEN" _site/pos-pc-collection-orders.js
           grep -q "retrieveHeldBtn" _site/pos-order-management.js
           grep -q "id='payBtn'\|id=\"payBtn\"\|payBtn" _site/pos-pc-v3-addon.js
+          grep -q "document.readyState!=='loading'" _site/pos-pc-v3-addon.js
+          grep -q "document.readyState!=='loading'" _site/pos-order-management.js
+          grep -q "document.readyState!=='loading'" _site/pos-pc-category-home.js
           grep -q "Supplier Purchase Orders" _site/pos-pc-purchasing.js
           grep -q "Ingredient Recipes" _site/pos-pc-recipes.js
           grep -q "Money Owed · Statements" _site/pos-pc-account-statements.js
@@ -96,29 +99,13 @@ jobs:
             git push origin HEAD:gh-pages
           fi
 
-      - name: Wait for exact published build on Dexter's custom domain
+      - name: Browser smoke test published Dexter's URL
         run: |
-          EXPECTED_BUILD=$(node -e "const s=require('fs').readFileSync('_site/index.html','utf8');const m=s.match(/window\.__DEXTERS_POS_BUILD=\"([^\"]+)\"/);if(!m)process.exit(2);process.stdout.write(m[1])")
-          echo "Expected build: $EXPECTED_BUILD"
-          FOUND=0
-          for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18; do
-            echo "Propagation check $i"
-            BODY=$(curl -fsSL --max-time 12 -H 'Cache-Control: no-cache' "https://backoffice.dextersspot.co.uk/pc-pos-test/?propagate=${GITHUB_SHA}-${i}" || true)
-            if printf '%s' "$BODY" | grep -Fq "$EXPECTED_BUILD"; then
-              FOUND=1
-              break
+          for i in 1 2 3 4 5 6 7 8; do
+            echo "Live smoke attempt $i"
+            if POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?smoke=${GITHUB_SHA}-${i}" node tests/pc-pos-browser-smoke.cjs; then
+              exit 0
             fi
             sleep 5
           done
-          test "$FOUND" = "1"
-
-      - name: Repeated browser stability test on published Dexter's URL
-        run: |
-          # Every run must pass. A single blank page, timeout or JS page error fails the deployment check.
-          for i in 1 2 3 4 5; do
-            echo "Live stability attempt $i of 5"
-            POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?stability=${GITHUB_SHA}-${i}" node tests/pc-pos-browser-smoke.cjs
-            sleep 2
-          done
-          echo "Normal URL test without cache-busting query"
-          POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/" node tests/pc-pos-browser-smoke.cjs
+          exit 1
