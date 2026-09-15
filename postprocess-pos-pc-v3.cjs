@@ -25,6 +25,16 @@ html=html.replace('DEXTER\'S · TABLE SERVICE','PC TEST · TABLE SERVICE');
 fs.writeFileSync('dist/pos.html',html);
 fs.writeFileSync('dist/pos-test.html',html);
 for(const f of ['pos-pc-pin-login.js','pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-pc-collection-orders.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-expiry.js','pos-pc-account-statements.js','pos-pc-capacity.js','pos-pc-close-day.js','pos-pc-security-audit.js'])fs.copyFileSync('web/'+f,'dist/'+f);
+// The PAY button is dynamically injected. On Chromium/Edge a plain synthetic/default button click
+// was locking the event dispatch path in the full PC build. Make it an explicit non-submit button
+// and stop the click at the POS payment handler.
+const addonPath='dist/pos-pc-v3-addon.js';
+let addonJs=fs.readFileSync(addonPath,'utf8');
+const payOld="b.onclick=choosePay";
+const payNew="b.type='button';b.onclick=e=>{e.preventDefault();e.stopPropagation();choosePay()}";
+if(!addonJs.includes(payOld))throw new Error('PC PAY handler signature missing');
+addonJs=addonJs.replace(payOld,payNew);
+fs.writeFileSync(addonPath,addonJs);
 // The original category photos were embedded as one large data URI. Chromium rendered the card
 // structure but left that data-URI background blank on the actual POS. Decode the same generated
 // food-photo sheet into a normal JPG asset and make the category cards load that file instead.
@@ -39,4 +49,4 @@ catJs=catJs.replace(/const SPRITE='data:image\/jpeg;base64,[^']+';/,"const SPRIT
 if(!catJs.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('PC category photo sprite URL replacement failed');
 fs.writeFileSync(catPath,catJs);
 fs.copyFileSync('web/customer-display.html','dist/customer-display.html');
-console.log('PC POS v3 built with PIN-only startup; category food photos exported as JPG; operational modules deferred until authenticated staff session');
+console.log('PC POS v3 built with PIN-only startup; PAY click guarded; category food photos exported as JPG; operational modules deferred until authenticated staff session');
