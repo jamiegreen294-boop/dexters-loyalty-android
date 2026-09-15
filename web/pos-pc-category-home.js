@@ -1,247 +1,54 @@
 (()=>{
   const $=id=>document.getElementById(id);
-  let home=true;
-  let installed=false;
+  const SPRITE='data:image/jpeg;base64,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[... ELLIPSIZATION ...]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';
+  const IMG={
+    'Breakfast':[0,0],'Hot Rolls':[1,0],'Cold Rolls':[2,0],'Toasties':[3,0],'Paninis':[4,0],'Wraps':[5,0],
+    'Baked Potatoes':[0,1],'Soups':[1,1],'Hot Meals':[2,1],'Street Subs':[3,1],'Chinese Style':[4,1],'Greek Style':[5,1],
+    'Rice Bowls':[0,2],'Smash Burgers':[1,2],'Chicken Burgers':[2,2],'Chicken Tenders':[1,3],'Inferno Chicken Tenders':[1,3],
+    'Loaded Fries':[3,2],'Pizzas':[4,2],'Waffles':[5,2],'Chippy Style':[2,3],'Kids Menu':[1,3],'Kids Meals':[1,3],
+    'Reaper Box':[5,3],'Beast Box':[5,3],'Dirty Soda Bar':[3,3],'Cakes & Bakes':[4,3],'Milkshakes':[0,3],'Coffee':[0,3],
+    'Sauces & Dips':[1,3],'Cans of Juice':[3,3],'Sides':[2,3],'Drinks':[3,3],'Desserts':[4,3],'Meal Deals':[5,3]
+  };
+  let home=true,installed=false;
   const originalRenderItems=window.renderItems;
+  const h=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const pos=name=>{const p=IMG[name]||[4,3];return [(p[0]*20)+'%',(p[1]*33.3333)+'%']};
 
   function installCss(){
-    if(document.getElementById('pcCategoryCss')) return;
-    const s=document.createElement('style');
-    s.id='pcCategoryCss';
+    if(document.getElementById('pcCategoryCss'))return;
+    const s=document.createElement('style');s.id='pcCategoryCss';
     s.textContent=`
-      .app,.main,.center,.cart{min-width:0}
-      .top{overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;scrollbar-width:thin}
-      .top>*{flex:0 0 auto}
-      .main{grid-template-columns:minmax(0,1fr) minmax(340px,380px)!important}
-      .cats{display:none!important}
-      .center{padding:12px 14px!important;overflow:auto!important}
-      .cart{width:100%!important;max-width:100%!important}
-      .pcCategoryHeader{display:flex;align-items:center;gap:10px;margin:0 0 12px 0;min-height:48px}
-      .pcCategoryHeader h2{margin:0;font-size:22px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .pcBackBtn,.pcHomeBtn{border:0;border-radius:9px;padding:11px 15px;font-weight:1000;background:#203a5d;color:#fff;min-height:44px;touch-action:manipulation}
-      .pcHomeBtn{background:#ffd43b;color:#08101d}
-
-      /* PASS-style card layout, while keeping the existing POS dark colour scheme. */
+      :root{--pc-cat-sprite:url("${SPRITE}")}
+      .app,.main,.center,.cart{min-width:0}.top{overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important}.top>*{flex:0 0 auto}
+      .main{grid-template-columns:minmax(0,1fr) minmax(340px,380px)!important}.cats{display:none!important}.center{padding:12px 14px!important;overflow:auto!important}.cart{width:100%!important;max-width:100%!important}
+      .pcCategoryHeader{display:flex;align-items:center;gap:10px;margin:0 0 12px;min-height:48px}.pcCategoryHeader h2{margin:0;font-size:28px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .pcBackBtn,.pcHomeBtn{border:1px solid #294663;border-radius:10px;padding:11px 15px;font-weight:1000;background:#142a44;color:#fff;min-height:44px}.pcHomeBtn{background:#ffd43b;color:#08101d;border-color:#ffd43b}
       .pcCatGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;align-content:start;width:100%}
-      .pcCatCard{position:relative;min-width:0;min-height:112px;border:1px solid #35506c!important;color:#fff!important;border-radius:7px!important;padding:16px!important;text-align:left!important;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;touch-action:manipulation;box-shadow:0 2px 7px #0004!important;overflow:hidden;background:#10233a!important;transition:.15s}
-      .pcCatCard:nth-child(n){background:#10233a!important}
-      .pcCatCard:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#ffd43b;pointer-events:none}
-      .pcCatCard:hover{border-color:#58789a!important;box-shadow:0 5px 13px #0005!important;transform:translateY(-1px)}
-      .pcCatCard:active{transform:scale(.985)}
-      .pcCatName{position:relative;font-size:18px;font-weight:1000;line-height:1.1;text-shadow:none!important;word-break:break-word}
-      .pcCatCount{position:relative;font-size:11px;color:#b9c9d9!important;opacity:1;margin-top:10px}
-      .pcCatArrow{display:none}
-      .pcItemsMode{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;width:100%}
-      .pcItemsMode .item{min-width:0!important}
-
-      /* Customers use the same PASS card structure, but retain the POS colours. */
-      .pcCustomersModal .box{width:min(1120px,96vw)!important;max-width:1120px!important}
-      .pcCustomersModal #cr{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px!important;margin-top:12px;align-items:stretch}
-      .pcCustomersModal #cr>p{grid-column:1/-1}
-      .pcCustomerCard{appearance:none;margin:0!important;min-width:0;min-height:190px!important;background:#10233a!important;border:1px solid #35506c!important;border-radius:7px!important;padding:16px!important;color:#fff!important;cursor:pointer;box-shadow:0 2px 7px #0004!important;transition:.15s;display:flex!important;flex-direction:column!important;gap:10px!important}
-      .pcCustomerCard:hover{border-color:#58789a!important;box-shadow:0 5px 13px #0005!important;transform:translateY(-1px)}
-      .pcCustomerCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
-      .pcCustomerIdentity{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
-      .pcCustomerAvatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#ffd43b;color:#08101d;font-weight:1000;font-size:16px;flex:0 0 48px}
-      .pcCustomerName{font-size:17px;font-weight:1000;color:#fff!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .pcCustomerType{border-radius:999px;padding:5px 8px;background:#203a5d;color:#dbe9f7;font-size:10px;font-weight:1000;letter-spacing:.04em;white-space:nowrap;border:1px solid #35506c}
-      .pcCustomerBadge{align-self:flex-start;background:#203a5d;color:#ffd43b;border:1px solid #35506c;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:1000}
-      .pcCustomerMeta{font-size:12px;color:#b9c9d9!important;line-height:1.45;min-height:18px}
-      .pcCustomerMetrics{margin-top:2px;border-top:1px solid #2e4966;border-bottom:1px solid #2e4966;display:grid;grid-template-columns:1fr 1fr;gap:0}
-      .pcCustomerMetrics span{padding:8px 4px;text-align:center;min-width:0}
-      .pcCustomerMetrics span+span{border-left:1px solid #2e4966}
-      .pcCustomerMetrics b{display:block;color:#fff!important;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .pcCustomerMetrics small{display:block;color:#8fa7bd!important;font-size:9px;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
-      .pcCustomerCard .co{margin-top:auto!important;width:100%;border:0!important;background:transparent!important;color:#ffd43b!important;text-align:left!important;padding:6px 0 0!important;font-weight:1000!important;cursor:pointer}
-      .pcCustomerDetailModal .box{width:min(1040px,96vw)!important;max-width:1040px!important}
-      .pcCustomerDetailModal .group,.pcCustomerDetailModal .held{border-radius:7px!important}
-
-      @media(max-width:1180px){
-        .main{grid-template-columns:minmax(0,1fr) 335px!important}
-        .pcCatGrid,.pcItemsMode{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-      }
-      @media(max-width:900px){
-        .main{grid-template-columns:minmax(0,1fr) 300px!important}
-        .pcCatGrid,.pcItemsMode{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-        .pcCustomersModal #cr{grid-template-columns:repeat(2,minmax(0,1fr))}
-      }
-      @media(max-width:720px){
-        .main{grid-template-columns:minmax(0,1fr) 270px!important}
-      }
-      @media(max-width:560px){
-        .pcCustomersModal #cr{grid-template-columns:1fr}
-        .pcCustomerCard{padding:14px!important}
-      }
-    `;
-    document.head.appendChild(s);
+      .pcCatCard{appearance:none;min-width:0;min-height:164px;border:1px solid #294663;color:#fff;border-radius:12px;padding:0;text-align:left;display:flex;flex-direction:column;overflow:hidden;background:#10233a;box-shadow:0 2px 7px #0005;cursor:pointer;touch-action:manipulation}
+      .pcCatCard:hover{border-color:#ffd43b;transform:translateY(-1px)}.pcCatCard:active{transform:scale(.985)}
+      .pcCatImage{height:108px;width:100%;background-image:var(--pc-cat-sprite);background-repeat:no-repeat;background-size:600% 400%;background-position:var(--px) var(--py);background-color:#172b43;border-bottom:1px solid #294663}
+      .pcCatFooter{padding:10px 12px 11px;display:flex;align-items:flex-end;gap:8px;min-height:52px}.pcCatName{font-size:17px;font-weight:1000;line-height:1.05;flex:1}.pcCatCount{font-size:10px;color:#9fb2c8;white-space:nowrap}
+      .pcItemsMode{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;width:100%}.pcItemsMode .item{min-width:0!important}
+      .pcCustomersModal .box{width:min(1120px,96vw)!important;max-width:1120px!important}.pcCustomersModal #cr{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px!important;margin-top:12px;align-items:stretch}.pcCustomersModal #cr>p{grid-column:1/-1}
+      .pcCustomerCard{appearance:none;margin:0!important;min-width:0;min-height:184px!important;background:#10233a!important;border:1px solid #294663!important;border-radius:12px!important;padding:15px!important;color:#fff!important;cursor:pointer;box-shadow:0 2px 7px #0004!important;transition:.15s;display:flex!important;flex-direction:column!important;gap:9px!important}
+      .pcCustomerCard:hover{border-color:#ffd43b!important;transform:translateY(-1px)}.pcCustomerCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}.pcCustomerIdentity{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+      .pcCustomerAvatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#203a5d;color:#ffd43b;font-weight:1000;font-size:16px;flex:0 0 46px}.pcCustomerName{font-size:17px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pcCustomerType,.pcCustomerBadge{border-radius:999px;padding:4px 7px;background:#203a5d;color:#ffd43b;font-size:10px;font-weight:1000;white-space:nowrap}.pcCustomerBadge{align-self:flex-start}
+      .pcCustomerMeta{font-size:12px;color:#a9bbcd;line-height:1.45}.pcCustomerMetrics{border-top:1px solid #294663;border-bottom:1px solid #294663;display:grid;grid-template-columns:1fr 1fr}.pcCustomerMetrics span{padding:8px 4px;text-align:center;min-width:0}.pcCustomerMetrics span+span{border-left:1px solid #294663}.pcCustomerMetrics b{display:block;color:#fff;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pcCustomerMetrics small{display:block;color:#8298ae;font-size:9px;text-transform:uppercase;margin-top:2px}.pcCustomerCard .co{margin-top:auto!important;width:100%;border:0!important;background:transparent!important;color:#ffd43b!important;text-align:left!important;padding:6px 0 0!important;font-weight:1000!important}
+      .pcCustomerDetailModal .box{width:min(1040px,96vw)!important;max-width:1040px!important}.pcCustomerDetailModal .group,.pcCustomerDetailModal .held{border:1px solid #294663!important;background:#10233a!important;border-radius:10px!important}
+      @media(max-width:1180px){.main{grid-template-columns:minmax(0,1fr) 335px!important}.pcCatGrid,.pcItemsMode{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+      @media(max-width:900px){.main{grid-template-columns:minmax(0,1fr) 300px!important}.pcCatGrid,.pcItemsMode{grid-template-columns:repeat(2,minmax(0,1fr))!important}.pcCustomersModal #cr{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:560px){.pcCustomersModal #cr{grid-template-columns:1fr}.pcCatImage{height:95px}}
+    `;document.head.appendChild(s);
   }
 
-  function ensureHeader(){
-    let h=document.getElementById('pcCategoryHeader');
-    if(h) return h;
-    const center=document.querySelector('.center');
-    const search=document.querySelector('.search');
-    if(!center||!search) return null;
-    h=document.createElement('div');
-    h.id='pcCategoryHeader';
-    h.className='pcCategoryHeader';
-    h.innerHTML='<button id="pcBackBtn" class="pcBackBtn" style="display:none">← Categories</button><h2 id="pcCategoryTitle">Menu categories</h2><button id="pcHomeBtn" class="pcHomeBtn">Categories</button>';
-    center.insertBefore(h,search);
-    h.querySelector('#pcBackBtn').onclick=()=>showHome();
-    h.querySelector('#pcHomeBtn').onclick=()=>showHome();
-    return h;
-  }
-
-  function showHome(){
-    if(typeof S==='undefined'||!Array.isArray(S.cats)||!S.cats.length) return false;
-    home=true;
-    const search=$('search');
-    if(search) search.value='';
-    const items=$('items');
-    const title=$('pcCategoryTitle');
-    const back=$('pcBackBtn');
-    if(title) title.textContent='Menu categories';
-    if(back) back.style.display='none';
-    if(!items) return false;
-    items.className='grid pcCatGrid';
-    items.innerHTML=S.cats.map(c=>{
-      const count=(c.items||[]).filter(i=>i.in_stock!==false).length;
-      return '<button class="pcCatCard" data-pc-cat="'+esc(c.name)+'"><div class="pcCatName">'+esc(c.name)+'</div><div class="pcCatCount">'+count+' item'+(count===1?'':'s')+'</div></button>';
-    }).join('');
-    items.querySelectorAll('[data-pc-cat]').forEach(b=>b.onclick=()=>openCategory(b.dataset.pcCat));
-    return true;
-  }
-
-  function openCategory(name){
-    home=false;
-    S.cat=name;
-    const search=$('search');
-    if(search) search.value='';
-    const title=$('pcCategoryTitle');
-    const back=$('pcBackBtn');
-    const items=$('items');
-    if(title) title.textContent=name;
-    if(back) back.style.display='inline-block';
-    if(items) items.className='grid pcItemsMode';
-    if(typeof originalRenderItems==='function') originalRenderItems();
-  }
-
-  function searchChanged(){
-    const q=($('search')?.value||'').trim();
-    if(!q){
-      if(home) showHome();
-      else openCategory(S.cat);
-      return;
-    }
-    home=false;
-    const title=$('pcCategoryTitle');
-    const back=$('pcBackBtn');
-    const items=$('items');
-    if(title) title.textContent='Search results';
-    if(back) back.style.display='inline-block';
-    if(items) items.className='grid pcItemsMode';
-    if(typeof window.renderCats==='function') try{window.renderCats()}catch{}
-    if(typeof originalRenderItems==='function') originalRenderItems();
-  }
-
-  function initials(name){
-    return String(name||'C').trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'C';
-  }
-
-  function customerFacts(card,btn,name){
-    const raw=card.innerText.replace(btn?.innerText||'','').replace(name,'').trim().replace(/\n+/g,' ');
-    const parts=raw.split('·').map(x=>x.trim()).filter(Boolean);
-    const phone=parts[0]||'';
-    const loyaltyPart=parts.find(x=>/^Loyalty\b/i.test(x))||'';
-    const loyalty=loyaltyPart.replace(/^Loyalty\s*/i,'').trim()||'—';
-    return {phone,loyalty};
-  }
-
-  function styleCustomerModal(modal){
-    const title=modal.querySelector('.box h2')?.textContent?.trim()||'';
-    if(title==='Customers / Loyalty'){
-      modal.classList.add('pcCustomersModal');
-      const out=modal.querySelector('#cr');
-      if(!out)return;
-      out.querySelectorAll(':scope > .held').forEach(card=>{
-        if(card.dataset.passStyled==='1')return;
-        const name=card.querySelector('b')?.textContent?.trim()||'Customer';
-        const btn=card.querySelector('.co');
-        const facts=customerFacts(card,btn,name);
-        card.dataset.passStyled='1';
-        card.classList.add('pcCustomerCard');
-        card.innerHTML='';
-
-        const head=document.createElement('div');
-        head.className='pcCustomerCardHead';
-        head.innerHTML='<div class="pcCustomerIdentity"><div class="pcCustomerAvatar"></div><div class="pcCustomerName"></div></div><span class="pcCustomerType">CUSTOMER</span>';
-        head.querySelector('.pcCustomerAvatar').textContent=initials(name);
-        head.querySelector('.pcCustomerName').textContent=name;
-        card.appendChild(head);
-
-        if(facts.loyalty&&facts.loyalty!=='—'){
-          const badge=document.createElement('div');
-          badge.className='pcCustomerBadge';
-          badge.textContent='LIVE LOYALTY';
-          card.appendChild(badge);
-        }
-
-        const meta=document.createElement('div');
-        meta.className='pcCustomerMeta';
-        meta.textContent=facts.phone||'No phone number';
-        card.appendChild(meta);
-
-        const metrics=document.createElement('div');
-        metrics.className='pcCustomerMetrics';
-        metrics.innerHTML='<span><b></b><small>Loyalty code</small></span><span><b></b><small>Contact</small></span>';
-        metrics.querySelectorAll('b')[0].textContent=facts.loyalty||'—';
-        metrics.querySelectorAll('b')[1].textContent=facts.phone?'Phone':'—';
-        card.appendChild(metrics);
-
-        if(btn){
-          btn.textContent='Open customer record →';
-          card.appendChild(btn);
-          card.tabIndex=0;
-          card.setAttribute('role','button');
-          card.onclick=e=>{if(e.target===btn||btn.contains(e.target))return;btn.click()};
-          card.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===card){e.preventDefault();btn.click()}};
-        }
-      });
-    }else if(title.startsWith('Customer ·')){
-      modal.classList.add('pcCustomerDetailModal');
-    }
-  }
-
-  function installCustomerObserver(){
-    const scan=()=>document.querySelectorAll('.modal:not(.hide)').forEach(styleCustomerModal);
-    const obs=new MutationObserver(scan);
-    obs.observe(document.body,{childList:true,subtree:true,characterData:true});
-    scan();
-  }
-
-  function install(){
-    if(installed) return;
-    installCss();
-    const h=ensureHeader();
-    const search=$('search');
-    if(!h||!search) return;
-    installed=true;
-    const baseRender=window.renderItems;
-    window.renderItems=function(){
-      const q=($('search')?.value||'').trim();
-      if(home&&!q&&typeof S!=='undefined'&&Array.isArray(S.cats)&&S.cats.length){showHome();return}
-      if(typeof baseRender==='function')return baseRender.apply(this,arguments);
-    };
-    search.oninput=searchChanged;
-    window.pcShowCategories=showHome;
-    installCustomerObserver();
-    const tryHome=()=>{if(showHome()) return true;return false};
-    if(!tryHome()){
-      let n=0;
-      const t=setInterval(()=>{n++;if(tryHome()||n>120)clearInterval(t)},250);
-    }
-  }
-
-  window.addEventListener('load',install);
-  if(document.readyState!=='loading') install();
+  function ensureHeader(){let x=$('pcCategoryHeader');if(x)return x;const center=document.querySelector('.center'),search=document.querySelector('.search');if(!center||!search)return null;x=document.createElement('div');x.id='pcCategoryHeader';x.className='pcCategoryHeader';x.innerHTML='<button id="pcBackBtn" class="pcBackBtn" style="display:none">← Categories</button><h2 id="pcCategoryTitle">Categories</h2><button id="pcHomeBtn" class="pcHomeBtn">Categories</button>';center.insertBefore(x,search);$('pcBackBtn').onclick=showHome;$('pcHomeBtn').onclick=showHome;return x}
+  function showHome(){if(typeof S==='undefined'||!Array.isArray(S.cats)||!S.cats.length)return false;home=true;const search=$('search');if(search)search.value='';const items=$('items');if($('pcCategoryTitle'))$('pcCategoryTitle').textContent='Categories';if($('pcBackBtn'))$('pcBackBtn').style.display='none';if(!items)return false;items.className='grid pcCatGrid';items.innerHTML=S.cats.map((c,i)=>{const count=(c.items||[]).filter(v=>v.in_stock!==false).length,[px,py]=pos(c.name);return '<button class="pcCatCard" data-pc-index="'+i+'"><div class="pcCatImage" style="--px:'+px+';--py:'+py+'"></div><div class="pcCatFooter"><div class="pcCatName">'+h(c.name)+'</div><div class="pcCatCount">'+count+' item'+(count===1?'':'s')+'</div></div></button>'}).join('');items.querySelectorAll('[data-pc-index]').forEach(b=>b.onclick=()=>openCategory(S.cats[Number(b.dataset.pcIndex)]?.name));return true}
+  function openCategory(name){if(!name)return;home=false;S.cat=name;const search=$('search');if(search)search.value='';if($('pcCategoryTitle'))$('pcCategoryTitle').textContent=name;if($('pcBackBtn'))$('pcBackBtn').style.display='inline-block';const items=$('items');if(items)items.className='grid pcItemsMode';if(typeof originalRenderItems==='function')originalRenderItems()}
+  function searchChanged(){const q=($('search')?.value||'').trim();if(!q){home?showHome():openCategory(S.cat);return}home=false;if($('pcCategoryTitle'))$('pcCategoryTitle').textContent='Search results';if($('pcBackBtn'))$('pcBackBtn').style.display='inline-block';const items=$('items');if(items)items.className='grid pcItemsMode';if(typeof originalRenderItems==='function')originalRenderItems()}
+  const initials=n=>String(n||'C').trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'C';
+  function customerFacts(card,btn,name){const raw=card.innerText.replace(btn?.innerText||'','').replace(name,'').trim().replace(/\n+/g,' '),parts=raw.split('·').map(x=>x.trim()).filter(Boolean),phone=parts[0]||'',lp=parts.find(x=>/^Loyalty\b/i.test(x))||'';return{phone,loyalty:lp.replace(/^Loyalty\s*/i,'').trim()||'—'}}
+  function styleCustomerModal(modal){const title=modal.querySelector('.box h2')?.textContent?.trim()||'';if(title==='Customers / Loyalty'){modal.classList.add('pcCustomersModal');const out=modal.querySelector('#cr');if(!out)return;out.querySelectorAll(':scope > .held').forEach(card=>{if(card.dataset.passStyled==='1')return;const name=card.querySelector('b')?.textContent?.trim()||'Customer',btn=card.querySelector('.co'),facts=customerFacts(card,btn,name);card.dataset.passStyled='1';card.classList.add('pcCustomerCard');card.innerHTML='';const head=document.createElement('div');head.className='pcCustomerCardHead';head.innerHTML='<div class="pcCustomerIdentity"><div class="pcCustomerAvatar"></div><div class="pcCustomerName"></div></div><span class="pcCustomerType">CUSTOMER</span>';head.querySelector('.pcCustomerAvatar').textContent=initials(name);head.querySelector('.pcCustomerName').textContent=name;card.appendChild(head);if(facts.loyalty&&facts.loyalty!=='—'){const badge=document.createElement('div');badge.className='pcCustomerBadge';badge.textContent='LIVE LOYALTY';card.appendChild(badge)}const meta=document.createElement('div');meta.className='pcCustomerMeta';meta.textContent=facts.phone||'No phone number';card.appendChild(meta);const metrics=document.createElement('div');metrics.className='pcCustomerMetrics';metrics.innerHTML='<span><b></b><small>Loyalty code</small></span><span><b></b><small>Contact</small></span>';metrics.querySelectorAll('b')[0].textContent=facts.loyalty||'—';metrics.querySelectorAll('b')[1].textContent=facts.phone?'Phone':'—';card.appendChild(metrics);if(btn){btn.textContent='Open customer record →';card.appendChild(btn);card.tabIndex=0;card.setAttribute('role','button');card.onclick=e=>{if(e.target===btn||btn.contains(e.target))return;btn.click()};card.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===card){e.preventDefault();btn.click()}}}})}else if(title.startsWith('Customer ·'))modal.classList.add('pcCustomerDetailModal')}
+  function installCustomerObserver(){const scan=()=>document.querySelectorAll('.modal:not(.hide)').forEach(styleCustomerModal);new MutationObserver(scan).observe(document.body,{childList:true,subtree:true,characterData:true});scan()}
+  function install(){if(installed)return;installCss();const head=ensureHeader(),search=$('search');if(!head||!search)return;installed=true;const base=window.renderItems;window.renderItems=function(){const q=($('search')?.value||'').trim();if(home&&!q&&typeof S!=='undefined'&&Array.isArray(S.cats)&&S.cats.length){showHome();return}if(typeof base==='function')return base.apply(this,arguments)};search.oninput=searchChanged;window.pcShowCategories=showHome;installCustomerObserver();if(!showHome()){let n=0;const t=setInterval(()=>{n++;if(showHome()||n>120)clearInterval(t)},250)}}
+  window.addEventListener('load',install);if(document.readyState!=='loading')install();
 })();
