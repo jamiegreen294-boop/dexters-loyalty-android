@@ -85,6 +85,9 @@ jobs:
       - name: All-buttons safe browser test built POS
         run: node tests/pc-pos-buttons-system-v2.cjs
 
+      - name: Full PC POS system browser test built POS
+        run: node tests/pc-pos-full-system.cjs
+
       - name: Publish test bundle to gh-pages
         run: |
           git fetch origin gh-pages
@@ -124,3 +127,6 @@ jobs:
             sleep 5
           done
           exit 1
+
+      - name: Full PC POS system browser test published Dexter's URL
+        run: POS_FULL_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?full=${GITHUB_SHA}" node tests/pc-pos-full-system.cjs
