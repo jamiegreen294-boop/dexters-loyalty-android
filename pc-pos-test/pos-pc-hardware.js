@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const VERSION='2026-09-15.2';
+const VERSION='2026-09-15.3';
 const INSTALLER='windows-hardware/Install-DextersPOSHardware.cmd';
 const CLAIM_API=U+'/functions/v1/pc-pos-receipt-claim';
 const $h=id=>document.getElementById(id);
@@ -19,7 +19,7 @@ function safeLoyalty(sale){
 function normaliseSale(sale){
   const loyalty=safeLoyalty(sale);
   const saleId=String(sale?.id||('PC-'+Date.now()));
-  const transactionRef=saleId.replace(/[^A-Za-z0-9]/g,'').slice(-10).toUpperCase();
+  const transactionRef=saleId.replace(/[^A-Za-z0-9]/g,'').slice(-8).toUpperCase();
   return {
     schema:1,
     action:'print_sale',

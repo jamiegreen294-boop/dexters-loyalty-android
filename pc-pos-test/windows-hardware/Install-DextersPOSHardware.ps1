@@ -3,8 +3,10 @@ $installDir = Join-Path $env:LOCALAPPDATA 'DextersPOSHardware'
 $handlerPath = Join-Path $installDir 'DextersPOSHardware.ps1'
 $launcherPath = Join-Path $installDir 'DextersPOSHardware.vbs'
 $scannerPath = Join-Path $installDir 'DextersScannerBridge.ps1'
+$logoPath = Join-Path $installDir 'dexters-logo.png'
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 Invoke-WebRequest -UseBasicParsing 'https://backoffice.dextersspot.co.uk/pc-pos-test/windows-hardware/DextersScannerBridge.ps1' -OutFile $scannerPath
+try { Invoke-WebRequest -UseBasicParsing 'https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo' -OutFile $logoPath } catch {}
 
 $handler = @'
 param([Parameter(Mandatory=$true)][string]$Url)
@@ -42,9 +44,8 @@ public class DextersRawPrinter {
 "@
 
 function Get-PosPrinter {
-  try { $p = Get-Printer -Name 'POS-80' -ErrorAction SilentlyContinue; if($p){return $p.Name} } catch {}
-  try { $p = Get-Printer -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'POS[- ]?80|POS80' } | Select-Object -First 1; if($p){return $p.Name} } catch {}
-  try { $p = Get-CimInstance Win32_Printer | Where-Object { $_.Name -match 'POS[- ]?80|POS80' } | Select-Object -First 1; if($p){return $p.Name} } catch {}
+  # The till is installed with this fixed queue name. Avoiding Windows printer
+  # discovery removes the long pause before every receipt.
   return 'POS-80'
 }
 function Decode-B64Url([string]$s){
@@ -60,7 +61,7 @@ function Add-QR($list,[string]$value){
   if([string]::IsNullOrWhiteSpace($value)){return}
   $data=$enc.GetBytes($value); $len=$data.Length+3; $pL=$len -band 255; $pH=($len -shr 8) -band 255
   Add-Bytes $list ([byte[]](29,40,107,4,0,49,65,50,0))
-  Add-Bytes $list ([byte[]](29,40,107,3,0,49,67,8))
+  Add-Bytes $list ([byte[]](29,40,107,3,0,49,67,12))
   Add-Bytes $list ([byte[]](29,40,107,3,0,49,69,49))
   Add-Bytes $list ([byte[]](29,40,107,$pL,$pH,49,80,48)); Add-Bytes $list $data
   Add-Bytes $list ([byte[]](29,40,107,3,0,49,81,48))
@@ -68,18 +69,18 @@ function Add-QR($list,[string]$value){
 function Add-Logo($list){
   try{
     Add-Type -AssemblyName System.Drawing
-    $w=416; $h=104; $row=[int]($w/8)
+    $w=416; $h=150; $row=[int]($w/8)
     $bmp=New-Object Drawing.Bitmap $w,$h; $g=[Drawing.Graphics]::FromImage($bmp); $g.Clear([Drawing.Color]::White)
-    $g.TextRenderingHint=[Drawing.Text.TextRenderingHint]::SingleBitPerPixelGridFit
-    $title=New-Object Drawing.Font 'Arial Black',35,[Drawing.FontStyle]::Bold,[Drawing.GraphicsUnit]::Pixel
-    $tag=New-Object Drawing.Font 'Arial',17,[Drawing.FontStyle]::Bold,[Drawing.GraphicsUnit]::Pixel
-    $centre=New-Object Drawing.StringFormat; $centre.Alignment=[Drawing.StringAlignment]::Center
-    $g.DrawString("DEXTER'S",$title,[Drawing.Brushes]::Black,(New-Object Drawing.RectangleF 0,5,$w,55),$centre)
-    $pen=New-Object Drawing.Pen ([Drawing.Color]::Black),3; $g.DrawLine($pen,35,64,381,64)
-    $g.DrawString('EAT WELL  |  LIVE WELL',$tag,[Drawing.Brushes]::Black,(New-Object Drawing.RectangleF 0,70,$w,28),$centre)
+    $g.InterpolationMode=[Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.SmoothingMode=[Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $sourcePath=Join-Path $env:LOCALAPPDATA 'DextersPOSHardware\dexters-logo.png'
+    if(-not (Test-Path $sourcePath)){throw 'Dexter logo file is missing'}
+    $source=[Drawing.Image]::FromFile($sourcePath)
+    $scale=[Math]::Min(380.0/$source.Width,140.0/$source.Height);$dw=[int]($source.Width*$scale);$dh=[int]($source.Height*$scale);$dx=[int](($w-$dw)/2);$dy=[int](($h-$dh)/2)
+    $g.DrawImage($source,$dx,$dy,$dw,$dh)
     Add-Bytes $list ([byte[]](29,118,48,0,($row -band 255),(($row -shr 8) -band 255),($h -band 255),(($h -shr 8) -band 255)))
     for($y=0;$y -lt $h;$y++){for($xb=0;$xb -lt $row;$xb++){$v=0;for($bit=0;$bit -lt 8;$bit++){$c=$bmp.GetPixel(($xb*8)+$bit,$y);$lum=(0.299*$c.R)+(0.587*$c.G)+(0.114*$c.B);if($c.A -gt 40 -and $lum -lt 170){$v=$v -bor (128 -shr $bit)}};$list.Add([byte]$v)}}
-    $pen.Dispose();$title.Dispose();$tag.Dispose();$centre.Dispose();$g.Dispose();$bmp.Dispose();Add-Line $list ''
+    $source.Dispose();$g.Dispose();$bmp.Dispose();Add-Line $list ''
   }catch{Log ('logo skipped '+$_.Exception.Message)}
 }
 function Add-Header($b){
@@ -103,7 +104,7 @@ function Build-Receipt($o){
     if([int]$loyalty.coffee_stamps_earned -gt 0){Add-Line $b ('Coffee stamps earned: '+[string]$loyalty.coffee_stamps_earned)}
     Add-Line $b '------------------------------------------'
   }
-  if($sale.order_number){Add-Line $b ('Order: '+[string]$sale.order_number)} else {Add-Line $b ('Receipt: '+[string]$sale.transaction_ref)}
+  Add-Line $b ('Ref: '+[string]$sale.transaction_ref)
   try{Add-Line $b ('Date: '+([DateTime]$sale.created_at).ToLocalTime().ToString('dd/MM/yyyy HH:mm'))}catch{Add-Line $b ('Date: '+[string]$sale.created_at)}
   Add-Line $b ('Type: '+[string]$sale.mode); if($sale.table_no -and [string]$sale.mode -match 'Table'){Add-Line $b ('Table: '+[string]$sale.table_no)}
   Add-Line $b '------------------------------------------'; Add-Items $b $sale.items; Add-Line $b '------------------------------------------'
@@ -125,7 +126,7 @@ function Build-Receipt($o){
     Add-Line $b ''; Add-Bytes $b ([byte[]](27,97,1)); Add-Line $b 'Thank you for visiting Dexter''s.'; Add-Bytes $b ([byte[]](27,97,0))
   }
   if($sale.transaction_barcode){
-    Add-Line $b ''; Add-Bytes $b ([byte[]](27,97,1)); Add-Line $b 'SCAN TO FIND TRANSACTION'; Add-Bytes $b ([byte[]](29,72,2,29,104,64,29,119,2,29,107,4)); Add-Text $b ([string]$sale.transaction_barcode); $b.Add([byte]0); Add-Line $b ''; Add-Bytes $b ([byte[]](27,97,0))
+    Add-Line $b ''; Add-Bytes $b ([byte[]](27,97,1)); Add-Line $b 'SCAN TO FIND TRANSACTION'; Add-Bytes $b ([byte[]](29,72,2,29,104,80,29,119,3,29,107,4)); Add-Text $b ([string]$sale.transaction_barcode); $b.Add([byte]0); Add-Line $b ''; Add-Line $b ([string]$sale.transaction_barcode); Add-Bytes $b ([byte[]](27,97,0))
   }
   if($o.test_mode){Add-Line $b ''; Add-Bytes $b ([byte[]](27,97,1)); Add-Line $b 'PC TEST'; Add-Bytes $b ([byte[]](27,97,0))}
   Add-Bytes $b ([byte[]](27,100,4))
@@ -157,7 +158,7 @@ $launcher = @"
 Set shell = CreateObject("WScript.Shell")
 If WScript.Arguments.Count = 0 Then WScript.Quit
 url = WScript.Arguments(0)
-command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$handlerPath"" """ & url & """"
+command = "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$handlerPath"" """ & url & """"
 shell.Run command, 0, False
 "@
 Set-Content -Path $launcherPath -Value $launcher -Encoding ASCII
