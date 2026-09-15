@@ -1,0 +1,10 @@
+const fs=require('fs');
+const file='dist/pos-pc-table-payments.js';
+if(!fs.existsSync(file))throw new Error('PC table payments build missing');
+let js=fs.readFileSync(file,'utf8');
+const old="const base=(typeof placeLabel==='function'?placeLabel(o.table_number):'Table '+o.table_number);";
+const replacement="const seat=Number(o.table_number);const labels={1:'Inside Table 1',2:'Inside Table 2',3:'Outside Table 1',4:'Outside Table 2',5:'Bar Chair 1',6:'Bar Chair 2',7:'Bar Chair 3'};const base=labels[seat]||(typeof placeLabel==='function'?placeLabel(o.table_number):'Table '+o.table_number);";
+if(!js.includes(old))throw new Error('PC table account label signature missing');
+js=js.replace(old,replacement);
+fs.writeFileSync(file,js);
+console.log('PASS PC table/QR account labels: inside, outside and bar seats');
