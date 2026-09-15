@@ -32,6 +32,22 @@ const initOld="window.addEventListener('load',initV3);if(document.readyState!=='
 const initNew="window.addEventListener('dexters-pos-features-ready',()=>{installTop();forceTestRoutes()});window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();";
 if(!addonJs.includes(initOld))throw new Error('PC v3 init handler signature missing');
 addonJs=addonJs.replace(initOld,initNew);
+
+// Money Owed must never take the whole POS down. Validate values, keep modal transitions atomic,
+// and catch local-storage/payment hand-off errors so staff get a visible error instead of a crash.
+const creditPayOld="function creditPayTest(acct,name,balance){const max=balance/100;ensurePayCss();const d=document.createElement('div');d.className='modal';d.innerHTML='<div class=\"box pcPayBox\"><h2>Money Owed · '+name+'</h2><div class=\"pcPaySummary\"><div style=\"color:#9eb0c5\">CURRENT BALANCE</div><div class=\"pcPayTotal\">'+cashMoney(max)+'</div><label>Amount customer is paying</label><input id=\"pcDebtAmount\" class=\"field\" inputmode=\"decimal\" value=\"'+max.toFixed(2)+'\"><div class=\"pcPayActions\"><button class=\"pcPayCancel\">CANCEL</button><button class=\"pcPayConfirm\">CONTINUE</button></div></div></div>';document.body.appendChild(d);d.querySelector('.pcPayCancel').onclick=()=>d.remove();d.querySelector('.pcPayConfirm').onclick=()=>{const amount=Number(String(d.querySelector('#pcDebtAmount').value||'').replace(',','.'));if(!amount||amount<=0||amount>max){d.querySelector('#pcDebtAmount').focus();return}d.remove();paymentMethodModal('Money Owed · '+name,amount,(tender,change)=>recordCreditPayment(acct,name,balance,amount,'cash',tender,change),()=>recordCreditPayment(acct,name,balance,amount,'card',amount,0))}}";
+const creditPayNew="function creditPayTest(acct,name,balance){try{const rawBalance=Number(balance);const max=Math.max(0,(Number.isFinite(rawBalance)?rawBalance:0)/100),label=String(name||'Customer');ensurePayCss();if(max<=0){modal('Money Owed · '+label,'<p>This customer has no outstanding balance to take.</p>');return null}const d=document.createElement('div');d.className='modal';d.innerHTML='<div class=\"box pcPayBox\"><h2>Money Owed · '+label+'</h2><div class=\"pcPaySummary\"><div style=\"color:#9eb0c5\">CURRENT BALANCE</div><div class=\"pcPayTotal\">'+cashMoney(max)+'</div><label>Amount customer is paying</label><input id=\"pcDebtAmount\" class=\"field\" inputmode=\"decimal\" value=\"'+max.toFixed(2)+'\"><div class=\"pcPayActions\"><button type=\"button\" class=\"pcPayCancel\">CANCEL</button><button type=\"button\" class=\"pcPayConfirm\">CONTINUE</button></div><div class=\"pcDebtError bad\"></div></div></div>';document.body.appendChild(d);d.querySelector('.pcPayCancel').onclick=e=>{e.preventDefault();d.remove()};d.querySelector('.pcPayConfirm').onclick=e=>{e.preventDefault();try{const field=d.querySelector('#pcDebtAmount'),amount=Number(String(field?.value||'').replace(',','.'));if(!Number.isFinite(amount)||amount<=0||amount>max){const er=d.querySelector('.pcDebtError');if(er)er.textContent='Enter an amount between £0.01 and '+cashMoney(max)+'.';field?.focus();return}const next=paymentMethodModal('Money Owed · '+label,amount,(tender,change)=>recordCreditPayment(acct,label,Number(balance)||0,amount,'cash',tender,change),()=>recordCreditPayment(acct,label,Number(balance)||0,amount,'card',amount,0));if(next)d.remove()}catch(err){const er=d.querySelector('.pcDebtError');if(er)er.textContent='Could not open payment: '+String(err?.message||err)}};return d}catch(err){console.error('Money Owed payment screen failed',err);modal('Money Owed payment error','<p>Could not open the payment screen. The POS is still running.</p><p class=\"bad\">'+String(err?.message||err)+'</p>');return null}}";
+if(!addonJs.includes(creditPayOld))throw new Error('Money Owed payment screen signature missing');
+addonJs=addonJs.replace(creditPayOld,creditPayNew);
+const storageOld="const rows=readSales();rows.unshift(row);saveSales(rows);let c=[];try{c=JSON.parse(localStorage.getItem(CREDIT_TEST_KEY)||'[]')}catch{}c.unshift(row);localStorage.setItem(CREDIT_TEST_KEY,JSON.stringify(c.slice(0,500)));";
+const storageNew="try{const rows=readSales();rows.unshift(row);saveSales(rows)}catch(e){console.error('Could not save Money Owed sale history',e)}let c=[];try{c=JSON.parse(localStorage.getItem(CREDIT_TEST_KEY)||'[]')}catch{}try{c.unshift(row);localStorage.setItem(CREDIT_TEST_KEY,JSON.stringify(c.slice(0,250)))}catch(e){console.error('Could not save Money Owed test history',e)}";
+if(!addonJs.includes(storageOld))throw new Error('Money Owed storage signature missing');
+addonJs=addonJs.replace(storageOld,storageNew);
+const takePayOld="out.querySelectorAll('.pcCreditPay').forEach(b=>b.onclick=()=>{const x=rows[Number(b.dataset.i)];creditPayTest(x.id||x.account_id,x.customer_name||x.full_name||x.name||'Customer',Number(x.balance_pence||x.balance||0))})";
+const takePayNew="out.querySelectorAll('.pcCreditPay').forEach(b=>b.onclick=e=>{e.preventDefault();try{const x=rows[Number(b.dataset.i)];if(!x)throw Error('Customer record is no longer available');creditPayTest(x.account_id||x.id||null,x.customer_name||x.full_name||x.name||'Customer',Number(x.balance_pence??x.balance??0))}catch(err){out.innerHTML='<p class=\"bad\">Could not open payment: '+String(err?.message||err)+'</p>'}})";
+if(!addonJs.includes(takePayOld))throw new Error('Money Owed take-payment handler signature missing');
+addonJs=addonJs.replace(takePayOld,takePayNew);
+
 const closeMark='\n})();';
 const closeAt=addonJs.lastIndexOf(closeMark);
 if(closeAt<0)throw new Error('PC v3 addon closing marker missing');
@@ -47,8 +63,6 @@ const sprite=Buffer.from(spriteMatch[1],'base64');
 if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('PC category photo sprite is not a valid complete JPEG');
 fs.writeFileSync('dist/pc-category-sprite.jpg',sprite);
 catJs=catJs.replace(/const SPRITE='data:image\/jpeg;base64,[^']+';/,"const SPRITE='./pc-category-sprite.jpg';");
-// Render the photo sheet as a real IMG inside a clipped frame instead of a huge CSS background.
-// This is more reliable on Windows Chromium/touch hardware and prevents half-rendered category photos.
 const oldPos="const pos=name=>{const p=IMG[name]||[4,3];return [(p[0]*20)+'%',(p[1]*33.3333)+'%']};";
 const newPos="const pos=name=>{const p=IMG[name]||[4,3];return [Number(p[0])||0,Number(p[1])||0]};";
 if(!catJs.includes(oldPos))throw new Error('PC category sprite position helper missing');
@@ -68,4 +82,4 @@ catJs=catJs.replace(cssEnd,cssEnd+touchCss);
 if(!catJs.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('PC category photo sprite URL replacement failed');
 fs.writeFileSync(catPath,catJs);
 fs.copyFileSync('web/customer-display.html','dist/customer-display.html');
-console.log('PC POS v3 built with PIN-only startup; critical toolbar handlers pinned; Windows-safe category IMG cropping and touch-screen responsive layout applied; operational modules deferred until authenticated staff session');
+console.log('PC POS v3 built with PIN-only startup; Money Owed payment crash guarded; critical toolbar handlers pinned; Windows-safe category IMG cropping and touch-screen responsive layout applied; operational modules deferred until authenticated staff session');
