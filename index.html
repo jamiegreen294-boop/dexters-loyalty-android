@@ -1973,6 +1973,13 @@ body.pride-theme{background:#f7f3f8!important}
  </div>
 </div>
 
+<div class="card" style="margin-top:14px">
+ <h3>Dexter’s POS activation</h3>
+ <p class="muted">Create a one-use six-digit setup code for a new or rebuilt Dexter’s Windows till. Codes expire after 15 minutes.</p>
+ <button class="btn" id="secGeneratePosCode">Generate POS setup code</button>
+ <div id="secPosCodeResult" class="summarybox" style="display:none;margin-top:12px" aria-live="polite"></div>
+</div>
+
 <div class="card">
  <h3>Security events</h3>
  <p class="muted">Recent account creations, role changes and account-access changes.</p>
@@ -7369,6 +7376,7 @@ document.addEventListener('click',function(e){
 </script><script id="dextersSecurityAccessV1">
 (function(){
  let SEC_DATA=null;
+ const POS_PIN_API=SUPABASE_URL+'/functions/v1/pc-pos-pin-auth';
  const E=id=>document.getElementById(id);
  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
  async function call(action,payload={}){
@@ -7408,9 +7416,21 @@ document.addEventListener('click',function(e){
    if(error){E('secSaveMessage').innerHTML='<span class="bad">'+esc(error.message)+'</span>';return}
    E('secSaveMessage').innerHTML='<span class="ok">Security settings saved.</span>';applySettings(row);
  }
+ async function generatePosSetupCode(){
+   const out=E('secPosCodeResult'),btn=E('secGeneratePosCode');
+   if(!out||!btn||SECURE_ACCOUNT?.role!=='Super User')return;
+   btn.disabled=true;out.style.display='block';out.innerHTML='<span class="muted">Creating a secure one-use code…</span>';
+   try{
+     const r=await fetch(POS_PIN_API,{method:'POST',headers:{Authorization:'Bearer '+SECURE_SESSION.access_token,apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({action:'issue_code'})});
+     const x=await r.json().catch(()=>({}));if(!r.ok||x.error)throw new Error(x.error||('POS service error '+r.status));
+     out.innerHTML='<b>POS SETUP CODE</b><div class="big" style="letter-spacing:.18em;margin:8px 0">'+esc(x.code)+'</div><span class="ok">One use only · expires '+new Date(x.expires_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'</span>';
+   }catch(err){out.innerHTML='<span class="bad">'+esc(err.message||err)+'</span>'}
+   finally{btn.disabled=false}
+ }
  document.addEventListener('click',async e=>{
    if(e.target?.closest?.('[data-tab="security"]'))setTimeout(loadSecurity,100);
    if(e.target?.id==='secSaveSettings')saveSettings();
+   if(e.target?.id==='secGeneratePosCode')generatePosSetupCode();
    if(e.target?.classList?.contains('secRoleSave')){
      const staff=e.target.dataset.staff,sel=[...document.querySelectorAll('.secRoleSelect')].find(x=>x.dataset.staff===staff);if(!staff||!sel)return;
      if(!confirm('Change this account role to '+sel.value+'?'))return;
