@@ -52,6 +52,7 @@ jobs:
           test -f _site/pos-pc-account-statements.js
           test -f _site/pos-pc-collection-orders.js
           test -f _site/customer-display.html
+          test -f _site/pc-category-sprite.jpg
           grep -q "uber-table-service-pc-test-api" _site/index.html
           grep -q "window.DextersPinLogin" _site/index.html
           grep -q "FEATURE_SCRIPTS" _site/pos-pc-pin-login.js
@@ -81,6 +82,9 @@ jobs:
       - name: Browser smoke test built POS
         run: node tests/pc-pos-browser-smoke.cjs
 
+      - name: Full safe browser test built POS
+        run: node tests/pc-pos-full-browser-test.cjs
+
       - name: Publish test bundle to gh-pages
         run: |
           git fetch origin gh-pages
@@ -104,6 +108,17 @@ jobs:
           for i in 1 2 3 4 5 6 7 8; do
             echo "Live smoke attempt $i"
             if POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?smoke=${GITHUB_SHA}-${i}" node tests/pc-pos-browser-smoke.cjs; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Full safe browser test published Dexter's URL
+        run: |
+          for i in 1 2 3 4 5; do
+            echo "Live full-system attempt $i"
+            if POS_FULL_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?full=${GITHUB_SHA}-${i}" node tests/pc-pos-full-browser-test.cjs; then
               exit 0
             fi
             sleep 5
