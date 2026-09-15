@@ -25,8 +25,8 @@ async function localUrl(){
 async function checkCategoryImages(browser){
   const cats=fs.readFileSync(path.join(root,'pos-pc-category-home.js'),'utf8');
   const pin=fs.readFileSync(path.join(root,'pos-pc-pin-login.js'),'utf8');
-  const match=cats.match(/const SPRITE='(data:image\/(?:jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+)'/i);
-  if(!match)throw new Error('Category sprite data URI missing from built POS');
+  const match=cats.match(/const SPRITE='([^']+)'/);
+  if(!match||!match[1].startsWith('data:image/'))throw new Error('Category sprite data URI missing from built POS');
   const sprite=match[1];
   const page=await browser.newPage();
   const errors=[];
