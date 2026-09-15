@@ -96,13 +96,29 @@ jobs:
             git push origin HEAD:gh-pages
           fi
 
-      - name: Browser smoke test published Dexter's URL
+      - name: Wait for exact published build on Dexter's custom domain
         run: |
-          for i in 1 2 3 4 5 6 7 8; do
-            echo "Live smoke attempt $i"
-            if POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?smoke=${GITHUB_SHA}-${i}" node tests/pc-pos-browser-smoke.cjs; then
-              exit 0
+          EXPECTED_BUILD=$(node -e "const s=require('fs').readFileSync('_site/index.html','utf8');const m=s.match(/window\.__DEXTERS_POS_BUILD=\"([^\"]+)\"/);if(!m)process.exit(2);process.stdout.write(m[1])")
+          echo "Expected build: $EXPECTED_BUILD"
+          FOUND=0
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18; do
+            echo "Propagation check $i"
+            BODY=$(curl -fsSL --max-time 12 -H 'Cache-Control: no-cache' "https://backoffice.dextersspot.co.uk/pc-pos-test/?propagate=${GITHUB_SHA}-${i}" || true)
+            if printf '%s' "$BODY" | grep -Fq "$EXPECTED_BUILD"; then
+              FOUND=1
+              break
             fi
             sleep 5
           done
-          exit 1
+          test "$FOUND" = "1"
+
+      - name: Repeated browser stability test on published Dexter's URL
+        run: |
+          # Every run must pass. A single blank page, timeout or JS page error fails the deployment check.
+          for i in 1 2 3 4 5; do
+            echo "Live stability attempt $i of 5"
+            POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?stability=${GITHUB_SHA}-${i}" node tests/pc-pos-browser-smoke.cjs
+            sleep 2
+          done
+          echo "Normal URL test without cache-busting query"
+          POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/" node tests/pc-pos-browser-smoke.cjs
