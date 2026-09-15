@@ -1,7 +1,8 @@
 (()=>{
 'use strict';
-const VERSION='2026-09-15.1';
+const VERSION='2026-09-15.2';
 const INSTALLER='windows-hardware/Install-DextersPOSHardware.cmd';
+const CLAIM_API=U+'/functions/v1/pc-pos-receipt-claim';
 const $h=id=>document.getElementById(id);
 const escH=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const moneyH=n=>'£'+Number(n||0).toFixed(2);
@@ -17,6 +18,8 @@ function safeLoyalty(sale){
 }
 function normaliseSale(sale){
   const loyalty=safeLoyalty(sale);
+  const saleId=String(sale?.id||('PC-'+Date.now()));
+  const transactionRef=saleId.replace(/[^A-Za-z0-9]/g,'').slice(-10).toUpperCase();
   return {
     schema:1,
     action:'print_sale',
@@ -25,7 +28,9 @@ function normaliseSale(sale){
     receipt_kind:loyalty?'loyalty':'standard',
     test_mode:true,
     sale:{
-      id:sale?.id||('PC-'+Date.now()),
+      id:saleId,
+      transaction_ref:transactionRef,
+      transaction_barcode:'DXT-'+transactionRef,
       order_number:sale?.orderNumber||sale?.order_number||'',
       created_at:sale?.created_at||sale?.createdAt||new Date().toISOString(),
       method:String(sale?.method||'').toUpperCase(),
@@ -49,10 +54,19 @@ function normaliseSale(sale){
     }:null
   };
 }
-function printSale(sale){
+async function rewardClaim(p){
+  const token=S?.session?.access_token||'';
+  if(!token||Number(p?.sale?.total||0)<1)return '';
+  const r=await fetch(CLAIM_API,{method:'POST',headers:{apikey:K,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({receipt_id:String(p.sale.id),order_value_pence:Math.round(Number(p.sale.total||0)*100)})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d.claim_token)throw new Error(d.error||'Reward QR unavailable');
+  return String(d.claim_token);
+}
+async function printSale(sale){
   const p=normaliseSale(sale);
+  try{p.sale.claim_token=await rewardClaim(p)}catch(e){status('Receipt will print, but the Scan to Win QR could not be created: '+String(e.message||e))}
   launch('print-pos',p);
-  status((p.receipt_kind==='loyalty'?'Loyalty':'Standard')+' receipt sent to POS-80'+(p.drawer?' · cash drawer requested':' · drawer stays closed'));
+  if(p.sale.claim_token)status((p.receipt_kind==='loyalty'?'Loyalty':'Standard')+' receipt sent to POS-80 · Scan to Win QR ready'+(p.drawer?' · cash drawer requested':' · drawer stays closed'));
 }
 function testReceipt(kind='standard',drawer=false){
   const sale={id:'HW-TEST-'+Date.now(),created_at:new Date().toISOString(),method:drawer?'cash':'card',total:3.5,tendered:drawer?5:3.5,change:drawer?1.5:0,mode:'Counter',staff:S?.staffEmail||'Test',items:[{name:'Hardware Test Item',qty:1,unit:3.5,mods:[]}],loyalty:kind==='loyalty'?{full_name:'Dexter Test Customer',loyalty_code:'123456',points:125,coffee_stamps_earned:1}:null};
