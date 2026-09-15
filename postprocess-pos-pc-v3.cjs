@@ -23,5 +23,18 @@ html=html.replace('DEXTER\'S · TABLE SERVICE','PC TEST · TABLE SERVICE');
 fs.writeFileSync('dist/pos.html',html);
 fs.writeFileSync('dist/pos-test.html',html);
 for(const f of ['pos-pc-pin-login.js','pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-pc-collection-orders.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-expiry.js','pos-pc-account-statements.js','pos-pc-capacity.js','pos-pc-close-day.js','pos-pc-security-audit.js'])fs.copyFileSync('web/'+f,'dist/'+f);
+// The original category photos were embedded as one large data URI. Chromium rendered the card
+// structure but left that data-URI background blank on the actual POS. Decode the same generated
+// food-photo sheet into a normal JPG asset and make the category cards load that file instead.
+const catPath='dist/pos-pc-category-home.js';
+let catJs=fs.readFileSync(catPath,'utf8');
+const spriteMatch=catJs.match(/const SPRITE='data:image\/jpeg;base64,([^']+)'/);
+if(!spriteMatch)throw new Error('PC category photo sprite data missing');
+const sprite=Buffer.from(spriteMatch[1],'base64');
+if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('PC category photo sprite is not a valid complete JPEG');
+fs.writeFileSync('dist/pc-category-sprite.jpg',sprite);
+catJs=catJs.replace(/const SPRITE='data:image\/jpeg;base64,[^']+';/,"const SPRITE='./pc-category-sprite.jpg';");
+if(!catJs.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('PC category photo sprite URL replacement failed');
+fs.writeFileSync(catPath,catJs);
 fs.copyFileSync('web/customer-display.html','dist/customer-display.html');
-console.log('PC POS v3 built with PIN-only startup; operational modules deferred until authenticated staff session');
+console.log('PC POS v3 built with PIN-only startup; category food photos exported as JPG; operational modules deferred until authenticated staff session');

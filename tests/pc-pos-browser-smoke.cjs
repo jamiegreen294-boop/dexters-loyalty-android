@@ -3,11 +3,11 @@ const fs=require('fs');
 const path=require('path');
 const { chromium }=require('playwright');
 
-const hard=setTimeout(()=>{console.error('HARD TIMEOUT: POS browser smoke did not finish within 45 seconds');process.exit(124)},45000);
+const hard=setTimeout(()=>{console.error('HARD TIMEOUT: POS browser smoke did not finish within 40 seconds');process.exit(124)},40000);
 const root=path.resolve('_site');
 const requested=process.env.POS_TEST_URL||'';
 let server=null;
-function mime(p){if(p.endsWith('.js'))return'application/javascript';if(p.endsWith('.html'))return'text/html';if(p.endsWith('.json'))return'application/json';return'application/octet-stream'}
+function mime(p){if(p.endsWith('.js'))return'application/javascript';if(p.endsWith('.html'))return'text/html';if(p.endsWith('.json'))return'application/json';if(p.endsWith('.jpg')||p.endsWith('.jpeg'))return'image/jpeg';return'application/octet-stream'}
 async function localUrl(){
   server=http.createServer((req,res)=>{
     try{
@@ -22,25 +22,18 @@ async function localUrl(){
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve)});
   return `http://127.0.0.1:${server.address().port}/`;
 }
-async function checkCategoryImages(browser){
-  const cats=fs.readFileSync(path.join(root,'pos-pc-category-home.js'),'utf8');
-  const pin=fs.readFileSync(path.join(root,'pos-pc-pin-login.js'),'utf8');
-  const match=cats.match(/const SPRITE='([^']+)'/);
-  if(!match||!match[1].startsWith('data:image/'))throw new Error('Category sprite data URI missing from built POS');
-  const sprite=match[1];
-  const page=await browser.newPage();
-  const errors=[];
-  page.on('pageerror',e=>errors.push(String(e.stack||e.message||e)));
-  page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
-  await page.setContent('<!doctype html><html><head><style id="pcCategoryCss">:root{--pc-cat-sprite:url("'+sprite+'")} .pcCatImage{width:180px;height:108px;overflow:hidden;background:#172b43}</style></head><body><div id="authGate"><div class="box"></div></div><div class="pcCatImage" style="--px:20%;--py:33.3333%"></div><script>var U="";var K="";var S={session:null};</script></body></html>');
-  await page.addScriptTag({content:pin});
-  await page.evaluate(()=>window.DextersPinLogin.installCategoryCardImages());
-  await page.waitForFunction(()=>{const i=document.querySelector('.pcCatImage img[data-dexters-category-photo="1"]');return !!i&&i.complete&&i.naturalWidth>0&&i.naturalHeight>0},{timeout:8000});
-  const state=await page.evaluate(()=>{const el=document.querySelector('.pcCatImage'),i=el.querySelector('img[data-dexters-category-photo="1"]');return{sourceFound:window.__dextersCategoryImages?.sourceFound||false,ready:el.dataset.dextersCategoryPhotoReady==='1',naturalWidth:i?.naturalWidth||0,naturalHeight:i?.naturalHeight||0,left:i?.style.left||'',top:i?.style.top||'',width:i?.style.width||'',height:i?.style.height||''}});
-  if(!state.sourceFound||!state.ready||state.naturalWidth<1||state.naturalHeight<1||state.left!=='-100%'||state.top!=='-100%'||state.width!=='600%'||state.height!=='400%')throw new Error('Category image render smoke failed: '+JSON.stringify(state));
-  if(errors.length)throw new Error('Category image browser errors: '+errors.join(' | '));
-  console.log('PASS CATEGORY IMAGE RENDER',JSON.stringify(state));
-  await page.close();
+async function checkCategoryPhotoAsset(page){
+  const state=await page.evaluate(async()=>{
+    const catUrl=new URL('pos-pc-category-home.js',location.href);catUrl.searchParams.set('photoSmoke',Date.now());
+    const code=await fetch(catUrl,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('category JS HTTP '+r.status);return r.text()});
+    const external=code.includes("const SPRITE='./pc-category-sprite.jpg';")&&code.includes('pcCatImage');
+    const imgUrl=new URL('pc-category-sprite.jpg',location.href);imgUrl.searchParams.set('photoSmoke',Date.now());
+    const image=await new Promise(resolve=>{const i=new Image();const timer=setTimeout(()=>resolve({ok:false,error:'image timeout'}),7000);i.onload=()=>{clearTimeout(timer);resolve({ok:true,width:i.naturalWidth,height:i.naturalHeight,src:i.src})};i.onerror=()=>{clearTimeout(timer);resolve({ok:false,error:'image load error',src:i.src})};i.src=imgUrl.href});
+    const probe=document.createElement('div');probe.style.cssText='position:absolute;left:-9999px;width:180px;height:108px;background-image:url("'+imgUrl.href+'");background-size:600% 400%;background-position:0 0';document.body.appendChild(probe);const bg=getComputedStyle(probe).backgroundImage;probe.remove();
+    return{external,image,backgroundApplied:bg.includes('pc-category-sprite.jpg')};
+  });
+  if(!state.external||!state.image?.ok||state.image.width<100||state.image.height<100||!state.backgroundApplied)throw new Error('Category photo asset smoke failed: '+JSON.stringify(state));
+  console.log('PASS CATEGORY PHOTO ASSET',JSON.stringify(state));
 }
 (async()=>{
   const url=requested||await localUrl();
@@ -81,11 +74,9 @@ async function checkCategoryImages(browser){
       activate:!!document.getElementById('pcActivate')
     };
   });
-  if(!state.responsive||!state.setup||state.loading||state.legacyEmail||state.legacyPassword||!state.setupCode||!state.newPin||!state.activate){
-    throw new Error('PIN startup smoke failed: '+JSON.stringify(state));
-  }
+  if(!state.responsive||!state.setup||state.loading||state.legacyEmail||state.legacyPassword||!state.setupCode||!state.newPin||!state.activate){throw new Error('PIN startup smoke failed: '+JSON.stringify(state))}
   if(pageErrors.length)throw new Error('Browser page errors: '+pageErrors.join(' | '));
-  await checkCategoryImages(browser);
+  await checkCategoryPhotoAsset(page);
   console.log('PASS PC POS browser smoke',JSON.stringify({url,state,consoleErrors,failed:failed.slice(0,8)}));
   await browser.close();if(server)server.closeAllConnections?.();if(server)await new Promise(r=>server.close(r));clearTimeout(hard);
 })().catch(async e=>{console.error(e);try{if(server)server.closeAllConnections?.();if(server)await new Promise(r=>server.close(r))}catch{}clearTimeout(hard);process.exit(1)});

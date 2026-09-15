@@ -12,6 +12,12 @@ for(const f of files){
   fs.copyFileSync('dist/'+f,path.join(out,f));
   html=html.replaceAll('src="/'+f+'"','src="./'+f+'"');
 }
+if(!fs.existsSync('dist/pc-category-sprite.jpg'))throw new Error('Missing pc-category-sprite.jpg');
+fs.copyFileSync('dist/pc-category-sprite.jpg',path.join(out,'pc-category-sprite.jpg'));
+const catHome=fs.readFileSync(path.join(out,'pos-pc-category-home.js'),'utf8');
+if(!catHome.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('Category cards are not pointing at the exported JPG photo sheet');
+const sprite=fs.readFileSync(path.join(out,'pc-category-sprite.jpg'));
+if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('Published category sprite is not a complete JPEG');
 if(!fs.existsSync('dist/customer-display.html')) throw new Error('Missing customer-display.html');
 fs.copyFileSync('dist/customer-display.html',path.join(out,'customer-display.html'));
 html=html.replace('<title>Dexter\'s POS + Table Service</title>','<title>Dexter\'s POS · GitHub Pages Test</title>');
@@ -51,4 +57,4 @@ const capacity=fs.readFileSync(path.join(out,'pos-pc-capacity.js'),'utf8');for(c
 const closeDay=fs.readFileSync(path.join(out,'pos-pc-close-day.js'),'utf8');for(const required of ['Close Day / End of Day','NOT READY TO CLOSE','READY TO CLOSE','Expected drawer cash','offline order','shift/close'])if(!closeDay.includes(required))throw new Error('Close Day layer missing '+required);
 const sec=fs.readFileSync(path.join(out,'pos-pc-security-audit.js'),'utf8');for(const required of ['Staff Security / Audit','manual_drawer_open','audit_add','audit_list']) if(!sec.includes(required)) throw new Error('Security audit layer missing '+required);
 const off=fs.readFileSync(path.join(out,'pos-pc-offline.js'),'utf8');for(const required of ['Offline Queue','client_request_id','queued_offline','replay','dexters-pc-order-sent']) if(!off.includes(required)) throw new Error('Offline queue layer missing '+required);
-console.log('PASS GitHub Pages PC POS build: only PIN bootstrap executes before authentication; all operational modules are present and deferred');
+console.log('PASS GitHub Pages PC POS build: PIN-first startup preserved and category food-photo JPG present');
