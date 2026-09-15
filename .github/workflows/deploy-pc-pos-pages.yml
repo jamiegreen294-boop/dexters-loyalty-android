@@ -50,12 +50,17 @@ jobs:
           test -f _site/pos-pc-purchasing.js
           test -f _site/pos-pc-expiry.js
           test -f _site/pos-pc-account-statements.js
+          test -f _site/pos-pc-collection-orders.js
           test -f _site/customer-display.html
           grep -q "uber-table-service-pc-test-api" _site/index.html
           grep -q "window.DextersPinLogin" _site/index.html
           grep -q "FEATURE_SCRIPTS" _site/pos-pc-pin-login.js
           grep -q "pos-pc-session-security.js" _site/pos-pc-pin-login.js
           grep -q "pos-pc-offline.js" _site/pos-pc-pin-login.js
+          grep -q "pos-pc-collection-orders.js" _site/pos-pc-pin-login.js
+          grep -q "COLLECTION OPEN" _site/pos-pc-collection-orders.js
+          grep -q "retrieveHeldBtn" _site/pos-order-management.js
+          grep -q "id='payBtn'\|id=\"payBtn\"\|payBtn" _site/pos-pc-v3-addon.js
           grep -q "Supplier Purchase Orders" _site/pos-pc-purchasing.js
           grep -q "Ingredient Recipes" _site/pos-pc-recipes.js
           grep -q "Money Owed · Statements" _site/pos-pc-account-statements.js
