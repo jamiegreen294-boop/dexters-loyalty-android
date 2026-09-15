@@ -1,0 +1,12 @@
+const fs=require('fs');
+const file='dist/pos-pc-v3-addon.js';
+if(!fs.existsSync(file))throw new Error('PC v3 addon build missing');
+let js=fs.readFileSync(file,'utf8');
+const old="const b=e.target?.closest?.('#pcSalesBtn,#pcCashupBtn,#qrOrdersBtn');if(!b)return;";
+const replacement="const b=e.target?.closest?.('#pcSalesBtn,#pcCashupBtn');if(!b)return;";
+if(!js.includes(old))throw new Error('PC toolbar capture signature missing');
+js=js.replace(old,replacement);
+const obsolete="  if(typeof window.showQrOrders==='function'){window.showQrOrders();return}\n  modal('Customer QR orders · PC TEST','<p>No QR table orders yet.</p>',true);\n";
+if(js.includes(obsolete))js=js.replace(obsolete,'');
+fs.writeFileSync(file,js);
+console.log('PASS PC QR orders button uses table-account handler without toolbar interception');
