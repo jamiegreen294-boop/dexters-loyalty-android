@@ -20,4 +20,3 @@
   function initLoyalty(){try{customer=JSON.parse(localStorage.getItem(TEST_CUSTOMER_KEY)||'null')}catch{}renderCustomer();updatePending()}
   window.addEventListener('load',initLoyalty);if(document.readyState!=='loading')initLoyalty();
 })();
-(()=>{if(document.querySelector('script[data-dexters-hardware]'))return;const s=document.createElement('script');s.dataset.dextersHardware='1';s.src='pos-pc-hardware.js?v=20260915.1';s.defer=true;document.head.appendChild(s)})();

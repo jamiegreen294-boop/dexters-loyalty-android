@@ -24,7 +24,7 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 
 <script>try{if(!localStorage.getItem("dexters_pc_pin_device_id_v1")){localStorage.removeItem("dexters-pos-session");localStorage.removeItem("dexters_pc_force_pin_lock_v1")}}catch(e){}</script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<script>window.__DEXTERS_POS_BUILD="26ac058a0d65"</script>
+<script>window.__DEXTERS_POS_BUILD="20260915.2"</script>
 <meta name="robots" content="noindex,nofollow">
 </head>
 <body>
@@ -102,7 +102,7 @@ function addLine(i,mods){const extra=mods.reduce((a,m)=>a+m.options.reduce((x,o)
 function renderCart(){if(!S.cart.length)$('lines').innerHTML='<div style="color:#9eb0c5;padding:20px;text-align:center">No items in this sale.</div>';else $('lines').innerHTML=S.cart.map(l=>'<div class="line"><div class="lrow"><div class="lname">'+esc(l.name)+'</div><div class="lprice">'+money(l.unit*l.qty)+'</div></div>'+(l.mods.length?'<div class="mods">'+l.mods.map(m=>'↳ '+esc(m.name)+': '+m.options.map(o=>esc(o.name)).join(', ')).join('\n')+'</div>':'')+'<div class="qty"><button data-minus="'+l.key+'">−</button><b>'+l.qty+'</b><button class="plus" data-plus="'+l.key+'">+</button><button class="remove" data-remove="'+l.key+'">REMOVE</button></div></div>').join('');document.querySelectorAll('[data-plus]').forEach(b=>b.onclick=()=>changeQty(b.dataset.plus,1));document.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>changeQty(b.dataset.minus,-1));document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{S.cart=S.cart.filter(x=>String(x.key)!==b.dataset.remove);renderCart()});const sub=S.cart.reduce((a,l)=>a+l.unit*l.qty,0),disc=Math.min(sub,S.discount);$('subtotal').textContent=money(sub);$('discount').textContent='-'+money(disc);$('total').textContent=money(sub-disc)}
 function changeQty(k,d){const l=S.cart.find(x=>String(x.key)===String(k));if(!l)return;l.qty=Math.max(0,l.qty+d);if(!l.qty)S.cart=S.cart.filter(x=>x!==l);renderCart()}
 function total(){const sub=S.cart.reduce((a,l)=>a+l.unit*l.qty,0);return Math.max(0,sub-Math.min(sub,S.discount))}
-function clearSale(){S.cart=[];S.discount=0;S.note='';S.customer='';S.phone='';renderCart()}
+function clearSale(){S.cart=[];S.discount=0;S.manualDiscount=0;S.manualDiscountLabel='';S.note='';S.customer='';S.phone='';renderCart()}
 function nextOrderNumber(){const d=new Date(),key='dexters-pos-order-seq-'+d.toISOString().slice(0,10),n=Number(localStorage.getItem(key)||0)+1;localStorage.setItem(key,String(n));return (S.mode==='Table'?'T':'C')+String(n).padStart(3,'0')}
 function sales(){try{return JSON.parse(localStorage.getItem('dexters-pos-sales-v1')||'[]')}catch{return []}}
 function saveSale(s){const a=sales();a.unshift(s);localStorage.setItem('dexters-pos-sales-v1',JSON.stringify(a.slice(0,1000)))}
@@ -144,7 +144,7 @@ renderCart();
 <script>(()=>{
 const API=U+'/functions/v1/pc-pos-pin-auth';
 const DEV_ID='dexters_pc_pin_device_id_v1',DEV_SEC='dexters_pc_pin_device_secret_v1',USER_ID='dexters_pc_pin_user_id_v1',USER_NAME='dexters_pc_pin_user_name_v1';
-const FEATURE_SCRIPTS=['pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-pc-collection-orders.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-expiry.js','pos-pc-account-statements.js','pos-pc-capacity.js','pos-pc-close-day.js','pos-pc-security-audit.js'];
+const FEATURE_SCRIPTS=['pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-discounts.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-hardware.js','pos-pc-category-home.js','pos-pc-collection-orders.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-expiry.js','pos-pc-account-statements.js','pos-pc-capacity.js','pos-pc-close-day.js','pos-pc-security-audit.js'];
 const $p=id=>document.getElementById(id);
 const storage={get:k=>{try{return localStorage.getItem(k)||''}catch{return''}},set:(k,v)=>{try{localStorage.setItem(k,v);return true}catch{return false}},remove:k=>{try{localStorage.removeItem(k)}catch{}}};
 const headers=()=>({apikey:K,'Content-Type':'application/json'});

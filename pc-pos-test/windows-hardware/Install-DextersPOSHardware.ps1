@@ -1,7 +1,11 @@
 $ErrorActionPreference = 'Stop'
 $installDir = Join-Path $env:LOCALAPPDATA 'DextersPOSHardware'
 $handlerPath = Join-Path $installDir 'DextersPOSHardware.ps1'
+$scannerPath = Join-Path $installDir 'DextersScannerBridge.ps1'
+$logoPath = Join-Path $installDir 'dexters-thermal-logo.png'
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+Invoke-WebRequest -UseBasicParsing 'https://backoffice.dextersspot.co.uk/sunday/dexters-thermal-logo.png' -OutFile $logoPath
+Invoke-WebRequest -UseBasicParsing 'https://backoffice.dextersspot.co.uk/pc-pos-test/windows-hardware/DextersScannerBridge.ps1' -OutFile $scannerPath
 
 $handler = @'
 param([Parameter(Mandatory=$true)][string]$Url)
@@ -62,8 +66,20 @@ function Add-QR($list,[string]$value){
   Add-Bytes $list ([byte[]](29,40,107,$pL,$pH,49,80,48)); Add-Bytes $list $data
   Add-Bytes $list ([byte[]](29,40,107,3,0,49,81,48))
 }
+function Add-Logo($list){
+  $path=Join-Path $env:LOCALAPPDATA 'DextersPOSHardware\dexters-thermal-logo.png'
+  if(-not (Test-Path $path)){return}
+  try{
+    Add-Type -AssemblyName System.Drawing
+    $src=[Drawing.Image]::FromFile($path); $w=320; $h=[Math]::Max(1,[int]($src.Height*$w/$src.Width)); $row=[int]($w/8)
+    $bmp=New-Object Drawing.Bitmap $w,$h; $g=[Drawing.Graphics]::FromImage($bmp); $g.Clear([Drawing.Color]::White); $g.DrawImage($src,0,0,$w,$h)
+    Add-Bytes $list ([byte[]](29,118,48,0,($row -band 255),(($row -shr 8) -band 255),($h -band 255),(($h -shr 8) -band 255)))
+    for($y=0;$y -lt $h;$y++){for($xb=0;$xb -lt $row;$xb++){$v=0;for($bit=0;$bit -lt 8;$bit++){$c=$bmp.GetPixel(($xb*8)+$bit,$y);$lum=(0.299*$c.R)+(0.587*$c.G)+(0.114*$c.B);if($c.A -gt 40 -and $lum -lt 170){$v=$v -bor (128 -shr $bit)}};$list.Add([byte]$v)}}
+    $g.Dispose();$bmp.Dispose();$src.Dispose();Add-Line $list ''
+  }catch{Log ('logo skipped '+$_.Exception.Message)}
+}
 function Add-Header($b){
-  Add-Bytes $b ([byte[]](27,64,27,116,0,27,97,1,27,69,1,29,33,17)); Add-Line $b "DEXTER'S"; Add-Bytes $b ([byte[]](29,33,0,27,69,0));
+  Add-Bytes $b ([byte[]](27,64,27,116,0,27,97,1)); Add-Logo $b; Add-Bytes $b ([byte[]](27,69,1,29,33,17)); Add-Line $b "DEXTER'S"; Add-Bytes $b ([byte[]](29,33,0,27,69,0));
   Add-Line $b '10A Dundasvale Court'; Add-Line $b 'Glasgow, G4 0JS'; Add-Line $b '0141 473 5249'; Add-Line $b 'hello@dextersspot.co.uk'; Add-Line $b ''; Add-Bytes $b ([byte[]](27,97,0))
 }
 function Add-Items($b,$items){
@@ -87,6 +103,7 @@ function Build-Receipt($o){
   try{Add-Line $b ('Date: '+([DateTime]$sale.created_at).ToLocalTime().ToString('dd/MM/yyyy HH:mm'))}catch{Add-Line $b ('Date: '+[string]$sale.created_at)}
   Add-Line $b ('Type: '+[string]$sale.mode); if($sale.table_no -and [string]$sale.mode -match 'Table'){Add-Line $b ('Table: '+[string]$sale.table_no)}
   Add-Line $b '------------------------------------------'; Add-Items $b $sale.items; Add-Line $b '------------------------------------------'
+  if([double]$sale.discount -gt 0){Add-Line $b (("Subtotal: GBP {0:N2}" -f [double]$sale.subtotal)); if($sale.discount_name){Add-Line $b ('Discount: '+[string]$sale.discount_name)}; Add-Line $b (("Discount saving: -GBP {0:N2}" -f [double]$sale.discount))}
   Add-Bytes $b ([byte[]](27,69,1,29,33,17)); Add-Line $b (("TOTAL  GBP {0:N2}" -f [double]$sale.total)); Add-Bytes $b ([byte[]](29,33,0,27,69,0))
   Add-Line $b ('Payment: '+[string]$sale.method)
   if(([string]$sale.method).ToUpper() -eq 'CASH'){
@@ -134,6 +151,12 @@ New-Item -Path "$base\shell\open\command" -Force | Out-Null
 $command = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $handlerPath + '" "%1"'
 Set-Item -Path "$base\shell\open\command" -Value $command
 
+$runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+$scannerCommand = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $scannerPath + '"'
+New-ItemProperty -Path $runKey -Name 'DextersScannerBridge' -Value $scannerCommand -PropertyType String -Force | Out-Null
+Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*DextersScannerBridge.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Start-Process powershell.exe -WindowStyle Hidden -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$scannerPath)
+
 $desktop = [Environment]::GetFolderPath('Desktop')
 $note = @"
 Dexter's POS hardware helper installed.
@@ -141,6 +164,8 @@ Printer queue: POS-80
 Cash sales: receipt prints and drawer opens.
 Card sales: receipt prints and drawer stays closed.
 Loyalty receipt layout is only used when a loyalty customer is attached to the sale.
+Foodhub Bluetooth scanner bridge: installed and starts automatically with Windows.
+Open Scanner in the POS to confirm the local bridge and Bluetooth COM port.
 
 Return to Dexter's PC POS and use Hardware > Test Card Receipt / Test Cash + Drawer.
 "@
