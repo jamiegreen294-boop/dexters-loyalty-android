@@ -17,5 +17,6 @@
   window.addEventListener('dexters-loyalty-scan',e=>{const code=six(e.detail?.value);if(code.length===6)lookup(code);else status('Loyalty QR did not contain a valid 6-digit code')});
   const originalRenderCart=window.renderCart;if(typeof originalRenderCart==='function')window.renderCart=function(){const r=originalRenderCart.apply(this,arguments);updatePending();return r};
   window.addEventListener('dexters-pc-test-sale-complete',e=>{const stamps=customer?coffeeQty(S.cart):0;if(stamps>0)saveTestStamps(e.detail||{},stamps);customer=null;localStorage.removeItem(TEST_CUSTOMER_KEY);renderCustomer()});
-  window.addEventListener('load',()=>{try{customer=JSON.parse(localStorage.getItem(TEST_CUSTOMER_KEY)||'null')}catch{}renderCustomer();updatePending()});
+  function initLoyalty(){try{customer=JSON.parse(localStorage.getItem(TEST_CUSTOMER_KEY)||'null')}catch{}renderCustomer();updatePending()}
+  window.addEventListener('load',initLoyalty);if(document.readyState!=='loading')initLoyalty();
 })();
