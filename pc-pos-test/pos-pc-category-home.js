@@ -20,45 +20,41 @@
       .pcCategoryHeader h2{margin:0;font-size:22px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .pcBackBtn,.pcHomeBtn{border:0;border-radius:9px;padding:11px 15px;font-weight:1000;background:#203a5d;color:#fff;min-height:44px;touch-action:manipulation}
       .pcHomeBtn{background:#ffd43b;color:#08101d}
-      .pcCatGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;align-content:start;width:100%}
-      .pcCatCard{position:relative;min-width:0;min-height:96px;border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:9px;padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:manipulation;box-shadow:0 2px 5px #0005;overflow:hidden;background:#28718a}
-      .pcCatCard:nth-child(8n+2){background:#c36d12}.pcCatCard:nth-child(8n+3){background:#278448}.pcCatCard:nth-child(8n+4){background:#b54850}
-      .pcCatCard:nth-child(8n+5){background:#355fa8}.pcCatCard:nth-child(8n+6){background:#7655a8}.pcCatCard:nth-child(8n+7){background:#3b7f74}.pcCatCard:nth-child(8n+8){background:#9b5b35}
-      .pcCatCard:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.08));pointer-events:none}
-      .pcCatCard:active{transform:scale(.98)}
-      .pcCatName{position:relative;font-size:18px;font-weight:1000;line-height:1.08;text-shadow:0 1px 2px #0008;word-break:break-word}
-      .pcCatCount{position:relative;font-size:11px;color:#eef7ff;opacity:.82;margin-top:7px}
+
+      /* PASS-style card layout, while keeping the existing POS dark colour scheme. */
+      .pcCatGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;align-content:start;width:100%}
+      .pcCatCard{position:relative;min-width:0;min-height:112px;border:1px solid #35506c!important;color:#fff!important;border-radius:7px!important;padding:16px!important;text-align:left!important;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;touch-action:manipulation;box-shadow:0 2px 7px #0004!important;overflow:hidden;background:#10233a!important;transition:.15s}
+      .pcCatCard:nth-child(n){background:#10233a!important}
+      .pcCatCard:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#ffd43b;pointer-events:none}
+      .pcCatCard:hover{border-color:#58789a!important;box-shadow:0 5px 13px #0005!important;transform:translateY(-1px)}
+      .pcCatCard:active{transform:scale(.985)}
+      .pcCatName{position:relative;font-size:18px;font-weight:1000;line-height:1.1;text-shadow:none!important;word-break:break-word}
+      .pcCatCount{position:relative;font-size:11px;color:#b9c9d9!important;opacity:1;margin-top:10px}
       .pcCatArrow{display:none}
       .pcItemsMode{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;width:100%}
       .pcItemsMode .item{min-width:0!important}
 
-      /* Customer directory mirrors the light PASS cards used in Dexter's Back Office. */
-      .pcCustomersModal .box{width:min(1120px,96vw)!important;max-width:1120px!important;background:#f3f3f5!important;border:1px solid #dedde3!important;color:#37343b!important}
-      .pcCustomersModal .box h2{color:#37343b!important}
-      .pcCustomersModal #cq{background:#fff!important;color:#37343b!important;border:1px solid #dedde3!important}
-      .pcCustomersModal #cs{background:#5b0b7e!important;color:#fff!important;border:0!important;border-radius:8px!important;padding:11px 15px!important;font-weight:1000!important}
+      /* Customers use the same PASS card structure, but retain the POS colours. */
+      .pcCustomersModal .box{width:min(1120px,96vw)!important;max-width:1120px!important}
       .pcCustomersModal #cr{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px!important;margin-top:12px;align-items:stretch}
-      .pcCustomersModal #cr>p{grid-column:1/-1;color:#74707a}
-      .pcCustomerCard{appearance:none;margin:0!important;min-width:0;min-height:190px!important;background:#fff!important;border:1px solid #dedde3!important;border-radius:5px!important;padding:16px!important;color:#3e3941!important;cursor:pointer;box-shadow:0 1px 4px #0000000a!important;transition:.15s;display:flex!important;flex-direction:column!important;gap:10px!important}
-      .pcCustomerCard:hover{border-color:#9b6fad!important;box-shadow:0 4px 12px #00000012!important;transform:translateY(-1px)}
+      .pcCustomersModal #cr>p{grid-column:1/-1}
+      .pcCustomerCard{appearance:none;margin:0!important;min-width:0;min-height:190px!important;background:#10233a!important;border:1px solid #35506c!important;border-radius:7px!important;padding:16px!important;color:#fff!important;cursor:pointer;box-shadow:0 2px 7px #0004!important;transition:.15s;display:flex!important;flex-direction:column!important;gap:10px!important}
+      .pcCustomerCard:hover{border-color:#58789a!important;box-shadow:0 5px 13px #0005!important;transform:translateY(-1px)}
       .pcCustomerCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
       .pcCustomerIdentity{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
-      .pcCustomerAvatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#efe7f3;color:#5b0b7e;font-weight:1000;font-size:16px;flex:0 0 48px}
-      .pcCustomerName{font-size:17px;font-weight:1000;color:#3d3840;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .pcCustomerType{border-radius:999px;padding:5px 8px;background:#efe7f3;color:#5b0b7e;font-size:10px;font-weight:1000;letter-spacing:.04em;white-space:nowrap}
-      .pcCustomerBadge{align-self:flex-start;background:#efe7f3;color:#5b0b7e;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:1000}
-      .pcCustomerMeta{font-size:12px;color:#74707a;line-height:1.45;min-height:18px}
-      .pcCustomerMetrics{margin-top:2px;border-top:1px solid #eeeef1;border-bottom:1px solid #eeeef1;display:grid;grid-template-columns:1fr 1fr;gap:0}
+      .pcCustomerAvatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#ffd43b;color:#08101d;font-weight:1000;font-size:16px;flex:0 0 48px}
+      .pcCustomerName{font-size:17px;font-weight:1000;color:#fff!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .pcCustomerType{border-radius:999px;padding:5px 8px;background:#203a5d;color:#dbe9f7;font-size:10px;font-weight:1000;letter-spacing:.04em;white-space:nowrap;border:1px solid #35506c}
+      .pcCustomerBadge{align-self:flex-start;background:#203a5d;color:#ffd43b;border:1px solid #35506c;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:1000}
+      .pcCustomerMeta{font-size:12px;color:#b9c9d9!important;line-height:1.45;min-height:18px}
+      .pcCustomerMetrics{margin-top:2px;border-top:1px solid #2e4966;border-bottom:1px solid #2e4966;display:grid;grid-template-columns:1fr 1fr;gap:0}
       .pcCustomerMetrics span{padding:8px 4px;text-align:center;min-width:0}
-      .pcCustomerMetrics span+span{border-left:1px solid #eeeef1}
-      .pcCustomerMetrics b{display:block;color:#3e3941;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .pcCustomerMetrics small{display:block;color:#8a868f;font-size:9px;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
-      .pcCustomerCard .co{margin-top:auto!important;width:100%;border:0!important;background:transparent!important;color:#5b0b7e!important;text-align:left!important;padding:6px 0 0!important;font-weight:1000!important;cursor:pointer}
-      .pcCustomerDetailModal .box{width:min(1040px,96vw)!important;max-width:1040px!important;background:#f3f3f5!important;color:#37343b!important;border:1px solid #dedde3!important}
-      .pcCustomerDetailModal .box h2,.pcCustomerDetailModal h3{color:#37343b!important}
-      .pcCustomerDetailModal .group,.pcCustomerDetailModal .held{border:1px solid #dedde3!important;background:#fff!important;color:#37343b!important;border-radius:5px!important}
-      .pcCustomerDetailModal .actions button{border-radius:7px!important}
-      .pcCustomerDetailModal .actions button:not(.cancel){background:#5b0b7e!important;color:#fff!important}
+      .pcCustomerMetrics span+span{border-left:1px solid #2e4966}
+      .pcCustomerMetrics b{display:block;color:#fff!important;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .pcCustomerMetrics small{display:block;color:#8fa7bd!important;font-size:9px;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+      .pcCustomerCard .co{margin-top:auto!important;width:100%;border:0!important;background:transparent!important;color:#ffd43b!important;text-align:left!important;padding:6px 0 0!important;font-weight:1000!important;cursor:pointer}
+      .pcCustomerDetailModal .box{width:min(1040px,96vw)!important;max-width:1040px!important}
+      .pcCustomerDetailModal .group,.pcCustomerDetailModal .held{border-radius:7px!important}
 
       @media(max-width:1180px){
         .main{grid-template-columns:minmax(0,1fr) 335px!important}
@@ -204,7 +200,7 @@
 
         if(btn){
           btn.textContent='Open customer record →';
-          card.appendChild(btn); // keep the original node so its customer-detail handler is preserved
+          card.appendChild(btn);
           card.tabIndex=0;
           card.setAttribute('role','button');
           card.onclick=e=>{if(e.target===btn||btn.contains(e.target))return;btn.click()};
