@@ -11,7 +11,12 @@ html=html.replace("try{const saved=JSON.parse(localStorage.getItem('dexters-pos-
 html=html.replace('</head>','<script>try{if(!localStorage.getItem("dexters_pc_pin_device_id_v1")){localStorage.removeItem("dexters-pos-session");localStorage.removeItem("dexters_pc_force_pin_lock_v1")}}catch(e){}</script>\n</head>');
 // Critical startup rule: only the PIN bootstrap is allowed to execute before authentication.
 // All operational POS modules are loaded by pos-pc-pin-login.js after a valid staff session.
-html=html.replace('</body>','<script src="/pos-pc-pin-login.js"></script>\n</body>');
+// Inline the tiny authentication bootstrap. A stale/blocked external bootstrap used to leave
+// the modal on "Loading secure PIN login…" forever before any error UI could run.
+const pinBootstrap=fs.readFileSync('web/pos-pc-pin-login.js','utf8');
+const buildId=require('crypto').createHash('sha256').update(pinBootstrap).digest('hex').slice(0,12);
+html=html.replace('</head>','<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n<script>window.__DEXTERS_POS_BUILD='+JSON.stringify(buildId)+'</script>\n</head>');
+html=html.replace('</body>','<script>'+pinBootstrap+'</script>\n</body>');
 html=html.replace("Live POS · connected to Dexter's order system.","PC TEST · isolated POS/table/KDS data");
 html=html.replace('DEXTER\'S · TABLE SERVICE','PC TEST · TABLE SERVICE');
 fs.writeFileSync('dist/pos.html',html);
