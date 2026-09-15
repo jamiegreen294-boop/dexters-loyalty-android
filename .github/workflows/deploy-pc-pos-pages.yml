@@ -83,7 +83,7 @@ jobs:
         run: node tests/pc-pos-browser-smoke.cjs
 
       - name: All-buttons safe browser test built POS
-        run: node tests/pc-pos-buttons-system.cjs
+        run: node tests/pc-pos-buttons-system-v2.cjs
 
       - name: Publish test bundle to gh-pages
         run: |
@@ -118,7 +118,7 @@ jobs:
         run: |
           for i in 1 2 3 4 5; do
             echo "Live all-buttons attempt $i"
-            if POS_BUTTON_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?buttons=${GITHUB_SHA}-${i}" node tests/pc-pos-buttons-system.cjs; then
+            if POS_BUTTON_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?buttons=${GITHUB_SHA}-${i}" node tests/pc-pos-buttons-system-v2.cjs; then
               exit 0
             fi
             sleep 5
