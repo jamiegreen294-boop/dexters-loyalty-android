@@ -112,7 +112,7 @@
     const baseRender=window.renderItems;
     window.renderItems=function(){
       const q=($('search')?.value||'').trim();
-      if(home&&!q){showHome();return}
+      if(home&&!q&&typeof S!=='undefined'&&Array.isArray(S.cats)&&S.cats.length){showHome();return}
       if(typeof baseRender==='function')return baseRender.apply(this,arguments);
     };
     search.oninput=searchChanged;
