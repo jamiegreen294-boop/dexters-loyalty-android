@@ -40,6 +40,14 @@ const initOld="window.addEventListener('load',initV3);if(document.readyState!=='
 const initNew="window.addEventListener('dexters-pos-features-ready',()=>{installTop();forceTestRoutes()});window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();";
 if(!addonJs.includes(initOld))throw new Error('PC v3 init handler signature missing');
 addonJs=addonJs.replace(initOld,initNew);
+// Guard the key top-bar controls at capture phase. Some later UI layers can replace/rebind
+// toolbar buttons after their modules initialise. These are PC-test-only actions and must keep
+// opening the correct screens even after the toolbar is reorganised.
+const closeMark='\n})();';
+const closeAt=addonJs.lastIndexOf(closeMark);
+if(closeAt<0)throw new Error('PC v3 addon closing marker missing');
+const toolbarGuard=`\nif(!window.__dextersPcCoreToolbarCapture){\n window.__dextersPcCoreToolbarCapture=true;\n document.addEventListener('click',e=>{\n  const b=e.target?.closest?.('#pcSalesBtn,#pcCashupBtn,#qrOrdersBtn');if(!b)return;\n  e.preventDefault();e.stopImmediatePropagation();\n  if(b.id==='pcSalesBtn'){salesView();return}\n  if(b.id==='pcCashupBtn'){cashup();return}\n  if(typeof window.showQrOrders==='function'){window.showQrOrders();return}\n  modal('Customer QR orders · PC TEST','<p>No QR table orders yet.</p>',true);\n },true);\n}\n`;
+addonJs=addonJs.slice(0,closeAt)+toolbarGuard+addonJs.slice(closeAt);
 fs.writeFileSync(addonPath,addonJs);
 // The original category photos were embedded as one large data URI. Chromium rendered the card
 // structure but left that data-URI background blank on the actual POS. Decode the same generated
@@ -55,4 +63,4 @@ catJs=catJs.replace(/const SPRITE='data:image\/jpeg;base64,[^']+';/,"const SPRIT
 if(!catJs.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('PC category photo sprite URL replacement failed');
 fs.writeFileSync(catPath,catJs);
 fs.copyFileSync('web/customer-display.html','dist/customer-display.html');
-console.log('PC POS v3 built with PIN-only startup; PAY click guarded; core toolbar rebound after feature load; category food photos exported as JPG; operational modules deferred until authenticated staff session');
+console.log('PC POS v3 built with PIN-only startup; PAY click guarded; critical toolbar handlers pinned; category food photos exported as JPG; operational modules deferred until authenticated staff session');
