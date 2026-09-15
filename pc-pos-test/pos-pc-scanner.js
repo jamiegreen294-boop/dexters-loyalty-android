@@ -26,5 +26,6 @@
   function installButton(){const top=document.querySelector('.top');if(!top||document.getElementById('scannerBtn'))return;const b=document.createElement('button');b.id='scannerBtn';b.textContent='Scanner';b.title='Pair Dexter scanner';const staff=document.getElementById('staffBtn');top.insertBefore(b,staff||null);b.onclick=pair}
   document.addEventListener('click',e=>{if(!pendingBarcode)return;const btn=e.target.closest?.('[data-item]');if(!btn)return;const id=String(btn.dataset.item||'');const item=itemForId(id);if(!item)return;const map=getMap();map[pendingBarcode]=id;saveMap(map);status('Linked barcode '+pendingBarcode+' to '+(item.name||'item')+' · future scans will add it automatically');pendingBarcode='';const search=$('search');if(search)search.placeholder='Search menu'},true);
   let keys='',lastKeyAt=0;document.addEventListener('keydown',e=>{const tag=(e.target?.tagName||'').toLowerCase();if(['input','textarea','select'].includes(tag))return;const now=Date.now();if(now-lastKeyAt>120)keys='';lastKeyAt=now;if(e.key==='Enter'){if(keys.length>=4){e.preventDefault();handleProduct(keys)}keys='';return}if(e.key.length===1&&!e.ctrlKey&&!e.altKey&&!e.metaKey)keys+=e.key},true);
-  window.addEventListener('load',()=>{installButton();if(localStorage.getItem(PAIR_KEY))beginPolling()});
+  function initScanner(){installButton();if(localStorage.getItem(PAIR_KEY))beginPolling()}
+  window.addEventListener('load',initScanner);if(document.readyState!=='loading')initScanner();
 })();

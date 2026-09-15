@@ -44,5 +44,6 @@ window.DextersSundayCreate=()=>sundayEditor();
 window.DextersSundayEdit=sundayEditor;
 function installTop(){const sales=topButton('pcSalesBtn','Sales');if(sales)sales.onclick=salesView;const cu=topButton('pcCashupBtn','Cash up');if(cu)cu.onclick=cashup;const mo=topButton('pcMoneyBtn','Money Owed');if(mo)mo.onclick=moneyOwed;const sr=topButton('pcSundayBtn','Sunday Roast');if(sr)sr.onclick=sunday}
 function forceTestRoutes(){const q=$x('qrCodesBtn');if(q)q.onclick=qrCodes}
-window.addEventListener('load',()=>{ensurePayCss();installPay();installTop();forceTestRoutes();const tag=document.querySelector('.tag');if(tag)tag.textContent='PC TEST · TABLE SERVICE';const st=$x('status');if(st)st.textContent='PC TEST · safe table/KDS/payment data';});
+function initV3(){ensurePayCss();installPay();installTop();forceTestRoutes();const tag=document.querySelector('.tag');if(tag)tag.textContent='PC TEST · TABLE SERVICE';const st=$x('status');if(st)st.textContent='PC TEST · safe table/KDS/payment data'}
+window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();
 })();
