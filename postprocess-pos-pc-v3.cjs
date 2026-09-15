@@ -19,6 +19,7 @@ const buildId=require('crypto').createHash('sha256').update(pinBootstrap).update
 html=html.replace('</head>','<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n<script>window.__DEXTERS_POS_BUILD='+JSON.stringify(buildId)+'</script>\n</head>');
 html=html.replace('</body>','<script>'+pinBootstrap+'</script>\n</body>');
 html=html.replace("Live POS · connected to Dexter's order system.","PC TEST · isolated POS/table/KDS data");
+html=html.replaceAll('Menu loaded · Live POS','Menu loaded · PC TEST');
 html=html.replace('DEXTER\'S · TABLE SERVICE','PC TEST · TABLE SERVICE');
 fs.writeFileSync('dist/pos.html',html);
 fs.writeFileSync('dist/pos-test.html',html);
