@@ -106,6 +106,15 @@
     const search=$('search');
     if(!h||!search) return;
     installed=true;
+    // The base POS calls renderItems again when its async menu finishes loading.
+    // Keep the XEPOS category home as the default view instead of letting that
+    // late render replace the tiles with the first category's products.
+    const baseRender=window.renderItems;
+    window.renderItems=function(){
+      const q=($('search')?.value||'').trim();
+      if(home&&!q){showHome();return}
+      if(typeof baseRender==='function')return baseRender.apply(this,arguments);
+    };
     search.oninput=searchChanged;
     window.pcShowCategories=showHome;
     const tryHome=()=>{if(showHome()) return true;return false};
