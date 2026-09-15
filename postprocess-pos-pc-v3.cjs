@@ -14,7 +14,8 @@ html=html.replace('</head>','<script>try{if(!localStorage.getItem("dexters_pc_pi
 // Inline the tiny authentication bootstrap. A stale/blocked external bootstrap used to leave
 // the modal on "Loading secure PIN login…" forever before any error UI could run.
 const pinBootstrap=fs.readFileSync('web/pos-pc-pin-login.js','utf8');
-const buildId=require('crypto').createHash('sha256').update(pinBootstrap).digest('hex').slice(0,12);
+const featureFingerprint=fs.readdirSync('web').filter(f=>/^pos-.*\.js$/.test(f)).sort().map(f=>fs.readFileSync('web/'+f)).join('\n');
+const buildId=require('crypto').createHash('sha256').update(pinBootstrap).update(featureFingerprint).digest('hex').slice(0,12);
 html=html.replace('</head>','<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n<script>window.__DEXTERS_POS_BUILD='+JSON.stringify(buildId)+'</script>\n</head>');
 html=html.replace('</body>','<script>'+pinBootstrap+'</script>\n</body>');
 html=html.replace("Live POS · connected to Dexter's order system.","PC TEST · isolated POS/table/KDS data");
