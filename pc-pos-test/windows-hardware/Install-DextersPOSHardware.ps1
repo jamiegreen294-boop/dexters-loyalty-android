@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $installDir = Join-Path $env:LOCALAPPDATA 'DextersPOSHardware'
 $handlerPath = Join-Path $installDir 'DextersPOSHardware.ps1'
+$launcherPath = Join-Path $installDir 'DextersPOSHardware.vbs'
 $scannerPath = Join-Path $installDir 'DextersScannerBridge.ps1'
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 Invoke-WebRequest -UseBasicParsing 'https://backoffice.dextersspot.co.uk/pc-pos-test/windows-hardware/DextersScannerBridge.ps1' -OutFile $scannerPath
@@ -152,12 +153,21 @@ try{
 '@
 Set-Content -Path $handlerPath -Value $handler -Encoding UTF8
 
+$launcher = @"
+Set shell = CreateObject("WScript.Shell")
+If WScript.Arguments.Count = 0 Then WScript.Quit
+url = WScript.Arguments(0)
+command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$handlerPath"" """ & url & """"
+shell.Run command, 0, False
+"@
+Set-Content -Path $launcherPath -Value $launcher -Encoding ASCII
+
 $base = 'HKCU:\Software\Classes\dexterscitaq'
 New-Item -Path $base -Force | Out-Null
 Set-Item -Path $base -Value 'URL:Dexters POS Hardware'
 New-ItemProperty -Path $base -Name 'URL Protocol' -Value '' -PropertyType String -Force | Out-Null
 New-Item -Path "$base\shell\open\command" -Force | Out-Null
-$command = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $handlerPath + '" "%1"'
+$command = 'wscript.exe //B //NoLogo "' + $launcherPath + '" "%1"'
 Set-Item -Path "$base\shell\open\command" -Value $command
 
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
