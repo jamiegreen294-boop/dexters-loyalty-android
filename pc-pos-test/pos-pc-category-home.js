@@ -19,7 +19,7 @@
     const s=document.createElement('style');s.id='pcCategoryCss';
     s.textContent=`
       :root{--pc-cat-sprite:url("${SPRITE}")}
-      .app,.main,.center,.cart{min-width:0}.top{overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important}.top>*{flex:0 0 auto}
+      .app,.main,.center,.cart,.top{min-width:0}
       .main{grid-template-columns:minmax(0,1fr) minmax(340px,380px)!important}.cats{display:none!important}.center{padding:12px 14px!important;overflow:auto!important}.cart{width:100%!important;max-width:100%!important}
       .pcCategoryHeader{display:flex;align-items:center;gap:10px;margin:0 0 12px;min-height:48px}.pcCategoryHeader h2{margin:0;font-size:28px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .pcBackBtn,.pcHomeBtn{border:1px solid #294663;border-radius:10px;padding:11px 15px;font-weight:1000;background:#142a44;color:#fff;min-height:44px}.pcHomeBtn{background:#ffd43b;color:#08101d;border-color:#ffd43b}
