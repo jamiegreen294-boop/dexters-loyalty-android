@@ -1,0 +1,9 @@
+const fs=require('fs');
+const path=require('path');
+const file=path.join(__dirname,'pc-pos-buttons-system.cjs');
+let src=fs.readFileSync(file,'utf8');
+const old="async function click(page,id){const e=page.locator('#'+id);if(!(await e.count()))bad('Missing button '+id);await e.click({timeout:3000,force:true})}";
+const replacement="async function click(page,id){const e=page.locator('#'+id);if(!(await e.count()))bad('Missing button '+id);if(!(await e.isVisible())){const section=await page.evaluate(id=>document.getElementById(id)?.closest('.pcToolGroup')?.dataset.section||'',id);if(section){const tab=page.locator('.pcToolGroup[data-section=\\\"'+section+'\\\"] .pcToolTab');if(await tab.count())await tab.click({timeout:3000})}}await e.click({timeout:3000,force:true})}";
+if(!src.includes(old))throw new Error('Could not patch toolbar-aware click helper');
+src=src.replace(old,replacement);
+(0,eval)(src);
