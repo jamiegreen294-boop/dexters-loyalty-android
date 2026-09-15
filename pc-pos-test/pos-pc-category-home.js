@@ -18,10 +18,13 @@
       .pcHomeBtn{background:#ffd43b;color:#08101d}
       .pcCatGrid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))!important;gap:12px!important;align-content:start}
       .pcCatCard{min-height:118px;border:1px solid #31506f;background:#142641;color:#fff;border-radius:16px;padding:16px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;touch-action:manipulation;box-shadow:0 2px 0 #06101d}
+      .pcCatCard{position:relative;overflow:hidden;text-align:center;align-items:center;justify-content:center;background:#294966;border-color:#355b78}
+      .pcCatCard:after{content:'';position:absolute;left:0;right:0;bottom:0;height:10px;background:#22c5e8}
+      .pcCatCard:nth-child(4n+2):after{background:#f6a51a}.pcCatCard:nth-child(4n+3):after{background:#20c653}.pcCatCard:nth-child(4n+4):after{background:#ef4d55}
       .pcCatCard:active{transform:scale(.98)}
       .pcCatName{font-size:19px;font-weight:1000;line-height:1.1}
       .pcCatCount{font-size:12px;color:#9eb0c5;margin-top:12px}
-      .pcCatArrow{font-size:22px;color:#ffd43b;font-weight:1000}
+      .pcCatArrow{font-size:22px;color:#ffd43b;font-weight:1000;display:none}
       .pcItemsMode{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(155px,1fr))!important;gap:10px!important}
       @media(max-width:950px){.main{grid-template-columns:1fr 320px!important}.pcCatGrid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))!important}}
     `;
