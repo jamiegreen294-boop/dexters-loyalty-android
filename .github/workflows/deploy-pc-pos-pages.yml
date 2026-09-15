@@ -52,7 +52,7 @@ jobs:
           test -f _site/pos-pc-account-statements.js
           test -f _site/customer-display.html
           grep -q "uber-table-service-pc-test-api" _site/index.html
-          grep -q "pos-pc-pin-login.js" _site/index.html
+          grep -q "window.DextersPinLogin" _site/index.html
           grep -q "FEATURE_SCRIPTS" _site/pos-pc-pin-login.js
           grep -q "pos-pc-session-security.js" _site/pos-pc-pin-login.js
           grep -q "pos-pc-offline.js" _site/pos-pc-pin-login.js
