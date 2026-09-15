@@ -22,7 +22,7 @@ fs.writeFileSync(path.join(out,'pos.html'),html);
 fs.writeFileSync(path.join(out,'.nojekyll'),'');
 fs.writeFileSync(path.join(out,'build-info.json'),JSON.stringify({build:'pc-pos-github-pages',generatedAt:new Date().toISOString(),branch:'dexters-pos-pc-test-v3'},null,2));
 const check=fs.readFileSync(path.join(out,'index.html'),'utf8');
-for(const required of ['pos-pc-pin-login.js','dexters-table-order-pc-test','uber-table-service-pc-test-api','customer_phone:S.phone','discount_pence','pcPinLoginMount']){
+for(const required of ['window.DextersPinLogin','dexters-table-order-pc-test','uber-table-service-pc-test-api','customer_phone:S.phone','discount_pence','pcPinLoginMount']){
   if(!check.includes(required)) throw new Error('GitHub Pages PC POS missing '+required);
 }
 for(const f of featureFiles){
@@ -30,6 +30,7 @@ for(const f of featureFiles){
 }
 for(const bad of ['src="/pos-pc-','src="/pos-order-management.js"','src="/pos-sunday-roast.js"','id="staffEmail"','id="staffPassword"']) if(check.includes(bad)) throw new Error('Legacy/root-relative PC POS content leaked into Pages build: '+bad);
 const pin=fs.readFileSync(path.join(out,'pos-pc-pin-login.js'),'utf8');
+if(!check.includes(pin))throw new Error('PIN bootstrap is not inline in the Pages build');
 for(const required of ['SIGN IN WITH PIN','ACTIVATE PIN LOGIN','6-digit setup code','pc-pos-pin-auth','device_secret','dexters-pos-session','FEATURE_SCRIPTS','__dextersFeatureLoadComplete','loadFeatures'])if(!pin.includes(required))throw new Error('PIN login layer missing '+required);
 for(const f of featureFiles)if(!pin.includes("'"+f+"'"))throw new Error('Deferred feature loader missing '+f);
 const session=fs.readFileSync(path.join(out,'pos-pc-session-security.js'),'utf8');for(const required of ['LOCK','refresh_token','staffRole','dexters_pc_force_pin_lock_v1'])if(!session.includes(required))throw new Error('Session security layer missing '+required);
