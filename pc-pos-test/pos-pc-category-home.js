@@ -3,11 +3,11 @@
   const SPRITE='./pc-category-sprite.jpg';
   const IMG={
     'Breakfast':[0,0],'Hot Rolls':[1,0],'Cold Rolls':[2,0],'Toasties':[3,0],'Paninis':[4,0],'Wraps':[5,0],
-    'Baked Potatoes':[0,1],'Soups':[1,1],'Hot Meals':[2,1],'Street Subs':[3,1],'Chinese Style':[4,1],'Greek Style':[5,1],
-    'Rice Bowls':[0,2],'Smash Burgers':[1,2],'Chicken Burgers':[2,2],'Chicken Tenders':[1,3],'Inferno Chicken Tenders':[1,3],
-    'Loaded Fries':[3,2],'Pizzas':[4,2],'Waffles':[5,2],'Chippy Style':[2,3],'Kids Menu':[1,3],'Kids Meals':[1,3],
-    'Reaper Box':[5,3],'Beast Box':[5,3],'Dirty Soda Bar':[3,3],'Cakes & Bakes':[4,3],'Milkshakes':[0,3],'Coffee':[0,3],
-    'Sauces & Dips':[1,3],'Cans of Juice':[3,3],'Sides':[2,3],'Drinks':[3,3],'Desserts':[4,3],'Meal Deals':[5,3]
+    'Baked Potatoes':[3,0],'Soups':[4,0],'Hot Meals':[0,0],'Street Subs':[2,0],'Chinese Style':[5,0],'Greek Style':[5,0],
+    'Rice Bowls':[5,0],'Smash Burgers':[1,0],'Chicken Burgers':[2,0],'Chicken Tenders':[0,0],'Inferno Chicken Tenders':[0,0],
+    'Loaded Fries':[3,0],'Pizzas':[4,0],'Waffles':[3,0],'Chippy Style':[4,0],'Kids Menu':[1,0],'Kids Meals':[1,0],
+    'Reaper Box':[0,0],'Beast Box':[0,0],'Dirty Soda Bar':[5,0],'Cakes & Bakes':[3,0],'Milkshakes':[5,0],'Coffee':[0,0],
+    'Sauces & Dips':[4,0],'Cans of Juice':[5,0],'Sides':[4,0],'Drinks':[5,0],'Desserts':[3,0],'Meal Deals':[1,0]
   };
   let home=true,installed=false;
   const originalRenderItems=window.renderItems;
