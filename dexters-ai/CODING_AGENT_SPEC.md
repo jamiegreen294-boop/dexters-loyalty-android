@@ -2,32 +2,83 @@
 
 ## Objective
 
-Dexter's AI must be built as a highly capable software engineering agent, with a coding workflow comparable to a modern AI coding assistant. The target is not a simple chatbot. It must be able to understand repositories, reason about architecture, edit code, use development tools, test its work, recover from failures and improve its project-specific performance over time.
+Dexter's AI must be built as a highly capable software engineering agent, with coding capability designed to be comparable to or exceed a modern AI coding assistant for the tasks it is equipped and tooled to perform. The target is not a simple chatbot. It must be able to understand repositories, reason about architecture, edit code, use development tools, test its work, recover from failures and improve its project-specific performance over time.
 
-## Coding capabilities
+It should also provide a broad general-assistant experience: conversation, explanations, jokes, stories, history, current web research, weather/current information through suitable tools, and business assistance.
 
-The coding agent should be able to:
+## Expanded capabilities
 
-- Read and understand complete repositories and relevant file trees.
-- Search code semantically and by exact text/symbol/error.
-- Trace dependencies and understand how components interact.
-- Plan multi-file changes before editing.
-- Create new files and directories.
-- Modify existing source code safely.
-- Refactor code while preserving behaviour.
-- Fix bugs and regressions.
-- Explain existing code.
-- Generate tests and test cases.
-- Run unit, integration, lint and type checks where available.
-- Run Android/web/backend builds where available.
-- Inspect build output and error logs.
-- Diagnose failures and attempt fixes iteratively.
-- Review its own changes and inspect diffs.
-- Work with Git branches, commits and pull requests.
-- Prepare deployments and verify deployed results when tools permit.
-- Research current technical documentation online when necessary.
-- Work across frontend, backend, Android, databases, APIs, automation and infrastructure.
-- Maintain project-specific coding conventions and architecture decisions.
+The platform should support, where technically and legally permitted:
+
+- Repository and project access across all authorised Dexter's development repositories.
+- Semantic and exact code search, dependency tracing and multi-file reasoning.
+- File and directory creation/editing, refactoring and bug fixing.
+- Unit, integration, lint, type, Android, web and backend build/test workflows.
+- Build-log/error inspection and iterative diagnose → fix → retest loops.
+- Git branches, commits, pull requests, diffs and deployment preparation.
+- Current technical documentation and web research.
+- Database development/staging access through approved server-side services.
+- Supabase operations through approved server-side services.
+- Controlled access to Dexter's business systems and integrations.
+- Business analytics, reporting, automation and operational assistance.
+- General AI conversation and knowledge functions.
+- Persistent, verified project/business memory.
+
+## Dexter's account and integration access
+
+Dexter's AI should be able to access the Dexter's accounts and services it is explicitly authorised to use, through secure connectors or server-side integrations rather than by storing passwords in the application.
+
+Potential authorised integrations include:
+
+- GitHub and GitHub repositories
+- Supabase
+- XEPOS / POS services where an approved API or integration is available
+- Xero
+- bOnline / telephony services where an approved API or integration is available
+- WhatsApp / Meta business services where approved APIs and permissions are available
+- Just Eat, Deliveroo, Get Me Food and other ordering channels where official APIs/integrations permit access
+- Dexter's KDS/order services
+- Dexter's printer/order infrastructure
+- Dexter's loyalty/customer systems
+- Google or Microsoft services if explicitly connected and authorised
+- Email, calendars, files and other business services if explicitly connected and authorised
+
+Access must be connector-specific and permission-scoped. If an integration has no supported API, the agent must not attempt to bypass security or automate through prohibited methods; instead it should identify the supported integration route.
+
+### Credential and secret rules
+
+- Never put passwords, API keys, access tokens, banking credentials or private secrets in public GitHub files, frontend JavaScript or client-side storage.
+- Store secrets in secure server-side environment variables, a secret manager, or the connected provider's secure credential system.
+- Use least-privilege permissions wherever possible.
+- Maintain an integration registry showing which business service is connected, what permissions it has, its status, and when it was last verified.
+- Allow individual integrations to be disconnected/revoked without disabling the whole platform.
+- Do not expose one tenant's credentials, data or integrations to another tenant.
+
+## Permission model
+
+Use explicit permission scopes, for example:
+
+- `repo.read`
+- `repo.write`
+- `repo.deploy`
+- `database.dev.read`
+- `database.dev.write`
+- `database.production.read`
+- `database.production.write`
+- `orders.read`
+- `orders.write`
+- `customer.read`
+- `customer.write`
+- `accounting.read`
+- `accounting.write`
+- `marketing.write`
+- `staff.read`
+- `staff.write`
+- `integration.manage`
+- `production.deploy`
+- `security.manage`
+
+Production, financial, customer-data, authentication and destructive permissions require stronger approval controls.
 
 ## Agent loop
 
@@ -35,17 +86,18 @@ For a coding task, prefer this loop:
 
 1. Understand the requested outcome and constraints.
 2. Identify the correct tenant, project and repository.
-3. Inspect relevant code, configuration, tests and documentation.
-4. Search project memory for previous decisions, known bugs and successful fixes.
-5. Form a concrete implementation plan.
-6. Make the smallest coherent set of changes.
-7. Run relevant tests/builds/static checks.
-8. Inspect failures rather than guessing.
-9. Fix failures and rerun validation.
-10. Review the final diff for unintended changes.
-11. Record useful durable lessons and architecture decisions.
-12. Report exactly what changed and the verified status.
-13. Request approval before protected production actions.
+3. Identify which connected accounts/integrations are relevant.
+4. Inspect relevant code, configuration, tests and documentation.
+5. Search project memory for previous decisions, known bugs and successful fixes.
+6. Form a concrete implementation plan.
+7. Make the smallest coherent set of changes.
+8. Run relevant tests/builds/static checks.
+9. Inspect failures rather than guessing.
+10. Fix failures and rerun validation.
+11. Review the final diff for unintended changes.
+12. Record useful durable lessons and architecture decisions.
+13. Report exactly what changed and the verified status.
+14. Request approval before protected production actions.
 
 The agent should continue the test/fix cycle when practical rather than stopping after the first failed build.
 
@@ -66,14 +118,10 @@ The platform should provide controlled tools for:
 - Documentation retrieval
 - Deployment preparation and verification
 - Project memory/knowledge retrieval and storage
+- Connected business-account integrations
+- Operational automation
 
 Tools must have explicit permissions and should be scoped to the active tenant/project.
-
-## Reasoning and context
-
-The agent should maintain enough context to reason across multiple files and systems. It should retrieve relevant files and documentation rather than relying on conversation history alone.
-
-For large repositories, use targeted retrieval and summaries while preserving access to the underlying source files. Never assume a missing file or symbol exists; inspect it.
 
 ## Learning and improvement
 
@@ -111,7 +159,9 @@ It must never claim a higher level of completion than the evidence supports.
 
 ## General intelligence and internet research
 
-The coding agent can use live web research for current technical documentation, API changes, error explanations and other information where freshness matters. It can also operate as a general assistant for normal questions, jokes, stories and history.
+The coding agent can use live web research for current technical documentation, API changes, error explanations and other information where freshness matters. It can also operate as a general assistant for normal questions, jokes, stories, history, current information and business questions.
+
+Weather/current conditions should use a suitable current-data source rather than stale model knowledge.
 
 Web retrieval and tenant-private data must remain separate. Do not send private customer data, credentials or secrets to arbitrary external sites.
 
@@ -119,10 +169,16 @@ Web retrieval and tenant-private data must remain separate. Do not send private 
 
 The user remains in control of production changes. Require approval for production deployments, live database migrations, payment/banking changes, customer-data changes, authentication/security changes and destructive actions unless an explicitly configured trusted workflow says otherwise.
 
+## Multi-tenant product requirement
+
+Dexter's Café is the first tenant, not the permanent hard-coded identity of the platform. The same engine must support additional businesses with isolated data, staff, customers, menus, integrations, branding, AI instructions and memory.
+
+A second business must never inherit Dexter's private knowledge or credentials unless explicitly shared through a controlled platform-level resource.
+
 ## Target end state
 
-Dexter's AI should feel like a capable software-engineering workspace rather than a basic chat window:
+Dexter's AI should feel like a capable software-engineering and business workspace rather than a basic chat window:
 
-**Ask → inspect → reason → research if needed → code → build → test → diagnose → fix → retest → review → remember verified lessons → ask for approval when required → deploy → verify.**
+**Ask → identify context → inspect → reason → research if needed → access authorised tools → code/act → build → test → diagnose → fix → retest → review → remember verified lessons → ask for approval when required → deploy/execute → verify.**
 
 The architecture must support Dexter's Café first and then other independent businesses as separate tenants without sharing private business knowledge.
