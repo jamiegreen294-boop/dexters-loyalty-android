@@ -1,0 +1,3 @@
+Force rebuild of Dexter’s PC POS GitHub Pages test after PIN-first login correction.
+Expected startup: Choose staff name -> existing staff PIN.
+Do not use setup PIN for normal login.
