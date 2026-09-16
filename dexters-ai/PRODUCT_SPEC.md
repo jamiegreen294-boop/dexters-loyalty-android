@@ -63,17 +63,39 @@ The target workflow is:
 
 **Ask → understand → inspect → plan → code → build → test → diagnose → fix → retest → review → remember verified lessons → approval → deploy → verify.**
 
+## Dexter's existing POS ecosystem
+
+Dexter's Café already has a working POS ecosystem containing the business communication and operational systems that Dexter's AI is intended to work with. The platform must treat these existing capabilities as the starting point rather than rebuilding them unnecessarily.
+
+Existing Dexter's POS capabilities include:
+
+- POS / till and order management
+- WhatsApp integration
+- Email integration
+- KDS / order flow
+- Receipt/order printing infrastructure
+- Customer and loyalty functionality
+- Existing business/order data and workflows
+
+The first integration goal is therefore to securely connect Dexter's AI to the existing POS capabilities and expose approved functions through controlled tools. The AI should discover the existing interfaces, APIs, database structures or supported integration mechanisms before proposing replacement systems.
+
+WhatsApp and email are **already integrated into the Dexter's POS system** and must be recorded as existing Dexter's capabilities. They are not treated as integrations that still need to be built for Dexter's reference tenant.
+
+Existing live systems must remain operational while the new platform is developed. Development should use read-only, shadow or test synchronization where practical before any replacement or migration.
+
 ## Dexter's account/integration access
 
 Dexter's AI should be able to access Dexter's accounts and services that are explicitly connected and authorised through secure connectors or server-side integrations.
 
-Potential integrations include:
+Existing/connected Dexter's capabilities must be detected and reused where supported, including:
 
+- POS and existing POS communication services
+- WhatsApp
+- Email
 - GitHub
 - Supabase
 - XEPOS/POS services where supported
 - Xero
-- WhatsApp/Meta Business services where supported
 - Just Eat
 - Deliveroo
 - Get Me Food
@@ -81,10 +103,8 @@ Potential integrations include:
 - KDS/order services
 - Printer infrastructure
 - Loyalty/customer systems
-- Email
-- Google services
-- Microsoft services
-- Future payment, delivery and hospitality providers
+
+Future providers may include Google services, Microsoft services, payment providers and other hospitality integrations where official APIs/integrations permit access.
 
 If a provider does not expose an approved API/integration, the platform must not bypass security or provider restrictions. It should identify the supported route.
 
@@ -100,6 +120,12 @@ Provide a central Integration Manager showing:
 - Health/error state
 - Connect/reconnect/disconnect controls
 - Audit history
+
+The Integration Manager must distinguish between:
+
+1. **Existing Dexter's integrations/capabilities** that are already active in the POS ecosystem.
+2. **New integrations** that still require connection or configuration.
+3. **Supported provider types** that can be connected by future tenants.
 
 Credentials must remain server-side and be encrypted/secured through an appropriate secret-management mechanism.
 
@@ -301,6 +327,8 @@ Never expose secrets to frontend code or public GitHub files. Never expose one t
 ## Dexter's reference tenant and migration strategy
 
 Dexter's Café remains the first reference business. Existing live apps and workflows must not be replaced during platform development. New functionality initially operates alongside existing systems using test/shadow synchronization where practical. Migration happens component-by-component only after verification, approval and a documented rollback route.
+
+The existing POS, WhatsApp and email capabilities are particularly important: the platform should integrate with and reuse them first, rather than creating duplicate communication systems. Any proposed replacement must be separately tested and approved.
 
 ## Sellable SaaS direction
 
