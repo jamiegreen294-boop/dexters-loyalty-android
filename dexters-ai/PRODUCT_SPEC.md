@@ -34,6 +34,77 @@ Every business-owned record must be scoped to a tenant/business ID. No tenant ma
 - External Integrations
 - Multi-site Management
 
+## AI knowledge, internet access and general assistant capability
+
+Dexter's AI must support three distinct knowledge sources:
+
+### 1. Live internet information
+
+The AI should be able to use an approved web/search tool when a question requires current information, including:
+
+- Current weather and forecasts
+- Current news and public information
+- Opening times and current business information
+- Travel, events, sports and local information
+- Current product/service information and research
+- Other time-sensitive facts that cannot safely be answered from stored knowledge
+
+Weather should use a suitable current-weather source/tool where available rather than relying only on the model's static knowledge.
+
+The AI must recognise when live information is required instead of pretending that an old model answer is current. Web access must be controlled through approved tools and must not expose private tenant data to arbitrary websites.
+
+### 2. General AI knowledge and conversation
+
+Dexter's AI should also work as a general-purpose assistant when internet access is unnecessary. It can answer general questions and provide normal conversation such as:
+
+- Jokes and humour
+- Stories and creative writing
+- History and general educational explanations
+- Everyday questions
+- Coding explanations
+- General problem solving
+
+### 3. Persistent business knowledge and memory
+
+Each tenant must have its own protected knowledge/memory layer. Dexter's Café can store approved business-specific information such as:
+
+- Business history
+- Menu and product information
+- Recipes and operating procedures
+- Opening hours and policies
+- Staff-approved instructions
+- Supplier and stock information
+- System documentation
+- Customer-service rules
+- Approved business preferences and facts
+
+A future tenant must never inherit Dexter's private knowledge unless explicitly configured to do so. Tenant knowledge must be isolated by business/tenant ID and protected by authorization/RLS.
+
+## Important distinction: retrieval is not automatic training
+
+Internet access does not mean the AI continuously retrains itself from everything it reads. The intended design is:
+
+**Live web information** → retrieve current facts at query time.
+
+**Approved tenant knowledge** → store and retrieve information from the tenant's protected knowledge base.
+
+**Model** → provides general reasoning and language capability.
+
+If the system later supports learning from business interactions, that must be an explicit, controlled memory/knowledge process with tenant isolation, auditability and appropriate approval. Do not silently add arbitrary web content or customer data to permanent model training.
+
+## AI tool-selection behaviour
+
+The AI should decide which source is appropriate:
+
+- "What's the weather today?" → current weather tool/web source.
+- "What's happening in Glasgow this weekend?" → current web/local information.
+- "Tell me a joke." → normal model response; no web search required.
+- "Tell me about Glasgow history." → general knowledge, with web research when current or source-specific information is requested.
+- "What are Dexter's opening hours?" → Dexter's protected business knowledge.
+- "Check why the POS is failing." → private project/code/tool access, not public web search unless external research is useful.
+
+The AI should avoid unnecessary web searches while still using live information whenever freshness materially affects correctness.
+
 ## Roles
 
 - Platform Owner: manages the software platform and tenant lifecycle.
