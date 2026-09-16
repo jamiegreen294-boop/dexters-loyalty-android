@@ -63,6 +63,34 @@ The target workflow is:
 
 **Ask → understand → inspect → plan → code → build → test → diagnose → fix → retest → review → remember verified lessons → approval → deploy → verify.**
 
+## Build Anything mode
+
+Dexter's AI should eventually provide a general-purpose application-building workflow. A user should be able to describe a required system or feature in normal language and the agent should turn the specification into an implementation plan and working software where the available tools support it.
+
+Example request:
+
+**User:** "Build me a stock management system."
+
+The agent should:
+
+1. Clarify the required outcome only where necessary.
+2. Identify the tenant, project and affected systems.
+3. Inspect the existing architecture and code before changing anything.
+4. Design the database, backend, UI and integration changes.
+5. Create or modify the required files and database structures.
+6. Generate appropriate tests.
+7. Build the application.
+8. Diagnose build/test failures from actual evidence.
+9. Fix failures and retest.
+10. Review the resulting diff and security implications.
+11. Show the proposed/actual changes and verification status.
+12. Request approval for protected production actions.
+13. Deploy when approved.
+14. Verify the deployed result.
+15. Record verified architecture decisions and lessons for future work.
+
+This mode must support web, Android, backend, database and business-system features as the platform's toolset grows. It must not claim completion without corresponding test/build/deployment evidence.
+
 ## Dexter's existing POS ecosystem
 
 Dexter's Café already has a working POS ecosystem containing the business communication and operational systems that Dexter's AI is intended to work with. The platform must treat these existing capabilities as the starting point rather than rebuilding them unnecessarily.
@@ -104,7 +132,7 @@ Existing/connected Dexter's capabilities must be detected and reused where suppo
 - Printer infrastructure
 - Loyalty/customer systems
 
-Future providers may include Google services, Microsoft services, payment providers and other hospitality integrations where official APIs/integrations permit access.
+Future providers may include Google services, Microsoft services, payment providers and other hospitality integrations where official APIs/integrations permit.
 
 If a provider does not expose an approved API/integration, the platform must not bypass security or provider restrictions. It should identify the supported route.
 
@@ -262,6 +290,32 @@ The AI should be able to answer business questions and, where authorised, perfor
 
 It should clearly distinguish analysis from actions and require approval for protected actions.
 
+## Platform Doctor / System Health
+
+Provide a unified system-health function such as **RUN FULL SYSTEM CHECK**. It should check, where technically supported and authorised:
+
+- POS
+- Orders
+- KDS
+- Printers
+- Loyalty
+- WhatsApp
+- Email
+- Database
+- Integrations
+- Backups
+- Security status
+- Website/app services
+- Network/device connectivity where supported
+
+Results should use clear states such as working, needs attention or problem, include evidence, identify the affected component and provide recommended or authorised remediation steps. The AI must not claim that a component is healthy without checking it.
+
+## Unified communications
+
+The platform should use the existing Dexter's POS communication capabilities first, including WhatsApp and email. The longer-term communication layer may also support SMS, push notifications, website chat and other providers through controlled integrations.
+
+Communications should be tenant-scoped, permission-controlled, auditable and configurable. External provider charges remain provider-dependent and should not be assumed to be part of the free core.
+
 ## AI knowledge, internet access and general assistant capability
 
 Dexter's AI must support three distinct knowledge sources:
@@ -323,6 +377,38 @@ Mandatory controls include:
 - Security-event logging
 
 Never expose secrets to frontend code or public GitHub files. Never expose one tenant's credentials/data to another tenant.
+
+## Disaster recovery
+
+The platform should provide:
+
+- Automated database backups where supported
+- Configuration backups
+- Git version history
+- Restore points
+- Deployment rollback
+- Documented recovery procedures
+- Recovery testing
+- Emergency read-only or disable modes where appropriate
+- Audit history sufficient to identify recent changes
+
+## Local-first / £0 core operating-cost target
+
+The platform should be designed around a **£0/month core operating-cost target** wherever technically practical for Dexter's own infrastructure. This is a design target, not a guarantee that every third-party service will always be free.
+
+Preferred architecture:
+
+- Local/self-hosted agent server where practical
+- Local/open-source AI model where hardware and capability allow
+- Local development/build/test tooling
+- GitHub for source control where appropriate
+- Self-hosted services where practical
+- Free/open-source components where they meet reliability and security requirements
+- No mandatory paid cloud hosting for the core platform where a suitable local/self-hosted alternative exists
+
+External paid services should be optional, replaceable and provider-abstracted wherever practical. Examples include messaging usage, payment processing, third-party ordering APIs, paid AI APIs, cloud hosting, commercial integrations and app-store fees. The platform must not make Dexter's dependent on an unnecessary paid provider when a viable supported alternative exists.
+
+For the future SaaS product, provider-specific transaction/API costs should be attributable to the relevant tenant or customer where commercially and legally appropriate. Billing architecture may be added later; it must not be a prerequisite for the core development environment.
 
 ## Dexter's reference tenant and migration strategy
 
