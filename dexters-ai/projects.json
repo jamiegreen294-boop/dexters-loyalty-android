@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "name": "Dexter's AI Project Registry",
+  "purpose": "Central map of Dexter's software systems for the coding agent.",
+  "projects": [
+    {
+      "id": "pc-pos",
+      "name": "PC POS / Back Office",
+      "status": "active",
+      "deployment": "GitHub Pages / customer-facing back office",
+      "production_changes_require_approval": true
+    },
+    {
+      "id": "loyalty",
+      "name": "Loyalty Android",
+      "repository": "jamiegreen294-boop/dexters-loyalty-android",
+      "status": "active",
+      "production_changes_require_approval": true
+    },
+    {
+      "id": "whatsapp-ai",
+      "name": "WhatsApp AI / Orders",
+      "status": "active",
+      "production_changes_require_approval": true
+    },
+    {
+      "id": "kds-orders",
+      "name": "KDS / Orders",
+      "status": "active",
+      "production_changes_require_approval": true
+    },
+    {
+      "id": "printer",
+      "name": "Receipt / Order Printer",
+      "status": "active",
+      "hardware": "Epson TM-M3011 / Ethernet",
+      "production_changes_require_approval": true
+    },
+    {
+      "id": "supabase",
+      "name": "Dexter's Supabase Backend",
+      "status": "planned",
+      "production_changes_require_approval": true
+    },
+    {
+      "id": "xepos",
+      "name": "XEPOS Integration",
+      "status": "active",
+      "production_changes_require_approval": true
+    },
+    {
+      "id": "xero",
+      "name": "Xero Integration",
+      "status": "planned",
+      "production_changes_require_approval": true
+    },
+    {
+      "id": "bonline",
+      "name": "bOnline / Phone Services",
+      "status": "active",
+      "production_changes_require_approval": true
+    }
+  ]
+}
