@@ -2,7 +2,13 @@
 
 ## Purpose
 
-Dexter's AI is being developed as the control and engineering layer for a reusable, multi-tenant hospitality software platform. Dexter's Café is Tenant 1 and the reference implementation. The platform must be reusable for cafés, takeaways, restaurants, food trucks and multi-site operators without copying Dexter's private business data.
+Dexter's AI is the control, engineering and business-assistance layer for a reusable, multi-tenant hospitality software platform. Dexter's Café is Tenant 1 and the reference implementation. The platform must be reusable for cafés, takeaways, restaurants, food trucks and multi-site operators without copying Dexter's private business data.
+
+## Product ambition
+
+The target is a highly capable AI workspace with the broad functions of a modern AI assistant plus a deeply integrated hospitality operating platform and software-engineering agent. It should be designed to exceed a basic chatbot in practical software-development and hospitality-management capability by combining reasoning with controlled tools, project context, persistent verified memory and authorised business integrations.
+
+No claim of objectively superior underlying model intelligence should be assumed. Capability comes from the combination of model + tools + project context + memory + verification + integrations + automation.
 
 ## Core principle
 
@@ -11,6 +17,109 @@ Build the platform engine once. A new customer is created as a new tenant/busine
 ## Tenant isolation
 
 Every business-owned record must be scoped to a tenant/business ID. No tenant may read, modify or expose another tenant's data. Supabase Row Level Security (RLS) and server-side authorization are mandatory for tenant-scoped data.
+
+## AI workspace capabilities
+
+The AI workspace should support, where technically available and authorised:
+
+- Natural conversation and general assistance
+- Voice input/output
+- Image understanding
+- Document, PDF, spreadsheet and image upload/analysis
+- Current web research
+- Current weather/current-data tools
+- Technical documentation retrieval
+- Long-running/resumable tasks
+- Background automations
+- Task history and status
+- Project context loading
+- Persistent verified memory
+- Self-verification and evidence-based completion reporting
+
+## Advanced coding agent
+
+The coding agent should be able to:
+
+- Understand complete repositories and project structures
+- Search code semantically and by exact text/symbol/error
+- Trace dependencies
+- Plan multi-file changes
+- Create and edit files/directories
+- Refactor and fix bugs
+- Generate tests
+- Run builds, tests, lint and type checks
+- Inspect errors/logs
+- Iterate through diagnose → fix → retest
+- Review diffs
+- Use Git branches, commits and pull requests
+- Prepare and verify deployments
+- Work across Android, web, backend, databases, APIs and infrastructure
+- Build complete applications from specifications
+- Maintain project architecture and coding conventions
+- Create technical documentation
+- Store verified project lessons and architecture decisions
+
+The target workflow is:
+
+**Ask → understand → inspect → plan → code → build → test → diagnose → fix → retest → review → remember verified lessons → approval → deploy → verify.**
+
+## Dexter's account/integration access
+
+Dexter's AI should be able to access Dexter's accounts and services that are explicitly connected and authorised through secure connectors or server-side integrations.
+
+Potential integrations include:
+
+- GitHub
+- Supabase
+- XEPOS/POS services where supported
+- Xero
+- WhatsApp/Meta Business services where supported
+- Just Eat
+- Deliveroo
+- Get Me Food
+- bOnline/telephony where supported
+- KDS/order services
+- Printer infrastructure
+- Loyalty/customer systems
+- Email
+- Google services
+- Microsoft services
+- Future payment, delivery and hospitality providers
+
+If a provider does not expose an approved API/integration, the platform must not bypass security or provider restrictions. It should identify the supported route.
+
+## Integration Manager
+
+Provide a central Integration Manager showing:
+
+- Connected service
+- Connection status
+- Tenant/business
+- Granted permissions
+- Last verification
+- Health/error state
+- Connect/reconnect/disconnect controls
+- Audit history
+
+Credentials must remain server-side and be encrypted/secured through an appropriate secret-management mechanism.
+
+## Permission model
+
+Use granular permission scopes for tools and accounts, including examples such as:
+
+- Repository read/write/deploy
+- Development database read/write
+- Production database read/write
+- Orders read/write
+- Customer read/write
+- Accounting read/write
+- Marketing write
+- Staff read/write
+- Integration management
+- Production deployment
+- Security management
+
+High-risk permissions require stronger authentication/approval.
 
 ## Platform modules
 
@@ -34,116 +143,171 @@ Every business-owned record must be scoped to a tenant/business ID. No tenant ma
 - External Integrations
 - Multi-site Management
 
+## Hospitality operations
+
+### POS
+
+- Till/order taking
+- Staff PINs/roles
+- Collection and delivery
+- Discounts
+- Refunds
+- Modifiers/extras
+- Customer accounts
+- Cash/card reconciliation
+- Table service where required
+
+### KDS
+
+- Live orders
+- Kitchen timers
+- Priority handling
+- Courses
+- Ready/completed states
+- Printer fallback
+
+### Ordering hub
+
+Unify supported channels including website, WhatsApp, Just Eat, Deliveroo, Uber Eats where supported, collection and QR ordering.
+
+### Customer app
+
+- Loyalty
+- Rewards
+- Digital receipts
+- Offers
+- Order history
+- Click & collect
+- Notifications
+
+### AI Customer Assistant
+
+Business-specific answers about menus, hours, allergens, offers, locations, FAQs and ordering rules, using protected tenant knowledge.
+
+### Stock and costing
+
+- Stock levels
+- Ingredient usage
+- Low-stock alerts
+- Supplier prices
+- Purchase orders
+- Waste tracking
+- Recipe costing
+- Margin analysis
+- Ingredient price change impact
+
+### Staff
+
+- Accounts
+- Permissions
+- Rotas/shifts
+- Clock-in/out
+- Breaks
+- Holiday requests
+- Staff records
+
+### Accounting
+
+- Xero integration
+- VAT/tax configuration
+- Daily takings
+- Expenses
+- Supplier invoices
+- Payroll exports
+
+### Marketing
+
+AI-assisted creation of promotions, social posts, customer messages, flyers, menu-board content and campaigns, subject to configured permissions.
+
+## AI Business Manager
+
+The AI should be able to answer business questions and, where authorised, perform actions such as:
+
+- Sales analysis
+- Order analysis
+- Product performance
+- Stock warnings
+- Margin analysis
+- Operational issue diagnosis
+- Promotion creation
+- Report generation
+- Routine automation
+- System health checks
+
+It should clearly distinguish analysis from actions and require approval for protected actions.
+
 ## AI knowledge, internet access and general assistant capability
 
 Dexter's AI must support three distinct knowledge sources:
 
 ### 1. Live internet information
 
-The AI should be able to use an approved web/search tool when a question requires current information, including:
-
-- Current weather and forecasts
-- Current news and public information
-- Opening times and current business information
-- Travel, events, sports and local information
-- Current product/service information and research
-- Other time-sensitive facts that cannot safely be answered from stored knowledge
-
-Weather should use a suitable current-weather source/tool where available rather than relying only on the model's static knowledge.
-
-The AI must recognise when live information is required instead of pretending that an old model answer is current. Web access must be controlled through approved tools and must not expose private tenant data to arbitrary websites.
+Use approved web/search tools for current weather, forecasts, news, public information, opening times, travel, events, sports, local information, current products/services and other time-sensitive facts.
 
 ### 2. General AI knowledge and conversation
 
-Dexter's AI should also work as a general-purpose assistant when internet access is unnecessary. It can answer general questions and provide normal conversation such as:
-
-- Jokes and humour
-- Stories and creative writing
-- History and general educational explanations
-- Everyday questions
-- Coding explanations
-- General problem solving
+Support jokes, humour, stories, history, education, everyday questions, coding explanations and general problem solving without unnecessary web searches.
 
 ### 3. Persistent business knowledge and memory
 
-Each tenant must have its own protected knowledge/memory layer. Dexter's Café can store approved business-specific information such as:
+Each tenant has protected knowledge/memory for business history, menus, recipes, procedures, hours, policies, staff-approved instructions, suppliers, stock, system documentation, customer-service rules and approved preferences.
 
-- Business history
-- Menu and product information
-- Recipes and operating procedures
-- Opening hours and policies
-- Staff-approved instructions
-- Supplier and stock information
-- System documentation
-- Customer-service rules
-- Approved business preferences and facts
+Internet retrieval is not automatic model retraining. Approved business knowledge may be stored as controlled tenant memory; arbitrary web content and customer data must not silently become permanent training data.
 
-A future tenant must never inherit Dexter's private knowledge unless explicitly configured to do so. Tenant knowledge must be isolated by business/tenant ID and protected by authorization/RLS.
+## Learning and improvement
 
-## Important distinction: retrieval is not automatic training
+The platform should improve through verified experience. It may remember:
 
-Internet access does not mean the AI continuously retrains itself from everything it reads. The intended design is:
+- Root causes
+- Successful fixes
+- Build commands
+- Environment requirements
+- Integration quirks
+- API limitations
+- Deployment requirements
+- Architecture decisions
+- Testing procedures
+- Known failure modes
+- User-approved coding preferences
 
-**Live web information** → retrieve current facts at query time.
+Memories require tenant/project metadata, source task, date, confidence/status and verification state. Unverified conclusions must not become authoritative facts.
 
-**Approved tenant knowledge** → store and retrieve information from the tenant's protected knowledge base.
+## Self-verification
 
-**Model** → provides general reasoning and language capability.
+The AI must distinguish between code written, code tested, build completed, deployment prepared, deployment completed and live result verified. It must never claim a higher completion level than the evidence supports.
 
-If the system later supports learning from business interactions, that must be an explicit, controlled memory/knowledge process with tenant isolation, auditability and appropriate approval. Do not silently add arbitrary web content or customer data to permanent model training.
+## Security
 
-## AI tool-selection behaviour
+Mandatory controls include:
 
-The AI should decide which source is appropriate:
+- Tenant isolation
+- Secure credential/secret storage
+- MFA where supported
+- Role-based permissions
+- Audit trails
+- Session management
+- Integration permission controls
+- Production approval gates
+- Backups and recovery
+- Rollback capability
+- Customer-data controls
+- Data export/deletion
+- Emergency disable capability
+- Rate limiting
+- Security-event logging
 
-- "What's the weather today?" → current weather tool/web source.
-- "What's happening in Glasgow this weekend?" → current web/local information.
-- "Tell me a joke." → normal model response; no web search required.
-- "Tell me about Glasgow history." → general knowledge, with web research when current or source-specific information is requested.
-- "What are Dexter's opening hours?" → Dexter's protected business knowledge.
-- "Check why the POS is failing." → private project/code/tool access, not public web search unless external research is useful.
+Never expose secrets to frontend code or public GitHub files. Never expose one tenant's credentials/data to another tenant.
 
-The AI should avoid unnecessary web searches while still using live information whenever freshness materially affects correctness.
+## Dexter's reference tenant and migration strategy
 
-## Roles
-
-- Platform Owner: manages the software platform and tenant lifecycle.
-- Business Owner/Admin: manages one business and its locations, staff, menus and settings.
-- Manager: operational access for an assigned business/location.
-- Staff: restricted operational access.
-- AI Agent: acts only within explicit tenant permissions and approved tools.
-
-## Configuration
-
-Each tenant can have:
-
-- Business name and branding
-- Locations
-- Menus, products, modifiers and prices
-- Opening hours
-- Staff and permissions
-- Customers and loyalty rules
-- Ordering channels
-- Printer/KDS configuration
-- Integrations
-- AI instructions/knowledge
-- Enabled modules
-- Tax/VAT configuration
-- Reporting settings
-
-## Integration architecture
-
-External systems must connect through a controlled integration layer rather than being hard-coded into individual modules. Credentials and tokens must remain server-side and must never be committed to the public repository.
-
-## Dexter's reference tenant
-
-Dexter's Café remains the first production/reference business. Existing live apps and workflows must not be replaced during platform development. New platform functionality should initially operate alongside existing systems, using test/shadow synchronization where practical, followed by controlled migration only after verification and explicit approval.
+Dexter's Café remains the first reference business. Existing live apps and workflows must not be replaced during platform development. New functionality initially operates alongside existing systems using test/shadow synchronization where practical. Migration happens component-by-component only after verification, approval and a documented rollback route.
 
 ## Sellable SaaS direction
 
-The architecture must support future:
+The architecture must support:
 
 - Customer self-service onboarding
+- Free trials
 - Subscription plans
 - Feature/add-on entitlements
 - White-label branding
@@ -152,20 +316,21 @@ The architecture must support future:
 - Audit logs
 - Data export/deletion
 - Usage limits
-- Backups and recovery
+- Backups/recovery
 - Support tooling
+- Billing architecture
+- Module marketplace/add-ons
 
-Billing can be implemented later, but the data model must not prevent it.
+Dexter's should be Tenant 1, not hard-coded into the engine.
 
-## Security requirements
+## Platform self-development
 
-- Tenant isolation is mandatory.
-- Financial, customer and authentication data are sensitive.
-- Production changes require explicit approval during the initial build.
-- AI must inspect before modifying existing code.
-- Changes affecting money, customer data, authentication, databases or live ordering require approval.
-- Test and staging environments should be used before production migration.
+Dexter's AI should eventually be capable of extending the platform itself. Example:
+
+**User:** "Add staff rota management."
+
+The agent should inspect the existing architecture, design the feature, create/update database structures, build backend and UI components, generate tests, build the application, diagnose and fix failures, show the proposed changes, request required approval, deploy and verify.
 
 ## Success condition
 
-A second business can be created from the same platform engine without cloning Dexter's database or application code, while Dexter's existing business continues operating independently.
+A second business can be onboarded from the same platform engine without cloning Dexter's database or application code, while Dexter's existing business continues operating independently.
