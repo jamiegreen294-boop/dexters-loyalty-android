@@ -1,0 +1,35 @@
+const VERIFY_TOKEN=Deno.env.get('META_WEBHOOK_VERIFY_TOKEN')||'';
+const SUPABASE_URL=Deno.env.get('SUPABASE_URL')||'';
+const SERVICE=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
+const META_TOKEN=Deno.env.get('META_WHATSAPP_TOKEN')||'';
+const META_PHONE=Deno.env.get('META_PHONE_NUMBER_ID')||'';
+const H={'apikey':SERVICE,'authorization':`Bearer ${SERVICE}`,'content-type':'application/json'};
+async function post(table:string,row:any,prefer='return=minimal'){const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{...H,prefer},body:JSON.stringify(row)});if(!r.ok)console.error(table,await r.text());return r}
+async function diag(row:any){try{await post('whatsapp_send_diagnostics',row)}catch{}}
+async function store(row:any){await fetch(`${SUPABASE_URL}/rest/v1/whatsapp_incoming_messages?on_conflict=message_id`,{method:'POST',headers:{...H,prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(row)})}
+async function upsertConv(wa:string,name:string|null,ts:string|null){const base=ts?new Date(ts):new Date(),exp=new Date(base.getTime()+86400000).toISOString(),now=new Date().toISOString();const r=await fetch(`${SUPABASE_URL}/rest/v1/whatsapp_conversations?on_conflict=wa_id`,{method:'POST',headers:{...H,prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify({wa_id:wa,customer_name:name,last_customer_message_at:ts||now,service_window_expires_at:exp,last_message_at:ts||now,updated_at:now})});if(!r.ok)return null;return (await r.json())?.[0]||null}
+async function updateConv(id:string,patch:any){await fetch(`${SUPABASE_URL}/rest/v1/whatsapp_conversations?id=eq.${id}`,{method:'PATCH',headers:{...H,prefer:'return=minimal'},body:JSON.stringify(patch)})}
+async function convMsg(id:string,pid:string|null,body:string|null,type:string|null,dir='inbound',meta:any={}){await fetch(`${SUPABASE_URL}/rest/v1/whatsapp_conversation_messages${pid?'?on_conflict=provider_message_id':''}`,{method:'POST',headers:{...H,prefer:pid?'resolution=ignore-duplicates,return=minimal':'return=minimal'},body:JSON.stringify({conversation_id:id,provider_message_id:pid,direction:dir,body,message_type:type,metadata:meta})})}
+async function fn(slug:string,body:any){const r=await fetch(`${SUPABASE_URL}/functions/v1/${slug}`,{method:'POST',headers:{authorization:`Bearer ${SERVICE}`,'content-type':'application/json'},body:JSON.stringify(body)});const d=await r.json().catch(()=>null);return {ok:r.ok,status:r.status,data:d}}
+async function release(wa:string){return await fn('whatsapp-thread-control',{action:'release',to:wa})}
+async function sendText(wa:string,body:string,stage='reply'){
+ if(!META_TOKEN||!META_PHONE){await diag({wa_id:wa,stage,http_status:0,ok:false,error_code:'missing_credentials',error_message:'Meta send credentials missing',raw:{}});return {ok:false,error:'Meta send credentials missing'}}
+ const r=await fetch(`https://graph.facebook.com/v23.0/${META_PHONE}/messages`,{method:'POST',headers:{authorization:`Bearer ${META_TOKEN}`,'content-type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:wa,type:'text',text:{body}})});
+ const d=await r.json().catch(()=>null);const e=d?.error||null;
+ await diag({wa_id:wa,stage,http_status:r.status,ok:r.ok,error_code:e?.code?String(e.code):null,error_message:e?.message||null,raw:d||{}});
+ return {ok:r.ok,status:r.status,data:d}
+}
+function normalIntent(t:string){return /\b(order|ordering|place an order|food order|collection order|pre[- ]?order|scran line|scran)\b/i.test(t)}
+function roastIntent(t:string){return /\b(sunday\s*roast|roast\s*dinner|roast dinner|roast)\b/i.test(t)}
+Deno.serve(async(req)=>{const u=new URL(req.url);if(req.method==='GET'){const mode=u.searchParams.get('hub.mode'),token=u.searchParams.get('hub.verify_token'),challenge=u.searchParams.get('hub.challenge');if(VERIFY_TOKEN&&mode==='subscribe'&&token===VERIFY_TOKEN&&challenge)return new Response(challenge);return new Response('Forbidden',{status:403})}if(req.method!=='POST')return new Response('Method not allowed',{status:405});let payload:any=null;try{payload=await req.json()}catch{}
+ try{const sh:any={};for(const [k,v] of req.headers.entries())if(['user-agent','content-type','x-hub-signature-256','x-forwarded-for'].includes(k.toLowerCase()))sh[k]=v;await post('whatsapp_webhook_events',{request_method:'POST',headers:sh,payload})}catch{}
+ try{if(payload?.object==='whatsapp_business_account'){for(const entry of payload.entry||[])for(const change of entry.changes||[]){if(!['messages','standby'].includes(change?.field))continue;const value=change.value||{},meta=value.metadata||{},contacts=new Map((value.contacts||[]).map((c:any)=>[c.wa_id,c]));for(const m of value.messages||[]){const c:any=contacts.get(m.from),ts=m.timestamp?new Date(Number(m.timestamp)*1000).toISOString():null;let text:string|null=null;if(m.type==='text')text=m.text?.body||null;else if(m.type==='button')text=m.button?.text||null;else if(m.type==='interactive')text=m.interactive?.button_reply?.title||m.interactive?.list_reply?.title||null;const sourceField=change.field;const row={message_id:m.id||null,sender_wa_id:m.from||null,sender_name:c?.profile?.name||null,phone_number_id:meta.phone_number_id||null,display_phone_number:meta.display_phone_number||null,message_type:m.type||null,message_text:text,message_timestamp:ts,raw_event:{entry_id:entry.id||null,field:sourceField,change}};await store(row);if(!m.from)continue;const conv=await upsertConv(String(m.from),c?.profile?.name||null,ts);if(!conv?.id)continue;await convMsg(conv.id,m.id||null,text,m.type||null,'inbound',{source:'meta',webhook_field:sourceField});if(!text)continue;
+ if(conv.mode==='handover')continue;
+ const isRoast=roastIntent(text)||conv.mode==='sunday_roast';const isNormal=normalIntent(text)||conv.mode==='ordering';
+ const routeMode=isRoast?'sunday_roast':isNormal?'ordering':'chat';
+ await updateConv(conv.id,{mode:routeMode,updated_at:new Date().toISOString()});
+ const out=isNormal&&!isRoast?await fn('scran-line-order',{wa_id:m.from,text}):await fn('whatsapp-ai-router',{wa_id:m.from,text});
+ if(!out.ok){await diag({wa_id:String(m.from),stage:'order_function',http_status:out.status,ok:false,error_code:'order_function_failed',error_message:out.data?.error||'Ordering function failed',raw:out.data||{}})}
+ if(out.ok&&out.data?.reply){const sent=await sendText(String(m.from),String(out.data.reply),String(out.data.stage||'reply'));if(sent.ok)await convMsg(conv.id,null,String(out.data.reply),'text','outbound',{source:isNormal&&!isRoast?'scran_line':'ai_auto',route:out.data.route||null,stage:out.data.stage||null,implicit_thread_take:true})}
+ if(out.data?.done===true||['placed','cancelled'].includes(String(out.data?.stage||''))){await updateConv(conv.id,{mode:out.data?.stage==='placed'?'order_active':'chat',updated_at:new Date().toISOString()});const rel=await release(String(m.from));if(!rel.ok)console.error('thread release failed',rel.status,rel.data)}
+ }}}}catch(e){console.error('webhook error',e)}return new Response('EVENT_RECEIVED',{status:200})});
