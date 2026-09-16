@@ -51,7 +51,7 @@ addonJs=addonJs.replace(takePayOld,takePayNew);
 const closeMark='\n})();';
 const closeAt=addonJs.lastIndexOf(closeMark);
 if(closeAt<0)throw new Error('PC v3 addon closing marker missing');
-const toolbarGuard=`\nif(!window.__dextersPcCoreToolbarCapture){\n window.__dextersPcCoreToolbarCapture=true;\n document.addEventListener('click',e=>{\n  const b=e.target?.closest?.('#pcSalesBtn,#pcCashupBtn,#qrOrdersBtn');if(!b)return;\n  e.preventDefault();e.stopImmediatePropagation();\n  if(b.id==='pcSalesBtn'){salesView();return}\n  if(b.id==='pcCashupBtn'){cashup();return}\n  if(typeof window.showQrOrders==='function'){window.showQrOrders();return}\n  modal('Customer QR orders · PC TEST','<p>No QR table orders yet.</p>',true);\n },true);\n}\n`;
+const toolbarGuard=`\nif(!window.__dextersPcCoreToolbarCapture){\n window.__dextersPcCoreToolbarCapture=true;\n document.addEventListener('click',e=>{\n  const b=e.target?.closest?.('#pcSalesBtn,#pcCashupBtn');if(!b)return;\n  e.preventDefault();e.stopImmediatePropagation();\n  if(b.id==='pcSalesBtn'){salesView();return}\n  if(b.id==='pcCashupBtn'){cashup();return}\n },true);\n}\n`;
 addonJs=addonJs.slice(0,closeAt)+toolbarGuard+addonJs.slice(closeAt);
 fs.writeFileSync(addonPath,addonJs);
 
