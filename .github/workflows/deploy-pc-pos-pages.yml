@@ -130,3 +130,5 @@ jobs:
 
       - name: Full PC POS system browser test published Dexter's URL
         run: POS_FULL_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?full=${GITHUB_SHA}" node tests/pc-pos-full-system-v2.cjs
+
+# Force a fresh Pages build after the PIN-first login correction.
