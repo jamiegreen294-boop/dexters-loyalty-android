@@ -1,6 +1,6 @@
 (()=>{
 const TEST_QR='https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-table-order-pc-test';
-const TEST_SUNDAY_API=U+'/functions/v1/sunday-roast-pc-pos-test-api';
+const TEST_SUNDAY_API=U+'/functions/v1/sunday-roast-pc-pos-api';
 const SALES_KEY='dexters_pc_pos_sales_v3';
 const CREDIT_TEST_KEY='dexters_pc_credit_payments_v3';
 const $x=id=>document.getElementById(id);
@@ -49,4 +49,3 @@ function forceTestRoutes(){const q=$x('qrCodesBtn');if(q)q.onclick=qrCodes}
 function initV3(){ensurePayCss();installPay();installTop();forceTestRoutes();const tag=document.querySelector('.tag');if(tag)tag.textContent='PC TEST · TABLE SERVICE';const st=$x('status');if(st)st.textContent='PC TEST · safe table/KDS/payment data'}
 window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();
 })();
-

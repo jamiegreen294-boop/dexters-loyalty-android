@@ -15,7 +15,7 @@ for(const f of deferred){if(!fs.existsSync('dist/'+f))throw new Error('PC deferr
 const pin=fs.readFileSync('dist/pos-pc-pin-login.js','utf8');for(const f of deferred)if(!pin.includes("'"+f+"'"))throw new Error('PIN feature loader missing: '+f);
 if(!s.includes(pin))throw new Error('PIN bootstrap must be inline so a stale external script cannot hang login');
 const add=fs.readFileSync('dist/pos-pc-v3-addon.js','utf8');
-for(const x of ['cashBtn','cardBtn','Money Owed','Sunday Roast','Cash up','Sales','dexters-table-order-pc-test','sunday-roast-pc-pos-test-api'])if(!add.includes(x))throw new Error('PC add-on missing: '+x);
+for(const x of ['cashBtn','cardBtn','Money Owed','Sunday Roast','Cash up','Sales','dexters-table-order-pc-test','sunday-roast-pc-pos-api'])if(!add.includes(x))throw new Error('PC add-on missing: '+x);
 const cats=fs.readFileSync('dist/pos-pc-category-home.js','utf8');
 for(const x of ['pcCatCard','Categories','pcCatImage','pcCatGrid'])if(!cats.includes(x))throw new Error('PC category home missing: '+x);
 console.log('PASS PC POS v3: PIN-only startup, deferred feature modules, safe test APIs and core POS assets present');
