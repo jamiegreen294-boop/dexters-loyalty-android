@@ -14,7 +14,7 @@ window.DextersPosModal=modal;
 function cartTotal(){return Number(String($x('total')?.textContent||'0').replace(/[^0-9.]/g,''))||0}
 function cartSubtotal(){return (S.cart||[]).reduce((sum,line)=>sum+(Number(line.unit)||0)*(Number(line.qty)||1),0)}
 function cartSnapshot(){return (S.cart||[]).map(x=>({name:x.name,qty:Number(x.qty)||1,unit:Number(x.unit)||0,mods:x.mods||x.modifiers||[]}))}
-function makeSale(method,tendered=0,change=0,kind='sale',extra={}){const subtotal=cartSubtotal(),total=cartTotal(),discount=Math.max(0,subtotal-total);return{id:'PC-'+Date.now()+'-'+Math.random().toString(16).slice(2),created_at:new Date().toISOString(),method,subtotal,discount,discount_name:S.manualDiscountLabel||'',total,tendered,change,kind,items:cartSnapshot(),mode:S.mode,tableNo:S.tableNo,staff:S.staffEmail||'',customer:S.customer||'',customer_phone:S.phone||'',notes:S.note||'',...extra}}
+function makeSale(method,tendered=0,change=0,kind='sale',extra={}){const subtotal=cartSubtotal(),total=cartTotal(),discount=Math.max(0,subtotal-total);return{id:'PC-'+Date.now()+'-'+Math.random().toString(16).slice(2),created_at:new Date().toISOString(),method,subtotal,discount,discount_name:S.manualDiscountLabel||'',total,tendered,change,kind,items:cartSnapshot(),mode:S.mode,tableNo:S.tableNo,staff:S.staffName||S.staffEmail?.split('@')[0]||'Staff',customer:S.customer||'',customer_phone:S.phone||'',notes:S.note||'',...extra}}
 function saveAndPrintSale(sale){const a=readSales();a.unshift(sale);saveSales(a);window.dispatchEvent(new CustomEvent('dexters-pc-test-sale-complete',{detail:sale}));return sale}
 async function sendPaidSale(sale){
  if(!token())throw Error('Please sign in again.');
