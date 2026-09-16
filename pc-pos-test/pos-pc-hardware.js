@@ -42,7 +42,7 @@ function normaliseSale(sale){
       change:Number(sale?.change||0),
       mode:sale?.mode||S?.mode||'Counter',
       table_no:sale?.tableNo||S?.tableNo||'',
-      staff:sale?.staff||S?.staffEmail||'staff',
+      staff:sale?.staff||S?.staffName||S?.staffEmail?.split('@')[0]||'Staff',
       customer:sale?.customer||S?.customer||'',
       items:(sale?.items||[]).map(i=>({name:i.name||i.item_name||'Item',qty:Number(i.qty||i.quantity||1),unit:Number(i.unit||i.price||0),mods:i.mods||i.modifiers||[]}))
     },
@@ -69,7 +69,7 @@ async function printSale(sale){
   if(p.sale.claim_token)status((p.receipt_kind==='loyalty'?'Loyalty':'Standard')+' receipt sent to POS-80 · Scan to Win QR ready'+(p.drawer?' · cash drawer requested':' · drawer stays closed'));
 }
 function testReceipt(kind='standard',drawer=false){
-  const sale={id:'HW-TEST-'+Date.now(),created_at:new Date().toISOString(),method:drawer?'cash':'card',total:3.5,tendered:drawer?5:3.5,change:drawer?1.5:0,mode:'Counter',staff:S?.staffEmail||'Test',items:[{name:'Hardware Test Item',qty:1,unit:3.5,mods:[]}],loyalty:kind==='loyalty'?{full_name:'Dexter Test Customer',loyalty_code:'123456',points:125,coffee_stamps_earned:1}:null};
+  const sale={id:'HW-TEST-'+Date.now(),created_at:new Date().toISOString(),method:drawer?'cash':'card',total:3.5,tendered:drawer?5:3.5,change:drawer?1.5:0,mode:'Counter',staff:S?.staffName||S?.staffEmail?.split('@')[0]||'Test',items:[{name:'Hardware Test Item',qty:1,unit:3.5,mods:[]}],loyalty:kind==='loyalty'?{full_name:'Dexter Test Customer',loyalty_code:'123456',points:125,coffee_stamps_earned:1}:null};
   printSale(sale);
 }
 function hardwareDialog(){
