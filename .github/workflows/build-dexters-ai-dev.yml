@@ -1,0 +1,61 @@
+name: Build Dexter's AI Development Command Centre
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dexters-ai-v1 ]
+    paths:
+      - 'dexters-ai/**'
+      - '.github/workflows/build-dexters-ai-dev.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-dexters-ai:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.DEXTERS_AI_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+
+      - name: Verify development secret is available
+        run: |
+          test -n "$SUPABASE_PUBLISHABLE_KEY"
+          echo "Development Supabase publishable key is configured."
+
+      - name: Build development Command Centre
+        run: |
+          rm -rf build/dexters-ai
+          mkdir -p build/dexters-ai
+          cp -R dexters-ai/. build/dexters-ai/
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          path = Path('build/dexters-ai/index.html')
+          text = path.read_text()
+          key = os.environ['SUPABASE_PUBLISHABLE_KEY']
+          placeholder = 'YOUR_SUPABASE_PUBLISHABLE_KEY'
+          if placeholder not in text:
+              raise SystemExit('Expected Supabase publishable-key placeholder was not found.')
+          text = text.replace(placeholder, key, 1)
+          path.write_text(text)
+          print('Development build generated successfully.')
+          PY
+
+      - name: Validate generated Command Centre
+        run: |
+          test -s build/dexters-ai/index.html
+          ! grep -q 'YOUR_SUPABASE_PUBLISHABLE_KEY' build/dexters-ai/index.html
+          grep -q 'slktukywdzvtvhveheni.supabase.co' build/dexters-ai/index.html
+          grep -q 'ai-command-centre' build/dexters-ai/index.html
+          echo "Development Command Centre validation passed."
+
+      - name: Upload development artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dexters-ai-command-centre-dev
+          path: build/dexters-ai
+          if-no-files-found: error
