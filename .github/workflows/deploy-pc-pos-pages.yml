@@ -21,16 +21,21 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
       - name: Build isolated PC POS
         run: npm run build
+
       - name: Build GitHub Pages test bundle
         run: node build-pc-pos-pages.cjs
+
       - name: Verify PC POS output and controls
         run: |
           test -f _site/index.html
@@ -46,6 +51,7 @@ jobs:
           test -f _site/pos-pc-expiry.js
           test -f _site/pos-pc-account-statements.js
           test -f _site/pos-pc-collection-orders.js
+          test -f _site/scanner/index.html
           test -f _site/customer-display.html
           test -f _site/pc-category-sprite.jpg
           grep -q "uber-table-service-pc-test-api" _site/index.html
@@ -55,6 +61,8 @@ jobs:
           grep -q "pos-pc-offline.js" _site/pos-pc-pin-login.js
           grep -q "pos-pc-collection-orders.js" _site/pos-pc-pin-login.js
           grep -q "COLLECTION OPEN" _site/pos-pc-collection-orders.js
+          grep -q "FOODHUB 1008" _site/scanner/index.html
+          grep -q "pc-pos-scanner-bridge-test" _site/pos-pc-scanner.js
           grep -q "retrieveHeldBtn" _site/pos-order-management.js
           grep -q "id='payBtn'\|id=\"payBtn\"\|payBtn" _site/pos-pc-v3-addon.js
           grep -q "document.readyState!=='loading'" _site/pos-pc-v3-addon.js
@@ -65,18 +73,24 @@ jobs:
           grep -q "Money Owed · Statements" _site/pos-pc-account-statements.js
           ! grep -q '<script src="./pos-pc-v3-addon.js"' _site/index.html
           ! grep -q '<script src="./pos-pc-offline.js"' _site/index.html
+
       - name: Check built JavaScript parses
         run: node tests/pc-pos-static-js-check.cjs
+
       - name: Install Chromium smoke-test browser
         run: |
           npm install --no-save playwright@1.55.0 --no-audit --no-fund
           npx playwright install --with-deps chromium
+
       - name: Browser smoke test built POS
         run: node tests/pc-pos-browser-smoke.cjs
+
       - name: All-buttons safe browser test built POS
         run: node tests/pc-pos-buttons-system-v2.cjs
+
       - name: Full PC POS system browser test built POS
         run: node tests/pc-pos-full-system-v2.cjs
+
       - name: Publish test bundle to gh-pages
         run: |
           git fetch origin gh-pages
@@ -88,23 +102,34 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pc-pos-test
-          if git diff --cached --quiet; then echo "No PC POS Pages changes to publish"; else git commit -m "Publish Dexter's PC POS test"; git push origin HEAD:gh-pages; fi
+          if git diff --cached --quiet; then
+            echo "No PC POS Pages changes to publish"
+          else
+            git commit -m "Publish Dexter's PC POS test"
+            git push origin HEAD:gh-pages
+          fi
+
       - name: Browser smoke test published Dexter's URL
         run: |
           for i in 1 2 3 4 5 6 7 8; do
-            POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?smoke=${GITHUB_SHA}-${i}" node tests/pc-pos-browser-smoke.cjs && exit 0
+            echo "Live smoke attempt $i"
+            if POS_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?smoke=${GITHUB_SHA}-${i}" node tests/pc-pos-browser-smoke.cjs; then
+              exit 0
+            fi
             sleep 5
           done
           exit 1
+
       - name: All-buttons safe browser test published Dexter's URL
         run: |
           for i in 1 2 3 4 5; do
-            POS_BUTTON_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?buttons=${GITHUB_SHA}-${i}" node tests/pc-pos-buttons-system-v2.cjs && exit 0
+            echo "Live all-buttons attempt $i"
+            if POS_BUTTON_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?buttons=${GITHUB_SHA}-${i}" node tests/pc-pos-buttons-system-v2.cjs; then
+              exit 0
+            fi
             sleep 5
           done
           exit 1
+
       - name: Full PC POS system browser test published Dexter's URL
         run: POS_FULL_TEST_URL="https://backoffice.dextersspot.co.uk/pc-pos-test/?full=${GITHUB_SHA}" node tests/pc-pos-full-system-v2.cjs
-
-# Force a fresh Pages build after the PIN-first login correction.
-# Login-only deployment trigger 2026-09-16 16:01 UTC.

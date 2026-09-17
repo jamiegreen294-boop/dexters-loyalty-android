@@ -20,6 +20,7 @@ const sprite=fs.readFileSync(path.join(out,'pc-category-sprite.jpg'));
 if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('Published category sprite is not a complete JPEG');
 if(!fs.existsSync('dist/customer-display.html')) throw new Error('Missing customer-display.html');
 fs.copyFileSync('dist/customer-display.html',path.join(out,'customer-display.html'));
+fs.cpSync('web/scanner',path.join(out,'scanner'),{recursive:true});
 html=html.replace('<title>Dexter\'s POS + Table Service</title>','<title>Dexter\'s POS · GitHub Pages Test</title>');
 html=html.replace('PC TEST · TABLE SERVICE','PC TEST · GITHUB PAGES');
 html=html.replace('<button id="fullBtn">Full screen</button>','<button id="installAppBtn" style="display:none">Install POS</button><button id="fullBtn">Full screen</button>');
@@ -44,7 +45,8 @@ if(!check.includes(pin))throw new Error('PIN bootstrap is not inline in the Page
 for(const required of ['SIGN IN WITH PIN','ACTIVATE PIN LOGIN','6-digit setup code','pc-pos-pin-auth','device_secret','dexters-pos-session','FEATURE_SCRIPTS','__dextersFeatureLoadComplete','loadFeatures'])if(!pin.includes(required))throw new Error('PIN login layer missing '+required);
 for(const f of featureFiles)if(!pin.includes("'"+f+"'"))throw new Error('Deferred feature loader missing '+f);
 const session=fs.readFileSync(path.join(out,'pos-pc-session-security.js'),'utf8');for(const required of ['LOCK','refresh_token','staffRole','dexters_pc_force_pin_lock_v1'])if(!session.includes(required))throw new Error('Session security layer missing '+required);
-const scanner=fs.readFileSync(path.join(out,'pos-pc-scanner.js'),'utf8');for(const required of ['Pair Barcode Scanner','PAIR SCANNER','6-digit code','next-scan','dexters-loyalty-scan'])if(!scanner.includes(required))throw new Error('Scanner layer missing '+required);
+const scanner=fs.readFileSync(path.join(out,'pos-pc-scanner.js'),'utf8');for(const required of ['Pair Foodhub Scanner','create_pair','next_scans','dexters-loyalty-scan','lastKeyAt'])if(!scanner.includes(required))throw new Error('Scanner layer missing '+required);
+const scannerPage=fs.readFileSync(path.join(out,'scanner','index.html'),'utf8');for(const required of ["FOODHUB 1008",'claim_pair','send_scan','START CAMERA SCANNER'])if(!scannerPage.includes(required))throw new Error('Foodhub scanner page missing '+required);
 const manager=fs.readFileSync(path.join(out,'pos-pc-manager.js'),'utf8');for(const required of ['Square Payment','Refunds / Voids','Cash Up','Manager PIN','Cash Drawer']) if(!manager.includes(required)) throw new Error('Manager layer missing '+required);
 const table=fs.readFileSync(path.join(out,'pos-pc-table-payments.js'),'utf8');for(const required of ['PART PAY / SPLIT BILL','CLOSE ACCOUNT','PAYMENT HISTORY','SQUARE']) if(!table.includes(required)) throw new Error('Table payment layer missing '+required);
 const roast=fs.readFileSync(path.join(out,'pos-sunday-roast.js'),'utf8');for(const required of ['Sunday Roast Payment Due','TAKE PAYMENT','MAKE READY','COLLECTED','SQUARE','balance_pence']) if(!roast.includes(required)) throw new Error('Sunday Roast layer missing '+required);
