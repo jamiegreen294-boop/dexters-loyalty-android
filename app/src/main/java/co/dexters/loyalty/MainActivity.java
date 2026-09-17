@@ -55,6 +55,7 @@ import net.nyx.printerservice.print.PrintTextFormat;
 
 public class MainActivity extends Activity {
     private static final String HOME = "https://dexters-loyalty-v15.vercel.app";
+    private static final String POS_SCANNER = "https://backoffice.dextersspot.co.uk/pc-pos-test/scanner/";
     private static final int CAMERA_REQUEST = 1001;
     private static final int SCAN_REQUEST = 2001;
     private static final int INSTALL_PERMISSION_REQUEST = 3001;
@@ -125,8 +126,8 @@ public class MainActivity extends Activity {
         printerState = new TextView(this);
         printerState.setVisibility(View.GONE);
 
-        Button scan = button("SCAN CUSTOMER");
-        scan.setOnClickListener(v -> launchHardwareScanner());
+        Button scan = button("SCAN TO POS");
+        scan.setOnClickListener(v -> webView.loadUrl(POS_SCANNER));
         bar.addView(scan, new LinearLayout.LayoutParams(dp(105), dp(48)));
 
         Button print = button("PRINTER TEST");
