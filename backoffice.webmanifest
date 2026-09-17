@@ -1,0 +1,11 @@
+{
+  "id": "/backoffice",
+  "name": "Dexter's Back Office",
+  "short_name": "Back Office",
+  "description": "Dexter's staff and management Back Office",
+  "start_url": "/?source=backoffice-app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f3f5",
+  "theme_color": "#5a189a"
+}
