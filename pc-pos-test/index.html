@@ -32,7 +32,7 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
   <header class="top">
     <div class="brand">Dexter's POS</div><span class="tag">PC TEST · GITHUB PAGES</span>
     <div class="spacer"></div>
-    <button id="openTablesTopBtn">Open tables</button><button id="qrOrdersBtn">QR orders <span id="qrCount"></span></button><button id="qrCodesBtn">Table QR codes</button><button id="staffBtn">Staff</button><button id="updateBtn">Check update</button><button id="fullBtn">Full screen</button><button id="clearBtn" class="danger">Clear order</button>
+    <button id="openTablesTopBtn">Open tables</button><button id="qrOrdersBtn">QR orders <span id="qrCount"></span></button><button id="qrCodesBtn">Table QR codes</button><button id="staffBtn">Staff</button><button id="updateBtn">Check update</button><button id="installAppBtn" style="display:none">Install POS</button><button id="fullBtn">Full screen</button><button id="clearBtn" class="danger">Clear order</button>
   </header>
   <main class="main">
     <aside class="cats" id="cats"></aside>
@@ -163,5 +163,5 @@ let initStarted=false;async function init(){if(initStarted)return;initStarted=tr
 window.DextersPinLogin={renderLogin,renderSetup,init,loadFeatures,FEATURE_SCRIPTS};init();
 })();
 </script>
-<script>if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>
+<script>let dextersInstallPrompt=null;const installBtn=document.getElementById("installAppBtn");window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dextersInstallPrompt=e;if(installBtn)installBtn.style.display=""});if(installBtn)installBtn.onclick=async()=>{if(!dextersInstallPrompt)return;await dextersInstallPrompt.prompt();dextersInstallPrompt=null;installBtn.style.display="none"};if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>
 </body></html>
