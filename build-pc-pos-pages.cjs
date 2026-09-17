@@ -22,8 +22,9 @@ if(!fs.existsSync('dist/customer-display.html')) throw new Error('Missing custom
 fs.copyFileSync('dist/customer-display.html',path.join(out,'customer-display.html'));
 html=html.replace('<title>Dexter\'s POS + Table Service</title>','<title>Dexter\'s POS · GitHub Pages Test</title>');
 html=html.replace('PC TEST · TABLE SERVICE','PC TEST · GITHUB PAGES');
+html=html.replace('<button id="fullBtn">Full screen</button>','<button id="installAppBtn" style="display:none">Install POS</button><button id="fullBtn">Full screen</button>');
 html=html.replace('</head>','<link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#08182a"><meta name="robots" content="noindex,nofollow">\n</head>');
-html=html.replace('</body>','<script>if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>\n</body>');
+html=html.replace('</body>','<script>let dextersInstallPrompt=null;const installBtn=document.getElementById("installAppBtn");window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dextersInstallPrompt=e;if(installBtn)installBtn.style.display=""});if(installBtn)installBtn.onclick=async()=>{if(!dextersInstallPrompt)return;await dextersInstallPrompt.prompt();dextersInstallPrompt=null;installBtn.style.display="none"};if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>\n</body>');
 fs.writeFileSync(path.join(out,'index.html'),html);
 fs.writeFileSync(path.join(out,'pos.html'),html);
 fs.writeFileSync(path.join(out,'manifest.webmanifest'),JSON.stringify({name:"Dexter's POS",short_name:'Dexter POS',description:"Dexter's staff point of sale",start_url:'./',scope:'./',display:'standalone',orientation:'landscape',background_color:'#07111f',theme_color:'#08182a',icons:[{src:'https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo',sizes:'512x512',type:'image/png',purpose:'any maskable'}]},null,2));
