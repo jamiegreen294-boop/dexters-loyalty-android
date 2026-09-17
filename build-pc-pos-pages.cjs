@@ -22,9 +22,12 @@ if(!fs.existsSync('dist/customer-display.html')) throw new Error('Missing custom
 fs.copyFileSync('dist/customer-display.html',path.join(out,'customer-display.html'));
 html=html.replace('<title>Dexter\'s POS + Table Service</title>','<title>Dexter\'s POS · GitHub Pages Test</title>');
 html=html.replace('PC TEST · TABLE SERVICE','PC TEST · GITHUB PAGES');
-html=html.replace('</head>','<meta name="robots" content="noindex,nofollow">\n</head>');
+html=html.replace('</head>','<link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#08182a"><meta name="robots" content="noindex,nofollow">\n</head>');
+html=html.replace('</body>','<script>if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>\n</body>');
 fs.writeFileSync(path.join(out,'index.html'),html);
 fs.writeFileSync(path.join(out,'pos.html'),html);
+fs.writeFileSync(path.join(out,'manifest.webmanifest'),JSON.stringify({name:"Dexter's POS",short_name:'Dexter POS',description:"Dexter's staff point of sale",start_url:'./',scope:'./',display:'standalone',orientation:'landscape',background_color:'#07111f',theme_color:'#08182a',icons:[{src:'https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-logo',sizes:'512x512',type:'image/png',purpose:'any maskable'}]},null,2));
+fs.writeFileSync(path.join(out,'sw.js'),`const C='dexters-pos-pc-v3';self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.add('./')).catch(()=>{}))});self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{if(e.request.method==='GET'&&new URL(e.request.url).origin===location.origin)e.respondWith(fetch(e.request).catch(()=>caches.match(e.request).then(r=>r||caches.match('./'))))});`);
 fs.writeFileSync(path.join(out,'.nojekyll'),'');
 fs.writeFileSync(path.join(out,'build-info.json'),JSON.stringify({build:'pc-pos-github-pages',generatedAt:new Date().toISOString(),branch:'dexters-pos-pc-test-v3'},null,2));
 const check=fs.readFileSync(path.join(out,'index.html'),'utf8');
