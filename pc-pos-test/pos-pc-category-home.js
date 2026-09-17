@@ -4,10 +4,10 @@
   const IMG={
     'Breakfast':[0,0],'Hot Rolls':[1,0],'Cold Rolls':[2,0],'Toasties':[3,0],'Paninis':[4,0],'Wraps':[5,0],
     'Baked Potatoes':[0,1],'Soups':[1,1],'Hot Meals':[2,1],'Street Subs':[3,1],'Chinese Style':[4,1],'Greek Style':[5,1],
-    'Rice Bowls':[0,2],'Smash Burgers':[1,2],'Chicken Burgers':[2,2],'Chicken Tenders':[1,3],'Inferno Chicken Tenders':[1,3],
-    'Loaded Fries':[3,2],'Pizzas':[4,2],'Waffles':[5,2],'Chippy Style':[2,3],'Kids Menu':[1,3],'Kids Meals':[1,3],
-    'Reaper Box':[5,3],'Beast Box':[5,3],'Dirty Soda Bar':[3,3],'Cakes & Bakes':[4,3],'Milkshakes':[0,3],'Coffee':[0,3],
-    'Sauces & Dips':[1,3],'Cans of Juice':[3,3],'Sides':[2,3],'Drinks':[3,3],'Desserts':[4,3],'Meal Deals':[5,3]
+    'Rice Bowls':[0,2],'Smash Burgers':[1,2],'Chicken Burgers':[2,2],'Chicken Tenders':[3,2],'Inferno Chicken Tenders':[4,2],
+    'Loaded Fries':[5,2],'Pizzas':[0,3],'Waffles':[5,3],'Chippy Style':[1,3],'Kids Menu':[2,3],'Kids Meals':[2,3],
+    'Reaper Box':[3,3],'Beast Box':[4,3],'Dirty Soda Bar':[0,4],'Cakes & Bakes':[1,4],'Milkshakes':[2,4],'Coffee':[3,4],
+    'Sauces & Dips':[4,4],'Cans of Juice':[5,4],'Sides':[0,5],'Drinks':[5,4],'Desserts':[1,4],'Meal Deals':[5,5]
   };
   let home=true,installed=false;
   const originalRenderItems=window.renderItems;
