@@ -450,7 +450,7 @@ body.pride-theme{background:#f7f3f8!important}
         const ov=document.getElementById('firstPasswordOverlay');
         if(ov)ov.style.display='block';
       }else if(shell){
-        shell.style.display='grid';
+        shell.style.display='block';
       }
       const rank={'Staff':1,'Team Leader':2,'Manager':3,'Super User':4};
       document.querySelectorAll('.dex-backoffice-nav .tab[data-minrole]').forEach(function(b){
@@ -2210,7 +2210,7 @@ function secureRoleRank(r){return {'Staff':1,'Team Leader':2,'Manager':3,'Super 
 function applySecureAccess(){
  const shell=document.getElementById('secureBackOfficeShell');
  const valid=!!(SECURE_SESSION&&SECURE_ACCOUNT&&SECURE_ACCOUNT.active&&SECURE_ACCOUNT.role&&!SECURE_ACCOUNT.must_change_password);
- if(shell)shell.style.display=valid?'grid':'none';
+ if(shell)shell.style.display=valid?'block':'none';
  const roleEl=document.getElementById('currentSecureRole');if(roleEl)roleEl.textContent=SECURE_ACCOUNT?.role||'Not signed in';
  document.querySelectorAll('.dex-backoffice-nav .tab[data-minrole]').forEach(b=>{
    const allowed=valid&&secureRoleRank(SECURE_ACCOUNT.role)>=secureRoleRank(b.dataset.minrole);
