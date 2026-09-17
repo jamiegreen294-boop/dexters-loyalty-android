@@ -1,4 +1,5 @@
-{\n  "id": "/pc-pos-test/",
+{
+  "id": "/pc-pos-test/dexters-pos",
   "name": "Dexter's POS",
   "short_name": "Dexter POS",
   "description": "Dexter's staff point of sale",
