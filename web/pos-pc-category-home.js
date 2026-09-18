@@ -53,5 +53,4 @@
   window.addEventListener('load',install);if(document.readyState!=='loading')install();
 })();
 
-/* Exact XEPOS four-across lock */
-.main{grid-template-columns:minmax(0,1fr) 300px!important}#items.pcCatGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}#items.pcItemsMode{grid-template-columns:repeat(4,minmax(0,1fr))!important}.pcCatCard{min-width:0!important}.center{overflow-x:hidden!important}@media(max-width:620px){.main{grid-template-columns:minmax(0,1fr) 260px!important}#items.pcCatGrid,#items.pcItemsMode{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+(()=>{const st=document.createElement('style');st.textContent=".main{grid-template-columns:minmax(0,1fr) 300px!important}#items.pcCatGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}#items.pcItemsMode{grid-template-columns:repeat(4,minmax(0,1fr))!important}.pcCatCard{min-width:0!important}.center{overflow-x:hidden!important}@media(max-width:620px){.main{grid-template-columns:minmax(0,1fr) 260px!important}#items.pcCatGrid,#items.pcItemsMode{grid-template-columns:repeat(4,minmax(0,1fr))!important}}";document.head.appendChild(st)})();
