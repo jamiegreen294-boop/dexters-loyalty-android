@@ -13,7 +13,7 @@ function ticket(order,{sample=false}={}){
     if(!Number.isInteger(Number(item.qty)) || Number(item.qty)<=0 || !item.name)throw Error('An item has an invalid quantity or name.');
     lines.push(Number(item.qty)+' x '+clean(item.name));
   }
-  if(order.notes)lines.push('Notes: '+clean(order.notes));
+  const note=order.order_notes||order.notes||'';if(note)lines.push('Notes: '+clean(note));
   if(!Number.isInteger(Number(order.total_pence)) || Number(order.total_pence)<0)throw Error('The order total is invalid.');
   lines.push('--------------------------------','Order total: GBP '+(Number(order.total_pence)/100).toFixed(2));
   if(sample)lines.push('TEST ONLY - DO NOT PREPARE');
