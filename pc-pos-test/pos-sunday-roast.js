@@ -18,7 +18,7 @@ const extras={
  beef:{name:'Extra Beef',price:350}
 };
 const included=['Crispy roast potatoes','Creamy mashed potatoes','Mashed turnip','Carrots','Garden peas','Broccoli','Yorkshire pudding','Sage & onion stuffing','Rich gravy'];
-let cfg=null,orders=[],selectedCustomer=null,editing=null,state=blank();
+let cfg=null,orders=[],selectedCustomer=null,editing=null,walkIn=false,state=blank();
 function blank(){return{meals:Object.fromEntries(Object.keys(meals).map(k=>[k,0])),extras:Object.fromEntries(Object.keys(extras).map(k=>[k,0]))}}
 function auth(){return{apikey:K,Authorization:'Bearer '+(S?.session?.access_token||''),'Content-Type':'application/json'}}
 async function call(body){const r=await fetch(API,{method:'POST',headers:auth(),body:JSON.stringify(body)}),x=await r.json().catch(()=>({}));if(!r.ok)throw Error(x.error||'Sunday Roast request failed');return x}
@@ -29,7 +29,7 @@ function card(kind,key,item){const q=state[kind][key]||0;return kind==='meals'
  :'<div class="srExtra"><span><b>'+esc(item.name)+'</b><small>'+mp(item.price)+'</small></span><div class="srCounter"><button data-sr-minus="'+kind+':'+key+'">−</button><span>'+q+'</span><button data-sr-plus="'+kind+':'+key+'">+</button></div></div>'}
 function stateFromOrder(o){const d=blank();for(const i of o.items||[])if((i.kind==='meals'||i.kind==='extras')&&Object.prototype.hasOwnProperty.call(d[i.kind],i.key))d[i.kind][i.key]=Number(i.qty)||0;return d}
 function customerCreditHtml(c){const a=c?.credit;if(!a)return '<div class="srCredit no">No approved customer credit allowance</div>';return '<div class="srCredit '+(a.eligible?'yes':'no')+'"><b>Customer credit</b><br>Limit '+mp(a.credit_limit_pence)+' · Owed '+mp(a.balance_pence)+' · Available <b>'+mp(a.available_pence)+'</b></div>'}
-function renderCustomer(){const box=$('srSelectedCustomer');if(!box)return;box.innerHTML=selectedCustomer?'<div class="held"><b>'+esc(selectedCustomer.full_name||'Customer')+'</b><br>'+esc(selectedCustomer.phone||'')+' · Loyalty '+esc(selectedCustomer.loyalty_code||'—')+customerCreditHtml(selectedCustomer)+'</div>':'<p class="muted">Search and select a loyalty customer first. The booking will then appear in that customer’s Loyalty App.</p>';renderPayment()}
+function renderCustomer(){const box=$('srSelectedCustomer');if(!box)return;box.innerHTML=selectedCustomer?'<div class="held"><b>'+esc(selectedCustomer.full_name||'Customer')+'</b><br>'+esc(selectedCustomer.phone||'')+' · Loyalty '+esc(selectedCustomer.loyalty_code||'—')+customerCreditHtml(selectedCustomer)+'</div>':walkIn?'<div class="held"><b>Walk-in customer</b><br>This booking is not linked to a Loyalty App account.</div>':'<p class="muted">Search/select a Loyalty App customer, or choose Walk-in customer.</p>';renderPayment()}
 function renderPayment(){const p=$('srPayment');if(!p)return;const old=p.value||'unpaid',credit=selectedCustomer?.credit?.eligible;let html='<option value="unpaid">Pay on collection</option><option value="deposit_paid">Deposit / part paid in store</option><option value="paid_full">Paid in full in store</option>';if(credit)html+='<option value="credit">Use customer credit allowance</option>';p.innerHTML=html;if([...p.options].some(o=>o.value===old))p.value=old;const paid=$('srPaid');if(paid)paid.disabled=p.value==='credit'||p.value==='unpaid';updateSummary()}
 function renderEditor(){
  $('srMeals').innerHTML=Object.entries(meals).map(([k,v])=>card('meals',k,v)).join('');
@@ -55,7 +55,7 @@ function bindOrders(){
  document.querySelectorAll('[data-sr-collected]').forEach(b=>b.onclick=()=>changeStatus(orders.find(o=>o.id===b.dataset.srCollected),'collected'));
 }
 function beginEdit(o){if(!o)return;editing=o;selectedCustomer={id:o.customer_id,full_name:o.customer_name,phone:o.customer_phone,loyalty_code:o.loyalty_code||''};state=stateFromOrder(o);$('srFormTitle').textContent='Edit SR-'+String(o.order_number).padStart(3,'0');$('srSlot').value=o.collection_slot||'';$('srPaymentRow').style.display='none';$('srCustomerSearchWrap').style.display='none';renderCustomer();renderEditor();$('srSave').textContent='SAVE ORDER CHANGES';$('srForm').scrollIntoView({behavior:'smooth',block:'start'})}
-function resetNew(){editing=null;selectedCustomer=null;state=blank();$('srFormTitle').textContent='Add Sunday Roast in store';$('srPaymentRow').style.display='grid';$('srCustomerSearchWrap').style.display='block';$('srSave').textContent='CREATE LIVE SUNDAY ROAST ORDER';$('srPaid').value='0.00';renderCustomer();renderEditor()}
+function resetNew(){editing=null;selectedCustomer=null;walkIn=false;state=blank();$('srFormTitle').textContent='Add Sunday Roast in store';$('srPaymentRow').style.display='grid';$('srCustomerSearchWrap').style.display='block';$('srSave').textContent='CREATE LIVE SUNDAY ROAST ORDER';$('srPaid').value='0.00';renderCustomer();renderEditor()}
 async function searchCustomer(){const q=$('srCustomerQuery').value.trim(),out=$('srCustomerResults');out.innerHTML='<p>Searching…</p>';try{const x=await call({action:'customer_search',query:q}),rows=x.customers||[];out.innerHTML=rows.length?rows.map((c,i)=>'<button class="srCustomerPick" data-i="'+i+'"><b>'+esc(c.full_name||'Customer')+'</b><small>'+esc(c.phone||'')+' · Loyalty '+esc(c.loyalty_code||'—')+'</small>'+(c.credit?'<small>Credit available '+mp(c.credit.available_pence)+'</small>':'')+'</button>').join(''):'<p>No customer found.</p>';out.querySelectorAll('.srCustomerPick').forEach(b=>b.onclick=()=>{selectedCustomer=rows[Number(b.dataset.i)];out.innerHTML='';renderCustomer()})}catch(e){out.innerHTML='<p class="bad">'+esc(e.message)+'</p>'}}
 async function save(){
  const msg=$('srMsg');msg.textContent='';try{
@@ -65,12 +65,12 @@ async function save(){
    await call({action:'update',id:editing.id,collection_slot:$('srSlot').value,meals:state.meals,extras:state.extras});
    msg.textContent='Sunday Roast order updated.';resetNew();await refresh();return;
   }
-  if(!selectedCustomer?.id)throw Error('Select a loyalty customer first.');
+  if(!selectedCustomer?.id&&!walkIn)throw Error('Select a loyalty customer or choose Walk-in customer.');if(walkIn&&!$('srWalkName').value.trim())throw Error('Enter the walk-in customer name.');
   const method=$('srPayment').value,t=total();let paid=Math.max(0,Math.round((Number($('srPaid').value)||0)*100));
   if(method==='paid_full')paid=t;if(method==='unpaid'||method==='credit')paid=0;
   if(method==='credit'&&(!selectedCustomer.credit?.eligible||selectedCustomer.credit.available_pence<t))throw Error('This customer does not have enough approved credit available.');
-  const x=await call({action:'create',customer_id:selectedCustomer.id,collection_date:cfg.collection_date,collection_slot:$('srSlot').value,meals:state.meals,extras:state.extras,payment_status:method==='credit'?'unpaid':method,paid_pence:paid,payment_method:method,credit_account_id:method==='credit'?selectedCustomer.credit.id:null});
-  msg.textContent='SR-'+String(x.order.order_number).padStart(3,'0')+' created and linked to '+selectedCustomer.full_name+'.';resetNew();await refresh();
+  const x=await call({action:'create',customer_id:selectedCustomer?.id||null,customer_name:walkIn?$('srWalkName').value.trim():'',customer_phone:walkIn?$('srWalkPhone').value.trim():'',collection_date:cfg.collection_date,collection_slot:$('srSlot').value,meals:state.meals,extras:state.extras,payment_status:method==='credit'?'unpaid':method,paid_pence:paid,payment_method:method,credit_account_id:method==='credit'?selectedCustomer?.credit?.id:null});
+  msg.textContent='SR-'+String(x.order.order_number).padStart(3,'0')+' created for '+(selectedCustomer?.full_name||$('srWalkName').value.trim())+'.';resetNew();await refresh();
  }catch(e){msg.textContent=e.message;msg.className='bad'}
 }
 async function takePayment(o){if(!o||Number(o.balance_pence||0)<=0)return;try{await call({action:'payment',id:o.id});await refresh()}catch(e){alert(e.message)}}
@@ -86,7 +86,7 @@ function install(){
  <div class="srWeek"><b id="srDate">Current Sunday</b><p>Live Sunday Roast orders for this week. Edit existing bookings or add an in-store booking linked to a Loyalty App customer.</p></div>
  <h3>This week's orders</h3><div id="srOrders" class="srOrders"></div>
  <section id="srForm" class="srForm"><h3 id="srFormTitle">Add Sunday Roast in store</h3>
- <div id="srCustomerSearchWrap"><div class="srCustomerSearch"><input id="srCustomerQuery" class="srField" placeholder="Search loyalty customer by name, phone or loyalty code"><button id="srCustomerGo" class="srBtn">SEARCH</button></div><div id="srCustomerResults" class="srCustomerResults"></div></div>
+ <div id="srCustomerSearchWrap"><div class="srCustomerSearch"><input id="srCustomerQuery" class="srField" placeholder="Search loyalty customer by name, phone or loyalty code"><button id="srCustomerGo" class="srBtn">SEARCH</button></div><button id="srWalkToggle" class="srBtn srSecondary" style="margin-top:8px">WALK-IN CUSTOMER</button><div id="srWalkFields" style="display:none;margin-top:8px"><input id="srWalkName" class="srField" placeholder="Walk-in customer name"><input id="srWalkPhone" class="srField" placeholder="Phone number (optional)" style="margin-top:8px"></div><div id="srCustomerResults" class="srCustomerResults"></div></div>
  <div id="srSelectedCustomer"></div>
  <label>Collection time<select id="srSlot" class="srField"></select></label>
  <h3>Dinners</h3><div id="srMeals" class="srMeals"></div>
@@ -96,7 +96,7 @@ function install(){
  <div class="srSummary"><div><b id="srTotal">£0.00</b><span>Total</span></div><div><b id="srPaidShow">£0.00</b><span>Paid / account</span></div><div><b id="srBalance">£0.00</b><span>Balance due</span></div></div>
  <div id="srCreditUse" class="srCreditUse"></div><button id="srSave" class="srBtn" style="width:100%">CREATE LIVE SUNDAY ROAST ORDER</button><p id="srMsg"></p>
  </section></div>`;document.body.appendChild(d);
- $('srClose').onclick=()=>d.classList.add('srHide');$('srCustomerGo').onclick=searchCustomer;$('srPayment').onchange=renderPayment;$('srPaid').oninput=updateSummary;$('srSave').onclick=save;
+ $('srClose').onclick=()=>d.classList.add('srHide');$('srCustomerGo').onclick=searchCustomer;$('srWalkToggle').onclick=()=>{walkIn=!walkIn;selectedCustomer=null;$('srWalkFields').style.display=walkIn?'block':'none';$('srCustomerResults').innerHTML='';renderCustomer()};$('srPayment').onchange=renderPayment;$('srPaid').oninput=updateSummary;$('srSave').onclick=save;
  let b=$('pcSundayBtn');if(!b){b=document.createElement('button');b.id='pcSundayBtn';b.textContent='Sunday Roast';document.querySelector('.top')?.insertBefore(b,$('staffBtn')||null)}b.onclick=open;
  window.DextersSundayOrders={open};window.DextersSundayCreate=open;window.DextersSundayEdit=beginEdit;
 }
