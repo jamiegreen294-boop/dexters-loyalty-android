@@ -69,7 +69,7 @@ async function save(){
   const method=$('srPayment').value,t=total();let paid=Math.max(0,Math.round((Number($('srPaid').value)||0)*100));
   if(method==='paid_full')paid=t;if(method==='unpaid'||method==='credit')paid=0;
   if(method==='credit'&&(!selectedCustomer.credit?.eligible||selectedCustomer.credit.available_pence<t))throw Error('This customer does not have enough approved credit available.');
-  const x=await call({action:'create',customer_id:selectedCustomer?.id||null,customer_name:walkIn?$('srWalkName').value.trim():'',customer_phone:walkIn?$('srWalkPhone').value.trim():'',collection_date:cfg.collection_date,collection_slot:$('srSlot').value,meals:state.meals,extras:state.extras,payment_status:method==='credit'?'unpaid':method,paid_pence:paid,payment_method:method,credit_account_id:method==='credit'?selectedCustomer?.credit?.id:null});
+  const x=await call({action:'create',customer_id:selectedCustomer?.id||null,customer_name:walkIn?$('srWalkName').value.trim():'',customer_phone:walkIn?$('srWalkPhone').value.trim():'',collection_date:cfg.collection_date,collection_slot:$('srSlot').value,meals:state.meals,extras:state.extras,payment_status:method==='credit'?'unpaid':method,paid_pence:paid,payment_method:method,credit_account_id:method==='credit'?selectedCustomer?.credit?.id:null,manual_override:!!$('srManualOverride')?.checked});
   msg.textContent='SR-'+String(x.order.order_number).padStart(3,'0')+' created for '+(selectedCustomer?.full_name||$('srWalkName').value.trim())+'.';resetNew();await refresh();
  }catch(e){msg.textContent=e.message;msg.className='bad'}
 }
@@ -92,7 +92,7 @@ function install(){
  <h3>Dinners</h3><div id="srMeals" class="srMeals"></div>
  <h3>All the trimmings</h3><ul id="srIncluded" class="srIncludes"></ul>
  <h3>A little extra?</h3><div id="srExtras" class="srExtras"></div>
- <div id="srPaymentRow" class="srPayGrid"><label>Payment<select id="srPayment" class="srField"></select></label><label>Amount already paid (£)<input id="srPaid" class="srField" inputmode="decimal" value="0.00"></label></div>
+ <div id="srPaymentRow" class="srPayGrid"><label>Payment<select id="srPayment" class="srField"></select></label><label>Amount already paid (£)<input id="srPaid" class="srField" inputmode="decimal" value="0.00"></label></div><label class="held" style="display:flex;gap:10px;align-items:center"><input id="srManualOverride" type="checkbox" style="width:22px;height:22px"><span><b>MANUAL OVERRIDE</b><br><small>Staff only — allow this Sunday booking after the normal pre-order cutoff. Stock and collection slots are still checked.</small></span></label>
  <div class="srSummary"><div><b id="srTotal">£0.00</b><span>Total</span></div><div><b id="srPaidShow">£0.00</b><span>Paid / account</span></div><div><b id="srBalance">£0.00</b><span>Balance due</span></div></div>
  <div id="srCreditUse" class="srCreditUse"></div><button id="srSave" class="srBtn" style="width:100%">CREATE LIVE SUNDAY ROAST ORDER</button><p id="srMsg"></p>
  </section></div>`;document.body.appendChild(d);
