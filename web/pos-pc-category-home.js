@@ -12,7 +12,7 @@
   let home=true,installed=false;
   const originalRenderItems=window.renderItems;
   const h=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const pos=name=>{const p=IMG[name]||[0,0];return [(p[0]*20)+'%',(p[1]*33.3333)+'%']};
+  const pos=name=>{const p=IMG[name]||[4,3];return [(p[0]*20)+'%',(p[1]*33.3333)+'%']};
 
   function installCss(){
     if(document.getElementById('pcCategoryCss'))return;
