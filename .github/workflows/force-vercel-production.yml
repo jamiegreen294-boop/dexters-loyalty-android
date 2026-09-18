@@ -17,7 +17,7 @@ jobs:
         run: |
           git config user.name "jamiegreen294-boop"
           git config user.email "jamiegreen294@gmail.com"
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.deploymentMarker='pos-sunday-live-20260910';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.deploymentMarker='marketing-consent-required-20260918-force';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
           git add package.json
-          git commit -m "Deploy POS Sunday Roast controls to production"
+          git commit -m "Deploy required marketing preference choice to production"
           git push origin main
