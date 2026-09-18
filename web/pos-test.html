@@ -27,6 +27,22 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 .lines{overflow:auto;padding:8px}.line{background:#11223a;border:1px solid #223b59;border-radius:12px;padding:10px;margin-bottom:8px}.lrow{display:flex;gap:8px}.lname{font-weight:900;flex:1}.lprice{font-weight:900}.mods{font-size:12px;color:#c3cfdd;margin-top:5px;white-space:pre-line}.qty{display:flex;gap:6px;align-items:center;margin-top:8px}.qty button{border:0;border-radius:8px;padding:6px 10px;font-weight:900;background:#203a5d;color:#fff}.qty .plus{background:var(--accent);color:#08101d}.qty .remove{margin-left:auto;background:#5a1420}
 .total{padding:12px;border-top:1px solid var(--line);background:#0d1b2f}.sumrow{display:flex;justify-content:space-between;margin:4px 0}.grand{font-size:26px;font-weight:1000}.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.pay button{border:0;border-radius:13px;padding:14px;font-weight:1000}.cash{background:#22c55e;color:#04210d}.cardbtn{background:#4d7cff;color:#fff}.send{grid-column:1/-1;background:var(--accent);color:#08101d}
 .modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px;z-index:20}.hide{display:none}.box{width:min(720px,100%);max-height:90vh;overflow:auto;background:#10213a;border:1px solid #31506f;border-radius:20px;padding:16px}.box h2{margin-top:0}.group{background:#0b192b;border-radius:14px;padding:12px;margin:10px 0}.gname{font-weight:1000;margin-bottom:8px}.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}.opt{border:1px solid #31506f;background:#142945;color:#fff;border-radius:12px;padding:12px;text-align:left;font-weight:800}.opt.on{background:var(--accent);color:#08101d}.actions{display:flex;gap:8px;margin-top:12px}.actions button{flex:1;border:0;border-radius:12px;padding:13px;font-weight:1000}.cancel{background:#263c58;color:#fff}.confirm{background:var(--accent)}.field{width:100%;padding:12px;border-radius:10px;border:1px solid #31506f;background:#09182a;color:#fff;margin:6px 0}.held{padding:8px;background:#0b192b;border-radius:12px;margin:8px 0}.held button{margin-top:6px;border:0;border-radius:9px;padding:8px 10px;font-weight:800}.bad{color:#ffadb8}.ok{color:#8ff0b3}
+#authGate{background:radial-gradient(circle at 50% 20%,rgba(40,65,95,.36),rgba(2,8,16,.96) 55%),#020810}
+#authGate .box{position:relative;max-width:460px!important;padding:0!important;overflow:hidden;background:linear-gradient(180deg,#122540 0%,#0a182a 100%);border:1px solid #365879;border-radius:24px;box-shadow:0 28px 80px rgba(0,0,0,.55)}
+#authGate .pos-login-head{padding:22px 22px 18px;border-bottom:1px solid #29435f;background:linear-gradient(135deg,#0c1d32,#142e4d)}
+#authGate .pos-login-brand{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#authGate .pos-login-brand strong{font-size:24px;font-weight:1000;letter-spacing:-.02em}
+#authGate .pos-login-tag{background:var(--accent);color:#08101d;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:1000}
+#authGate .pos-login-head h2{margin:18px 0 5px;font-size:29px;line-height:1.05}
+#authGate .pos-login-head p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+#authGate .pos-login-body{padding:20px 22px 22px}
+#authGate .pos-login-label{display:block;margin:0 0 6px;color:#dfeaf5;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+#authGate .field{margin:0 0 14px;padding:14px 15px;border-radius:13px;border:1px solid #365879;background:#071524;color:#fff;outline:none}
+#authGate .field:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,212,59,.13)}
+#authGate #loginBtn{width:100%;border:0;border-radius:13px;padding:14px 16px;font-weight:1000;background:var(--accent);color:#08101d;box-shadow:0 10px 30px rgba(255,212,59,.15)}
+#authGate #loginBtn:active{transform:translateY(1px)}
+#authGate #loginMsg{min-height:20px;margin-top:12px;padding:0 2px;font-size:13px;font-weight:800}
+#authGate .pos-login-foot{margin-top:12px;color:#7f95ab;font-size:11px;text-align:center}
 @media(max-width:950px){.main{grid-template-columns:140px 1fr 310px}.grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
 </style>
 <!-- preview trigger: POS isolated test -->
@@ -74,7 +90,22 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 
 <div id="modifierModal" class="modal hide"><div class="box"><h2 id="modTitle">Choose options</h2><div id="modGroups"></div><div class="actions"><button class="cancel" id="modCancel">Cancel</button><button class="confirm" id="modAdd">Add to order</button></div><div id="modError" class="bad"></div></div></div>
 <div id="simpleModal" class="modal hide"><div class="box"><h2 id="simpleTitle"></h2><div id="simpleBody"></div><div class="actions"><button class="cancel" id="simpleCancel">Cancel</button><button class="confirm" id="simpleSave">Save</button></div></div></div>
-<div id="authGate" class="modal"><div class="box" style="max-width:430px"><h2>Dexter's POS Staff Sign In</h2><p style="color:#9eb0c5">Use a Dexter's staff or admin account. This POS stays locked until a valid staff or admin account signs in.</p><input id="staffEmail" class="field" type="email" autocomplete="username" placeholder="Email"><input id="staffPassword" class="field" type="password" autocomplete="current-password" placeholder="Password"><button id="loginBtn" class="confirm" style="width:100%;border:0;border-radius:12px;padding:13px;font-weight:1000">SIGN IN</button><div id="loginMsg" class="bad" style="margin-top:10px"></div></div></div>
+<div id="authGate" class="modal"><div class="box">
+  <div class="pos-login-head">
+    <div class="pos-login-brand"><strong>DEXTER'S POS</strong><span class="pos-login-tag">STAFF TERMINAL</span></div>
+    <h2>Staff sign in</h2>
+    <p>Sign in with your Dexter's staff or admin account to unlock the till.</p>
+  </div>
+  <div class="pos-login-body">
+    <label class="pos-login-label" for="staffEmail">Email</label>
+    <input id="staffEmail" class="field" type="email" autocomplete="username" placeholder="name@dextersspot.co.uk">
+    <label class="pos-login-label" for="staffPassword">Password</label>
+    <input id="staffPassword" class="field" type="password" autocomplete="current-password" placeholder="Enter password">
+    <button id="loginBtn" type="button">SIGN IN TO POS</button>
+    <div id="loginMsg" class="bad" role="status" aria-live="polite"></div>
+    <div class="pos-login-foot">Secure staff access · Dexter's POS</div>
+  </div>
+</div></div>
 
 <script>
 const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',POS_API=U+'/functions/v1/dexters-pos-test-api',sb=supabase.createClient(U,K);
