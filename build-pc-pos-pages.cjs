@@ -23,8 +23,8 @@ fs.copyFileSync('dist/customer-display.html',path.join(out,'customer-display.htm
 if(!fs.existsSync('dist/qr.js'))throw new Error('Missing qr.js');
 fs.copyFileSync('dist/qr.js',path.join(out,'qr.js'));
 fs.cpSync('web/scanner',path.join(out,'scanner'),{recursive:true});
-html=html.replace('<title>Dexter\'s POS + Table Service</title>','<title>Dexter\'s POS · GitHub Pages Test</title>');
-html=html.replace('PC TEST · TABLE SERVICE','DEXTER'S POS · LIVE');
+html=html.replace("<title>Dexter's POS + Table Service</title>","<title>Dexter's POS</title>");
+html=html.replace("PC TEST · TABLE SERVICE","DEXTER'S POS · LIVE");
 html=html.replace('<button id="fullBtn">Full screen</button>','<button id="installAppBtn" style="display:none">Install POS</button><button id="fullBtn">Full screen</button>');
 html=html.replace('</head>','<link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#08182a"><meta name="robots" content="noindex,nofollow">\n</head>');
 html=html.replace('</body>','<script>let dextersInstallPrompt=null;const installBtn=document.getElementById("installAppBtn");window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dextersInstallPrompt=e;if(installBtn)installBtn.style.display=""});if(installBtn)installBtn.onclick=async()=>{if(!dextersInstallPrompt)return;await dextersInstallPrompt.prompt();dextersInstallPrompt=null;installBtn.style.display="none"};if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>\n</body>');
