@@ -3941,8 +3941,9 @@ async function syncLiveCustomers(){
    const {data:secureRows,error:secureErr}=await SB.from('backoffice_customer_records').select('*');
    if(secureErr)throw secureErr;
    const secureById=new Map((secureRows||[]).map(x=>[String(x.record_id),x]));
+   const secureByCustomerId=new Map((secureRows||[]).filter(x=>x.customer_id).map(x=>[String(x.customer_id),x]));
    const byLive=new Map((customerDb.customers||[]).filter(x=>x.liveId).map(x=>[x.liveId,x]));
-   const liveIds=new Set(list.map(r=>r.id));
+   const liveIds=new Set(list.map(r=>String(r.id)));
    list.forEach(r=>{
      let cu=byLive.get(r.id)||customerDb.customers.find(x=>x.id===r.id);
      if(!cu){
@@ -3957,17 +3958,25 @@ async function syncLiveCustomers(){
      cu.rewards=(Array.isArray(r.bonus_rewards)?r.bonus_rewards:[]).map(x=>({title:x.prize_name||'Reward',status:x.status||'active',createdAt:x.created_at||null,redeemedAt:x.redeemed_at||null,source:'Live Loyalty'}));
      cu.consent={...(cu.consent||{}),marketing:!!r.marketing_consent,sms:!!r.sms_consent,email:!!r.email_consent,termsAccepted:!!r.terms_accepted,privacyAccepted:!!r.privacy_accepted,recorded:!!r.consent_recorded,version:r.consent_version||'',source:r.consent_source||'',updatedAt:r.consent_at||null,note:(cu.consent||{}).note||''};
      cu.lastLiveSync=new Date().toISOString();
-     const sr=secureById.get(String(cu.id));if(sr)mergeSecureCustomerRecord(cu,sr);
+     const sr=secureById.get(String(cu.id))||secureByCustomerId.get(String(cu.id));if(sr)mergeSecureCustomerRecord(cu,sr);
    });
-   (secureRows||[]).filter(r=>!customerDb.customers.some(cu=>String(cu.id)===String(r.record_id))).forEach(r=>{
+   (secureRows||[]).forEach(r=>{
+     const linkedId=r.customer_id?String(r.customer_id):'';
+     const linked=linkedId?customerDb.customers.find(cu=>String(cu.liveId||cu.id)===linkedId):null;
+     if(linked){mergeSecureCustomerRecord(linked,r);return}
+     if(customerDb.customers.some(cu=>String(cu.id)===String(r.record_id)))return;
      const d=r.record_data||{},cu={id:String(r.record_id),source:'Back Office',name:r.customer_name||'Customer',phone:'',email:'',status:d.status||'Active',joined:'',preferredContact:d.preferredContact||'App',tags:[],loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],communications:[],audit:[]};
      mergeSecureCustomerRecord(cu,r);customerDb.customers.push(cu);
    });
-   const removed=customerDb.customers.filter(x=>x.source==='Live Loyalty'&&x.liveId&&!liveIds.has(x.liveId));
+   const validSecureIds=new Set((secureRows||[]).map(r=>String(r.record_id)));
+   const removed=customerDb.customers.filter(x=>
+     (x.source==='Live Loyalty'&&x.liveId&&!liveIds.has(String(x.liveId)))||
+     (x.source==='Back Office'&&x.secureRecord&&!validSecureIds.has(String(x.id)))
+   );
    if(removed.length){
-     const removedIds=new Set(removed.map(x=>x.id));
-     customerDb.customers=customerDb.customers.filter(x=>!removedIds.has(x.id));
-     if(removedIds.has(customerDb.selected)){customerDb.selected=customerDb.customers[0]?.id||null;CUSTOMER_RECORD_OPEN=false}
+     const removedIds=new Set(removed.map(x=>String(x.id)));
+     customerDb.customers=customerDb.customers.filter(x=>!removedIds.has(String(x.id)));
+     if(removedIds.has(String(customerDb.selected))){customerDb.selected=customerDb.customers[0]?.id||null;CUSTOMER_RECORD_OPEN=false}
    }
    localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));
    renderCustomerDb();
@@ -4006,7 +4015,7 @@ function renderCustomerDb(){
  $('custCatering').innerHTML=(cu.catering||[]).map(o=>'<div class="summarybox"><b>'+o.ref+'</b><br><span class="muted">'+o.date+' · '+o.status+'</span></div>').join('')||'<span class="muted">No linked catering requests.</span>';
  $('custDeals').innerHTML=(cu.deals||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b> '+(d.source?'<span class="badge">'+d.source+'</span>':'')+'<br><span class="muted">'+(d.status||'')+(d.value?' · '+d.value:'')+(d.expiresAt?' · expires '+new Date(d.expiresAt).toLocaleDateString('en-GB'):'')+'</span></div>').join('')||'<span class="muted">No linked live deals.</span>';
  $('custChallenges').innerHTML=(cu.challenges||[]).map(d=>'<div class="summarybox"><b>'+d.title+'</b><br><span class="muted">'+d.progress+'</span></div>').join('')||'<span class="muted">No linked challenge progress.</span>';
- $('custComplaints').innerHTML=(cu.complaints||[]).map((x,i)=>'<div class="summarybox"><b>Complaint / incident</b><br><span class="muted">'+x.text+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No complaints or incidents.</span>';
+ $('custComplaints').innerHTML=(cu.complaints||[]).map((x,i)=>{const closed=x.status==='Resolved'||x.status==='Closed';return '<div class="summarybox"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px"><div><b>Complaint / incident</b> <span class="badge">'+escLive(x.status||'Open')+'</span><br><span class="muted">'+escLive(x.text||'')+'</span>'+(x.resolution?'<br><span class="tiny"><b>Resolution:</b> '+escLive(x.resolution)+'</span>':'')+'<br><span class="tiny">'+new Date(x.at).toLocaleString()+(x.due?' · Due '+escLive(x.due):'')+(x.closedAt?' · Closed '+new Date(x.closedAt).toLocaleString():'')+'</span></div>'+(closed?'<span class="ok"><b>Closed</b></span>':'<button class="btn alt small" onclick="closeCustomerComplaint('+i+')">Close complaint</button>')+'</div></div>'}).join('')||'<span class="muted">No complaints or incidents.</span>';
  $('custDocuments').innerHTML=(cu.documents||[]).map((x,i)=>'<div class="summarybox"><b>'+x.type+'</b>'+(x.signed?'<span class="badge">Signed</span>':'')+'<br><span class="tiny"><b>Created by:</b> '+(x.createdBy||'Creator not recorded')+' · '+new Date(x.createdAt||x.at||Date.now()).toLocaleString()+'</span>'+(x.updatedAt?'<br><span class="tiny"><b>Last updated by:</b> '+(x.updatedBy||'Updater not recorded')+' · '+new Date(x.updatedAt).toLocaleString()+'</span>':'')+'<br><textarea id="cuDocEdit'+i+'" rows="3">'+String(x.note||'').replace(/</g,'&lt;')+'</textarea>'+(x.signatureData?'<div class="pass-saved-signature"><span>Signed by '+(x.signatureName||'customer')+(x.signedAt?' · '+new Date(x.signedAt).toLocaleString():'')+'</span><img src="'+x.signatureData+'" alt="Saved customer signature"></div>':'')+'<div class="row"><button class="btn alt small" onclick="saveCustomerDocument('+i+')">Save changes</button><button class="btn alt small" onclick="removeCustomerDocument('+i+')">Remove</button></div></div>').join('')||'<span class="muted">No customer documents.</span>';
  $('custNotes').innerHTML=(cu.notes||[]).map(x=>'<div class="summarybox"><span class="muted">'+x.text+'</span><br><span class="tiny">'+new Date(x.at).toLocaleString()+'</span></div>').join('')||'<span class="muted">No notes.</span>';
  renderCustomerWorkflow(cu);
@@ -4053,6 +4062,7 @@ if($('boCreateCustomerLogin'))$('boCreateCustomerLogin').onclick=createBackOffic
 $('custAdd').onclick=async()=>{const name=prompt('Customer name');if(!name?.trim())return;const id='cust-'+Date.now();const cu={id,name:name.trim(),phone:'',email:'',status:'Active',joined:new Date().toISOString().slice(0,10),preferredContact:'App',loyalty:{points:0,stamps:0,rewards:[]},orders:[],catering:[],deals:[],challenges:[],complaints:[],documents:[],notes:[],communications:[],audit:[]};customerDb.customers.push(cu);customerDb.selected=id;logCustomer(cu,'Customer record created');saveCustomerDb();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure customer save failed: '+e.message)}};
 $('custSave').onclick=async()=>{const cu=selectedCustomer();if(!cu)return;cu.name=$('cuName').value.trim()||'Unnamed customer';cu.phone=$('cuPhone').value.trim();cu.email=$('cuEmail').value.trim();cu.status=$('cuStatus').value;cu.joined=$('cuJoined').value;cu.preferredContact=$('cuContact').value;cu.tags=pickedTags('cuTags');logCustomer(cu,'Customer profile updated');saveCustomerDb();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure customer save failed: '+e.message)}};
 $('custAddComplaint').onclick=async()=>{const cu=selectedCustomer(),text=$('cuComplaint').value.trim();if(!cu||!text)return;cu.complaints.unshift({text,owner:$('cuComplaintOwner').value,due:$('cuComplaintDue').value,resolution:$('cuComplaintResolution').value.trim(),status:'Open',at:new Date().toISOString()});dexManage.tasks.unshift({title:'Customer complaint · '+cu.name,assignee:$('cuComplaintOwner').value,type:'Task',priority:'High',due:$('cuComplaintDue').value,details:text,resolution:$('cuComplaintResolution').value.trim(),tags:['Follow-up'],status:'Open',at:new Date().toISOString()});logCustomer(cu,'Complaint workflow opened');addTimeline('Customer Complaint',cu.name+' complaint opened');$('cuComplaint').value='';saveCustomerDb();saveDexManage();try{await persistCustomerRecordDb(cu)}catch(e){alert('Secure complaint save failed: '+e.message)}};
+window.closeCustomerComplaint=async i=>{const cu=selectedCustomer(),c=cu?.complaints?.[i];if(!cu||!c||c.status==='Closed'||c.status==='Resolved')return;if(!confirm('Close this complaint as dealt with?'))return;const now=new Date().toISOString();c.status='Closed';c.closedAt=now;c.closedBy=currentActorName();(dexManage.tasks||[]).filter(t=>t.status==='Open'&&t.title==='Customer complaint · '+cu.name&&(!t.details||t.details===c.text)).forEach(t=>{t.status='Completed';t.closedAt=now;t.resolution=t.resolution||c.resolution||'Complaint closed'});logCustomer(cu,'Complaint closed'+(c.resolution?' · '+c.resolution:''));addTimeline('Customer Complaint',cu.name+' complaint closed');saveCustomerDb();saveDexManage();try{await persistCustomerRecordDb(cu)}catch(e){alert('Complaint closed locally but secure save failed: '+e.message)}};
 $('custAddDocument').onclick=async()=>{const cu=selectedCustomer(),note=$('cuDocNote').value.trim();if(!cu||!note)return;const now=new Date().toISOString(),doc={id:'custdoc-'+Date.now(),type:$('cuDocType').value,note,signed:!!CUSTOMER_SIGNATURE_DATA,signatureData:CUSTOMER_SIGNATURE_DATA||'',signatureName:CUSTOMER_SIGNATURE_NAME||'',signedAt:CUSTOMER_SIGNATURE_AT||'',createdBy:currentActorName(),createdByUserId:SECURE_SESSION?.user?.id||'',createdAt:now,at:now};cu.documents.unshift(doc);resetCustomerSignature();logCustomer(cu,'Customer document added: '+doc.type+' by '+doc.createdBy);$('cuDocNote').value='';saveCustomerDb();await Promise.allSettled([persistCustomerRecordDb(cu),logFormActivity('Created','Customer',doc.id,doc.type,cu.liveId||cu.id,{customer:cu.name,createdBy:doc.createdBy})])};
 window.saveCustomerDocument=async i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const d=cu.documents[i],who=currentActorName(),now=new Date().toISOString();logFormActivity('Accessed','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name}).catch(()=>{});d.note=$('cuDocEdit'+i).value;d.updatedBy=who;d.updatedByUserId=SECURE_SESSION?.user?.id||'';d.updatedAt=now;logCustomer(cu,'Customer document updated: '+d.type+' by '+who);saveCustomerDb();await Promise.allSettled([persistCustomerRecordDb(cu),logFormActivity('Updated','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name,updatedBy:who})])};
 window.removeCustomerDocument=async i=>{const cu=selectedCustomer();if(!cu||!cu.documents[i])return;const d=cu.documents[i];if(!confirm('Delete '+d.type+'? This action will be audited.'))return;cu.documents.splice(i,1);logCustomer(cu,'Customer document removed: '+d.type);saveCustomerDb();await Promise.allSettled([persistCustomerRecordDb(cu),logFormActivity('Deleted','Customer',d.id||i,d.type,cu.liveId||cu.id,{customer:cu.name})])};
