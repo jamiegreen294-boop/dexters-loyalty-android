@@ -5,7 +5,8 @@ assert(html.includes('id="dxMarketingConsentLoader"'),'marketing consent startup
 assert(js.includes("$('accountPage')"),'consent UI must mount in Account');
 assert(js.includes('Email offers')&&js.includes('Text message offers'),'separate channel choices missing');
 assert(js.includes('marketing_consent:email||sms'),'master consent must follow selected channels');
-assert(js.includes("consent_source:'loyalty_app_account'"),'consent source missing');
+assert(js.includes("saveChoice(email,sms,'loyalty_app_account')"),'account consent source missing');
+assert(js.includes("'loyalty_app_required_choice'"),'required-choice consent source missing');
 assert(!js.includes('checked>'),'consent must not be selected by default');
 assert(js.includes('marketing_choice_made:true'),'explicit marketing choice must be recorded');
 assert(js.includes('No thanks'),'customers must be able to decline marketing');
