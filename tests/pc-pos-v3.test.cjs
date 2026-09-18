@@ -3,7 +3,7 @@ const p='dist/pos.html';
 if(!fs.existsSync(p))throw new Error('dist/pos.html missing');
 const s=fs.readFileSync(p,'utf8');
 const must=[
-'PC TEST · TABLE SERVICE',
+"DEXTER'S POS · LIVE",
 'openTablesTopBtn','qrOrdersBtn','qrCodesBtn','tableNo','Table Service','QR Orders',
 'id="sendBtn"','SEND TO KITCHEN','id="authGate"','pcPinLoginMount',
 '/functions/v1/uber-table-service-pc-test-api','window.DextersPinLogin','window.__DEXTERS_POS_BUILD'
