@@ -36,7 +36,7 @@ function offlineStatus(){let b=$('pcOfflineState');if(!b){b=document.createEleme
 const TOOL_SECTIONS={
  Orders:['pcCollectionOrdersBtn','clearBtn','qrCodesBtn','pcHeldOrdersBtn','pcTableOrdersBtn','pcSundayBtn','pcPhoneOrdersBtn','pcTablePlanBtn','pcTimedBtn','pcTableToolsBtn'],
  Customers:['pcCustomersBtn','pcStatementsBtn','pcReceiptCentreBtn'],
- Sales:['pcMoneyBtn','pcRefundBtn','pcAuditBtn','pcTxnSearchBtn','pcReportsBtn','pcPromoBtn'],
+ Sales:['pcSalesBtn','pcCashupBtn','pcMoneyBtn','pcRefundBtn','pcAuditBtn','pcTxnSearchBtn','pcReportsBtn','pcPromoBtn'],
  Stock:['pcInventoryBtn','pcStockBtn','pcRecipesBtn','pcPurchasingBtn','pcExpiryBtn'],
  Manage:['scannerBtn','pcOfflineQueueBtn','pcDrawerBtn','pcManagerPinBtn','pcDisplayBtn','pcCapacityBtn','pcCloseDayBtn','pcSecurityBtn','pcLockBtn','updateBtn','fullBtn']
 };
