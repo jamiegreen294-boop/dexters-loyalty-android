@@ -12,12 +12,17 @@ for(const f of files){
   fs.copyFileSync('dist/'+f,path.join(out,f));
   html=html.replaceAll('src="/'+f+'"','src="./'+f+'"');
 }
-if(!fs.existsSync('dist/pc-category-sprite.jpg'))throw new Error('Missing pc-category-sprite.jpg');
-fs.copyFileSync('dist/pc-category-sprite.jpg',path.join(out,'pc-category-sprite.jpg'));
 const catHome=fs.readFileSync(path.join(out,'pos-pc-category-home.js'),'utf8');
-if(!catHome.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('Category cards are not pointing at the exported JPG photo sheet');
-const sprite=fs.readFileSync(path.join(out,'pc-category-sprite.jpg'));
-if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('Published category sprite is not a complete JPEG');
+if(catHome.includes('const CATEGORY_IMAGES=')){
+  if(!catHome.includes('background-size:cover'))throw new Error('Category photo cover styling missing');
+  if(!catHome.includes('CATEGORY_IMAGES[name]'))throw new Error('Category photo mapping missing');
+}else{
+  if(!fs.existsSync('dist/pc-category-sprite.jpg'))throw new Error('Missing pc-category-sprite.jpg');
+  fs.copyFileSync('dist/pc-category-sprite.jpg',path.join(out,'pc-category-sprite.jpg'));
+  if(!catHome.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('Category cards are not pointing at the exported JPG photo sheet');
+  const sprite=fs.readFileSync(path.join(out,'pc-category-sprite.jpg'));
+  if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('Published category sprite is not a complete JPEG');
+}
 if(!fs.existsSync('dist/customer-display.html')) throw new Error('Missing customer-display.html');
 fs.copyFileSync('dist/customer-display.html',path.join(out,'customer-display.html'));
 if(!fs.existsSync('dist/qr.js'))throw new Error('Missing qr.js');
