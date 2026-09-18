@@ -39,12 +39,15 @@ function css(){
 function consentRows(){const id=subject(token());return id?request('customer_consents?select=marketing_consent,email_consent,sms_consent,marketing_choice_made,marketing_choice_at&customer_id=eq.'+encodeURIComponent(id)+'&limit=1'):Promise.resolve([])}
 async function saveChoice(email,sms,source){
  const id=subject(token());if(!id)throw Error('Please sign in again.');
- return request('customer_consents?on_conflict=customer_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({customer_id:id,marketing_consent:email||sms,email_consent:email,sms_consent:sms,marketing_choice_made:true,marketing_choice_at:new Date().toISOString(),consent_source:source||'loyalty_app',consent_version:VERSION,consent_at:new Date().toISOString(),updated_at:new Date().toISOString()})});
+ const now=new Date().toISOString(),reason=source||'loyalty_app';
+ await request('customer_consents?on_conflict=customer_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({customer_id:id,marketing_consent:email||sms,email_consent:email,sms_consent:sms,marketing_choice_made:true,marketing_choice_at:now,consent_source:reason,consent_version:VERSION,consent_at:now,updated_at:now})});
+ await request('marketing_suppressions?on_conflict=customer_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({customer_id:id,email_suppressed:!email,sms_suppressed:!sms,email_suppressed_at:email?null:now,sms_suppressed_at:sms?null:now,reason,updated_at:now})});
+ return null;
 }
 function gateMarkup(){
  const g=document.createElement('div');g.id='dxMarketingGate';g.innerHTML=`<div class="dx-gate-card" role="dialog" aria-modal="true" aria-labelledby="dxGateTitle">
  <h2 id="dxGateTitle">Marketing preferences</h2>
- <p class="dx-gate-sub">Before you continue, please choose whether Dexter’s can send you marketing emails and offers.</p>
+ <p class="dx-gate-sub">Before you continue, please choose whether Dexter’s can send you marketing emails and offers. You can say No and still use the app. <a href="/privacy.html" target="_blank" rel="noopener">Privacy notice</a>.</p>
  <label class="dx-gate-option"><input type="radio" name="dxGateChoice" value="yes"><span><strong>Yes, send me Dexter’s offers and news by email</strong><small>You can withdraw this permission at any time.</small></span></label>
  <label class="dx-gate-option"><input type="radio" name="dxGateChoice" value="no"><span><strong>No thanks</strong><small>You can still use your account, order, earn rewards and change your choice later.</small></span></label>
  <button id="dxGateSave" type="button" class="btn primary" disabled>Save choice & continue</button>
@@ -69,9 +72,11 @@ function accountCard(){
  card.innerHTML=`<div class="dx-consent-heading"><div><h2>Marketing preferences</h2><p class="muted">Choose whether Dexter’s may send you offers and loyalty news.</p></div></div>
  <label class="dx-consent-choice"><input id="dxConsentEmail" type="checkbox"><span><strong>Email offers</strong><small>Offers, rewards and Dexter’s news by email.</small></span></label>
  <label class="dx-consent-choice"><input id="dxConsentSms" type="checkbox"><span><strong>Text message offers</strong><small>Occasional offers and loyalty news by SMS.</small></span></label>
- <p class="tiny muted dx-consent-note">A marketing choice is required, but choosing “No thanks” does not affect your account, orders or rewards. You can change your mind here at any time.</p>
- <button id="dxConsentSave" type="button" class="btn primary">Save marketing preferences</button><div id="dxConsentStatus" class="tiny muted dx-consent-status" role="status" aria-live="polite"></div>`;
- first.after(card);$('dxConsentSave').onclick=saveAccount;loadAccount();
+ <p class="tiny muted dx-consent-note">A marketing choice is required, but choosing “No thanks” does not affect your account, orders or rewards. You can change your mind at any time. Dexter’s keeps an opt-out record so you are not contacted by mistake. <a href="/privacy.html" target="_blank" rel="noopener">Privacy notice</a>.</p>
+ <button id="dxConsentSave" type="button" class="btn primary">Save marketing preferences</button>
+ <button id="dxConsentUnsubscribe" type="button" class="btn" style="margin-top:8px">Unsubscribe from all marketing</button>
+ <div id="dxConsentStatus" class="tiny muted dx-consent-status" role="status" aria-live="polite"></div>`;
+ first.after(card);$('dxConsentSave').onclick=saveAccount;$('dxConsentUnsubscribe').onclick=unsubscribeAll;loadAccount();
 }
 async function loadAccount(){
  const status=$('dxConsentStatus');try{const rows=await consentRows(),c=rows?.[0];$('dxConsentEmail').checked=!!c?.email_consent;$('dxConsentSms').checked=!!c?.sms_consent;if(status)status.textContent=c?.marketing_choice_made?'':'Please make a marketing choice.'}catch(e){if(status)status.textContent='Preferences could not be loaded.'}
@@ -80,9 +85,20 @@ async function saveAccount(){
  const btn=$('dxConsentSave'),status=$('dxConsentStatus'),email=!!$('dxConsentEmail')?.checked,sms=!!$('dxConsentSms')?.checked;
  btn.disabled=true;status.textContent='Saving…';try{await saveChoice(email,sms,'loyalty_app_account');status.textContent='✓ Marketing preferences saved.';gateDone=true;if($('dxMarketingGate'))$('dxMarketingGate').remove()}catch(e){status.textContent=e.message}finally{btn.disabled=false}
 }
+async function unsubscribeAll(){
+ const btn=$('dxConsentUnsubscribe'),status=$('dxConsentStatus');if(!btn)return;
+ btn.disabled=true;status.textContent='Unsubscribing…';
+ try{
+  await saveChoice(false,false,'loyalty_app_unsubscribe_all');
+  if($('dxConsentEmail'))$('dxConsentEmail').checked=false;
+  if($('dxConsentSms'))$('dxConsentSms').checked=false;
+  status.textContent='✓ Unsubscribed. Dexter’s will not send you marketing emails or texts unless you opt in again.';
+  gateDone=true;
+ }catch(e){status.textContent=e.message}finally{btn.disabled=false}
+}
 function signupChoicePanel(){
  if($('dxSignupMarketingChoice')||!$('authView'))return;
- css();const panel=document.createElement('div');panel.id='dxSignupMarketingChoice';panel.innerHTML=`<div class="dx-required">Marketing choice required when creating an account</div><p class="tiny muted">Choose one option — “No thanks” is allowed and will not affect your account.</p><label class="dx-consent-choice"><input type="radio" name="dxSignupMarketing" value="yes"><span><strong>Yes, email me Dexter’s offers and news</strong></span></label><label class="dx-consent-choice"><input type="radio" name="dxSignupMarketing" value="no"><span><strong>No thanks</strong></span></label>`;
+ css();const panel=document.createElement('div');panel.id='dxSignupMarketingChoice';panel.innerHTML=`<div class="dx-required">Marketing choice required when creating an account</div><p class="tiny muted">Choose one option — “No thanks” is allowed and will not affect your account. Dexter’s uses consent for marketing and you can withdraw it at any time. <a href="/privacy.html" target="_blank" rel="noopener">Privacy notice</a>.</p><label class="dx-consent-choice"><input type="radio" name="dxSignupMarketing" value="yes"><span><strong>Yes, email me Dexter’s offers and news</strong></span></label><label class="dx-consent-choice"><input type="radio" name="dxSignupMarketing" value="no"><span><strong>No thanks</strong></span></label>`;
  const target=$('authView').querySelector('.card:last-child')||$('authView');target.appendChild(panel);
 }
 function signupChoiceSelected(){return !!document.querySelector('input[name="dxSignupMarketing"]:checked')}
