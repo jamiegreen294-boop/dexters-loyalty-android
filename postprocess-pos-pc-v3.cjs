@@ -57,29 +57,36 @@ fs.writeFileSync(addonPath,addonJs);
 
 const catPath='dist/pos-pc-category-home.js';
 let catJs=fs.readFileSync(catPath,'utf8');
-const spriteMatch=catJs.match(/const SPRITE='data:image\/jpeg;base64,([^']+)'/);
-if(!spriteMatch)throw new Error('PC category photo sprite data missing');
-const sprite=Buffer.from(spriteMatch[1],'base64');
-if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('PC category photo sprite is not a valid complete JPEG');
-fs.writeFileSync('dist/pc-category-sprite.jpg',sprite);
-catJs=catJs.replace(/const SPRITE='data:image\/jpeg;base64,[^']+';/,"const SPRITE='./pc-category-sprite.jpg';");
-const oldPos="const pos=name=>{const p=IMG[name]||[4,3];return [(p[0]*20)+'%',(p[1]*33.3333)+'%']};";
-const newPos="const pos=name=>{const p=IMG[name]||[4,3];return [Number(p[0])||0,Number(p[1])||0]};";
-if(!catJs.includes(oldPos))throw new Error('PC category sprite position helper missing');
-catJs=catJs.replace(oldPos,newPos);
-const oldImageCss='.pcCatImage{height:108px;width:100%;background-image:var(--pc-cat-sprite);background-repeat:no-repeat;background-size:600% 400%;background-position:var(--px) var(--py);background-color:#172b43;border-bottom:1px solid #294663}';
-const newImageCss='.pcCatImage{position:relative;height:108px;width:100%;overflow:hidden;background:#172b43;border-bottom:1px solid #294663;contain:paint}.pcCatImage img{position:absolute;display:block;width:600%;height:400%;max-width:none;left:calc(var(--pc-col) * -100%);top:calc(var(--pc-row) * -100%);object-fit:fill;pointer-events:none;user-select:none}';
-if(!catJs.includes(oldImageCss))throw new Error('PC category image CSS signature missing');
-catJs=catJs.replace(oldImageCss,newImageCss);
-const oldCard="const count=(c.items||[]).filter(v=>v.in_stock!==false).length,[px,py]=pos(c.name);return '<button class=\"pcCatCard\" data-pc-index=\"'+i+'\"><div class=\"pcCatImage\" style=\"--px:'+px+';--py:'+py+'\"></div><div class=\"pcCatFooter\"><div class=\"pcCatName\">'+h(c.name)+'</div><div class=\"pcCatCount\">'+count+' item'+(count===1?'':'s')+'</div></div></button>'";
-const newCard="const count=(c.items||[]).filter(v=>v.in_stock!==false).length,[col,row]=pos(c.name);return '<button class=\"pcCatCard\" data-pc-index=\"'+i+'\"><div class=\"pcCatImage\" style=\"--pc-col:'+col+';--pc-row:'+row+'\"><img src=\"'+SPRITE+'\" alt=\"\" draggable=\"false\"></div><div class=\"pcCatFooter\"><div class=\"pcCatName\">'+h(c.name)+'</div><div class=\"pcCatCount\">'+count+' item'+(count===1?'':'s')+'</div></div></button>'";
-if(!catJs.includes(oldCard))throw new Error('PC category card image markup signature missing');
-catJs=catJs.replace(oldCard,newCard);
-const cssEnd='@media(max-width:560px){.pcCustomersModal #cr{grid-template-columns:1fr}.pcCatImage{height:95px}}';
-const touchCss='@media(max-width:1180px){.main{grid-template-columns:minmax(0,1fr) minmax(300px,340px)!important}.pcCatGrid,.pcItemsMode{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:900px){.main{grid-template-columns:minmax(0,1fr) minmax(280px,310px)!important}.pcCatGrid,.pcItemsMode{grid-template-columns:repeat(2,minmax(0,1fr))!important}.top button,.pcToolTab{min-height:46px!important}.pcCatCard{min-height:158px}.pcCatImage{height:102px}}';
-if(!catJs.includes(cssEnd))throw new Error('PC category responsive CSS marker missing');
-catJs=catJs.replace(cssEnd,cssEnd+touchCss);
-if(!catJs.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('PC category photo sprite URL replacement failed');
+if(catJs.includes('const CATEGORY_IMAGES=')){
+  // New category cards use real category-specific food photos directly.
+  // Keep the exact existing POS layout and do not run the legacy sprite crop rewrite.
+  if(!catJs.includes('background-size:cover'))throw new Error('PC category photo cover CSS missing');
+  if(!catJs.includes('const catImage=name=>CATEGORY_IMAGES[name]'))throw new Error('PC category image helper missing');
+}else{
+  const spriteMatch=catJs.match(/const SPRITE='data:image\/jpeg;base64,([^']+)'/);
+  if(!spriteMatch)throw new Error('PC category photo sprite data missing');
+  const sprite=Buffer.from(spriteMatch[1],'base64');
+  if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('PC category photo sprite is not a valid complete JPEG');
+  fs.writeFileSync('dist/pc-category-sprite.jpg',sprite);
+  catJs=catJs.replace(/const SPRITE='data:image\/jpeg;base64,[^']+';/,"const SPRITE='./pc-category-sprite.jpg';");
+  const oldPos="const pos=name=>{const p=IMG[name]||[4,3];return [(p[0]*20)+'%',(p[1]*33.3333)+'%']};";
+  const newPos="const pos=name=>{const p=IMG[name]||[4,3];return [Number(p[0])||0,Number(p[1])||0]};";
+  if(!catJs.includes(oldPos))throw new Error('PC category sprite position helper missing');
+  catJs=catJs.replace(oldPos,newPos);
+  const oldImageCss='.pcCatImage{height:108px;width:100%;background-image:var(--pc-cat-sprite);background-repeat:no-repeat;background-size:600% 400%;background-position:var(--px) var(--py);background-color:#172b43;border-bottom:1px solid #294663}';
+  const newImageCss='.pcCatImage{position:relative;height:108px;width:100%;overflow:hidden;background:#172b43;border-bottom:1px solid #294663;contain:paint}.pcCatImage img{position:absolute;display:block;width:600%;height:400%;max-width:none;left:calc(var(--pc-col) * -100%);top:calc(var(--pc-row) * -100%);object-fit:fill;pointer-events:none;user-select:none}';
+  if(!catJs.includes(oldImageCss))throw new Error('PC category image CSS signature missing');
+  catJs=catJs.replace(oldImageCss,newImageCss);
+  const oldCard="const count=(c.items||[]).filter(v=>v.in_stock!==false).length,[px,py]=pos(c.name);return '<button class=\"pcCatCard\" data-pc-index=\"'+i+'\"><div class=\"pcCatImage\" style=\"--px:'+px+';--py:'+py+'\"></div><div class=\"pcCatFooter\"><div class=\"pcCatName\">'+h(c.name)+'</div><div class=\"pcCatCount\">'+count+' item'+(count===1?'':'s')+'</div></div></button>'";
+  const newCard="const count=(c.items||[]).filter(v=>v.in_stock!==false).length,[col,row]=pos(c.name);return '<button class=\"pcCatCard\" data-pc-index=\"'+i+'\"><div class=\"pcCatImage\" style=\"--pc-col:'+col+';--pc-row:'+row+'\"><img src=\"'+SPRITE+'\" alt=\"\" draggable=\"false\"></div><div class=\"pcCatFooter\"><div class=\"pcCatName\">'+h(c.name)+'</div><div class=\"pcCatCount\">'+count+' item'+(count===1?'':'s')+'</div></div></button>'";
+  if(!catJs.includes(oldCard))throw new Error('PC category card image markup signature missing');
+  catJs=catJs.replace(oldCard,newCard);
+  const cssEnd='@media(max-width:560px){.pcCustomersModal #cr{grid-template-columns:1fr}.pcCatImage{height:95px}}';
+  const touchCss='@media(max-width:1180px){.main{grid-template-columns:minmax(0,1fr) minmax(300px,340px)!important}.pcCatGrid,.pcItemsMode{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:900px){.main{grid-template-columns:minmax(0,1fr) minmax(280px,310px)!important}.pcCatGrid,.pcItemsMode{grid-template-columns:repeat(2,minmax(0,1fr))!important}.top button,.pcToolTab{min-height:46px!important}.pcCatCard{min-height:158px}.pcCatImage{height:102px}}';
+  if(!catJs.includes(cssEnd))throw new Error('PC category responsive CSS marker missing');
+  catJs=catJs.replace(cssEnd,cssEnd+touchCss);
+  if(!catJs.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('PC category photo sprite URL replacement failed');
+}
 fs.writeFileSync(catPath,catJs);
 fs.copyFileSync('web/customer-display.html','dist/customer-display.html');
 fs.copyFileSync('web/universal-qr/qr.js','dist/qr.js');
