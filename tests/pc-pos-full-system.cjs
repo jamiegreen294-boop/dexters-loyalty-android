@@ -87,7 +87,7 @@ async function checkLayout(page,w,h){await page.setViewportSize({width:w,height:
  await page.waitForTimeout(1800);
 
  const start=await page.evaluate(()=>({features:document.querySelectorAll('script[data-dexters-feature]').length,expected:DextersPinLogin.FEATURE_SCRIPTS.length,status:document.getElementById('status')?.textContent||'',sections:[...document.querySelectorAll('.pcToolTab')].map(x=>x.textContent.trim()),role:S.staffRole}));
- if(start.features!==start.expected||start.expected<20||!start.status.includes('PC TEST'))fail('Authenticated startup failed',start);
+ if(start.features!==start.expected||start.expected<20||!start.status.includes('Dexter’s POS'))fail('Authenticated startup failed',start);
  for(const n of ['Orders','Customers','Sales','Stock','Manage'])if(!start.sections.some(x=>x.startsWith(n)))fail('Missing toolbar section '+n,start.sections);
  console.log('PASS AUTHENTICATED STARTUP',start.features);
 
@@ -95,7 +95,7 @@ async function checkLayout(page,w,h){await page.setViewportSize({width:w,height:
  const missing=await page.evaluate(ids=>ids.filter(id=>!document.getElementById(id)),required);if(missing.length)fail('Controls missing',missing);
  console.log('PASS CONTROL INVENTORY',required.length);
 
- const imageState=await page.evaluate(async()=>{const cards=[...document.querySelectorAll('.pcCatCard')],imgs=[...document.querySelectorAll('.pcCatImage')],bg=imgs.filter(x=>getComputedStyle(x).backgroundImage.includes('pc-category-sprite.jpg')).length,img=await new Promise(resolve=>{const i=new Image();i.onload=()=>resolve({ok:true,w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>resolve({ok:false,w:0,h:0});i.src=new URL('pc-category-sprite.jpg',location.href)+'?full='+Date.now()});return{cards:cards.length,imgs:imgs.length,bg,img}});if(imageState.cards<8||imageState.imgs!==imageState.cards||imageState.bg!==imageState.imgs||!imageState.img.ok)fail('Category photos failed',imageState);console.log('PASS CATEGORY PHOTOS',imageState.cards);
+ const imageState=await page.evaluate(async()=>{const cards=[...document.querySelectorAll('.pcCatCard')],wraps=[...document.querySelectorAll('.pcCatImage')],spriteImgs=[...document.querySelectorAll('.pcCatImage img')].filter(x=>String(x.getAttribute('src')||'').includes('pc-category-sprite.jpg')),img=await new Promise(resolve=>{const i=new Image();i.onload=()=>resolve({ok:true,w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>resolve({ok:false,w:0,h:0});i.src=new URL('pc-category-sprite.jpg',location.href)+'?full='+Date.now()});return{cards:cards.length,wraps:wraps.length,spriteImgs:spriteImgs.length,img}});if(imageState.cards<8||imageState.wraps!==imageState.cards||imageState.spriteImgs!==imageState.cards||!imageState.img.ok)fail('Category photos failed',imageState);console.log('PASS CATEGORY PHOTOS',imageState.cards);
  await checkLayout(page,1366,768);await checkLayout(page,1024,768);await page.setViewportSize({width:1366,height:768});
 
  await closeAll(page);await page.locator('.pcCatCard').filter({hasText:'Breakfast'}).click();await page.locator('.item[data-item="i0"]').click();await page.waitForFunction(()=>document.querySelectorAll('#lines .line').length===1);if((await page.locator('#total').textContent())!=='£8.50')fail('Basket total wrong',await page.locator('#total').textContent());console.log('PASS MENU + BASKET');
