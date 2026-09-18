@@ -76,14 +76,17 @@ async function submitApplication(){
  catch(e){status.innerHTML='<span style="color:#ffb3b3">'+esc(e.message||e)+'</span>'}finally{btn.disabled=false}
 }
 async function render(){
- const c=card();if(!c)return;ensureStyle();const root=$('dxCustomerAccountBody');if(!root)return;if(!token()){root.innerHTML='<div class="status err">Sign in to see your Dexter’s credit account.</div>';return}
+ const c=card();if(!c)return;ensureStyle();const root=$('dxCustomerAccountBody');if(!root)return;
+ const openState={account:root.querySelector('[data-dxacct-group="account"]')?.open,activity:root.querySelector('[data-dxacct-group="activity"]')?.open};
+ if(!token()){root.innerHTML='<div class="status err">Sign in to see your Dexter’s credit account.</div>';return}
  try{
   const state=await creditApi('customer_status');
   if(!state.has_credit){root.innerHTML=applicationHtml(state);if($('dxCreditApply'))$('dxCreditApply').onclick=submitApplication;return}
   const a=state.account||{},tx=Array.isArray(state.transactions)?state.transactions:[],balance=Number(a.balance_pence||0),limit=Number(a.credit_limit_pence||0),available=Math.max(0,limit-balance);
+  const accountOpen=openState.account!==false,activityOpen=openState.activity!==false;
   root.innerHTML='<div class="dxacct-balance"><small>Outstanding balance</small><strong>'+pounds(balance)+'</strong><div class="dxacct-paid">'+(balance>0?'Amount currently due on your Dexter’s credit account':'Nothing currently outstanding')+'</div></div>'+
-  '<details class="dxacct-group" open><summary><span>Credit account</span></summary><div class="dxacct-content"><div class="dxacct-info"><div><small>Approved allowance</small><strong>'+pounds(limit)+'</strong></div><div><small>Available credit</small><strong>'+pounds(available)+'</strong></div><div><small>Payment reference</small><strong>'+esc(a.payment_reference||'—')+'</strong></div></div></div></details>'+
-  '<details class="dxacct-group" open><summary><span>Credit purchases & payments</span><span class="dxacct-count">'+tx.length+'</span></summary><div class="dxacct-content">'+(tx.length?tx.map(txCard).join(''):'<div class="dxacct-empty">No credit purchases or payments are recorded yet.</div>')+'</div></details>';
+  '<details class="dxacct-group" data-dxacct-group="account" '+(accountOpen?'open':'')+'><summary><span>Credit account</span></summary><div class="dxacct-content"><div class="dxacct-info"><div><small>Approved allowance</small><strong>'+pounds(limit)+'</strong></div><div><small>Available credit</small><strong>'+pounds(available)+'</strong></div><div><small>Payment reference</small><strong>'+esc(a.payment_reference||'—')+'</strong></div></div></div></details>'+
+  '<details class="dxacct-group" data-dxacct-group="activity" '+(activityOpen?'open':'')+'><summary><span>Credit purchases & payments</span><span class="dxacct-count">'+tx.length+'</span></summary><div class="dxacct-content">'+(tx.length?tx.map(txCard).join(''):'<div class="dxacct-empty">No credit purchases or payments are recorded yet.</div>')+'</div></details>';
  }catch(e){root.innerHTML='<div class="status err">'+esc(e.message||'Could not load your credit account.')+'</div>'}
 }
 function wantsAccount(){const q=new URLSearchParams(location.search);if(q.get('open')==='account'){try{sessionStorage.setItem('dexters_open_account','1')}catch(e){}return true}try{return sessionStorage.getItem('dexters_open_account')==='1'}catch(e){return false}}
@@ -91,6 +94,6 @@ function accountNav(){const els=[...document.querySelectorAll('button,a,[role="b
 function pageVisible(page){if(!page)return false;const s=getComputedStyle(page);return !page.hidden&&s.display!=='none'&&s.visibility!=='hidden'&&page.getBoundingClientRect().height>0}
 function forceAccount(){if(!wantsAccount())return false;const page=$('accountPage');if(!page)return false;const b=accountNav();if(b&&typeof b.click==='function')b.click();setTimeout(()=>{if(!pageVisible(page)){document.querySelectorAll('.page').forEach(x=>{if(x!==page)x.style.display='none'});page.hidden=false;page.style.display='block';page.removeAttribute('aria-hidden')}render();page.scrollIntoView({block:'start'});if(pageVisible(page)){try{sessionStorage.removeItem('dexters_open_account')}catch(e){}const u=new URL(location.href);if(u.searchParams.get('open')==='account'){u.searchParams.delete('open');history.replaceState({},'',u.pathname+(u.search||'')+(u.hash||''))}}},120);return true}
 function openAccountFromLink(){if(!wantsAccount())return;[250,650,1200,2000,3200,4800].forEach(ms=>setTimeout(()=>{if(wantsAccount())forceAccount()},ms))}
-function boot(){ensureStyle();const make=()=>{if(card())render()};make();setTimeout(make,450);setTimeout(make,1300);new MutationObserver(()=>setTimeout(make,0)).observe(document.body,{childList:true,subtree:true});openAccountFromLink()}
+function boot(){ensureStyle();const make=()=>{const existed=!!$('dxCustomerAccountCard');const c=card();if(c&&!existed)render()};make();setTimeout(make,450);setTimeout(make,1300);new MutationObserver(()=>setTimeout(make,0)).observe(document.body,{childList:true,subtree:true});openAccountFromLink()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
