@@ -20,6 +20,8 @@ const sprite=fs.readFileSync(path.join(out,'pc-category-sprite.jpg'));
 if(sprite.length<1000||sprite[0]!==0xff||sprite[1]!==0xd8||sprite[sprite.length-2]!==0xff||sprite[sprite.length-1]!==0xd9)throw new Error('Published category sprite is not a complete JPEG');
 if(!fs.existsSync('dist/customer-display.html')) throw new Error('Missing customer-display.html');
 fs.copyFileSync('dist/customer-display.html',path.join(out,'customer-display.html'));
+if(!fs.existsSync('dist/qr.js'))throw new Error('Missing qr.js');
+fs.copyFileSync('dist/qr.js',path.join(out,'qr.js'));
 fs.cpSync('web/scanner',path.join(out,'scanner'),{recursive:true});
 html=html.replace('<title>Dexter\'s POS + Table Service</title>','<title>Dexter\'s POS · GitHub Pages Test</title>');
 html=html.replace('PC TEST · TABLE SERVICE','DEXTER'S POS · LIVE');
