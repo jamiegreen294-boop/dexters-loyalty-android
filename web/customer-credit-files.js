@@ -7,7 +7,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const pounds=p=>{const n=Number(p||0);return '£'+(n/100).toFixed(2)};
 function session(){try{return (typeof SECURE_SESSION!=='undefined'&&SECURE_SESSION)||null}catch{return null}}
 function client(){try{return (typeof SB!=='undefined'&&SB)||null}catch{return null}}
-function admin(){try{return typeof SECURE_ACCOUNT!=='undefined'&&['staff','admin'].includes(String(SECURE_ACCOUNT?.role||'').toLowerCase())}catch{return false}}
+function admin(){try{const r=String(SECURE_ACCOUNT?.role||'').toLowerCase();return ['staff','admin','team leader','manager','super user'].includes(r)}catch{return false}}
 let loadedFor='';
 function addTab(){
  const tabs=document.querySelector('.staff-subtabs');
