@@ -22,8 +22,24 @@ async function localUrl(){
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve)});
   return `http://127.0.0.1:${server.address().port}/`;
 }
+async function stableEvaluate(page,fn){
+  let last;
+  for(let i=0;i<4;i++){
+    try{
+      await page.waitForLoadState('domcontentloaded',{timeout:5000}).catch(()=>{});
+      await page.waitForTimeout(350);
+      return await page.evaluate(fn);
+    }catch(e){
+      last=e;
+      if(!/Execution context was destroyed|Cannot find context|navigation/i.test(String(e)))throw e;
+      await page.waitForLoadState('domcontentloaded',{timeout:5000}).catch(()=>{});
+      await page.waitForTimeout(500);
+    }
+  }
+  throw last;
+}
 async function checkCategoryPhotoAsset(page){
-  const state=await page.evaluate(async()=>{
+  const state=await stableEvaluate(page,async()=>{
     const catUrl=new URL('pos-pc-category-home.js',location.href);catUrl.searchParams.set('photoSmoke',Date.now());
     const code=await fetch(catUrl,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('category JS HTTP '+r.status);return r.text()});
     const external=code.includes("const SPRITE='./pc-category-sprite.jpg';")&&code.includes('pcCatImage');
@@ -49,7 +65,7 @@ async function checkCategoryPhotoAsset(page){
   console.log('GOTO');
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:15000});
   console.log('DOMCONTENTLOADED');
-  const early=await page.evaluate(()=>({
+  const early=await stableEvaluate(page,()=>({
     pinBootstrap:typeof window.DextersPinLogin,
     authGate:document.getElementById('authGate')?.innerText||null,
     pinMount:document.getElementById('pcPinLoginMount')?.innerText||null,
