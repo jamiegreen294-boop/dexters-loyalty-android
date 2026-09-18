@@ -26,10 +26,14 @@ function patch(p){
  s=s.replace(/\$\('loginBtn'\)\.onclick=async\(\)=>\{const email=\$\('staffEmail'\)\.value\.trim\(\),password=\$\('staffPassword'\)\.value;[\s\S]*?finally\{\$\('loginBtn'\)\.disabled=false\}\}/,patchedLogin);
  s=s.replace(
  "sb.auth.onAuthStateChange((_e,s)=>{if(!s&&S.session)location.reload()});sb.auth.getSession().then(({data})=>applySession(data.session));",
- "validateSession(storedSession()).then(v=>{if(v)applySession(v);else{try{localStorage.removeItem(AUTH_KEY)}catch{}applySession(null)}})"
+ "try{localStorage.removeItem(AUTH_KEY)}catch{};applySession(null)"
  );
  s=s.replace(/if\(sb\)\{sb\.auth\.onAuthStateChange\([\s\S]*?\}\)\}/,
- "validateSession(storedSession()).then(v=>{if(v)applySession(v);else{try{localStorage.removeItem(AUTH_KEY)}catch{}applySession(null)}})");
+ "try{localStorage.removeItem(AUTH_KEY)}catch{};applySession(null)");
+ s=s.replace(
+ "validateSession(storedSession()).then(v=>{if(v)applySession(v);else{try{localStorage.removeItem(AUTH_KEY)}catch{}applySession(null)}})",
+ "try{localStorage.removeItem(AUTH_KEY)}catch{};applySession(null)"
+ );
  fs.writeFileSync(p,s);
  console.log('POS direct auth applied to '+p);
 }
