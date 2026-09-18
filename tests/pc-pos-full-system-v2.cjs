@@ -1,13 +1,2 @@
-const fs=require('fs');
-const path=require('path');
-const Module=require('module');
-const file=path.join(__dirname,'pc-pos-full-system.cjs');
-let src=fs.readFileSync(file,'utf8');
-const old=` const imageState=await page.evaluate(async()=>{const cards=[...document.querySelectorAll('.pcCatCard')],imgs=[...document.querySelectorAll('.pcCatImage')],bg=imgs.filter(x=>getComputedStyle(x).backgroundImage.includes('pc-category-sprite.jpg')).length,img=await new Promise(resolve=>{const i=new Image();i.onload=()=>resolve({ok:true,w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>resolve({ok:false,w:0,h:0});i.src=new URL('pc-category-sprite.jpg',location.href)+'?full='+Date.now()});return{cards:cards.length,imgs:imgs.length,bg,img}});if(imageState.cards<8||imageState.imgs!==imageState.cards||imageState.bg!==imageState.imgs||!imageState.img.ok)fail('Category photos failed',imageState);console.log('PASS CATEGORY PHOTOS',imageState.cards);`;
-const replacement=` const imageState=await page.evaluate(async()=>{const cards=[...document.querySelectorAll('.pcCatCard')],imgs=[...document.querySelectorAll('.pcCatImage')],bad=imgs.map((c,i)=>{const im=c.querySelector('img'),cr=c.getBoundingClientRect(),ir=im?.getBoundingClientRect(),bg=getComputedStyle(c).backgroundImage;const bgOk=bg.includes('pc-category-sprite.jpg');const imgOk=!!im?.complete&&Number(im?.naturalWidth||0)>0&&Number(im?.naturalHeight||0)>0&&Number(ir?.width||0)>=cr.width*5.8&&Number(ir?.height||0)>=cr.height*3.8;return{index:i,bgOk,imgOk,cw:cr.width,ch:cr.height,nw:Number(im?.naturalWidth||0),nh:Number(im?.naturalHeight||0)}}).filter(x=>!x.bgOk&&!x.imgOk),asset=await new Promise(resolve=>{const i=new Image();i.onload=()=>resolve({ok:true,w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>resolve({ok:false,w:0,h:0});i.src=new URL('pc-category-sprite.jpg',location.href)+'?full='+Date.now()});return{cards:cards.length,imgs:imgs.length,bad,asset}});if(imageState.cards<8||imageState.imgs!==imageState.cards||imageState.bad.length||!imageState.asset.ok)fail('Category photos failed',imageState);console.log('PASS CATEGORY PHOTOS',imageState.cards);`;
-if(!src.includes(old))throw new Error('Could not patch current category-photo assertion');
-src=src.replace(old,replacement);
-const runner=new Module(file,module);
-runner.filename=file;
-runner.paths=Module._nodeModulePaths(path.dirname(file));
-runner._compile(src,file);
+// PC POS v3 full-system test now uses the current assertions directly.
+require('./pc-pos-full-system.cjs');
