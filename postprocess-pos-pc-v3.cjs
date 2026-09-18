@@ -30,8 +30,8 @@ if(!addonJs.includes(payOld))throw new Error('PC PAY handler signature missing')
 addonJs=addonJs.replace(payOld,payNew);
 const initOld="window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();";
 const initNew="window.addEventListener('dexters-pos-features-ready',()=>{installTop();forceTestRoutes()});window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();";
-if(!addonJs.includes(initOld))throw new Error('PC v3 init handler signature missing');
-addonJs=addonJs.replace(initOld,initNew);
+if(addonJs.includes(initOld))addonJs=addonJs.replace(initOld,initNew);
+else if(!addonJs.includes("window.addEventListener('dexters-pos-features-ready'"))addonJs=addonJs.replace("window.addEventListener('load',initV3);if(document.readyState!=='loading')initV3();",initNew);
 
 // Money Owed must never take the whole POS down. Validate values, keep modal transitions atomic,
 // and catch local-storage/payment hand-off errors so staff get a visible error instead of a crash.
