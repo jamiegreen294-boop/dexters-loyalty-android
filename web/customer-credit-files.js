@@ -23,11 +23,20 @@ function style(){if($('dxCreditStyle'))return;const s=document.createElement('st
 async function rpc(name,args){const c=client();const s=session();if(!c||!s?.access_token)throw Error('Please sign in again.');const {data,error}=await c.rpc(name,args);if(error)throw error;return data}
 async function accountFor(cu){
  const c=client();if(!c)throw Error('Secure database is not available.');
- const {data,error}=await c.from('customer_credit_accounts').select('id,loyalty_user_id,customer_name,phone,email,status,balance_pence,credit_limit_pence,notes,last_activity_at,payment_reference').eq(cu.liveId?'loyalty_user_id':'id',cu.liveId?cu.liveId:cu.id).maybeSingle();
- if(error)throw error;
- if(data)return data;
+ const select='id,loyalty_user_id,customer_name,phone,email,status,balance_pence,credit_limit_pence,notes,last_activity_at,payment_reference';
+ if(cu.liveId){
+  const {data,error}=await c.from('customer_credit_accounts').select(select).eq('loyalty_user_id',cu.liveId).maybeSingle();
+  if(error)throw error;if(data)return data;
+ }else{
+  const rows=await rpc('credit_search_customers',{p_query:cu.name||'',p_limit:50});
+  const found=(Array.isArray(rows)?rows:[]).find(x=>String(x.customer_name||'').toLowerCase()===String(cu.name||'').toLowerCase()&&(cu.phone?String(x.phone||'')===String(cu.phone):true));
+  if(found?.account_id){
+   const {data,error}=await c.from('customer_credit_accounts').select(select).eq('id',found.account_id).single();
+   if(error)throw error;if(data)return data;
+  }
+ }
  const id=await rpc('credit_create_customer',{p_customer_name:cu.name||'Customer',p_phone:cu.phone||null,p_email:cu.email||null,p_loyalty_user_id:cu.liveId||null,p_notes:null});
- const r=await c.from('customer_credit_accounts').select('id,loyalty_user_id,customer_name,phone,email,status,balance_pence,credit_limit_pence,notes,last_activity_at,payment_reference').eq('id',id).single();
+ const r=await c.from('customer_credit_accounts').select(select).eq('id',id).single();
  if(r.error)throw r.error;return r.data;
 }
 async function render(){
@@ -51,7 +60,7 @@ async function saveLimit(){
  const cu=typeof selectedCustomer==='function'?selectedCustomer():null;if(!cu)return;const input=$('dxCreditLimit'),notes=$('dxCreditNotes'),status=$('dxCreditStatus'),btn=$('dxCreditSave');
  const raw=input.value.trim();let p=null;if(raw){const n=Number(raw.replace(/[^0-9.-]/g,''));if(!Number.isFinite(n)||n<0)return status.innerHTML='<span class="dx-credit-err">Enter a valid non-negative credit limit.</span>';p=Math.round(n*100)}
  btn.disabled=true;status.textContent='Saving…';
- try{const a=await accountFor(cu);await rpc('credit_set_limit',{p_account_id:a.id,p_credit_limit_pence:p});if(notes){const c=client();const {error}=await c.from('customer_credit_accounts').update({notes:notes.value.trim()||null}).eq('id',a.id);if(error)throw error}status.innerHTML='<span class="dx-credit-ok">✓ Credit limit saved.</span>';loadedFor='';await render();}catch(e){status.innerHTML='<span class="dx-credit-err">'+esc(e.message||e)+'</span>'}finally{btn.disabled=false}
+ try{const a=await accountFor(cu);await rpc('credit_set_limit',{p_account_id:a.id,p_credit_limit_pence:p,p_notes:notes?.value.trim()||null})status.innerHTML='<span class="dx-credit-ok">✓ Credit limit saved.</span>';loadedFor='';await render();}catch(e){status.innerHTML='<span class="dx-credit-err">'+esc(e.message||e)+'</span>'}finally{btn.disabled=false}
 }
 function hook(){addTab();style();const old=window.selectCustomerRecord;if(typeof old==='function'&&!old.__dxCreditWrapped){const wrapped=function(id){loadedFor='';const r=old.apply(this,arguments);setTimeout(render,50);return r};wrapped.__dxCreditWrapped=true;window.selectCustomerRecord=wrapped;}const oldClose=window.closeCustomerRecord;if(typeof oldClose==='function'&&!oldClose.__dxCreditWrapped){const wrapped=function(){loadedFor='';return oldClose.apply(this,arguments)};wrapped.__dxCreditWrapped=true;window.closeCustomerRecord=wrapped;}render()}
 let tries=0;const boot=()=>{tries++;hook();if(tries<30)setTimeout(boot,500)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
