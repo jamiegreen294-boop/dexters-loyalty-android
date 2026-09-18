@@ -3971,7 +3971,10 @@ async function syncLiveCustomers(){
    const validSecureIds=new Set((secureRows||[]).map(r=>String(r.record_id)));
    const removed=customerDb.customers.filter(x=>
      (x.source==='Live Loyalty'&&x.liveId&&!liveIds.has(String(x.liveId)))||
-     (x.source==='Back Office'&&x.secureRecord&&!validSecureIds.has(String(x.id)))
+     (x.source==='Back Office'&&x.secureRecord&&(
+       !validSecureIds.has(String(x.id))||
+       !!(secureById.get(String(x.id))?.customer_id&&liveIds.has(String(secureById.get(String(x.id)).customer_id)))
+     ))
    );
    if(removed.length){
      const removedIds=new Set(removed.map(x=>String(x.id)));
