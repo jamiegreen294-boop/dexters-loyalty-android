@@ -19,7 +19,7 @@
     const s=document.createElement('style');s.id='pcCategoryCss';
     s.textContent=`
       :root{--pc-cat-sprite:url("${SPRITE}")}
-      .app,.main,.center,.cart{min-width:0;max-width:100%}.top{overflow:hidden!important;flex-wrap:nowrap!important}.top>*{flex:0 1 auto;min-width:0}
+      .app,.main,.center,.cart{min-width:0;max-width:100%}.top{overflow:hidden!important;flex-wrap:nowrap!important;min-width:0}.top>*{flex:0 1 auto;min-width:0}.center{overflow-x:hidden!important}
       .main{grid-template-columns:minmax(0,1fr) minmax(340px,380px)!important}.cats{display:none!important}.center{padding:12px 14px!important;overflow:auto!important}.cart{width:100%!important;max-width:100%!important}
       .pcCategoryHeader{display:flex;align-items:center;gap:10px;margin:0 0 12px;min-height:48px}.pcCategoryHeader h2{margin:0;font-size:28px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .pcBackBtn,.pcHomeBtn{border:1px solid #294663;border-radius:10px;padding:11px 15px;font-weight:1000;background:#142a44;color:#fff;min-height:44px}.pcHomeBtn{background:#ffd43b;color:#08101d;border-color:#ffd43b}
@@ -51,6 +51,4 @@
   function installCustomerObserver(){const scan=()=>document.querySelectorAll('.modal:not(.hide)').forEach(styleCustomerModal);new MutationObserver(scan).observe(document.body,{childList:true,subtree:true,characterData:true});scan()}
   function install(){if(installed)return;installCss();const head=ensureHeader(),search=$('search');if(!head||!search)return;installed=true;const base=window.renderItems;window.renderItems=function(){const q=($('search')?.value||'').trim();if(home&&!q&&typeof S!=='undefined'&&Array.isArray(S.cats)&&S.cats.length){showHome();return}if(typeof base==='function')return base.apply(this,arguments)};search.oninput=searchChanged;window.pcShowCategories=showHome;installCustomerObserver();if(!showHome()){let n=0;const t=setInterval(()=>{n++;if(showHome()||n>120)clearInterval(t)},250)}}
   window.addEventListener('load',install);if(document.readyState!=='loading')install();
-
-const hideBars=document.createElement('style');hideBars.textContent='html,body,.app,.main,.center,.cart,.cats{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::-webkit-scrollbar,.app::-webkit-scrollbar,.main::-webkit-scrollbar,.center::-webkit-scrollbar,.cart::-webkit-scrollbar,.cats::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}.center,.cart{touch-action:pan-y;-webkit-overflow-scrolling:touch}';document.head.appendChild(hideBars);
 })();
