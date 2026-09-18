@@ -12,5 +12,5 @@
     "test:loyalty-flows": "node tests/loyalty-flows-regression.test.cjs",
     "test:growth-live": "node tests/growth-live-regression.test.cjs"
   },
-  "deploymentMarker": "uber-tablet-money-owed-live-20260913"
+  "deploymentMarker": "marketing-consent-required-20260918"
 }
