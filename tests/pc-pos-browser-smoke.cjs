@@ -58,14 +58,14 @@ async function checkCategoryPhotoAsset(page){
     bodyText:(document.body?.innerText||'').slice(0,1200)
   }));
   console.log('EARLY STATE',JSON.stringify(early));
-  await page.waitForFunction(()=>document.body&&document.body.innerText.includes('Set Up Dexter’s POS PIN'),null,{timeout:6000});
+  await page.waitForFunction(()=>document.body&&document.body.innerText.includes('Set up PIN'),null,{timeout:6000});
   console.log('PIN SETUP VISIBLE');
   const state=await page.evaluate(async()=>{
     const before=performance.now();
     await new Promise(r=>setTimeout(r,250));
     return {
       responsive:(performance.now()-before)<1500,
-      setup:document.body.innerText.includes('Set Up Dexter’s POS PIN'),
+      setup:document.body.innerText.includes('Set up PIN'),
       loading:document.body.innerText.includes('Loading secure PIN login…'),
       legacyEmail:!!document.getElementById('staffEmail'),
       legacyPassword:!!document.getElementById('staffPassword'),
