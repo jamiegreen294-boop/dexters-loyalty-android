@@ -7,5 +7,7 @@ assert(js.includes('Email offers')&&js.includes('Text message offers'),'separate
 assert(js.includes('marketing_consent:email||sms'),'master consent must follow selected channels');
 assert(js.includes("consent_source:'loyalty_app_account'"),'consent source missing');
 assert(!js.includes('checked>'),'consent must not be selected by default');
-assert(js.includes('does not affect your account, orders or rewards'),'optional consent explanation missing');
+assert(js.includes('marketing_choice_made:true'),'explicit marketing choice must be recorded');
+assert(js.includes('No thanks'),'customers must be able to decline marketing');
+assert(js.includes('Before you continue'),'existing customers must be prompted before continuing');
 console.log('Marketing consent regression passed');
