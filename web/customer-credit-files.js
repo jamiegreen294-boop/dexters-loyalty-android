@@ -21,6 +21,7 @@ function addTab(){
 }
 function style(){if($('dxCreditStyle'))return;const s=document.createElement('style');s.id='dxCreditStyle';s.textContent='#custPane-credit .dx-credit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}#custPane-credit .dx-credit-box{background:#f7f7f9;border:1px solid #dedde3;border-radius:10px;padding:12px;color:#3e3941}#custPane-credit .dx-credit-box small{display:block;color:#77717b;margin-bottom:4px}#custPane-credit .dx-credit-box b{font-size:20px}#custPane-credit .dx-credit-form{background:#fff;border:1px solid #dedde3;border-radius:10px;padding:14px;margin:12px 0}#custPane-credit .dx-credit-tx{background:#fff;border:1px solid #dedde3;border-radius:10px;padding:11px;margin:7px 0}#custPane-credit .dx-credit-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}#custPane-credit .dx-credit-muted{font-size:12px;color:#77717b;margin-top:3px}#custPane-credit .dx-credit-ok{color:#18794e;font-weight:800}#custPane-credit .dx-credit-err{color:#b42318;font-weight:800}#custPane-credit .dx-credit-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}#custPane-credit .dx-credit-action{background:#fff;border:1px solid #dedde3;border-radius:10px;padding:14px}#custPane-credit .dx-credit-action h3{margin:0 0 5px}#custPane-credit .dx-credit-action .btn{margin-top:8px}@media(max-width:650px){#custPane-credit .dx-credit-grid,#custPane-credit .dx-credit-actions{grid-template-columns:1fr}}';document.head.appendChild(s)}
 async function rpc(name,args){const c=client();const s=session();if(!c||!s?.access_token)throw Error('Please sign in again.');const {data,error}=await c.rpc(name,args);if(error)throw error;return data}
+async function creditApplicationApi(action,body={}){const s=session();if(!s?.access_token)throw Error('Please sign in again.');const r=await fetch(U+'/functions/v1/credit-application-api',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:JSON.stringify({action,...body})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Credit application request failed.');return d}
 async function accountFor(cu){
  const c=client();if(!c)throw Error('Secure database is not available.');
  const select='id,loyalty_user_id,customer_name,phone,email,status,balance_pence,credit_limit_pence,notes,last_activity_at,payment_reference';
@@ -51,9 +52,15 @@ async function render(){
  try{
   const a=await accountFor(cu);
   if(!a){
+    let pending=null;
+    if(cu.liveId){try{const apps=await creditApplicationApi('staff_list');pending=(apps.applications||[]).find(x=>String(x.loyalty_user_id)===String(cu.liveId)&&x.status==='pending')||null}catch(e){}}
     body.innerHTML='<div class="summarybox"><b>No approved credit account</b><br><span class="muted">This customer does not currently have a credit allowance. Opening this record does not create one.</span></div>'+
-      '<div class="dx-credit-form"><b>Approve / create credit allowance</b><div class="muted" style="margin:5px 0 9px">Only use this after you have decided to approve credit. This creates the customer\'s credit account and allowance.</div><div class="field">Approved credit limit (£)<input id="dxCreditLimit" inputmode="decimal" placeholder="e.g. 50.00"></div><div class="field">Internal approval notes<textarea id="dxCreditNotes" rows="3" placeholder="Why this allowance was approved"></textarea></div><button type="button" class="btn" id="dxCreditSave">Create approved credit account</button><div id="dxCreditStatus" class="dx-credit-muted"></div></div>';
-    $('dxCreditSave').onclick=saveLimit;return;
+      (pending?'<div class="dx-credit-form"><b>Pending credit application</b><div class="muted" style="margin:5px 0 9px">Requested allowance: <b>'+pounds(pending.requested_limit_pence)+'</b> · Submitted '+new Date(pending.submitted_at).toLocaleString('en-GB')+'</div><div class="field">Approved limit (£)<input id="dxCreditApproveLimit" inputmode="decimal" value="'+(Number(pending.requested_limit_pence||0)/100).toFixed(2)+'"></div><div class="field">Decision note<textarea id="dxCreditDecisionReason" rows="3" placeholder="Optional note for the customer"></textarea></div><div class="row" style="gap:8px"><button type="button" class="btn" id="dxCreditApproveApp">Approve application</button><button type="button" class="btn alt" id="dxCreditDeclineApp">Decline application</button></div><div id="dxCreditDecisionStatus" class="dx-credit-muted"></div></div>':'')+
+      '<div class="dx-credit-form"><b>Approve / create credit allowance manually</b><div class="muted" style="margin:5px 0 9px">Only use this after you have decided to approve credit. This creates the customer\'s credit account and allowance.</div><div class="field">Approved credit limit (£)<input id="dxCreditLimit" inputmode="decimal" placeholder="e.g. 50.00"></div><div class="field">Internal approval notes<textarea id="dxCreditNotes" rows="3" placeholder="Why this allowance was approved"></textarea></div><button type="button" class="btn" id="dxCreditSave">Create approved credit account</button><div id="dxCreditStatus" class="dx-credit-muted"></div></div>';
+    if($('dxCreditSave'))$('dxCreditSave').onclick=saveLimit;
+    if(pending&&$('dxCreditApproveApp'))$('dxCreditApproveApp').onclick=()=>decideApplication(pending,'approved');
+    if(pending&&$('dxCreditDeclineApp'))$('dxCreditDeclineApp').onclick=()=>decideApplication(pending,'declined');
+    return;
   }
   const detail=await rpc('credit_account_detail',{p_account_id:a.id});const account=detail?.account||a,tx=Array.isArray(detail?.transactions)?detail.transactions:[];
   const bal=Number(account.balance_pence||0),lim=account.credit_limit_pence==null?null:Number(account.credit_limit_pence),available=lim==null?null:Math.max(0,lim-bal),overdue=Number(detail?.overdue_pence||0);
@@ -70,6 +77,14 @@ async function render(){
  }catch(e){body.innerHTML='<div class="dx-credit-err">Could not load credit file: '+esc(e.message||e)+'</div>';}
 }
 function moneyInput(id){const raw=$(id)?.value.trim()||'';const n=Number(raw.replace(/[^0-9.-]/g,''));return Number.isFinite(n)?Math.round(n*100):NaN}
+async function decideApplication(app,decision){
+ const status=$('dxCreditDecisionStatus');if(!status)return;
+ const reason=$('dxCreditDecisionReason')?.value.trim()||null;
+ let limit=null;if(decision==='approved'){limit=moneyInput('dxCreditApproveLimit');if(!Number.isFinite(limit)||limit<=0){status.innerHTML='<span class="dx-credit-err">Enter an approved limit greater than £0.00.</span>';return}}
+ status.textContent=decision==='approved'?'Approving application…':'Declining application…';
+ try{const d=await creditApplicationApi('staff_decide',{application_id:app.id,decision,approved_limit_pence:limit,decision_reason:reason});status.innerHTML='<span class="dx-credit-ok">✓ Application '+esc(decision)+(d.email_sent?' · email sent':' · email not sent')+'</span>';loadedFor='';await render()}
+ catch(e){status.innerHTML='<span class="dx-credit-err">'+esc(e.message||e)+'</span>'}
+}
 async function addCharge(){
  const cu=typeof selectedCustomer==='function'?selectedCustomer():null,status=$('dxCreditChargeStatus'),btn=$('dxCreditAddCharge');if(!cu||!status||!btn)return;
  const amount=moneyInput('dxCreditChargeAmount'),description=$('dxCreditChargeDesc')?.value.trim()||'',due=$('dxCreditChargeDue')?.value||null,orderRef=$('dxCreditChargeRef')?.value.trim()||null;
