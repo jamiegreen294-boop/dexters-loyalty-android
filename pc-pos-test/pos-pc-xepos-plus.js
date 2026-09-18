@@ -34,8 +34,8 @@ let displayWin=null;function openDisplay(){displayWin=window.open('./customer-di
 function broadcastDisplay(){const cart=(S?.cart||[]).map(i=>({name:i.name,qty:Number(i.qty)||1,unit:Number(i.unit)||0})),total=cart.reduce((s,i)=>s+i.unit*i.qty,0),payload={cart,total,customer:S?.customer||'',at:Date.now()};try{localStorage.setItem('dexters_customer_display_state',JSON.stringify(payload));new BroadcastChannel('dexters-customer-display').postMessage(payload)}catch{}}
 function offlineStatus(){let b=$('pcOfflineState');if(!b){b=document.createElement('span');b.id='pcOfflineState';b.style='padding:6px 10px;border-radius:999px;font-weight:800;font-size:12px';document.querySelector('.top')?.appendChild(b)}const draw=()=>{b.textContent=navigator.onLine?'ONLINE':'OFFLINE · CASH ONLY';b.style.background=navigator.onLine?'#14532d':'#7f1d1d';b.style.color='#fff'};window.addEventListener('online',draw);window.addEventListener('offline',draw);draw()}
 const TOOL_SECTIONS={
- Orders:['pcCollectionOrdersBtn','qrCodesBtn','pcHeldOrdersBtn','pcTableOrdersBtn','pcSundayBtn','pcPhoneOrdersBtn','pcTablePlanBtn','pcTimedBtn','pcTableToolsBtn'],
- Customers:['pcWhatsAppBtn','pcCustomersBtn','pcStatementsBtn','pcReceiptCentreBtn'],
+ Orders:['pcCollectionOrdersBtn','clearBtn','qrCodesBtn','pcHeldOrdersBtn','pcTableOrdersBtn','pcSundayBtn','pcPhoneOrdersBtn','pcTablePlanBtn','pcTimedBtn','pcTableToolsBtn'],
+ Customers:['pcCustomersBtn','pcStatementsBtn','pcReceiptCentreBtn'],
  Sales:['pcMoneyBtn','pcRefundBtn','pcAuditBtn','pcTxnSearchBtn','pcReportsBtn','pcPromoBtn'],
  Stock:['pcInventoryBtn','pcStockBtn','pcRecipesBtn','pcPurchasingBtn','pcExpiryBtn'],
  Manage:['scannerBtn','pcOfflineQueueBtn','pcDrawerBtn','pcManagerPinBtn','pcDisplayBtn','pcCapacityBtn','pcCloseDayBtn','pcSecurityBtn','pcLockBtn','updateBtn','fullBtn']
