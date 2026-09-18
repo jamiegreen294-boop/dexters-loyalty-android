@@ -32,7 +32,7 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
   <header class="top">
     <div class="brand">Dexter's POS</div><span class="tag">DEXTER'S POS · LIVE</span>
     <div class="spacer"></div>
-    <button id="openTablesTopBtn">Open tables</button><button id="qrOrdersBtn">QR orders <span id="qrCount"></span></button><button id="qrCodesBtn">Table QR codes</button><button id="staffBtn">Staff</button><button id="updateBtn">Check update</button><button id="installAppBtn" style="display:none">Install POS</button><button id="fullBtn">Full screen</button><button id="clearBtn" class="danger">Clear order</button>
+    <button id="openTablesTopBtn">Open tables</button><button id="qrOrdersBtn">QR orders <span id="qrCount"></span></button><button id="qrCodesBtn">Table QR codes</button><button id="staffBtn">Staff</button><button id="updateBtn">Check update</button><button id="fullBtn">Full screen</button><button id="clearBtn" class="danger">Clear order</button>
   </header>
   <main class="main">
     <aside class="cats" id="cats"></aside>
@@ -213,5 +213,5 @@ let initStarted=false;async function init(){if(initStarted)return;initStarted=tr
 window.DextersPinLogin={renderLogin,renderSetup,init,loadFeatures,FEATURE_SCRIPTS};init();
 })();
 </script>
-<script>navigator.serviceWorker&&navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="DEXTERS_POS_CACHE_RESET"&&!sessionStorage.getItem("dexters_pos_cache_reset_done")){sessionStorage.setItem("dexters_pos_cache_reset_done","1");location.replace(location.pathname+"?live="+Date.now())}});let dextersInstallPrompt=null;const installBtn=document.getElementById("installAppBtn");window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dextersInstallPrompt=e;if(installBtn)installBtn.style.display=""});if(installBtn)installBtn.onclick=async()=>{if(!dextersInstallPrompt)return;await dextersInstallPrompt.prompt();dextersInstallPrompt=null;installBtn.style.display="none"};if("serviceWorker" in navigator)window.addEventListener("load",async()=>{try{const reg=await navigator.serviceWorker.register("./sw.js?v="+encodeURIComponent(window.__DEXTERS_POS_BUILD||Date.now()),{updateViaCache:"none"});await reg.update()}catch{}});</script>
+<script>navigator.serviceWorker&&navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="DEXTERS_POS_CACHE_RESET"&&!sessionStorage.getItem("dexters_pos_cache_reset_done")){sessionStorage.setItem("dexters_pos_cache_reset_done","1");location.replace(location.pathname+"?live="+Date.now())}});if("serviceWorker" in navigator)window.addEventListener("load",async()=>{try{const reg=await navigator.serviceWorker.register("./sw.js?v="+encodeURIComponent(window.__DEXTERS_POS_BUILD||Date.now()),{updateViaCache:"none"});await reg.update()}catch{}});</script>
 </body></html>
