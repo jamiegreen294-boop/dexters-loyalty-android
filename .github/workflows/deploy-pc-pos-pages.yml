@@ -53,7 +53,7 @@ jobs:
           test -f _site/pos-pc-collection-orders.js
           test -f _site/scanner/index.html
           test -f _site/customer-display.html
-          test -f _site/pc-category-sprite.jpg
+          if grep -q "const CATEGORY_IMAGES=" _site/pos-pc-category-home.js; then echo "Using category-specific food photos"; else test -f _site/pc-category-sprite.jpg; fi
           grep -q "uber-table-service-pc-test-api" _site/index.html
           grep -q "window.DextersPinLogin" _site/index.html
           grep -q "FEATURE_SCRIPTS" _site/pos-pc-pin-login.js
