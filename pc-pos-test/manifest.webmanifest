@@ -1,10 +1,9 @@
 {
-  "id": "/pc-pos-test/dexters-pos",
   "name": "Dexter's POS",
   "short_name": "Dexter POS",
   "description": "Dexter's staff point of sale",
-  "start_url": "/pc-pos-test/",
-  "scope": "/pc-pos-test/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#07111f",
