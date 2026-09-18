@@ -17,7 +17,7 @@ html=html.replace('</head>','<meta http-equiv="Cache-Control" content="no-cache,
 html=html.replace('</body>','<script>'+pinBootstrap+'</script>\n</body>');
 html=html.replace("Live POS · connected to Dexter's order system.","LIVE POS · connected Dexter's system");
 html=html.replaceAll('Menu loaded · Live POS','Menu loaded · Dexter's POS');
-html=html.replace('DEXTER\'S · TABLE SERVICE','DEXTER'S · TABLE SERVICE');
+html=html.replace("DEXTER'S · TABLE SERVICE","DEXTER'S · TABLE SERVICE");
 fs.writeFileSync('dist/pos.html',html);
 fs.writeFileSync('dist/pos-test.html',html);
 for(const f of ['pos-pc-pin-login.js','pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-pc-collection-orders.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-expiry.js','pos-pc-account-statements.js','pos-pc-capacity.js','pos-pc-close-day.js','pos-pc-security-audit.js'])fs.copyFileSync('web/'+f,'dist/'+f);
