@@ -82,4 +82,5 @@ catJs=catJs.replace(cssEnd,cssEnd+touchCss);
 if(!catJs.includes("const SPRITE='./pc-category-sprite.jpg';"))throw new Error('PC category photo sprite URL replacement failed');
 fs.writeFileSync(catPath,catJs);
 fs.copyFileSync('web/customer-display.html','dist/customer-display.html');
+fs.copyFileSync('web/universal-qr/qr.js','dist/qr.js');
 console.log('PC POS v3 built with PIN-only startup; Money Owed payment crash guarded; critical toolbar handlers pinned; Windows-safe category IMG cropping and touch-screen responsive layout applied; operational modules deferred until authenticated staff session');
