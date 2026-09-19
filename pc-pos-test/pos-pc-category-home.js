@@ -1,24 +1,52 @@
 (()=>{
   const $=id=>document.getElementById(id);
-  const SPRITE='./pc-category-sprite.jpg';
-  const IMG={
-    'Breakfast':[0,0],'Hot Rolls':[1,0],'Cold Rolls':[2,0],'Toasties':[3,0],'Paninis':[4,0],'Wraps':[5,0],
-    'Baked Potatoes':[0,1],'Soups':[1,1],'Hot Meals':[0,0],'Street Subs':[1,0],'Chinese Style':[4,0],'Greek Style':[5,0],
-    'Rice Bowls':[4,1],'Smash Burgers':[1,0],'Chicken Burgers':[5,1],'Chicken Tenders':[2,1],'Inferno Chicken Tenders':[2,1],
-    'Loaded Fries':[2,1],'Pizzas':[3,0],'Waffles':[4,0],'Chippy Style':[2,1],'Kids Menu':[2,1],'Kids Meals':[2,1],
-    'Reaper Box':[5,1],'Beast Box':[5,1],'Dirty Soda Bar':[1,1],'Cakes & Bakes':[3,0],'Milkshakes':[1,1],'Coffee':[1,1],
-    'Sauces & Dips':[1,1],'Cans of Juice':[1,1],'Sides':[2,1],'Drinks':[1,1],'Desserts':[3,0],'Meal Deals':[5,1]
+  const CATEGORY_IMAGES={
+    'Breakfast':'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=700&q=82',
+    'Hot Rolls':'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=700&q=82',
+    'Cold Rolls':'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=700&q=82',
+    'Toasties':'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=700&q=82',
+    'Paninis':'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=700&q=82',
+    'Wraps':'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=700&q=82',
+    'Baked Potatoes':'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=700&q=82',
+    'Soups':'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=700&q=82',
+    'Hot Meals':'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=700&q=82',
+    'Street Subs':'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=700&q=82',
+    'Chinese Style':'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=700&q=82',
+    'Greek Style':'https://images.unsplash.com/photo-1544510808-91bcbee1df55?auto=format&fit=crop&w=700&q=82',
+    'Rice Bowls':'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=700&q=82',
+    'Smash Burgers':'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=82',
+    'Chicken Burgers':'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=82',
+    'Chicken Tenders':'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=700&q=82',
+    'Inferno Chicken Tenders':'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=700&q=82',
+    'Loaded Fries':'https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=700&q=82',
+    'Pizzas':'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=700&q=82',
+    'Chippy Style':'https://images.unsplash.com/photo-1579208030886-b937da0925dc?auto=format&fit=crop&w=700&q=82',
+    'Kids Menu':'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=82',
+    'Kids Meals':'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=82',
+    'Reaper Box':'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=700&q=82',
+    'Beast Box':'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=700&q=82',
+    'Waffles':'https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=700&q=82',
+    'Dirty Soda Bar':'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=700&q=82',
+    'Cakes & Bakes':'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=700&q=82',
+    'Milkshakes':'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=700&q=82',
+    'Coffee':'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=700&q=82',
+    'Sauces & Dips':'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?auto=format&fit=crop&w=700&q=82',
+    'Cans of Juice':'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=700&q=82',
+    'Sides':'https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=700&q=82',
+    'Drinks':'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=700&q=82',
+    'Desserts':'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=700&q=82',
+    'Meal Deals':'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=82'
   };
+  const FALLBACK_IMAGE='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=700&q=82';
+  const photo=name=>CATEGORY_IMAGES[name]||FALLBACK_IMAGE;
   let home=true,installed=false;
   const originalRenderItems=window.renderItems;
   const h=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const pos=name=>{const p=IMG[name]||[4,3];return [Number(p[0])||0,Number(p[1])||0]};
 
   function installCss(){
     if(document.getElementById('pcCategoryCss'))return;
     const s=document.createElement('style');s.id='pcCategoryCss';
     s.textContent=`
-      :root{--pc-cat-sprite:url("${SPRITE}")}
       .app,.main,.center,.cart{min-width:0;max-width:100%}.top{overflow:hidden!important;flex-wrap:nowrap!important;min-width:0}.top>*{flex:0 1 auto;min-width:0}.center{overflow-x:hidden!important}
       .main{grid-template-columns:minmax(0,1fr) minmax(340px,380px)!important}.cats{display:none!important}.center{padding:12px 14px!important;overflow:auto!important}.cart{width:100%!important;max-width:100%!important}
       .pcCategoryHeader{display:flex;align-items:center;gap:10px;margin:0 0 12px;min-height:48px}.pcCategoryHeader h2{margin:0;font-size:28px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -26,7 +54,7 @@
       .pcCatGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;align-content:start;width:100%}
       .pcCatCard{appearance:none;min-width:0;min-height:164px;border:1px solid #294663;color:#fff;border-radius:12px;padding:0;text-align:left;display:flex;flex-direction:column;overflow:hidden;background:#10233a;box-shadow:0 2px 7px #0005;cursor:pointer;touch-action:manipulation}
       .pcCatCard:hover{border-color:#ffd43b;transform:translateY(-1px)}.pcCatCard:active{transform:scale(.985)}
-      .pcCatImage{position:relative;height:108px;width:100%;overflow:hidden;background:#172b43;border-bottom:1px solid #294663;contain:paint}.pcCatImage img{position:absolute;display:block;width:600%;height:400%;max-width:none;left:calc(var(--pc-col) * -100%);top:calc(var(--pc-row) * -100%);object-fit:fill;pointer-events:none;user-select:none}
+      .pcCatImage{height:108px;width:100%;overflow:hidden;background:#172b43;background-size:cover;border-bottom:1px solid #294663}.pcCatImage img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
       .pcCatFooter{padding:10px 12px 11px;display:flex;align-items:flex-end;gap:8px;min-height:52px}.pcCatName{font-size:17px;font-weight:1000;line-height:1.05;flex:1}.pcCatCount{font-size:10px;color:#9fb2c8;white-space:nowrap}
       .pcItemsMode{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;width:100%}.pcItemsMode .item{min-width:0!important}
       .pcCustomersModal .box{width:min(1120px,96vw)!important;max-width:1120px!important}.pcCustomersModal #cr{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px!important;margin-top:12px;align-items:stretch}.pcCustomersModal #cr>p{grid-column:1/-1}
@@ -42,7 +70,7 @@
   }
 
   function ensureHeader(){let x=$('pcCategoryHeader');if(x)return x;const center=document.querySelector('.center'),search=document.querySelector('.search');if(!center||!search)return null;x=document.createElement('div');x.id='pcCategoryHeader';x.className='pcCategoryHeader';x.innerHTML='<button id="pcBackBtn" class="pcBackBtn" style="display:none">← Categories</button><h2 id="pcCategoryTitle">Categories</h2><button id="pcHomeBtn" class="pcHomeBtn">Categories</button>';center.insertBefore(x,search);$('pcBackBtn').onclick=showHome;$('pcHomeBtn').onclick=showHome;return x}
-  function showHome(){if(typeof S==='undefined'||!Array.isArray(S.cats)||!S.cats.length)return false;home=true;const search=$('search');if(search)search.value='';const items=$('items');if($('pcCategoryTitle'))$('pcCategoryTitle').textContent='Categories';if($('pcBackBtn'))$('pcBackBtn').style.display='none';if(!items)return false;items.className='grid pcCatGrid';items.innerHTML=S.cats.map((c,i)=>{const count=(c.items||[]).filter(v=>v.in_stock!==false).length,[col,row]=pos(c.name);return '<button class="pcCatCard" data-pc-index="'+i+'"><div class="pcCatImage" style="--pc-col:'+col+';--pc-row:'+row+'"><img src="'+SPRITE+'" alt="" draggable="false"></div><div class="pcCatFooter"><div class="pcCatName">'+h(c.name)+'</div><div class="pcCatCount">'+count+' item'+(count===1?'':'s')+'</div></div></button>'}).join('');items.querySelectorAll('[data-pc-index]').forEach(b=>b.onclick=()=>openCategory(S.cats[Number(b.dataset.pcIndex)]?.name));return true}
+  function showHome(){if(typeof S==='undefined'||!Array.isArray(S.cats)||!S.cats.length)return false;home=true;const search=$('search');if(search)search.value='';const items=$('items');if($('pcCategoryTitle'))$('pcCategoryTitle').textContent='Categories';if($('pcBackBtn'))$('pcBackBtn').style.display='none';if(!items)return false;items.className='grid pcCatGrid';items.innerHTML=S.cats.map((c,i)=>{const count=(c.items||[]).filter(v=>v.in_stock!==false).length;return '<button class="pcCatCard" data-pc-index="'+i+'"><div class="pcCatImage"><img src="'+h(photo(c.name))+'" alt="" referrerpolicy="no-referrer"></div><div class="pcCatFooter"><div class="pcCatName">'+h(c.name)+'</div><div class="pcCatCount">'+count+' item'+(count===1?'':'s')+'</div></div></button>'}).join('');items.querySelectorAll('[data-pc-index]').forEach(b=>b.onclick=()=>openCategory(S.cats[Number(b.dataset.pcIndex)]?.name));return true}
   function openCategory(name){if(!name)return;home=false;S.cat=name;const search=$('search');if(search)search.value='';if($('pcCategoryTitle'))$('pcCategoryTitle').textContent=name;if($('pcBackBtn'))$('pcBackBtn').style.display='inline-block';const items=$('items');if(items)items.className='grid pcItemsMode';if(typeof originalRenderItems==='function')originalRenderItems()}
   function searchChanged(){const q=($('search')?.value||'').trim();if(!q){home?showHome():openCategory(S.cat);return}home=false;if($('pcCategoryTitle'))$('pcCategoryTitle').textContent='Search results';if($('pcBackBtn'))$('pcBackBtn').style.display='inline-block';const items=$('items');if(items)items.className='grid pcItemsMode';if(typeof originalRenderItems==='function')originalRenderItems()}
   const initials=n=>String(n||'C').trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'C';
