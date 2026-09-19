@@ -19,11 +19,21 @@ function openHardware(){
  d.querySelector('#hwDrawer').onclick=()=>{try{bridge("DEXTER'S\nDRAWER TEST\n"+new Date().toLocaleString('en-GB')+"\n\n",{drawer:true});msg.textContent='Drawer test sent to Windows Hardware Bridge.'}catch(e){msg.textContent=e.message}};
 }
 function install(){
+ const top=document.querySelector('.top');if(!top)return;
  let b=$h('pcHardwareBtn');
- if(!b){b=document.createElement('button');b.id='pcHardwareBtn';b.textContent='Hardware';const top=document.querySelector('.top');top?.insertBefore(b,$h('staffBtn')||null)}
- if(b)b.onclick=openHardware;
+ if(!b){b=document.createElement('button');b.id='pcHardwareBtn';b.textContent='Hardware'}
+ b.style.cssText='flex:0 0 auto!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:82px!important;visibility:visible!important';
+ b.onclick=openHardware;
+ const buttons=[...top.querySelectorAll('button')];
+ const manage=buttons.find(x=>/^manage\b/i.test(String(x.textContent||'').trim()));
+ const stock=buttons.find(x=>/^stock\b/i.test(String(x.textContent||'').trim()));
+ const anchor=manage||stock;
+ if(anchor&&anchor.parentNode===top)top.insertBefore(b,anchor.nextSibling);
+ else top.insertBefore(b,top.querySelector('.spacer')?.nextSibling||top.firstChild);
 }
 window.DextersHardware={open:openHardware,bridge};
 window.addEventListener('load',install);
-if(document.readyState==='complete')install();
+install();
+setTimeout(install,250);
+setTimeout(install,1200);
 })();
