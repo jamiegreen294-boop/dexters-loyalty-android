@@ -63,3 +63,184 @@ body:has(#appView:not(.hidden) #accountPage:not(.hidden)) .wrap{padding-bottom:1
 body.dexters-motion-paused #seasonFx .season-fx{animation-play-state:paused!important}
 #homePage.work-home>.work-usual,#homePage.work-home>.work-current,#homePage.work-home>.work-deals,#homePage.work-home>.card{content-visibility:auto;contain-intrinsic-size:1px 180px}
 @media(max-width:360px){#homePage .work-brand{font-size:24px}#homePage .work-action{padding:13px;min-height:104px}.work-action .wt{font-size:15px}}
+
+
+/* Full-screen Ask Dexter page — uses the same Loyalty App theme tokens */
+#workDexterChat.work-dexter-chat{
+ position:fixed;
+ inset:0 0 74px 0;
+ z-index:90;
+ display:flex;
+ flex-direction:column;
+ box-sizing:border-box;
+ padding:max(12px,env(safe-area-inset-top)) 14px 14px;
+ color:var(--white);
+ background:transparent;
+}
+#workDexterChat[hidden]{display:none!important}
+#workDexterChat::before{
+ content:"";
+ position:absolute;
+ inset:0;
+ z-index:-2;
+ background:color-mix(in srgb,var(--navy) 72%,transparent);
+ backdrop-filter:blur(8px);
+ -webkit-backdrop-filter:blur(8px);
+}
+#workDexterChat::after{
+ content:"";
+ position:absolute;
+ inset:10px 10px 8px;
+ z-index:-1;
+ border-radius:24px;
+ border:1px solid #ffffff1f;
+ background:color-mix(in srgb,var(--card) 92%,transparent);
+ box-shadow:0 18px 42px #0007;
+}
+#workDexterChat .work-dexter-head{
+ display:grid;
+ grid-template-columns:auto 1fr auto;
+ align-items:center;
+ gap:10px;
+ flex:0 0 auto;
+ padding:8px 5px 14px;
+ border-bottom:1px solid #ffffff16;
+}
+#workDexterChat .work-dexter-home,
+#workDexterChat .work-dexter-close{
+ min-height:44px;
+ border:1px solid #ffffff20;
+ border-radius:14px;
+ background:var(--navy2);
+ color:var(--white);
+ font:inherit;
+ font-weight:900;
+ cursor:pointer;
+}
+#workDexterChat .work-dexter-home{
+ padding:0 13px;
+ font-size:13px;
+}
+#workDexterChat .work-dexter-close{
+ width:44px;
+ padding:0;
+ font-size:22px;
+}
+#workDexterChat .work-dexter-title-wrap{min-width:0;text-align:center}
+#workDexterChat .work-heading{
+ margin:0!important;
+ font-size:24px;
+ line-height:1.05;
+ color:var(--white);
+}
+#workDexterChat .work-dexter-sub{
+ margin-top:4px;
+ color:var(--muted);
+ font-size:12px;
+}
+#workDexterChat .work-dexter-messages{
+ flex:1 1 auto;
+ min-height:0;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ display:flex;
+ flex-direction:column;
+ gap:12px;
+ padding:18px 4px 14px;
+ scrollbar-width:thin;
+}
+#workDexterChat .work-dexter-msg{
+ width:fit-content;
+ max-width:88%;
+ box-sizing:border-box;
+ padding:13px 15px;
+ border-radius:18px;
+ font-size:15px;
+ line-height:1.42;
+ white-space:pre-wrap;
+ overflow-wrap:anywhere;
+ box-shadow:0 7px 18px #0002;
+}
+#workDexterChat .work-dexter-msg.assistant{
+ align-self:flex-start;
+ background:var(--card);
+ color:var(--white);
+ border:1px solid #ffffff1b;
+ border-bottom-left-radius:6px;
+}
+#workDexterChat .work-dexter-msg.user{
+ align-self:flex-end;
+ background:linear-gradient(135deg,var(--yellow),var(--orange));
+ color:#111;
+ font-weight:750;
+ border-bottom-right-radius:6px;
+}
+#workDexterChat .work-dexter-status{
+ min-height:18px;
+ padding:0 4px 5px;
+ color:var(--muted);
+ font-size:12px;
+ font-weight:700;
+}
+#workDexterChat .work-dexter-form{
+ display:grid;
+ grid-template-columns:1fr auto;
+ gap:9px;
+ align-items:end;
+ flex:0 0 auto;
+ padding:10px 2px 2px;
+ border-top:1px solid #ffffff16;
+}
+#workDexterChat #workDexterInput{
+ width:100%;
+ min-height:58px;
+ max-height:150px;
+ resize:vertical;
+ box-sizing:border-box;
+ border:1px solid #ffffff28;
+ border-radius:17px;
+ padding:15px;
+ background:color-mix(in srgb,var(--navy2) 84%,transparent);
+ color:var(--white);
+ font:inherit;
+ font-size:16px;
+ line-height:1.35;
+ outline:none;
+}
+#workDexterChat #workDexterInput::placeholder{color:var(--muted)}
+#workDexterChat #workDexterInput:focus{
+ border-color:var(--yellow);
+ box-shadow:0 0 0 3px color-mix(in srgb,var(--yellow) 24%,transparent);
+}
+#workDexterChat #workDexterSend{
+ min-width:82px;
+ min-height:58px;
+ border:0;
+ border-radius:17px;
+ padding:0 15px;
+ background:linear-gradient(135deg,var(--yellow),var(--orange));
+ color:#111;
+ font:inherit;
+ font-size:15px;
+ font-weight:950;
+ cursor:pointer;
+ box-shadow:0 8px 20px #0004;
+}
+#workDexterChat #workDexterSend:disabled{opacity:.55}
+body:has(#workDexterChat:not([hidden])) #workHomeNav{
+ display:grid!important;
+ z-index:100;
+}
+body:has(#workDexterChat:not([hidden])) #workHomeNav #workNavDexter{
+ color:var(--yellow);
+ font-weight:900;
+}
+body:has(#workDexterChat:not([hidden])) .wrap{
+ padding-bottom:100px!important;
+}
+@media(max-width:360px){
+ #workDexterChat{padding-left:10px;padding-right:10px}
+ #workDexterChat .work-dexter-msg{max-width:92%;font-size:14px}
+ #workDexterChat .work-dexter-home{padding:0 10px}
+ #workDexterChat #workDexterSend{min-width:72px}
+}
