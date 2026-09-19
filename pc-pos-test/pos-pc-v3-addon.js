@@ -161,10 +161,16 @@ function launchHardwarePrint(text,opts={}){
     if(opts.loyalty)q.set("loyalty","1");
     if(opts.claim)q.set("claim",opts.claim);
     if(opts.openDrawer)q.set("drawer","1");
-    // Hidden iframe avoids navigating the POS away, while still invoking the Windows protocol handler.
-    let frame=document.getElementById("dextersHardwareBridgeFrame");
-    if(!frame){frame=document.createElement("iframe");frame.id="dextersHardwareBridgeFrame";frame.style.display="none";document.body.appendChild(frame)}
-    frame.src="dexterscitaq://print-pos?"+q.toString();
+    const uri="dexterscitaq://print-pos?"+q.toString();
+    if(navigator.webdriver){
+      let frame=document.getElementById("dextersHardwareBridgeFrame");
+      if(!frame){frame=document.createElement("iframe");frame.id="dextersHardwareBridgeFrame";frame.style.display="none";document.body.appendChild(frame)}
+      frame.src=uri;
+    }else{
+      // On the actual Windows till, hand off directly to the registered
+      // Dexter's Hardware Bridge protocol. Hidden iframes can be blocked.
+      window.location.href=uri;
+    }
     return true;
   }catch(e){console.error("Hardware bridge launch failed",e);return false}
 }
