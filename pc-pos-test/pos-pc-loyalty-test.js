@@ -3,6 +3,7 @@
   const TEST_STAMPS_KEY='dexters_pos_test_coffee_stamps_v1';
   const TEST_CUSTOMER_KEY='dexters_pos_test_loyalty_customer_v1';
   let customer=null;
+  window.DextersGetLoyaltyCustomer=()=>customer?JSON.parse(JSON.stringify(customer)):null;
   const $=id=>document.getElementById(id);
   const esc2=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const status=msg=>{const el=$('status');if(el)el.textContent=msg};
