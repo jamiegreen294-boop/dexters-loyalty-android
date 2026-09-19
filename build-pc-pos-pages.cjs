@@ -8,6 +8,11 @@ fs.rmSync(out,{recursive:true,force:true});
 fs.mkdirSync(out,{recursive:true});
 let html=fs.readFileSync('dist/pos.html','utf8');
 for(const f of files){
+  // Most feature modules are copied to dist by the main build. New POS-only modules
+  // may live directly in web/, so stage them into dist before assembling Pages.
+  if(!fs.existsSync('dist/'+f) && fs.existsSync('web/'+f)){
+    fs.copyFileSync('web/'+f,'dist/'+f);
+  }
   if(!fs.existsSync('dist/'+f)) throw new Error('Missing '+f);
   fs.copyFileSync('dist/'+f,path.join(out,f));
   html=html.replaceAll('src="/'+f+'"','src="./'+f+'"');
