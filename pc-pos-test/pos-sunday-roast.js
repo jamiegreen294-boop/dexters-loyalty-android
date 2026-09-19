@@ -70,7 +70,19 @@ async function save(){
   if(method==='paid_full')paid=t;if(method==='unpaid'||method==='credit')paid=0;
   if(method==='credit'&&(!selectedCustomer.credit?.eligible||selectedCustomer.credit.available_pence<t))throw Error('This customer does not have enough approved credit available.');
   const x=await call({action:'create',customer_id:selectedCustomer?.id||null,customer_name:walkIn?$('srWalkName').value.trim():'',customer_phone:walkIn?$('srWalkPhone').value.trim():'',collection_date:cfg.collection_date,collection_slot:$('srSlot').value,meals:state.meals,extras:state.extras,payment_status:method==='credit'?'unpaid':method,paid_pence:paid,payment_method:method,credit_account_id:method==='credit'?selectedCustomer?.credit?.id:null,manual_override:!!$('srManualOverride')?.checked,order_notes:$('srOrderNotes').value});
-  msg.textContent='SR-'+String(x.order.order_number).padStart(3,'0')+' created for '+(selectedCustomer?.full_name||$('srWalkName').value.trim())+'.';resetNew();await refresh();
+  const createdNumber='SR-'+String(x.order.order_number).padStart(3,'0');
+  const createdName=selectedCustomer?.full_name||$('srWalkName').value.trim();
+  msg.textContent=createdNumber+' created for '+createdName+'.';
+  resetNew();
+  try{$('srLiveModal')?.classList.add('srHide')}catch{}
+  try{if(typeof window.pcShowCategories==='function')window.pcShowCategories()}catch{}
+  try{
+    const toast=document.createElement('div');
+    toast.textContent=createdNumber+' created for '+createdName;
+    toast.style='position:fixed;right:22px;bottom:22px;z-index:30000;background:#123f2c;color:#d7ffe3;border:1px solid #2f7d55;border-radius:12px;padding:14px 18px;font-weight:900;box-shadow:0 8px 24px #0008';
+    document.body.appendChild(toast);setTimeout(()=>toast.remove(),2800);
+  }catch{}
+  return;
  }catch(e){msg.textContent=e.message;msg.className='bad'}
 }
 async function takePayment(o){if(!o||Number(o.balance_pence||0)<=0)return;try{await call({action:'payment',id:o.id});await refresh()}catch(e){alert(e.message)}}
