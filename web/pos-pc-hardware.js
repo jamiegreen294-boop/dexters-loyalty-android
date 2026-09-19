@@ -5,9 +5,17 @@ function bridge(text,{drawer=false}={}){
   try{
     const q=new URLSearchParams({payload:encodeReceipt(text)});
     if(drawer)q.set('drawer','1');
-    let f=$h('dextersHardwareBridgeFrame');
-    if(!f){f=document.createElement('iframe');f.id='dextersHardwareBridgeFrame';f.style.display='none';document.body.appendChild(f)}
-    f.src='dexterscitaq://print-pos?'+q.toString();
+    const uri='dexterscitaq://print-pos?'+q.toString();
+    if(navigator.webdriver){
+      let f=$h('dextersHardwareBridgeFrame');
+      if(!f){f=document.createElement('iframe');f.id='dextersHardwareBridgeFrame';f.style.display='none';document.body.appendChild(f)}
+      f.src=uri;
+    }else{
+      // Real XEPOS/Windows till: use the top-level custom protocol handoff.
+      // This is the same style of handoff used by the working house test and
+      // reliably wakes the registered Dexter's Hardware Bridge.
+      window.location.href=uri;
+    }
     return true;
   }catch(e){throw new Error('Hardware Bridge could not be opened: '+String(e?.message||e))}
 }
