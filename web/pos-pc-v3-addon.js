@@ -14,6 +14,40 @@ window.DextersPosModal=modal;
 function cartTotal(){return Number(String($x('total')?.textContent||'0').replace(/[^0-9.]/g,''))||0}
 function cartSnapshot(){return (S.cart||[]).map(x=>({name:x.name,qty:Number(x.qty)||1,unit:Number(x.unit)||0,mods:x.mods||x.modifiers||[]}))}
 async function kitchenSend(){const b=$x('sendBtn');if(!b)return;try{b.click()}catch{}}
+function hardwarePrintSale(sale){
+  try{
+    const items=(sale.items||[]).flatMap(x=>{
+      const qty=Number(x.qty)||1,unit=Number(x.unit)||0;
+      const rows=[qty+" x "+String(x.name||"Item")+"  "+cashMoney(qty*unit)];
+      for(const m of (x.mods||[])){
+        const opts=(m.options||[]).map(o=>String(o.name||o)).filter(Boolean).join(", ");
+        if(opts) rows.push("  > "+String(m.name||"Option")+": "+opts);
+      }
+      return rows;
+    });
+    const staff=String(sale.staffName||sale.staff||"").split("@")[0].trim();
+    const txt=[
+      "DEXTER'S",
+      "10a Dundasvale Court, Glasgow, G4 0JS",
+      "POS RECEIPT",
+      new Date(sale.created_at||Date.now()).toLocaleString("en-GB"),
+      "----------------",
+      ...items,
+      "----------------",
+      "TOTAL "+cashMoney(sale.total||0),
+      "Payment: "+String(sale.method||"").toUpperCase(),
+      staff?("Served by: "+staff):"",
+      "",
+      "Thank you for choosing Dexter's"
+    ].filter(Boolean).join("\n");
+    localStorage.setItem("dexters-pos-last-receipt",txt);
+    const payload=btoa(unescape(encodeURIComponent(txt)));
+    location.href="dexterscitaq://print-pos?payload="+encodeURIComponent(payload);
+    return true;
+  }catch(e){console.error("Hardware bridge print failed",e);return false}
+}
+window.DextersHardwarePrintSale=hardwarePrintSale;
+
 function recordSale(method,tendered=0,change=0,kind='sale',extra={}){const sale={id:'PC-'+Date.now()+'-'+Math.random().toString(16).slice(2),created_at:new Date().toISOString(),method,total:cartTotal(),tendered,change,kind,items:cartSnapshot(),mode:S.mode,tableNo:S.tableNo,staff:S.staffEmail||'',...extra};const a=readSales();a.unshift(sale);saveSales(a);window.dispatchEvent(new CustomEvent('dexters-pc-test-sale-complete',{detail:sale}));return sale}
 function ensurePayCss(){if(document.getElementById('pcPayCss'))return;const s=document.createElement('style');s.id='pcPayCss';s.textContent=`
 .pcPayBox{width:min(780px,96vw)!important;max-height:94vh!important;overflow:auto}.pcPayLayout{display:grid;grid-template-columns:1fr 360px;gap:18px}.pcPaySummary{background:#0b192b;border:1px solid #31506f;border-radius:16px;padding:18px}.pcPayTotal{font-size:42px;font-weight:1000;color:#ffd43b;margin:8px 0 18px}.pcTender{font-size:34px;font-weight:1000;background:#07111f;border:2px solid #31506f;border-radius:14px;padding:14px;text-align:right}.pcChange{font-size:28px;font-weight:1000;margin-top:14px;padding:14px;border-radius:14px;background:#10213a}.pcChange.ok{color:#8ff0b3}.pcChange.bad{color:#ffadb8}.pcQuick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.pcQuick button,.pcKey,.pcPayConfirm,.pcPayCancel,.pcMethod{border:0;border-radius:12px;font-weight:1000;touch-action:manipulation}.pcQuick button{padding:13px;background:#203a5d;color:white}.pcKeys{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.pcKey{min-height:68px;font-size:28px;background:#162a45;color:white}.pcKey:active{transform:scale(.97)}.pcKey.action{background:#263c58}.pcPayActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.pcPayConfirm{padding:16px;background:#22c55e;color:#04210d;font-size:18px}.pcPayConfirm:disabled{opacity:.45}.pcPayCancel{padding:16px;background:#5a1420;color:white;font-size:18px}.pcMethodGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pcMethod{padding:28px 16px;font-size:26px}.pcMethod.cashM{background:#22c55e;color:#04210d}.pcMethod.cardM{background:#4d7cff;color:white}@media(max-width:720px){.pcPayLayout{grid-template-columns:1fr}.pcPayBox{width:98vw!important}.pcKey{min-height:58px}}
@@ -25,9 +59,9 @@ function cashKeypad(title,total,onConfirm){ensurePayCss();let value='';const d=d
  d.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const q=b.dataset.q;if(q==='exact')value=total.toFixed(2);else if(q==='clear')value='';else value=String(q);redraw()});
  d.querySelector('.pcPayCancel').onclick=()=>d.remove();confirmBtn.onclick=()=>{const tender=amount();if(tender<total)return;const change=Math.round((tender-total)*100)/100;d.remove();onConfirm(tender,change)};redraw();return d}
 function cardConfirm(title,total,onConfirm){ensurePayCss();const d=document.createElement('div');d.className='modal';d.innerHTML='<div class="box pcPayBox"><h2>'+title+' · CARD</h2><div class="pcPaySummary"><div style="color:#9eb0c5">CARD AMOUNT</div><div class="pcPayTotal">'+cashMoney(total)+'</div><p style="color:#9eb0c5">PC TEST: this records an approved card payment without charging a real card.</p><div class="pcPayActions"><button class="pcPayCancel">CANCEL</button><button class="pcPayConfirm">APPROVE TEST PAYMENT</button></div></div></div>';document.body.appendChild(d);d.querySelector('.pcPayCancel').onclick=()=>d.remove();d.querySelector('.pcPayConfirm').onclick=()=>{d.remove();onConfirm()};return d}
-function cashPay(){const total=cartTotal();if(total<=0){modal('Payment','<p>Add items to the basket first.</p>');return}cashKeypad('Sale',total,(tender,change)=>{recordSale('cash',tender,change);kitchenSend();const d=modal('Payment complete','<div class="pcPayTotal">CHANGE '+cashMoney(change)+'</div><p>Cash sale recorded in PC TEST.</p>');setTimeout(()=>{if(document.body.contains(d))d.remove()},3500)})}
-function cardPay(){const total=cartTotal();if(total<=0){modal('Payment','<p>Add items to the basket first.</p>');return}cardConfirm('Sale',total,()=>{recordSale('card',total,0);kitchenSend();const d=modal('Payment complete','<div class="pcPayTotal">'+cashMoney(total)+'</div><p>Card sale approved in PC TEST.</p>');setTimeout(()=>{if(document.body.contains(d))d.remove()},2500)})}
-function choosePay(){const total=cartTotal();if(total<=0){modal('Payment','<p>Add items to the basket first.</p>');return}paymentMethodModal('Pay',total,(tender,change)=>{recordSale('cash',tender,change);kitchenSend();const d=modal('Payment complete','<div class="pcPayTotal">CHANGE '+cashMoney(change)+'</div><p>Cash sale recorded in PC TEST.</p>');setTimeout(()=>{if(document.body.contains(d))d.remove()},3500)},()=>{recordSale('card',total,0);kitchenSend();const d=modal('Payment complete','<div class="pcPayTotal">'+cashMoney(total)+'</div><p>Card sale approved in PC TEST.</p>');setTimeout(()=>{if(document.body.contains(d))d.remove()},2500)})}
+function cashPay(){const total=cartTotal();if(total<=0){modal('Payment','<p>Add items to the basket first.</p>');return}cashKeypad('Sale',total,(tender,change)=>{const sale=recordSale('cash',tender,change);hardwarePrintSale(sale);kitchenSend();const d=modal('Payment complete','<div class="pcPayTotal">CHANGE '+cashMoney(change)+'</div><p>Cash sale recorded in PC TEST.</p>');setTimeout(()=>{if(document.body.contains(d))d.remove()},3500)})}
+function cardPay(){const total=cartTotal();if(total<=0){modal('Payment','<p>Add items to the basket first.</p>');return}cardConfirm('Sale',total,()=>{const sale=recordSale('card',total,0);hardwarePrintSale(sale);kitchenSend();const d=modal('Payment complete','<div class="pcPayTotal">'+cashMoney(total)+'</div><p>Card sale approved in PC TEST.</p>');setTimeout(()=>{if(document.body.contains(d))d.remove()},2500)})}
+function choosePay(){const total=cartTotal();if(total<=0){modal('Payment','<p>Add items to the basket first.</p>');return}paymentMethodModal('Pay',total,(tender,change)=>{const sale=recordSale('cash',tender,change);hardwarePrintSale(sale);kitchenSend();const d=modal('Payment complete','<div class="pcPayTotal">CHANGE '+cashMoney(change)+'</div><p>Cash sale recorded in PC TEST.</p>');setTimeout(()=>{if(document.body.contains(d))d.remove()},3500)},()=>{const sale=recordSale('card',total,0);hardwarePrintSale(sale);kitchenSend();const d=modal('Payment complete','<div class="pcPayTotal">'+cashMoney(total)+'</div><p>Card sale approved in PC TEST.</p>');setTimeout(()=>{if(document.body.contains(d))d.remove()},2500)})}
 function installPay(){const pay=document.querySelector('.pay');if(!pay)return;$x('cashBtn')?.remove();$x('cardBtn')?.remove();let b=$x('payBtn');if(!b){b=document.createElement('button');b.id='payBtn';b.className='cash';b.textContent='PAY';b.style='grid-column:1/-1;min-height:64px;font-size:24px';pay.insertBefore(b,$x('sendBtn'))}b.onclick=choosePay}
 function salesView(){const rows=readSales();const html=rows.length?rows.slice(0,100).map(r=>'<div class="held"><b>'+new Date(r.created_at).toLocaleString()+'</b> · '+String(r.kind||'sale').toUpperCase()+' · '+String(r.method||'')+' · '+cashMoney(r.total||r.amount||0)+'</div>').join(''):'<p>No PC test sales yet.</p>';modal('Sales · PC TEST',html)}
 function cashup(){const rows=readSales();let cash=0,card=0,credit=0;for(const r of rows){if(r.kind==='money_owed')credit+=Number(r.amount||0);if(r.method==='cash')cash+=Number(r.total||r.amount||0);if(r.method==='card')card+=Number(r.total||r.amount||0)}modal('Cash up · PC TEST','<div class="group"><div class="sumrow"><span>Cash</span><b>'+cashMoney(cash)+'</b></div><div class="sumrow"><span>Card</span><b>'+cashMoney(card)+'</b></div><div class="sumrow"><span>Money Owed payments</span><b>'+cashMoney(credit)+'</b></div><div class="sumrow grand"><span>Total</span><b>'+cashMoney(cash+card)+'</b></div></div><p style="color:#9eb0c5">PC test data only.</p>')}
