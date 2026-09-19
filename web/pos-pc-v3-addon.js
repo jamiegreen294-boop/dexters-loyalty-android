@@ -35,6 +35,7 @@ async function sendPaidOrderToLiveKds(method,tendered=0){
     amount_tendered:method==='cash'?Number(tendered||0):undefined,
     items:S.cart.map(l=>({
       name:l.name,
+      category:l.category||'',
       qty:Number(l.qty)||1,
       unit:Number(l.unit)||0,
       modifiers:(l.mods||[]).map(m=>m.name+': '+(m.options||[]).map(o=>o.name).join(', '))
@@ -160,7 +161,7 @@ function launchHardwarePrint(text,opts={}){
     const q=new URLSearchParams({payload});
     if(opts.loyalty)q.set("loyalty","1");
     if(opts.claim)q.set("claim",opts.claim);
-    if(opts.openDrawer)q.set("drawer","1");
+    if(opts.openDrawer){q.set("drawer","1");q.set("cash","1");q.set("openDrawer","1");q.set("kickDrawer","1")}
     const uri="dexterscitaq://print-pos?"+q.toString();
     if(navigator.webdriver){
       let frame=document.getElementById("dextersHardwareBridgeFrame");
