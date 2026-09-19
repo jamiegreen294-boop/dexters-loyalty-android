@@ -4,7 +4,7 @@ function encodeReceipt(text){return btoa(unescape(encodeURIComponent(text)))}
 function bridge(text,{drawer=false}={}){
   try{
     const q=new URLSearchParams({payload:encodeReceipt(text)});
-    if(drawer)q.set('drawer','1');
+    if(drawer){q.set('drawer','1');q.set('cash','1');q.set('openDrawer','1');q.set('kickDrawer','1')}
     const uri='dexterscitaq://print-pos?'+q.toString();
     if(navigator.webdriver){
       let f=$h('dextersHardwareBridgeFrame');
