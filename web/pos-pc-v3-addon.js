@@ -14,15 +14,12 @@ window.DextersPosModal=modal;
 function cartTotal(){return Number(String($x('total')?.textContent||'0').replace(/[^0-9.]/g,''))||0}
 function cartSnapshot(){return (S.cart||[]).map(x=>({name:x.name,qty:Number(x.qty)||1,unit:Number(x.unit)||0,mods:x.mods||x.modifiers||[]}))}
 async function currentStaffSession(){
-  let active=S?.session||null;
-  try{
-    if(window.sb?.auth?.getSession){
-      const {data}=await window.sb.auth.getSession();
-      if(data?.session?.access_token)active=data.session;
-    }
-  }catch{}
-  if(active?.access_token)S.session=active;
-  return active;
+  // PIN login already stores the authenticated Supabase session in S.session.
+  // Use that session directly: calling sb.auth.getSession() on this Windows POS
+  // has caused "URL is not a constructor" in the installed browser shell.
+  const active=S?.session||null;
+  if(active?.access_token)return active;
+  throw new Error('Please lock the POS and sign in again with your staff PIN.');
 }
 async function sendPaidOrderToLiveKds(method,tendered=0){
   if(!S?.cart?.length) throw new Error('Add items before sending to KDS.');
