@@ -13,9 +13,21 @@ function modal(title,html,wide=false){const d=document.createElement('div');d.cl
 window.DextersPosModal=modal;
 function cartTotal(){return Number(String($x('total')?.textContent||'0').replace(/[^0-9.]/g,''))||0}
 function cartSnapshot(){return (S.cart||[]).map(x=>({name:x.name,qty:Number(x.qty)||1,unit:Number(x.unit)||0,mods:x.mods||x.modifiers||[]}))}
+async function currentStaffSession(){
+  let active=S?.session||null;
+  try{
+    if(window.sb?.auth?.getSession){
+      const {data}=await window.sb.auth.getSession();
+      if(data?.session?.access_token)active=data.session;
+    }
+  }catch{}
+  if(active?.access_token)S.session=active;
+  return active;
+}
 async function sendPaidOrderToLiveKds(method,tendered=0){
   if(!S?.cart?.length) throw new Error('Add items before sending to KDS.');
-  if(!S?.session?.access_token) throw new Error('Please sign in again.');
+  const activeSession=await currentStaffSession();
+  if(!activeSession?.access_token) throw new Error('Please sign in again.');
   const body={
     order_type:S.mode,
     customer_name:S.customer,
@@ -33,7 +45,7 @@ async function sendPaidOrderToLiveKds(method,tendered=0){
   };
   const r=await fetch(U+'/functions/v1/dexters-pos-test-api/orders',{
     method:'POST',
-    headers:{apikey:K,Authorization:'Bearer '+S.session.access_token,'Content-Type':'application/json'},
+    headers:{apikey:K,Authorization:'Bearer '+activeSession.access_token,'Content-Type':'application/json'},
     body:JSON.stringify(body)
   });
   const d=await r.json().catch(()=>({}));
