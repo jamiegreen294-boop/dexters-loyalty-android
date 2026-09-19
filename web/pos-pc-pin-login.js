@@ -1,7 +1,7 @@
 (()=>{
 const API=U+'/functions/v1/pc-pos-pin-auth';
 const DEV_ID='dexters_pc_pin_device_id_v1',DEV_SEC='dexters_pc_pin_device_secret_v1',USER_ID='dexters_pc_pin_user_id_v1',USER_NAME='dexters_pc_pin_user_name_v1';
-const FEATURE_SCRIPTS=['pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-pc-collection-orders.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-expiry.js','pos-pc-account-statements.js','pos-pc-capacity.js','pos-pc-close-day.js','pos-pc-security-audit.js'];
+const FEATURE_SCRIPTS=['pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-hardware.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-pc-collection-orders.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-expiry.js','pos-pc-account-statements.js','pos-pc-capacity.js','pos-pc-close-day.js','pos-pc-security-audit.js'];
 const $p=id=>document.getElementById(id);
 const memStore=new Map();
 function cookieGet(k){try{const n=encodeURIComponent(k)+'=';const hit=document.cookie.split('; ').find(x=>x.startsWith(n));return hit?decodeURIComponent(hit.slice(n.length)):''}catch{return''}}
