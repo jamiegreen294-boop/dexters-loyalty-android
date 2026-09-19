@@ -24,7 +24,7 @@ function openHardware(){
  const d=modalH('Hardware','<div class="held"><b>Windows Hardware Bridge</b><br>Printer: POS-80 · USB001<br>Cash drawer: connected through printer</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px"><button id="hwPrint" class="confirm" style="padding:14px">TEST PRINTER</button><button id="hwDrawer" class="confirm" style="padding:14px">TEST DRAWER</button></div><div id="hwMsg" style="margin-top:12px;color:#9eb0c5">Use these tests before opening for service.</div>');
  const msg=d.querySelector('#hwMsg');
  d.querySelector('#hwPrint').onclick=()=>{try{bridge("DEXTER'S\nHARDWARE TEST\nPrinter: POS-80 / USB001\n"+new Date().toLocaleString('en-GB')+"\n\n");msg.textContent='Printer test sent to Windows Hardware Bridge.'}catch(e){msg.textContent=e.message}};
- d.querySelector('#hwDrawer').onclick=()=>{try{bridge("DEXTER'S\nDRAWER TEST\n"+new Date().toLocaleString('en-GB')+"\n\n",{drawer:true});msg.textContent='Drawer test sent to Windows Hardware Bridge.'}catch(e){msg.textContent=e.message}};
+ d.querySelector('#hwDrawer').onclick=()=>{try{bridge("DEXTER'S\nDRAWER TEST\n"+new Date().toLocaleString('en-GB')+"\nCash\n\n",{drawer:true});msg.textContent='Drawer test sent to Windows Hardware Bridge.'}catch(e){msg.textContent=e.message}};
 }
 function install(){
  const top=document.querySelector('.top');if(!top)return;
