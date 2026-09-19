@@ -3,21 +3,10 @@ const $h=id=>document.getElementById(id);
 function encodeReceipt(text){return btoa(unescape(encodeURIComponent(text)))}
 function bridge(text,{drawer=false}={}){
   try{
-    const q=new URLSearchParams({payload:encodeReceipt(text)});
-    if(drawer){q.set('drawer','1');q.set('cash','1');q.set('openDrawer','1');q.set('kickDrawer','1')}
-    const uri='dexterscitaq://print-pos?'+q.toString();
-    if(navigator.webdriver){
-      let f=$h('dextersHardwareBridgeFrame');
-      if(!f){f=document.createElement('iframe');f.id='dextersHardwareBridgeFrame';f.style.display='none';document.body.appendChild(f)}
-      f.src=uri;
-    }else{
-      // Real XEPOS/Windows till: use the top-level custom protocol handoff.
-      // This is the same style of handoff used by the working house test and
-      // reliably wakes the registered Dexter's Hardware Bridge.
-      window.location.href=uri;
-    }
+    const payload=encodeReceipt(text);
+    window.location.href='dexterscitaq://print-pos?payload='+encodeURIComponent(payload);
     return true;
-  }catch(e){throw new Error('Hardware Bridge could not be opened: '+String(e?.message||e))}
+}catch(e){throw new Error('Hardware Bridge could not be opened: '+String(e?.message||e))}
 }
 function modalH(title,html){if(window.DextersPosModal)return window.DextersPosModal(title,html,true);const d=document.createElement('div');d.className='modal';d.innerHTML='<div class="box"><h2>'+title+'</h2>'+html+'<div class="actions"><button class="cancel pcClose">Close</button></div></div>';document.body.appendChild(d);d.querySelector('.pcClose').onclick=()=>d.remove();return d}
 function openHardware(){
