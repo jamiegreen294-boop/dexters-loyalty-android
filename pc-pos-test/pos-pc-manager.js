@@ -41,7 +41,54 @@ function drawer(){managerGate(()=>{audit('manual_drawer_open');modal('Cash Drawe
 function cashUp(){const rows=salesRows();let cash=0,square=0,owed=0,refunds=0,voids=0;for(const r of rows){const v=Number(r.total||r.amount||0);const method=r.method==='card'?'square':r.method;if(r.kind==='refund'){refunds+=Math.abs(v);continue}if(r.kind==='void'){voids+=Math.abs(v);continue}if(r.kind==='money_owed')owed+=Math.max(0,v);if(method==='cash')cash+=v;if(method==='square')square+=v}const d=modal('Cash Up','<div class="group"><div class="sumrow"><span>Cash sales/payments</span><b>'+money(cash)+'</b></div><div class="sumrow"><span>Square</span><b>'+money(square)+'</b></div><div class="sumrow"><span>Money Owed payments</span><b>'+money(owed)+'</b></div><div class="sumrow"><span>Refunds</span><b>-'+money(refunds)+'</b></div><div class="sumrow"><span>Voids</span><b>-'+money(voids)+'</b></div></div><label>Opening float</label><input id="mgrFloat" class="field" inputmode="decimal" value="0.00"><label>Actual cash counted</label><input id="mgrActual" class="field" inputmode="decimal" value="0.00"><button id="mgrCalc" class="confirm" style="border:0;border-radius:10px;padding:12px 16px;font-weight:900">CALCULATE</button><div id="mgrVariance" style="margin-top:12px;font-size:22px;font-weight:1000"></div>',true);d.querySelector('#mgrCalc').onclick=()=>{const fl=Number(d.querySelector('#mgrFloat').value||0),actual=Number(d.querySelector('#mgrActual').value||0),expected=fl+cash,variance=actual-expected;d.querySelector('#mgrVariance').innerHTML='Expected cash: '+money(expected)+'<br>Variance: '+money(variance);audit('cash_up',{float:fl,actual,expected,variance,cash,square,refunds,voids})}}
 function auditView(){const rows=read(AUDIT_KEY);modal('Audit Log',rows.length?rows.slice(0,200).map(r=>'<div class="held"><b>'+new Date(r.at).toLocaleString()+'</b> · '+String(r.action||'')+'<br><small>'+String(r.staff||'')+'</small></div>').join(''):'<p>No audit entries.</p>',true)}
 function addTop(id,label,fn){let b=$m(id);if(!b){b=document.createElement('button');b.id=id;b.textContent=label;const top=document.querySelector('.top');top?.insertBefore(b,$m('staffBtn')||null)}if(b)b.onclick=fn;return b}
-function squareSale(){const total=Number(String($m('total')?.textContent||'0').replace(/[^0-9.]/g,''))||0;if(total<=0){modal('Square','<p>Add items first.</p>');return}const d=modal('Square Payment','<div style="font-size:40px;font-weight:1000;color:#ffd43b">'+money(total)+'</div><p>Take '+money(total)+' on the Square reader, then confirm after Square shows the payment as approved.</p><div class="actions"><button class="cancel sqCancel">CANCEL</button><button class="confirm sqApprove">SQUARE APPROVED</button></div>');d.querySelector('.sqCancel').onclick=()=>d.remove();d.querySelector('.sqApprove').onclick=()=>{const rows=salesRows();rows.unshift({id:'PC-'+Date.now(),created_at:new Date().toISOString(),kind:'sale',method:'square',total,items:(S.cart||[]).map(x=>({name:x.name,qty:Number(x.qty)||1,unit:Number(x.unit)||0,mods:x.mods||x.modifiers||[]})),mode:S.mode,tableNo:S.tableNo,staff:S.staffEmail||''});saveSales(rows);audit('square_sale',{amount:total});d.remove();try{$m('sendBtn')?.click()}catch{}modal('Payment complete','<div style="font-size:34px;font-weight:1000">'+money(total)+'</div><p>Square payment recorded in PC TEST.</p>')}}
+let squarePaymentActive=false;
+async function squareBridge(body){
+  if(!S?.session?.access_token)throw Error('Staff session required');
+  const r=await fetch(U+'/functions/v1/pc-pos-square-bridge',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+S.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
+  const x=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(x.error||'Square bridge unavailable');
+  return x;
+}
+window.DextersPcSquarePay=async(amount,reference='PC POS')=>{
+  const pence=Math.round(Number(amount||0)*100);
+  if(pence<1)throw Error('Invalid Square amount');
+  const made=await squareBridge({action:'create',amount_pence:pence,reference});
+  const id=made?.request?.id;
+  if(!id)throw Error('Could not create Square payment request');
+  const started=Date.now();
+  while(Date.now()-started<190000){
+    const s=await squareBridge({action:'status',id});
+    const q=s?.request;
+    if(!q)throw Error('Square payment request disappeared');
+    if(q.status==='approved')return q;
+    if(['cancelled','failed','expired'].includes(q.status))throw Error(q.error_message||('Square payment '+q.status));
+    await new Promise(r=>setTimeout(r,900));
+  }
+  try{await squareBridge({action:'cancel',id})}catch{}
+  throw Error('Square payment timed out');
+};
+async function squareSale(){
+  const total=Number(String($m('total')?.textContent||'0').replace(/[^0-9.]/g,''))||0;
+  if(total<=0){modal('Square','<p>Add items first.</p>');return}
+  if(squarePaymentActive){modal('Square','<p>A Square payment is already in progress.</p>');return}
+  squarePaymentActive=true;
+  const d=modal('Square Payment','<div style="font-size:40px;font-weight:1000;color:#ffd43b">'+money(total)+'</div><p class="sqState">Sending payment to Foodhub terminal…</p><p><small>Square will open automatically on the Foodhub terminal. This sale will only complete after Square approves it.</small></p>');
+  const state=d.querySelector('.sqState');
+  try{
+    state.textContent='Waiting for Foodhub / Square approval…';
+    const result=await window.DextersPcSquarePay(total,'Counter sale '+new Date().toLocaleTimeString());
+    const rows=salesRows();
+    rows.unshift({id:'PC-'+Date.now(),created_at:new Date().toISOString(),kind:'sale',method:'square',total,square_transaction_id:result.transaction_id||'',items:(S.cart||[]).map(x=>({name:x.name,qty:Number(x.qty)||1,unit:Number(x.unit)||0,mods:x.mods||x.modifiers||[]})),mode:S.mode,tableNo:S.tableNo,staff:S.staffEmail||''});
+    saveSales(rows);
+    audit('square_sale',{amount:total,transaction_id:result.transaction_id||''});
+    d.remove();
+    try{$m('sendBtn')?.click()}catch{}
+    modal('Payment complete','<div style="font-size:34px;font-weight:1000">'+money(total)+'</div><p>Square approved on Foodhub terminal.</p>');
+  }catch(e){
+    state.textContent='Payment not completed: '+e.message;
+    audit('square_sale_failed',{amount:total,error:e.message});
+  }finally{squarePaymentActive=false}
+}
 function relabelSquare(){const card=$m('cardBtn');if(card){if(card.textContent!=='SQUARE')card.textContent='SQUARE';card.onclick=squareSale}document.querySelectorAll('.cardM').forEach(b=>{if(b.textContent!=='SQUARE')b.textContent='SQUARE'});document.querySelectorAll('.pcMethod.cardM').forEach(b=>{if(b.textContent!=='SQUARE')b.textContent='SQUARE'})}
 function install(){addTop('pcRefundBtn','Refunds / Voids',refundScreen);addTop('pcDrawerBtn','Drawer',drawer);addTop('pcAuditBtn','Audit',auditView);const cu=$m('pcCashupBtn')||[...document.querySelectorAll('.top button')].find(b=>/cash\s*up/i.test(b.textContent||''));if(cu)cu.onclick=cashUp;addTop('pcManagerPinBtn','Manager PIN',setManagerPin);addTop('pcManagePosStaffBtn','Manage POS Staff',()=>managePosStaff());relabelSquare();new MutationObserver(relabelSquare).observe(document.body,{childList:true,subtree:true})}
 window.addEventListener('load',install);if(document.readyState==='complete')install();
