@@ -158,7 +158,8 @@ function launchHardwarePrint(text,opts={}){
   try{
     localStorage.setItem("dexters-pos-last-receipt",text);
     const payload=btoa(unescape(encodeURIComponent(text)));
-    window.location.href="dexterscitaq://print-pos?payload="+encodeURIComponent(payload);
+    const openDrawer=Boolean(opts?.openDrawer||opts?.drawer);
+    window.location.href="dexterscitaq://print-pos?payload="+encodeURIComponent(payload)+(openDrawer?"&drawer=1":"");
     return true;
   }catch(e){console.error("Hardware bridge launch failed",e);return false}
 }
