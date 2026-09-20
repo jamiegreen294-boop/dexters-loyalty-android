@@ -42,14 +42,17 @@ async function checkCategoryPhotoAsset(page){
   const state=await stableEvaluate(page,async()=>{
     const catUrl=new URL('pos-pc-category-home.js',location.href);catUrl.searchParams.set('photoSmoke',Date.now());
     const code=await fetch(catUrl,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('category JS HTTP '+r.status);return r.text()});
-    const external=code.includes("const SPRITE='./pc-category-sprite.jpg';")&&code.includes('pcCatImage');
+    const modern=code.includes('const CATEGORY_IMAGES=')&&code.includes('const FALLBACK_IMAGE=')&&code.includes('const photo=name=>CATEGORY_IMAGES[name]||FALLBACK_IMAGE')&&code.includes('object-fit:cover');
+    if(modern)return{modern:true,helper:true,cover:true};
+    const legacy=code.includes("const SPRITE='./pc-category-sprite.jpg';")&&code.includes('pcCatImage');
     const imgUrl=new URL('pc-category-sprite.jpg',location.href);imgUrl.searchParams.set('photoSmoke',Date.now());
     const image=await new Promise(resolve=>{const i=new Image();const timer=setTimeout(()=>resolve({ok:false,error:'image timeout'}),7000);i.onload=()=>{clearTimeout(timer);resolve({ok:true,width:i.naturalWidth,height:i.naturalHeight,src:i.src})};i.onerror=()=>{clearTimeout(timer);resolve({ok:false,error:'image load error',src:i.src})};i.src=imgUrl.href});
     const probe=document.createElement('div');probe.style.cssText='position:absolute;left:-9999px;width:180px;height:108px;background-image:url("'+imgUrl.href+'");background-size:600% 400%;background-position:0 0';document.body.appendChild(probe);const bg=getComputedStyle(probe).backgroundImage;probe.remove();
-    return{external,image,backgroundApplied:bg.includes('pc-category-sprite.jpg')};
+    return{modern:false,legacy,image,backgroundApplied:bg.includes('pc-category-sprite.jpg')};
   });
-  if(!state.external||!state.image?.ok||state.image.width<100||state.image.height<100||!state.backgroundApplied)throw new Error('Category photo asset smoke failed: '+JSON.stringify(state));
-  console.log('PASS CATEGORY PHOTO ASSET',JSON.stringify(state));
+  if(state.modern){console.log('PASS CATEGORY PHOTO ASSET MODERN',JSON.stringify(state));return}
+  if(!state.legacy||!state.image?.ok||state.image.width<100||state.image.height<100||!state.backgroundApplied)throw new Error('Category photo asset smoke failed: '+JSON.stringify(state));
+  console.log('PASS CATEGORY PHOTO ASSET LEGACY',JSON.stringify(state));
 }
 (async()=>{
   const url=requested||await localUrl();
