@@ -3,7 +3,10 @@ const $h=id=>document.getElementById(id);
 function encodeReceipt(text){return btoa(unescape(encodeURIComponent(text)))}
 function bridge(text,{drawer=false}={}){
   try{
-    const payload=encodeReceipt(text);
+    // Direct ESC/POS drawer pulse. This bypasses any cash-text parsing in the
+    // Windows helper and sends the kick command through the same raw print path.
+    const pulse=drawer?'\x1b\x70\x00\x3c\x78\x1b\x70\x01\x3c\x78':'';
+    const payload=encodeReceipt(pulse+text);
     location.href='dexterscitaq://print-pos?payload='+encodeURIComponent(payload);
     return true;
 }catch(e){throw new Error('Hardware Bridge could not be opened: '+String(e?.message||e))}
