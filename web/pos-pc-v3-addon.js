@@ -180,6 +180,8 @@ async function hardwarePrintSale(sale){
   }catch(e){console.error("Hardware bridge print failed",e);return false}
 }
 window.DextersHardwarePrintSale=hardwarePrintSale;
+window.DextersHardwarePrintText=launchHardwarePrint;
+window.DextersIssueReceiptClaim=issueReceiptClaim;
 
 function recordSale(method,tendered=0,change=0,kind='sale',extra={}){const loyalty_customer=window.DextersGetLoyaltyCustomer?.()||null;const sale={id:'PC-'+Date.now()+'-'+Math.random().toString(16).slice(2),created_at:new Date().toISOString(),method,total:cartTotal(),tendered,change,kind,items:cartSnapshot(),mode:S.mode,tableNo:S.tableNo,loyalty_customer,...extra};const a=readSales();a.unshift(sale);saveSales(a);window.dispatchEvent(new CustomEvent('dexters-pc-test-sale-complete',{detail:sale}));return sale}
 function ensurePayCss(){if(document.getElementById('pcPayCss'))return;const s=document.createElement('style');s.id='pcPayCss';s.textContent=`
