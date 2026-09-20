@@ -12,3 +12,7 @@ android {
         versionName '1.013-pos'
     }
 }
+
+dependencies {
+    implementation 'com.squareup.sdk:point-of-sale-sdk:2.0'
+}
