@@ -68,9 +68,23 @@ button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-he
 .theme-standrews .order-btn,.theme-standrews .basketbtn{background:#ffd45f;color:#091a26;border-radius:999px}
 .theme-standrews .nav{background:#03243af5}.theme-standrews .nav button.active{color:#ffd45f}
 
-#websiteThemeRef{margin:4px 0 14px;border-radius:11px;overflow:hidden;background:#03243a;border:0}
-#websiteThemeRef iframe{display:block;width:100%;height:390px;border:0;background:#03243a}
-#websiteThemeRef .refLabel{padding:9px 12px;background:rgba(0,0,0,.28);font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#fff}
+
+/* Current live loyalty home geometry — test-only copy */
+.current-loyalty-home{padding-bottom:6px}
+.work-top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;margin:0 -14px 12px;padding:12px 14px;background:color-mix(in srgb,var(--bg) 88%,transparent);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(14px)}
+.work-brand{font-weight:900;font-size:28px;letter-spacing:-1px;flex:1}.work-pill{font-size:11px;font-weight:800;border-radius:999px;background:var(--panel2);padding:7px 10px}.staff-link{border:0;background:transparent;color:var(--ink);font-size:11px;font-weight:800;padding:7px 0}
+.work-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--panel) 82%,var(--accent) 18%),var(--panel));border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:20px;box-shadow:0 10px 26px #0003;margin-bottom:14px;overflow:hidden}
+.work-hello{font-size:15px;color:var(--muted)}.work-hero h1{font-size:28px;line-height:1.05;margin:6px 0 12px}.coffee-progress{height:12px;background:var(--panel2);border-radius:999px;overflow:hidden}.coffee-progress i{display:block;width:44%;height:100%;background:var(--accent)}
+.work-count{font-size:13px;color:var(--muted);margin-top:8px}.reward-mini{margin:12px 0 0;padding:10px 0 0;border-top:1px solid rgba(255,255,255,.08)}.reward-mini strong,.reward-mini span{display:block}.reward-mini span{font-size:12px;color:var(--muted);margin-top:3px}
+.collection-btn,.browse-menu{display:block;width:100%;border:0;border-radius:16px;padding:15px 16px;margin-top:16px;background:var(--accent);color:#111;font-weight:900;font-size:16px}
+.current-quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}.work-action{display:block;background:var(--panel);color:var(--ink);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:15px;box-shadow:0 6px 18px #0002;text-align:left;min-width:0;min-height:112px}.work-action .wi{font-size:24px}.work-action .wt{font-weight:900;margin-top:7px}.work-action .wd{font-size:12px;color:var(--muted);margin-top:4px}
+.work-heading{margin:18px 2px 10px;font-weight:900;font-size:18px}.work-deals{margin:0}.offer,.work-row{background:var(--panel);border-radius:18px;padding:14px;margin:0 0 10px}.work-row{display:flex;gap:12px;align-items:center}.work-grow{flex:1;min-width:0}.work-desc{font-size:12px;color:var(--muted);margin-top:4px}.work-small{display:inline-block;border:0;background:var(--panel2);color:var(--ink);border-radius:12px;padding:9px 11px;font-size:12px;font-weight:800}.deal-line{margin-top:9px}.deal-line b{font-size:21px;margin-left:8px}
+.work-order{background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:17px}.work-steps{display:flex;gap:6px;margin-top:12px}.work-step{height:6px;flex:1;background:var(--panel2);border-radius:99px}.work-step.on{background:var(--accent)}
+.browse-menu{margin:16px 0 6px;background:var(--panel2);color:var(--ink);font-size:12px;padding:10px 12px;border-radius:12px;width:auto}
+.current-nav .order-nav{margin:-17px 2px 0;min-height:58px;padding:8px 3px 4px;border-radius:17px!important;background:linear-gradient(135deg,var(--accent),var(--accent2))!important;color:#111!important;box-shadow:0 8px 20px #0005;font-weight:950}
+.dexter-input{margin-top:14px;padding:13px;border-radius:14px;background:var(--panel2);color:var(--muted)}
+.site-season-banner{margin:0 0 14px;border-radius:11px;min-height:145px;padding:18px;background:var(--panel);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;position:relative}.season-kicker{font-size:10px;font-weight:900;letter-spacing:.09em}.season-title{font:700 28px/1.03 Georgia,serif;margin-top:5px}.season-sub{font-size:12px;margin-top:5px;color:var(--muted)}
+.theme-halloween .site-season-banner{background:linear-gradient(180deg,transparent,#17111fe8),#241a2e}.theme-christmas .site-season-banner{background:linear-gradient(180deg,transparent,#03483fe8),#0a5a4e}.theme-valentines .site-season-banner{background:linear-gradient(180deg,transparent,#4a0718e8),#611027}.theme-pride .site-season-banner,.theme-default .site-season-banner,.theme-burns .site-season-banner,.theme-standrews .site-season-banner{background:#0b3851}
 @media(min-width:481px){body{padding:18px 0}.app{border:1px solid #ffffff12;border-radius:28px;overflow:hidden;min-height:calc(100vh - 36px)}.top{border-radius:28px 28px 0 0}.nav{bottom:18px;border-radius:0 0 28px 28px}}
 </style>
 </head>
@@ -88,102 +102,100 @@ button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-he
     <button data-theme="burns">🏴 Burns Night</button>
     <button data-theme="standrews">🏴 St Andrew’s</button>
   </div>
-  <section id="websiteThemeRef">
-  <div class="refLabel">Exact website theme reference</div>
-  <iframe id="themeFrame" title="Exact Dexter's website theme" loading="eager" src="https://dextersspot.co.uk/theme-clean.html?name=halloween"></iframe>
+  <section id="seasonBanner" class="site-season-banner">
+  <div class="season-kicker">DEXTER'S SEASONAL THEME</div>
+  <div class="season-title" id="seasonTitle">Good treats. Dark nights.</div>
+  <div class="season-sub" id="seasonSub">Halloween at Dexter's</div>
 </section>
 
-<main id="home" class="screen active">
-    <section class="order-hero">
-      <button class="order-btn" data-go="order">🍔 ORDER FOR COLLECTION</button>
-      <div class="current">
-        <div class="eyebrow">Current order</div>
-        <div class="order-title">Order #123 · <span id="statusText" class="status-ready">Cooking</span></div>
-        <div class="steps"><span class="step on"></span><span class="step on"></span><span class="step"></span><span class="step"></span></div>
-        <div class="step-labels"><span>Accepted</span><span>Cooking</span><span>Ready</span><span>Collected</span></div>
-        <button class="smallbtn" style="margin-top:11px" id="advanceStatus">Preview next status</button>
-      </div>
-    </section>
+<main id="home" class="screen active current-loyalty-home">
+  <div class="work-top">
+    <div class="work-brand">DEXTER’S</div>
+    <div class="work-pill">Collection OPEN</div>
+    <button class="staff-link">Staff / Admin</button>
+  </div>
 
-    <section class="card">
-      <div class="eyebrow">Your loyalty</div>
-      <div class="loyalty-row" style="margin-top:10px">
-        <div class="loyalty-box"><span>☕ Coffee</span><b>4 / 9</b><div class="progress"><i></i></div></div>
-        <div class="loyalty-box"><span>⭐ Points</span><b>126</b><small style="color:var(--muted)">£1.26 value</small></div>
-      </div>
-    </section>
-
-    <section class="quick">
-      <button class="tile" data-go="rewards"><div class="icon">🎁</div><b>Rewards</b><span>Coffee, points, offers & prizes</span></button>
-      <button class="tile" id="orderAgain"><div class="icon">⭐</div><b>Order Again</b><span>Your usual, favourites & recent orders</span></button>
-      <button class="tile"><div class="icon">🎡</div><b>Spin to Win</b><span>Play your daily spin when active</span></button>
-      <button class="tile"><div class="icon">💬</div><b>Ask Dexter</b><span>Help, menu questions & cheeky banter</span></button>
-    </section>
-
-    <div class="section-title">Dexter's Deal</div>
-    <section class="card deal">
-      <div class="eyebrow">September offer</div>
-      <h3 style="margin:7px 0 6px">🔥 Back to Routine</h3>
-      <div style="color:var(--muted)">Chicken Mayo Melt + Chips + Can</div>
-      <div style="margin-top:10px"><span class="old">£11.50</span><span class="deal-price">£10.75</span></div>
-      <button class="smallbtn" style="margin-top:11px" data-go="order">Order this deal</button>
-    </section>
-
-    <div class="section-title">Your Usual</div>
-    <section class="card usual">
-      <div><b>Chicken Mayo Melt</b><div class="meta">Your most ordered item · review current options before checkout</div></div>
-      <button class="smallbtn" data-go="order">Review</button>
-    </section>
-  </main>
-
-  <main id="order" class="screen">
-    <div class="pagehead"><h1>Order</h1><button class="back" data-go="home">Home</button></div>
-    <input class="menu-search" placeholder="Search menu or ingredients">
-    <div class="category"><div class="cathead"><span>Street Subs</span><span>⌄</span></div>
-      <div class="item"><div><b>Chicken Mayo Melt</b><small>6” sub · salad & sauce options</small></div><div class="price">£6.50</div></div>
-      <div class="item"><div><b>Southern Fried Chicken</b><small>6” sub · salad & sauce options</small></div><div class="price">£7.00</div></div>
+  <section class="work-hero">
+    <div class="work-hello">Welcome back, Nero</div>
+    <h1 id="coffeeHeadline">5 more coffees = FREE COFFEE</h1>
+    <div class="coffee-progress"><i></i></div>
+    <div class="work-count">4 coffees collected</div>
+    <div class="reward-mini">
+      <strong>⭐ 126 points</strong>
+      <span>£1.26 reward value</span>
     </div>
-    <div class="category"><div class="cathead"><span>Smash Burgers</span><span>⌄</span></div>
-      <div class="item"><div><b>Dexter Smash</b><small>Brioche bun · customise toppings</small></div><div class="price">£8.50</div></div>
+    <button class="collection-btn" data-go="order">Order for Collection</button>
+  </section>
+
+  <section id="workQuickActions" class="current-quick">
+    <button class="work-action" data-go="rewards"><div class="wi">🎁</div><div class="wt">Your Rewards</div><div class="wd">Coffee, offers & treats</div></button>
+    <button class="work-action" id="orderAgain"><div class="wi">⭐</div><div class="wt">Order Again</div><div class="wd">View your previous orders</div></button>
+    <button class="work-action"><div class="wi">🎡</div><div class="wt">Spin to Win</div><div class="wd">Play your daily spin</div></button>
+    <button class="work-action" data-go="dexter"><div class="wi">💬</div><div class="wt">Ask Dexter</div><div class="wd">Chat with Dexter here</div></button>
+  </section>
+
+  <section class="work-deals">
+    <h2 class="work-heading">Dexter’s Deals</h2>
+    <div class="offer">
+      <strong>🔥 Back to Routine</strong>
+      <div class="work-desc">Chicken Mayo Melt + Chips + Can</div>
+      <div class="deal-line"><span class="old">£11.50</span><b>£10.75</b></div>
     </div>
-    <div class="category"><div class="cathead"><span>Chicken Tenders</span><span>⌄</span></div>
-      <div class="item"><div><b>4 Chicken Tenders</b><small>Choose sauce & extras</small></div><div class="price">£6.50</div></div>
+  </section>
+
+  <section class="work-usual">
+    <h2 class="work-heading">Your Usual</h2>
+    <div class="work-row">
+      <div class="work-grow"><strong>Chicken Mayo Melt</strong><div class="work-desc">Your most ordered item in recent orders · Check current options in the menu.</div></div>
+      <button class="work-small" data-go="order">Review usual</button>
     </div>
-    <div class="sticky-basket"><button class="basketbtn">3 items • £20.50 • VIEW BASKET</button></div>
-  </main>
+  </section>
 
-  <main id="rewards" class="screen">
-    <div class="pagehead"><h1>Your Rewards</h1><button class="back" data-go="home">Home</button></div>
-    <section class="card"><div class="eyebrow">Available now</div>
-      <div class="reward"><strong>☕ Coffee reward</strong><small>4 of 9 coffees collected</small></div>
-      <div class="reward"><strong>⭐ 126 points</strong><small>Worth £1.26 towards eligible rewards</small></div>
-      <div class="reward"><strong>🔥 Back to Routine</strong><small>Chicken Mayo Melt + Chips + Can · £10.75</small></div>
-      <div class="reward"><strong>🎡 Spin to Win</strong><small>Daily spin available when promotion is active</small></div>
-    </section>
-    <section class="card"><div class="eyebrow">Challenges</div><h3>Order 3 times this month</h3><div class="progress"><i style="width:66%"></i></div><small style="color:var(--muted)">2 / 3 complete</small></section>
-  </main>
-
-  <main id="dexter" class="screen">
-    <div class="pagehead"><h1>Ask Dexter</h1><button class="back" data-go="home">Home</button></div>
-    <section class="card"><b>Dexter’s AI · Loyalty App</b><p style="color:var(--muted)">Awright 👻 What d’ye need help wi’?</p><div style="margin-top:14px;padding:13px;border-radius:14px;background:var(--panel2);color:var(--muted)">Message Dexter…</div></section>
-  </main>
-
-  <main id="account" class="screen">
-    <div class="pagehead"><h1>Account</h1><button class="back" data-go="home">Home</button></div>
-    <div class="account-wrap">
-      <button class="account-row"><span>👤 My Details</span><span>›</span></button>
-      <button class="account-row"><span>🔔 Notifications</span><span>Enabled ›</span></button>
-      <button class="account-row"><span>📣 Marketing Preferences</span><span>›</span></button>
-      <button class="account-row"><span>💳 Dexter’s Credit</span><span>›</span></button>
-      <button class="account-row"><span>⚖️ Privacy & Legal</span><span>›</span></button>
-      <button class="account-row" style="color:#ff9aa6"><span>🗑 Delete Account</span><span>›</span></button>
+  <section class="work-current">
+    <h2 class="work-heading">Current Order</h2>
+    <div class="work-order">
+      <strong>Order #123</strong>
+      <div class="work-desc">Cooking · 13:30 collection</div>
+      <div class="work-steps"><span class="work-step on"></span><span class="work-step on"></span><span class="work-step"></span></div>
+      <button class="work-small" style="margin-top:12px" id="advanceStatus">Preview next status</button>
     </div>
-  </main>
-</div>
+  </section>
 
-<nav class="nav">
+  <button class="browse-menu" data-go="order">Browse the full menu</button>
+</main>
+
+<main id="order" class="screen">
+  <div class="pagehead"><h1>Order for Collection</h1><button class="back" data-go="home">Home</button></div>
+  <div class="card"><strong>Test menu preview</strong><p class="work-desc">This page is visual only. No live order will be created.</p></div>
+  <input class="menu-search" placeholder="Search menu">
+  <div class="category"><div class="cathead"><span>Street Subs</span><span>⌄</span></div><div class="item"><div><b>Chicken Mayo Melt</b><small>6” sub · current options</small></div><div class="price">£6.50</div></div></div>
+</main>
+
+<main id="rewards" class="screen">
+  <div class="pagehead"><h1>Your Rewards</h1><button class="back" data-go="home">Home</button></div>
+  <section class="card"><div class="reward"><strong>☕ Coffee reward</strong><small>4 of 9 coffees collected</small></div><div class="reward"><strong>⭐ 126 points</strong><small>Worth £1.26</small></div></section>
+</main>
+
+<main id="dexter" class="screen">
+  <div class="pagehead"><h1>Ask Dexter</h1><button class="back" data-go="home">Home</button></div>
+  <section class="card"><b>Dexter’s AI · Loyalty App</b><p class="work-desc">Awright 👻 What d’ye need help wi’?</p><div class="dexter-input">Message Dexter…</div></section>
+</main>
+
+<main id="account" class="screen">
+  <div class="pagehead"><h1>Account</h1><button class="back" data-go="home">Home</button></div>
+  <div class="account-wrap">
+    <button class="account-row"><span>👤 My Details</span><span>›</span></button>
+    <button class="account-row"><span>🔔 Notifications</span><span>Enabled ›</span></button>
+    <button class="account-row"><span>📣 Marketing Preferences</span><span>›</span></button>
+    <button class="account-row"><span>💳 Dexter’s Credit</span><span>›</span></button>
+    <button class="account-row"><span>⚖️ Privacy & Legal</span><span>›</span></button>
+    <button class="account-row" style="color:#ff9aa6"><span>🗑 Delete Account</span><span>›</span></button>
+  </div>
+</main></div>
+
+<nav class="nav current-nav">
   <button data-go="home" class="active"><b>🏠</b>Home</button>
-  <button data-go="order"><b>🍔</b>Order</button>
+  <button data-go="order" class="order-nav"><b>🍔</b>Order</button>
   <button data-go="rewards"><b>🎁</b>Rewards</button>
   <button data-go="dexter"><b>💬</b>Dexter</button>
   <button data-go="account"><b>👤</b>Account</button>
@@ -198,15 +210,11 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b
 document.getElementById('orderAgain').onclick=()=>document.getElementById('againModal').classList.add('open');
 document.getElementById('closeAgain').onclick=()=>document.getElementById('againModal').classList.remove('open');
 const stages=['Accepted','Cooking','Ready','Collected'];let stage=1;
-document.getElementById('advanceStatus').onclick=()=>{stage=(stage+1)%4;document.getElementById('statusText').textContent=stages[stage];document.querySelectorAll('.step').forEach((x,i)=>x.classList.toggle('on',i<=stage))};
+document.getElementById('advanceStatus').onclick=()=>{stage=(stage+1)%4;const labels=['Waiting for acceptance','Accepted','Cooking','Ready for collection','Collected'];document.querySelector('.work-order .work-desc').textContent=labels[stage+1]+' · 13:30 collection';document.querySelectorAll('.work-step').forEach((x,i)=>x.classList.toggle('on',i<Math.min(stage+1,3)))};document.getElementById('statusText').textContent=stages[stage];document.querySelectorAll('.step').forEach((x,i)=>x.classList.toggle('on',i<=stage))};
 const fxMap={default:['✨','🍔','☕','⭐'],halloween:['🎃','👻','🕸️','🦇'],christmas:['❄️','🎄','✨','🎁'],valentines:['💘','🌹','💕','💌'],pride:['🏳️‍🌈','✨','❤️','🌈'],burns:['🏴','🥃','📜','🔥'],standrews:['🏴','⚪','🔵','✨']};
 const siteThemeName={default:'default',halloween:'halloween',christmas:'christmas',valentines:'valentine',pride:'pride',burns:'burns',standrews:'st-andrews'};
-document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{
-  document.body.className='theme-'+b.dataset.theme;
-  document.querySelectorAll('[data-theme]').forEach(x=>x.classList.toggle('active',x===b));
-  const a=fxMap[b.dataset.theme];document.querySelectorAll('#fx span').forEach((x,i)=>x.textContent=a[i]);
-  document.getElementById('themeFrame').src='https://dextersspot.co.uk/theme-clean.html?name='+siteThemeName[b.dataset.theme];
-});
+const seasonCopy={default:['Bigger. Brighter. Flavours.','Dexter’s'],halloween:['Good treats. Dark nights.','Halloween at Dexter’s'],christmas:['A little magic. Every visit.','Christmas at Dexter’s'],valentines:['Made with love. Shared with you.','Valentine’s at Dexter’s'],pride:['Pride at Dexter’s','Pride theme'],burns:['Burns Night at Dexter’s','Burns Night theme'],standrews:['St Andrew’s at Dexter’s','St Andrew’s theme']};
+document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{document.body.className='theme-'+b.dataset.theme;document.querySelectorAll('[data-theme]').forEach(x=>x.classList.toggle('active',x===b));const cp=seasonCopy[b.dataset.theme];document.getElementById('seasonTitle').textContent=cp[0];document.getElementById('seasonSub').textContent=cp[1];});
 </script>
 </body>
 </html>
