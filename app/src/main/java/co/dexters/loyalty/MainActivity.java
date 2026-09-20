@@ -92,7 +92,6 @@ public class MainActivity extends Activity {
         }
         ChargeRequest request = new ChargeRequest.Builder(amountPence, CurrencyCode.GBP)
             .note("Dexter's POS")
-            .restrictTenderTypesTo(ChargeRequest.TenderType.CARD)
             .build();
         try {
             squareInProgress = true;
