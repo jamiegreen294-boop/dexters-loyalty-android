@@ -4,7 +4,8 @@ function encodeReceipt(text){return btoa(unescape(encodeURIComponent(text)))}
 function bridge(text,{drawer=false}={}){
   try{
     const payload=encodeReceipt(text);
-    window.location.href='dexterscitaq://print-pos?payload='+encodeURIComponent(payload);
+    const drawerFlag=drawer?'&drawer=1':'';
+    window.location.href='dexterscitaq://print-pos?payload='+encodeURIComponent(payload)+drawerFlag;
     return true;
 }catch(e){throw new Error('Hardware Bridge could not be opened: '+String(e?.message||e))}
 }
