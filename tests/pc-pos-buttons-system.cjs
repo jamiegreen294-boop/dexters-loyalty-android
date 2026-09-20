@@ -20,7 +20,7 @@ async function mocks(ctx){
   else if(p.includes('loyalty_modifier_public'))x=MODS;
   else if(p.includes('/rest/v1/profiles'))x=[{role:'manager',full_name:'Browser Test Manager'}];
   else if(p.includes('credit_search_customers'))x=[{id:'credit1',account_id:'credit1',customer_name:CUSTOMER.full_name,full_name:CUSTOMER.full_name,phone:CUSTOMER.phone,email:CUSTOMER.email,balance_pence:2350}];
-  else if(p.includes('pc-pos-square-bridge')){if(a==='create')x={ok:true,request:{id:'sq-test',amount_pence:Number(b.amount_pence||0),status:'pending'}};else if(a==='status')x={ok:true,request:{id:'sq-test',status:'approved',transaction_id:'square-browser-test'}};else if(a==='cancel')x={ok:true,request:{id:'sq-test',status:'cancelled'}};else x={ok:true,request:null};
+  else if(p.includes('pc-pos-square-bridge')){if(a==='create')x={ok:true,request:{id:'sq-test',amount_pence:Number(b.amount_pence||0),status:'pending'}};else if(a==='status')x={ok:true,request:{id:'sq-test',status:'approved',transaction_id:'square-browser-test'}};else if(a==='cancel')x={ok:true,request:{id:'sq-test',status:'cancelled'}};else x={ok:true,request:null}}
   else if(p.includes('uber-table-service-pc-test-api'))x=p.endsWith('/staff/state')?{orders:[QR],bill_requests:[{id:'b1',table_number:1}]}:{ok:true,order:{id:'k1'},orders:[QR],bill_requests:[]};
   else if(p.includes('collection-orders-test-api'))x=a==='kds_orders'?{orders:[COLL],rejection_reasons:['Out of stock']}:a==='status'?{enabled:true}:{ok:true,enabled:b.enabled!==false,orders:[COLL],rejection_reasons:['Out of stock']};
   else if(p.includes('sunday-roast-pc-pos-test-api'))x=a==='outstanding'?{orders:[]}:a==='list'?{orders:[ROAST]}:{ok:true,order:{...ROAST,...b,id:b.id||'r2'},orders:[]};
