@@ -25,31 +25,52 @@ button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-he
 .sticky-basket{position:sticky;bottom:78px;z-index:15;margin:16px 0 0}.basketbtn{width:100%;border:0;border-radius:17px;padding:15px;background:linear-gradient(90deg,var(--accent),var(--accent2));font-weight:1000;color:#111;box-shadow:0 9px 26px #0007}.reward{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:13px;margin:9px 0}.reward strong{display:block}.reward small{display:block;color:var(--muted);margin-top:4px}.account-wrap{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:0 14px;overflow:hidden}.account-row{width:100%;display:flex;align-items:center;justify-content:space-between;border:0;background:var(--panel);color:#fff;border-bottom:1px solid var(--line);padding:16px 2px;text-align:left}
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,480px);z-index:30;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 94%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(14px)}.nav button{border:0;background:transparent;color:#8998af;padding:5px 2px;font-size:10px;font-weight:900}.nav button b{display:block;font-size:19px;margin-bottom:2px}.nav button.active{color:var(--accent)}
 .modal{position:fixed;inset:0;z-index:100;background:#000b;display:none;align-items:flex-end;justify-content:center}.modal.open{display:flex}.sheet{width:min(100%,480px);background:var(--panel);border-radius:24px 24px 0 0;padding:18px 16px 28px;max-height:78vh;overflow:auto}.sheet h2{margin-top:0}.sheet .order{background:var(--panel2);border-radius:15px;padding:13px;margin:8px 0}
-.theme-halloween{--bg:#060708;--bg2:#060708;--panel:#171211;--panel2:#20130d;--accent:#ffd095;--accent2:#e76623;--hero1:#332013;--hero2:#17100d;--muted:#d2c0b5;background:linear-gradient(180deg,#06070822,#060708b8 65%,#060708ef),url('https://app.dextersspot.co.uk/haunted-v4.webp') center top/cover fixed no-repeat}
-.theme-halloween .open{background:#2b160c;color:#ffd095;border-color:#ab704966}
-.theme-halloween .card,.theme-halloween .tile,.theme-halloween .order-hero,.theme-halloween .category,.theme-halloween .account-wrap,.theme-halloween .sheet{background:linear-gradient(145deg,#24170ff8,#100e0cf8);border-color:#ac683d66;box-shadow:inset 0 2px #b1703b33,0 10px 28px #0005;border-radius:12px;color:#fff0e5}
-.theme-halloween .order-hero{background:linear-gradient(120deg,#332013f8,#17100df8);border-color:#d8884880}
-.theme-halloween .nav{background:#100c09f5;border-top-color:#93582855}.theme-halloween .nav button.active{color:#ffc88c}
-.theme-halloween .fx{opacity:.12}.theme-halloween .testbar{background:#1a110c;border-color:#ab704955;color:#ffd3a8}
-.theme-halloween #seasonBanner{background:linear-gradient(180deg,#06070800 15%,#06070825 45%,#060708f0 100%),url('https://app.dextersspot.co.uk/haunted-v4.webp') center 25%/cover no-repeat;border:1px solid #ab704944;color:#ffcb9a}
-.theme-halloween #seasonBanner .seasonTitle{color:#fff0e3}
+.theme-default{--bg:#03243a;--bg2:#03243a;--panel:#03243a;--panel2:#0b3851;--accent:#ffd43c;--accent2:#ffd43c;--hero1:#03243a;--hero2:#03243a;--muted:#dce7ee}
+.theme-default .brand,.theme-default .seasonTitle{font-family:Georgia,serif}.theme-default .brand:after{content:'';display:block;width:62px;border-top:3px solid #ffd43c;margin-top:5px}
+.theme-default .card,.theme-default .tile,.theme-default .order-hero,.theme-default .category,.theme-default .account-wrap,.theme-default .sheet{border:0;border-radius:11px;background:#0b3851;box-shadow:none}
+.theme-default .order-btn,.theme-default .basketbtn{background:#ffd43c;color:#091a26;border-radius:999px}
+.theme-default .nav{background:#03243af5}.theme-default .nav button.active{color:#ffd43c}
 
-.theme-christmas{--bg:#06140e;--bg2:#06140e;--panel:#10271c;--panel2:#103422;--accent:#ffdf88;--accent2:#c7a34b;--hero1:#51202b;--hero2:#28111b;--muted:#dbd8c4;background:linear-gradient(180deg,#06140e22,#06140eb8 65%,#06140eef),url('https://app.dextersspot.co.uk/christmas-v5.webp') center top/cover fixed no-repeat}
-.theme-christmas .card,.theme-christmas .tile,.theme-christmas .order-hero,.theme-christmas .category,.theme-christmas .account-wrap,.theme-christmas .sheet{background:linear-gradient(145deg,#24392af8,#081b13f8);border-color:#d1aa5b88;box-shadow:inset 0 2px #dfbd7133,0 10px 28px #0005;border-radius:8px 20px 8px 20px;color:#fff4dd}
-.theme-christmas .order-hero{background:linear-gradient(120deg,#51202bf8,#28111bf8);border-color:#dcb97299}
-.theme-christmas .nav{background:#061a12f5;border-top-color:#c6a45177}.theme-christmas .nav button.active{color:#ffe395}
-.theme-christmas #seasonBanner{background:linear-gradient(180deg,#06140e00 15%,#06140e25 45%,#06140ef0 100%),url('https://app.dextersspot.co.uk/christmas-v5.webp') center 25%/cover no-repeat;border:2px solid #d6b66688;border-radius:32px 32px 12px 12px;color:#ffe8a6}
-.theme-christmas #seasonBanner .seasonTitle{color:#fff5d8}
+.theme-halloween{--bg:#17111f;--bg2:#17111f;--panel:#17111f;--panel2:#241a2e;--accent:#ff7a1a;--accent2:#ff7a1a;--hero1:#17111f;--hero2:#17111f;--muted:#e5eef4}
+.theme-halloween .brand,.theme-halloween .seasonTitle{font-family:Georgia,serif}.theme-halloween .brand:after{content:'';display:block;width:62px;border-top:3px solid #ff7a1a;margin-top:5px}
+.theme-halloween .card,.theme-halloween .tile,.theme-halloween .order-hero,.theme-halloween .category,.theme-halloween .account-wrap,.theme-halloween .sheet{border:0;border-radius:11px;background:#241a2e;box-shadow:none}
+.theme-halloween .order-btn,.theme-halloween .basketbtn{background:#ffd43c;color:#091a26;border-radius:999px}
+.theme-halloween .nav{background:#17111ff5;border-top:1px solid rgba(255,255,255,.18)}.theme-halloween .nav button.active{color:#ff7a1a}
+.theme-halloween .open{background:#241a2e;color:#ffb875;border-color:#ff7a1a55}
 
-.theme-valentines{--bg:#210916;--bg2:#210916;--panel:#391026;--panel2:#4c1932;--accent:#ffd5e0;--accent2:#df779b;--hero1:#772543;--hero2:#3e112a;--muted:#edccdb;background:linear-gradient(180deg,#21091622,#210916b8 65%,#210916ef),url('https://app.dextersspot.co.uk/valentines-v5.webp') center top/cover fixed no-repeat}
-.theme-valentines .card,.theme-valentines .tile,.theme-valentines .order-hero,.theme-valentines .category,.theme-valentines .account-wrap,.theme-valentines .sheet{background:linear-gradient(145deg,#63203df8,#2b0b20f8);border-color:#e6a0b888;box-shadow:inset 0 2px #e397b233,0 10px 28px #21000c66;border-radius:22px;color:#fff0f6}
-.theme-valentines .order-hero{background:linear-gradient(120deg,#772543f8,#3e112af8);border-color:#e3a6be99}
-.theme-valentines .nav{background:#280c1df5;border-top-color:#dc8fb077}.theme-valentines .nav button.active{color:#ffd5e5}
-.theme-valentines #seasonBanner{background:linear-gradient(180deg,#21091600 15%,#21091625 45%,#210916f0 100%),url('https://app.dextersspot.co.uk/valentines-v5.webp') center 25%/cover no-repeat;border:1px solid #e7a5bb66;border-radius:45px 45px 18px 18px;color:#ffd1df}
-.theme-valentines #seasonBanner .seasonTitle{color:#fff0f5;font-style:italic}
-.theme-pride{--bg:#0b1220;--bg2:#111827;--panel:#162033;--panel2:#202d44;--accent:#ffd43b;--accent2:#ff5c7a;--hero1:#402060;--hero2:#0f4f63;--muted:#d4d9e6}.theme-pride .order-btn{background:linear-gradient(90deg,#ff5c5c,#ffb84d,#ffe761,#64d97b,#5aa7ff,#ad70ff)}
-.theme-burns{--bg:#101214;--bg2:#1a1c1f;--panel:#24272c;--panel2:#30343a;--accent:#d9b45b;--accent2:#7c1f2b;--hero1:#3b2327;--hero2:#23262a;--muted:#d7d2c7}
-.theme-standrews{--bg:#051a33;--bg2:#09264a;--panel:#0e315d;--panel2:#174477;--accent:#f3f7ff;--accent2:#5aa7ff;--hero1:#16477b;--hero2:#0b2d55;--muted:#cbdaf0}
+.theme-christmas{--bg:#03483f;--bg2:#03483f;--panel:#03483f;--panel2:#0a5a4e;--accent:#ffd43c;--accent2:#ffd43c;--hero1:#03483f;--hero2:#03483f;--muted:#e5eef4}
+.theme-christmas .brand,.theme-christmas .seasonTitle{font-family:Georgia,serif}.theme-christmas .brand:after{content:'';display:block;width:62px;border-top:3px solid #ffd43c;margin-top:5px}
+.theme-christmas .card,.theme-christmas .tile,.theme-christmas .order-hero,.theme-christmas .category,.theme-christmas .account-wrap,.theme-christmas .sheet{border:0;border-radius:11px;background:#0a5a4e;box-shadow:none}
+.theme-christmas .order-btn,.theme-christmas .basketbtn{background:#ffd43c;color:#091a26;border-radius:999px}
+.theme-christmas .nav{background:#03483ff5;border-top:1px solid rgba(255,255,255,.18)}.theme-christmas .nav button.active{color:#ffd43c}
+
+.theme-valentines{--bg:#4a0718;--bg2:#4a0718;--panel:#4a0718;--panel2:#611027;--accent:#ff7da8;--accent2:#ff7da8;--hero1:#4a0718;--hero2:#4a0718;--muted:#f1dce4}
+.theme-valentines .brand,.theme-valentines .seasonTitle{font-family:Georgia,serif}.theme-valentines .brand:after{content:'';display:block;width:62px;border-top:3px solid #ff7da8;margin-top:5px}
+.theme-valentines .card,.theme-valentines .tile,.theme-valentines .order-hero,.theme-valentines .category,.theme-valentines .account-wrap,.theme-valentines .sheet{border:0;border-radius:11px;background:#611027;box-shadow:none}
+.theme-valentines .order-btn,.theme-valentines .basketbtn{background:#ffd43c;color:#091a26;border-radius:999px}
+.theme-valentines .nav{background:#4a0718f5;border-top:1px solid rgba(255,255,255,.18)}.theme-valentines .nav button.active{color:#ff7da8}
+
+.theme-pride{--bg:#03243a;--bg2:#03243a;--panel:#03243a;--panel2:#0b3851;--accent:#ffd43c;--accent2:#ffd43c;--hero1:#03243a;--hero2:#03243a;--muted:#dce7ee}
+.theme-pride .brand,.theme-pride .seasonTitle{font-family:Georgia,serif}.theme-pride .brand:after{content:'';display:block;width:62px;border-top:3px solid #ffd43c;margin-top:5px}
+.theme-pride .card,.theme-pride .tile,.theme-pride .order-hero,.theme-pride .category,.theme-pride .account-wrap,.theme-pride .sheet{border:0;border-radius:11px;background:#0b3851;box-shadow:none}
+.theme-pride .order-btn,.theme-pride .basketbtn{background:#ffd43c;color:#091a26;border-radius:999px}
+.theme-pride .nav{background:#03243af5;border-top:1px solid rgba(255,255,255,.18)}.theme-pride .nav button.active{color:#ffd43c}
+
+.theme-burns{--bg:#03243a;--bg2:#03243a;--panel:#03243a;--panel2:#0b3851;--accent:#ffd45f;--accent2:#ffd45f;--hero1:#03243a;--hero2:#03243a;--muted:#dce7ee}
+.theme-burns .brand,.theme-burns .seasonTitle{font-family:Georgia,serif}.theme-burns .brand:after{content:'';display:block;width:62px;border-top:3px solid #ffd45f;margin-top:5px}
+.theme-burns .card,.theme-burns .tile,.theme-burns .order-hero,.theme-burns .category,.theme-burns .account-wrap,.theme-burns .sheet{border:0;border-radius:11px;background:#0b3851;box-shadow:none}
+.theme-burns .order-btn,.theme-burns .basketbtn{background:#ffd45f;color:#091a26;border-radius:999px}
+.theme-burns .nav{background:#03243af5}.theme-burns .nav button.active{color:#ffd45f}
+
+.theme-standrews{--bg:#03243a;--bg2:#03243a;--panel:#03243a;--panel2:#0b3851;--accent:#ffd45f;--accent2:#ffd45f;--hero1:#03243a;--hero2:#03243a;--muted:#dce7ee}
+.theme-standrews .brand,.theme-standrews .seasonTitle{font-family:Georgia,serif}.theme-standrews .brand:after{content:'';display:block;width:62px;border-top:3px solid #ffd45f;margin-top:5px}
+.theme-standrews .card,.theme-standrews .tile,.theme-standrews .order-hero,.theme-standrews .category,.theme-standrews .account-wrap,.theme-standrews .sheet{border:0;border-radius:11px;background:#0b3851;box-shadow:none}
+.theme-standrews .order-btn,.theme-standrews .basketbtn{background:#ffd45f;color:#091a26;border-radius:999px}
+.theme-standrews .nav{background:#03243af5}.theme-standrews .nav button.active{color:#ffd45f}
+
+#websiteThemeRef{margin:4px 0 14px;border-radius:11px;overflow:hidden;background:#03243a;border:0}
+#websiteThemeRef iframe{display:block;width:100%;height:390px;border:0;background:#03243a}
+#websiteThemeRef .refLabel{padding:9px 12px;background:rgba(0,0,0,.28);font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#fff}
 @media(min-width:481px){body{padding:18px 0}.app{border:1px solid #ffffff12;border-radius:28px;overflow:hidden;min-height:calc(100vh - 36px)}.top{border-radius:28px 28px 0 0}.nav{bottom:18px;border-radius:0 0 28px 28px}}
 </style>
 </head>
@@ -59,6 +80,7 @@ button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-he
   <div class="top"><div class="brand">DEXTER'S</div><div class="open">Collection OPEN</div></div>
   <div class="testbar">TEST LAYOUT ONLY — no live orders, customer data or payments</div>
   <div class="themebar">
+    <button data-theme="default">Dexter’s</button>
     <button data-theme="halloween" class="active">🎃 Halloween</button>
     <button data-theme="christmas">🎄 Christmas</button>
     <button data-theme="valentines">💘 Valentine’s</button>
@@ -66,9 +88,12 @@ button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-he
     <button data-theme="burns">🏴 Burns Night</button>
     <button data-theme="standrews">🏴 St Andrew’s</button>
   </div>
-  <section id="seasonBanner"><div class="seasonTitle" id="seasonTitle">Good treats.<br>Dark nights.</div><div id="seasonSub">Dexter’s Halloween theme — using the same live artwork and styling.</div></section>
+  <section id="websiteThemeRef">
+  <div class="refLabel">Exact website theme reference</div>
+  <iframe id="themeFrame" title="Exact Dexter's website theme" loading="eager" src="https://dextersspot.co.uk/theme-clean.html?name=halloween"></iframe>
+</section>
 
-  <main id="home" class="screen active">
+<main id="home" class="screen active">
     <section class="order-hero">
       <button class="order-btn" data-go="order">🍔 ORDER FOR COLLECTION</button>
       <div class="current">
@@ -174,16 +199,14 @@ document.getElementById('orderAgain').onclick=()=>document.getElementById('again
 document.getElementById('closeAgain').onclick=()=>document.getElementById('againModal').classList.remove('open');
 const stages=['Accepted','Cooking','Ready','Collected'];let stage=1;
 document.getElementById('advanceStatus').onclick=()=>{stage=(stage+1)%4;document.getElementById('statusText').textContent=stages[stage];document.querySelectorAll('.step').forEach((x,i)=>x.classList.toggle('on',i<=stage))};
-const fxMap={halloween:['🎃','👻','🕸️','🦇'],christmas:['❄️','🎄','✨','🎁'],valentines:['💘','🌹','💕','💌'],pride:['🏳️‍🌈','✨','❤️','🌈'],burns:['🏴','🥃','📜','🔥'],standrews:['🏴','⚪','🔵','✨']};
-const seasonCopy={
- halloween:['Good treats.<br>Dark nights.','Dexter’s Halloween theme — same live artwork and styling.'],
- christmas:['A little magic.<br>Every visit.','Dexter’s Christmas theme — same live artwork and styling.'],
- valentines:['Made with love.<br>Shared with you.','Dexter’s Valentine’s theme — same live artwork and styling.'],
- pride:['Pride at Dexter’s','Manual Pride preview'],
- burns:['Burns Night at Dexter’s','Manual Burns Night preview'],
- standrews:['St Andrew’s at Dexter’s','Manual St Andrew’s preview']
-};
-document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{document.body.className='theme-'+b.dataset.theme;document.querySelectorAll('[data-theme]').forEach(x=>x.classList.toggle('active',x===b));const a=fxMap[b.dataset.theme];document.querySelectorAll('#fx span').forEach((x,i)=>x.textContent=a[i]);const cp=seasonCopy[b.dataset.theme];document.getElementById('seasonTitle').innerHTML=cp[0];document.getElementById('seasonSub').textContent=cp[1];});
+const fxMap={default:['✨','🍔','☕','⭐'],halloween:['🎃','👻','🕸️','🦇'],christmas:['❄️','🎄','✨','🎁'],valentines:['💘','🌹','💕','💌'],pride:['🏳️‍🌈','✨','❤️','🌈'],burns:['🏴','🥃','📜','🔥'],standrews:['🏴','⚪','🔵','✨']};
+const siteThemeName={default:'default',halloween:'halloween',christmas:'christmas',valentines:'valentine',pride:'pride',burns:'burns',standrews:'st-andrews'};
+document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{
+  document.body.className='theme-'+b.dataset.theme;
+  document.querySelectorAll('[data-theme]').forEach(x=>x.classList.toggle('active',x===b));
+  const a=fxMap[b.dataset.theme];document.querySelectorAll('#fx span').forEach((x,i)=>x.textContent=a[i]);
+  document.getElementById('themeFrame').src='https://dextersspot.co.uk/theme-clean.html?name='+siteThemeName[b.dataset.theme];
+});
 </script>
 </body>
 </html>
