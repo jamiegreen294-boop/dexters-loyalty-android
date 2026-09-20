@@ -157,12 +157,15 @@ function buildLoyaltyReceipt(sale,customer,claim){
 function launchHardwarePrint(text,opts={}){
   try{
     localStorage.setItem("dexters-pos-last-receipt",text);
-    // For cash sales, prepend raw ESC/POS drawer kick commands for both
-    // supported drawer pins. The bytes are all <128 so the bridge preserves them.
-    const openDrawer=Boolean(opts?.openDrawer||opts?.drawer);
-    const pulse=openDrawer?'\x1b\x70\x00\x3c\x78\x1b\x70\x01\x3c\x78':'';
-    const payload=btoa(unescape(encodeURIComponent(pulse+text)));
-    location.href="dexterscitaq://print-pos?payload="+encodeURIComponent(payload);
+    const payload=btoa(unescape(encodeURIComponent(text)));
+    const q=new URLSearchParams({payload});
+    if(opts.loyalty)q.set("loyalty","1");
+    if(opts.claim)q.set("claim",opts.claim);
+    if(opts.openDrawer)q.set("drawer","1");
+    // Hidden iframe avoids navigating the POS away, while still invoking the Windows protocol handler.
+    let frame=document.getElementById("dextersHardwareBridgeFrame");
+    if(!frame){frame=document.createElement("iframe");frame.id="dextersHardwareBridgeFrame";frame.style.display="none";document.body.appendChild(frame)}
+    frame.src="dexterscitaq://print-pos?"+q.toString();
     return true;
   }catch(e){console.error("Hardware bridge launch failed",e);return false}
 }
