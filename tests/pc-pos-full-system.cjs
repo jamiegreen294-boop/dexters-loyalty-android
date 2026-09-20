@@ -63,6 +63,22 @@ async function installMocks(context){
  });
 }
 function fail(msg,extra){throw new Error(msg+(extra?' :: '+JSON.stringify(extra):''))}
+async function stableEvaluate(page,fn){
+ let last;
+ for(let i=0;i<5;i++){
+  try{
+   await page.waitForLoadState('domcontentloaded',{timeout:5000}).catch(()=>{});
+   await page.waitForTimeout(250);
+   return await page.evaluate(fn);
+  }catch(e){
+   last=e;
+   if(!/Execution context was destroyed|Cannot find context|navigation/i.test(String(e)))throw e;
+   await page.waitForLoadState('domcontentloaded',{timeout:5000}).catch(()=>{});
+   await page.waitForTimeout(500);
+  }
+ }
+ throw last;
+}
 async function closeAll(page){await page.evaluate(()=>{document.querySelectorAll('.modal').forEach(m=>{if(m.id==='authGate')return;if(m.id==='simpleModal'||m.id==='modifierModal')m.classList.add('hide');else m.remove()})})}
 async function clickId(page,id){const ok=await page.evaluate(id=>{const e=document.getElementById(id);if(!e)return false;e.click();return true},id);if(!ok)fail('Missing button '+id)}
 async function waitDialog(page,contains){await page.waitForFunction(t=>[...document.querySelectorAll('.modal')].some(m=>m.id!=='authGate'&&!m.classList.contains('hide')&&(!t||m.innerText.includes(t))),contains||'',{timeout:5000})}
@@ -83,7 +99,7 @@ async function checkLayout(page,w,h){await page.setViewportSize({width:w,height:
  console.log('FULL SYSTEM URL',url);
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:20000});
  await page.waitForFunction(()=>window.DextersPinLogin&&document.getElementById('pcSetupCode'),null,{timeout:8000});
- await page.evaluate(async()=>{S.session={access_token:'browser-test',refresh_token:'browser-refresh',user:{id:'browser-user',email:'tester@dexters.test'}};S.staffRole='manager';document.getElementById('authGate').classList.add('hide');await DextersPinLogin.loadFeatures();await applySession(S.session)});
+ await stableEvaluate(page,async()=>{S.session={access_token:'browser-test',refresh_token:'browser-refresh',user:{id:'browser-user',email:'tester@dexters.test'}};S.staffRole='manager';document.getElementById('authGate')?.classList.add('hide');await DextersPinLogin.loadFeatures();await applySession(S.session)});
  await page.waitForFunction(()=>window.__dextersFeatureLoadComplete===true&&Array.isArray(S.cats)&&S.cats.length>=8&&document.querySelectorAll('.pcCatCard').length>=8,null,{timeout:20000});
  await page.waitForTimeout(1800);
 
