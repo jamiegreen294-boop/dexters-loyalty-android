@@ -111,7 +111,7 @@ function buildStandardReceipt(sale){
     ...receiptItems(sale),
     "--------------------------------",
     linePad("TOTAL",cashMoney(sale.total||0)),
-    String(sale.method||"").toLowerCase()==="cash"?"Cash":"Card",
+    "Payment: "+String(sale.method||"").toUpperCase(),
     sale.method==="cash"&&Number(sale.tendered||0)>0?linePad("Cash",cashMoney(sale.tendered)):"",
     sale.method==="cash"&&Number(sale.change||0)>=0?linePad("Change",cashMoney(sale.change)):"",
     "--------------------------------",
@@ -139,7 +139,7 @@ function buildLoyaltyReceipt(sale,customer,claim){
     ...receiptItems(sale),
     "--------------------------------",
     linePad("TOTAL",cashMoney(sale.total||0)),
-    String(sale.method||"").toLowerCase()==="cash"?"Cash":"Card",
+    "Payment: "+String(sale.method||"").toUpperCase(),
     "--------------------------------",
     "        SCAN TO WIN",
     "Scan this receipt in the Dexter's",
@@ -158,8 +158,7 @@ function launchHardwarePrint(text,opts={}){
   try{
     localStorage.setItem("dexters-pos-last-receipt",text);
     const payload=btoa(unescape(encodeURIComponent(text)));
-    const openDrawer=Boolean(opts?.openDrawer||opts?.drawer);
-    window.location.href="dexterscitaq://print-pos?payload="+encodeURIComponent(payload)+(openDrawer?"&drawer=1":"");
+    location.href="dexterscitaq://print-pos?payload="+encodeURIComponent(payload);
     return true;
   }catch(e){console.error("Hardware bridge launch failed",e);return false}
 }
