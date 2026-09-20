@@ -36,7 +36,16 @@ function loyaltyOrderReceiptText(o,total,claim){
   const no=String(o.order_number||'').replace(/^#/,'');
   const when=new Date(o.created_at||Date.now()).toLocaleString('en-GB',{timeZone:'Europe/London',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   const q=String(claim||'').trim();
-  const qr=q?"\u001d(k\u0004\u00001A2\u0000\u001d(k\u0003\u00001C\u0006\u001d(k\u0003\u00001E1\u001d(k\u0014\u00001P0CLAIM_PLACEHOLDER\u001d(k\u0003\u00001Q0".replace("CLAIM_PLACEHOLDER",q):"";
+  let qr="";
+  if(q){
+    const n=q.length+3,pL=String.fromCharCode(n&255),pH=String.fromCharCode((n>>8)&255);
+    qr=
+      GS+"(k"+String.fromCharCode(4,0,49,65,50,0)+
+      GS+"(k"+String.fromCharCode(3,0,49,67,6)+
+      GS+"(k"+String.fromCharCode(3,0,49,69,49)+
+      GS+"(k"+pL+pH+String.fromCharCode(49,80,48)+q+
+      GS+"(k"+String.fromCharCode(3,0,49,81,48);
+  }
   return [
     ESC+"@",
     ESC+"a"+String.fromCharCode(1),
