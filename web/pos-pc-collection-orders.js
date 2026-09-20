@@ -4,6 +4,7 @@ const $c=id=>document.getElementById(id), escC=s=>String(s??'').replace(/[&<>\"'
 let orders=[],reasons=[],busy=false,lastWaiting='',realtimeClient=null,realtimeChannel=null,realtimeRetry=null;
 let collectionOpen=null,toggleBusy=false;
 const ALERTED='dexters_pc_collection_alerted_v3';
+const PRINTED_RECEIPTS='dexters_pc_loyalty_order_receipts_v1';
 const headers=()=>({apikey:K,Authorization:'Bearer '+(S?.session?.access_token||''),'Content-Type':'application/json'});
 async function api(body){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7000);try{const r=await fetch(API,{method:'POST',headers:headers(),body:JSON.stringify(body),cache:'no-store',signal:ctrl.signal});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Collection order request failed');return d}finally{clearTimeout(timer)}}
 function modalC(title,html){if(window.DextersPosModal)return window.DextersPosModal(title,html,true);if(typeof modal==='function')return modal(title,html,true);throw Error('POS dialog is unavailable')}
@@ -17,7 +18,65 @@ function activeOrder(o){return ['pending','amendment_required','amended','accept
 function alertedKeys(){try{return new Set(JSON.parse(localStorage.getItem(ALERTED)||'[]'))}catch{return new Set()}}
 function markAlerted(key){const seen=alertedKeys();seen.add(key);localStorage.setItem(ALERTED,JSON.stringify([...seen].slice(-100)))}
 function alertKey(o){return String(o?.id||'')+':'+String(o?.status||'pending')}
-function showLiveOrder(o){if(!waiting(o))return;const key=alertKey(o);if(!o.id||alertedKeys().has(key))return;markAlerted(key);try{navigator.vibrate?.([220,100,220,100,320])}catch{};openOrder(o)}
+function printedReceiptIds(){try{return new Set(JSON.parse(localStorage.getItem(PRINTED_RECEIPTS)||'[]'))}catch{return new Set()}}
+function markReceiptPrinted(id){const s=printedReceiptIds();s.add(String(id));localStorage.setItem(PRINTED_RECEIPTS,JSON.stringify([...s].slice(-500)))}
+function priceNum(v){const m=String(v??'').replace(',','.').match(/-?\d+(?:\.\d{1,2})?/);return m?Number(m[0]):0}
+function receiptTotal(o){return (o.items||[]).reduce((sum,i)=>sum+(Math.max(1,Number(i.qty)||1)*priceNum(i.price)),0)}
+function receiptMoney(n){return '£'+Number(n||0).toFixed(2)}
+function receiptPad(left,right,width=32){left=String(left||'');right=String(right||'');if(left.length+right.length+1>width)left=left.slice(0,Math.max(1,width-right.length-1));return left+' '.repeat(Math.max(1,width-left.length-right.length))+right}
+function loyaltyOrderReceiptText(o,total){
+  const itemLines=[];
+  for(const i of (o.items||[])){
+    const q=Math.max(1,Number(i.qty)||1),name=String(i.base_name||i.name||'Item').replace(/^.*? — /,'');
+    itemLines.push(receiptPad(q+' x '+name,receiptMoney(q*priceNum(i.price))));
+    for(const m of (i.modifiers||[]))if(m)itemLines.push('  > '+String(m).slice(0,28));
+  }
+  const points=Math.floor(Number(total||0));
+  const no=String(o.order_number||'').replace(/^#/,'');
+  const when=new Date(o.created_at||Date.now()).toLocaleString('en-GB',{timeZone:'Europe/London',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  return [
+    "Dexters",
+    "10A Dundasvale Court",
+    "Glasgow, G4 0JS",
+    "Scotland",
+    "Tel: 0141 473 5249",
+    "Email: hello@dextersspot.co.uk",
+    "Web: app.dextersspot.co.uk",
+    "--------------------------------",
+    "       LOYALTY APP ORDER",
+    receiptPad("Order No:","#"+no),
+    receiptPad("Date:",when),
+    receiptPad("Type:","Collection"),
+    "--------------------------------",
+    ...itemLines,
+    "--------------------------------",
+    receiptPad("Total:",receiptMoney(total)),
+    "--------------------------------",
+    receiptPad("Loyalty Points Earned:",String(points)),
+    "--------------------------------",
+    "       SCAN YOUR RECEIPT",
+    " Scan the QR code to see if you've won",
+    "   A FREE COFFEE or FREE CAKE",
+    "",
+    "           Good Luck!",
+    "--------------------------------",
+    " Thank you for supporting Dexters!",
+    "Eat Good • Support Local • See You Soon!",
+    "",
+    ""
+  ].join('\n');
+}
+async function printLoyaltyOrderReceipt(o,{force=false}={}){
+  if(!o?.id||(!force&&printedReceiptIds().has(String(o.id))))return false;
+  if(typeof window.DextersHardwarePrintText!=='function'||typeof window.DextersIssueReceiptClaim!=='function')throw Error('Receipt printer bridge is still loading.');
+  const total=receiptTotal(o);
+  const claim=await window.DextersIssueReceiptClaim({id:'APP-'+String(o.id),total,created_at:o.created_at||new Date().toISOString()});
+  const text=loyaltyOrderReceiptText(o,total);
+  const ok=window.DextersHardwarePrintText(text,{loyalty:true,claim,openDrawer:false});
+  if(ok)markReceiptPrinted(o.id);
+  return ok;
+}
+function showLiveOrder(o){if(!waiting(o))return;const key=alertKey(o);if(!o.id||alertedKeys().has(key))return;markAlerted(key);try{navigator.vibrate?.([220,100,220,100,320])}catch{};printLoyaltyOrderReceipt(o).catch(()=>{});openOrder(o)}
 function paint(){const b=$c('pcCollectionOrdersBtn');if(!b)return;const n=orders.filter(waiting).length;b.innerHTML='Collection Orders'+(n?' <span class="pcCollectionCount">'+n+'</span>':'');b.classList.toggle('pcCollectionFlash',n>0);b.setAttribute('aria-label',n?n+' collection order'+(n===1?'':'s')+' waiting':'Collection orders');}
 function paintToggle(){const b=$c('pcCollectionToggleBtn');if(!b)return;b.textContent=collectionOpen===true?'COLLECTION OPEN':collectionOpen===false?'COLLECTION CLOSED':'COLLECTION…';b.className=collectionOpen===true?'pcCollectionOn':'pcCollectionOff';b.setAttribute('aria-pressed',collectionOpen===true?'true':'false')}
 async function refreshToggle(){try{const d=await api({action:'status'});collectionOpen=!!d.enabled;paintToggle()}catch{}}
@@ -25,7 +84,8 @@ async function toggleCollection(){if(toggleBusy)return;const next=!collectionOpe
 function lines(o,check=false){return (o.items||[]).map((i,n)=>'<div class="held" style="font-size:16px">'+(check?'<label><input type="checkbox" class="amendLine" value="'+n+'"> ':'')+'<b>'+escC(i.qty||1)+' × '+escC(i.name||i.item_name||'Item')+'</b>'+((i.modifiers||[]).length?'<br><small>'+escC((i.modifiers||[]).join(' · '))+'</small>':'')+(check?'</label>':'')+'</div>').join('')}
 async function act(id,action,reason){await api({action,id,reason});await poll(true)}
 function openAmend(o,parent){const d=modalC('Ask customer to amend #'+o.order_number,'<p>Select every unavailable line. The order will pause until the customer sends the amended order back.</p>'+lines(o,true)+'<label>Message to customer</label><textarea id="collectionAmendNote" class="field" rows="3">Sorry, one or more items are unavailable today. Please amend your order.</textarea><div class="actions"><button class="confirm" id="collectionSendAmend">REQUEST AMENDMENT</button></div><div id="collectionAmendMsg" class="bad"></div>');d.querySelector('#collectionSendAmend').onclick=async()=>{const btn=d.querySelector('#collectionSendAmend'),selected=[...d.querySelectorAll('.amendLine:checked')].map(x=>Number(x.value));if(!selected.length){d.querySelector('#collectionAmendMsg').textContent='Select at least one unavailable item.';return}btn.disabled=true;try{await api({action:'request_amendment',id:o.id,item_indexes:selected,note:d.querySelector('#collectionAmendNote').value});d.remove();parent?.remove();await poll(true);openInbox()}catch(e){d.querySelector('#collectionAmendMsg').textContent=e.message;btn.disabled=false}}}
-function openOrder(o,parent){const canDecide=waiting(o),state=String(o.status).replaceAll('_',' ').toUpperCase();const d=modalC('Collection #'+o.order_number,'<div class="held"><b>'+escC(o.customer_name||'Customer')+'</b> · '+escC(o.customer_phone||'No phone')+'<br>Collection: <b>'+escC(o.collection_time||'ASAP')+'</b><br>Payment: <b>'+escC(o.payment_label||'UNPAID')+'</b><br>Status: <b>'+escC(state)+'</b></div>'+lines(o)+(o.order_notes?'<p><b>Notes:</b> '+escC(o.order_notes)+'</p>':'')+(canDecide?'<div class="actions"><button class="confirm collectionAccept">ACCEPT ORDER</button><button class="cancel collectionAmend">ITEM OOS / AMEND</button></div><label>Reject reason</label><select class="field collectionReason">'+reasons.map(r=>'<option>'+escC(r)+'</option>').join('')+'</select><button class="cancel collectionReject" style="width:100%;padding:12px">REJECT ORDER</button>':'<p>This order is already in the existing kitchen flow.</p>'));const a=d.querySelector('.collectionAccept');if(a)a.onclick=async()=>{a.disabled=true;try{await act(o.id,'accept');d.remove();parent?.remove();openInbox()}catch(e){a.disabled=false;alert(e.message)}};const m=d.querySelector('.collectionAmend');if(m)m.onclick=()=>openAmend(o,d);const r=d.querySelector('.collectionReject');if(r)r.onclick=async()=>{const reason=d.querySelector('.collectionReason').value;if(!await confirmInPos('Reject collection #'+o.order_number,'Reject this order? Reason: '+reason,'REJECT ORDER'))return;r.disabled=true;try{await act(o.id,'reject',reason);d.remove();parent?.remove();openInbox()}catch(e){r.disabled=false;alert(e.message)}}}
+function openOrder(o,parent){const canDecide=waiting(o),state=String(o.status).replaceAll('_',' ').toUpperCase();const d=modalC('Collection #'+o.order_number,'<div class="held"><b>'+escC(o.customer_name||'Customer')+'</b> · '+escC(o.customer_phone||'No phone')+'<br>Collection: <b>'+escC(o.collection_time||'ASAP')+'</b><br>Payment: <b>'+escC(o.payment_label||'UNPAID')+'</b><br>Status: <b>'+escC(state)+'</b></div>'+lines(o)+(o.order_notes?'<p><b>Notes:</b> '+escC(o.order_notes)+'</p>':'')+'<button class="confirm collectionPrintReceipt" style="width:100%;padding:12px;margin:10px 0">PRINT LOYALTY RECEIPT</button>'+(canDecide?'<div class="actions"><button class="confirm collectionAccept">ACCEPT ORDER</button><button class="cancel collectionAmend">ITEM OOS / AMEND</button></div><label>Reject reason</label><select class="field collectionReason">'+reasons.map(r=>'<option>'+escC(r)+'</option>').join('')+'</select><button class="cancel collectionReject" style="width:100%;padding:12px">REJECT ORDER</button>':'<p>This order is already in the existing kitchen flow.</p>'));const pr=d.querySelector('.collectionPrintReceipt');if(pr)pr.onclick=async()=>{pr.disabled=true;const old=pr.textContent;pr.textContent='PRINTING…';try{await printLoyaltyOrderReceipt(o,{force:true});pr.textContent='PRINTED'}catch(e){pr.textContent='PRINT FAILED';alert(e.message)}setTimeout(()=>{pr.disabled=false;pr.textContent=old},1600)};
+const a=d.querySelector('.collectionAccept');if(a)a.onclick=async()=>{a.disabled=true;try{await act(o.id,'accept');d.remove();parent?.remove();openInbox()}catch(e){a.disabled=false;alert(e.message)}};const m=d.querySelector('.collectionAmend');if(m)m.onclick=()=>openAmend(o,d);const r=d.querySelector('.collectionReject');if(r)r.onclick=async()=>{const reason=d.querySelector('.collectionReason').value;if(!await confirmInPos('Reject collection #'+o.order_number,'Reject this order? Reason: '+reason,'REJECT ORDER'))return;r.disabled=true;try{await act(o.id,'reject',reason);d.remove();parent?.remove();openInbox()}catch(e){r.disabled=false;alert(e.message)}}}
 function openInbox(){const d=modalC('Loyalty / App Collection Orders',orders.length?orders.map((o,i)=>'<button class="held collectionOpen" data-i="'+i+'" style="display:block;width:100%;text-align:left;color:inherit;border:1px solid #31506f"><b>#'+escC(o.order_number)+' · '+escC(String(o.status).replaceAll('_',' ').toUpperCase())+'</b><br>'+escC(o.customer_name||'Customer')+' · '+escC(o.customer_phone||'No phone')+' · '+escC(o.collection_time||'ASAP')+' · <b>'+escC(o.payment_label||'UNPAID')+'</b><br><small>'+escC((o.items||[]).map(x=>(x.qty||1)+'× '+(x.name||'Item')+((x.modifiers||[]).length?' ['+x.modifiers.join(' · ')+']':'')).join(' · '))+'</small>'+(o.order_notes?'<br><small>Notes: '+escC(o.order_notes)+'</small>':'')+'</button>').join(''):'<p>No active test collection orders.</p>');d.querySelectorAll('.collectionOpen').forEach(b=>b.onclick=()=>openOrder(orders[Number(b.dataset.i)],d))}
 async function poll(force=false){if(busy||!S?.session?.access_token)return;busy=true;try{const d=await api({action:'kds_orders'});orders=(d.orders||[]).map(mapOrder).filter(activeOrder);reasons=d.rejection_reasons||[];paint();const key=orders.filter(waiting).map(o=>o.id+':'+o.status).join(',');if(key&&key!==lastWaiting){lastWaiting=key;if(force!==true){try{navigator.vibrate?.([180,100,180])}catch{};const newest=orders.filter(waiting).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))).find(o=>!alertedKeys().has(alertKey(o)));if(newest)setTimeout(()=>showLiveOrder(newest),100)}}if(!key)lastWaiting=''}catch(e){const b=$c('pcCollectionOrdersBtn');if(b)b.title='Collection feed: '+e.message}finally{busy=false}}
 function loadRealtimeLibrary(){if(window.supabase?.createClient)return Promise.resolve();return new Promise((resolve,reject)=>{const found=document.querySelector('script[data-dexters-collection-realtime]');if(found){found.addEventListener('load',resolve,{once:true});found.addEventListener('error',()=>reject(Error('Realtime library failed to load')),{once:true});return}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.async=true;s.dataset.dextersCollectionRealtime='1';s.onload=resolve;s.onerror=()=>reject(Error('Realtime library failed to load'));document.head.appendChild(s)})}
