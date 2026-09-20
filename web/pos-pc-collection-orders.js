@@ -24,7 +24,8 @@ function priceNum(v){const m=String(v??'').replace(',','.').match(/-?\d+(?:\.\d{
 function receiptTotal(o){return (o.items||[]).reduce((sum,i)=>sum+(Math.max(1,Number(i.qty)||1)*priceNum(i.price)),0)}
 function receiptMoney(n){return '£'+Number(n||0).toFixed(2)}
 function receiptPad(left,right,width=32){left=String(left||'');right=String(right||'');if(left.length+right.length+1>width)left=left.slice(0,Math.max(1,width-right.length-1));return left+' '.repeat(Math.max(1,width-left.length-right.length))+right}
-function loyaltyOrderReceiptText(o,total){
+function loyaltyOrderReceiptText(o,total,claim){
+  const ESC="\x1b",GS="\x1d";
   const itemLines=[];
   for(const i of (o.items||[])){
     const q=Math.max(1,Number(i.qty)||1),name=String(i.base_name||i.name||'Item').replace(/^.*? — /,'');
@@ -34,44 +35,42 @@ function loyaltyOrderReceiptText(o,total){
   const points=Math.floor(Number(total||0));
   const no=String(o.order_number||'').replace(/^#/,'');
   const when=new Date(o.created_at||Date.now()).toLocaleString('en-GB',{timeZone:'Europe/London',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const q=String(claim||'').trim();
+  const qr=q?"\u001d(k\u0004\u00001A2\u0000\u001d(k\u0003\u00001C\u0006\u001d(k\u0003\u00001E1\u001d(k\u0014\u00001P0CLAIM_PLACEHOLDER\u001d(k\u0003\u00001Q0".replace("CLAIM_PLACEHOLDER",q):"";
   return [
-    "Dexters",
-    "10A Dundasvale Court",
-    "Glasgow, G4 0JS",
-    "Scotland",
-    "Tel: 0141 473 5249",
-    "Email: hello@dextersspot.co.uk",
-    "Web: app.dextersspot.co.uk",
-    "--------------------------------",
-    "       LOYALTY APP ORDER",
-    receiptPad("Order No:","#"+no),
-    receiptPad("Date:",when),
-    receiptPad("Type:","Collection"),
-    "--------------------------------",
-    ...itemLines,
-    "--------------------------------",
-    receiptPad("Total:",receiptMoney(total)),
-    "--------------------------------",
-    receiptPad("Loyalty Points Earned:",String(points)),
-    "--------------------------------",
-    "       SCAN YOUR RECEIPT",
-    " Scan the QR code to see if you've won",
-    "   A FREE COFFEE or FREE CAKE",
-    "",
-    "           Good Luck!",
-    "--------------------------------",
-    " Thank you for supporting Dexters!",
-    "Eat Good • Support Local • See You Soon!",
-    "",
-    ""
-  ].join('\n');
+    ESC+"@",
+    ESC+"a"+String.fromCharCode(1),
+    GS+"!"+String.fromCharCode(0x11),ESC+"E"+String.fromCharCode(1),"Dexters\n",
+    GS+"!"+String.fromCharCode(0x00),ESC+"E"+String.fromCharCode(0),"Sit-in and Take Away\n",
+    "Dexters\n10A Dundasvale Court\nGlasgow, G4 0JS\nScotland\nTel: 0141 473 5249\nEmail: hello@dextersspot.co.uk\nWeb: app.dextersspot.co.uk\n",
+    "--------------------------------\n",
+    ESC+"E"+String.fromCharCode(1),"LOYALTY APP ORDER\n",ESC+"E"+String.fromCharCode(0),
+    receiptPad("Order No:","#"+no)+"\n",
+    receiptPad("Date:",when)+"\n",
+    receiptPad("Type:","Collection")+"\n",
+    "--------------------------------\n",
+    ESC+"a"+String.fromCharCode(0),itemLines.join("\n")+"\n",
+    "--------------------------------\n",
+    ESC+"E"+String.fromCharCode(1),receiptPad("Total:",receiptMoney(total))+"\n",ESC+"E"+String.fromCharCode(0),
+    "--------------------------------\n",
+    receiptPad("Loyalty Points Earned:",String(points))+"\n",
+    "--------------------------------\n",
+    ESC+"a"+String.fromCharCode(1),
+    ESC+"E"+String.fromCharCode(1),"SCAN YOUR RECEIPT\n",ESC+"E"+String.fromCharCode(0),
+    "Scan the QR code to see if you've won\n",
+    ESC+"E"+String.fromCharCode(1),"A FREE COFFEE or FREE CAKE\n",ESC+"E"+String.fromCharCode(0),
+    qr,"\nGood Luck!  ♥\n",
+    "--------------------------------\n",
+    "Thank you for supporting Dexters!\n",
+    "Eat Good • Support Local • See You Soon!\n\n\n"
+  ].join('');
 }
 async function printLoyaltyOrderReceipt(o,{force=false}={}){
   if(!o?.id||(!force&&printedReceiptIds().has(String(o.id))))return false;
   if(typeof window.DextersHardwarePrintText!=='function'||typeof window.DextersIssueReceiptClaim!=='function')throw Error('Receipt printer bridge is still loading.');
   const total=receiptTotal(o);
   const claim=await window.DextersIssueReceiptClaim({id:'APP-'+String(o.id),total,created_at:o.created_at||new Date().toISOString()});
-  const text=loyaltyOrderReceiptText(o,total);
+  const text=loyaltyOrderReceiptText(o,total,claim);
   const ok=window.DextersHardwarePrintText(text,{loyalty:true,claim,openDrawer:false});
   if(ok)markReceiptPrinted(o.id);
   return ok;
