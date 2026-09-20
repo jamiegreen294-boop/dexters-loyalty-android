@@ -110,7 +110,19 @@ function cashUp(){const day=new Date().toISOString().slice(0,10),a=sales().filte
 function simple(title,html,onSave){$('simpleTitle').textContent=title;$('simpleBody').innerHTML=html;$('simpleModal').classList.remove('hide');$('simpleSave').onclick=()=>{onSave();$('simpleModal').classList.add('hide')}}
 function holdSale(){if(!S.cart.length)return;const arr=JSON.parse(localStorage.getItem('dexters-pos-held')||'[]');arr.push({id:Date.now(),time:new Date().toISOString(),cart:S.cart,mode:S.mode,discount:S.discount,note:S.note,customer:S.customer,phone:S.phone});localStorage.setItem('dexters-pos-held',JSON.stringify(arr.slice(-30)));clearSale();$('status').textContent='Sale held.'}
 function showHeld(){const arr=JSON.parse(localStorage.getItem('dexters-pos-held')||'[]');simple('Held orders',arr.length?arr.map(x=>'<div class="held"><b>'+new Date(x.time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</b> · '+x.cart.length+' lines · '+esc(x.mode)+'<br><button data-recall="'+x.id+'">Recall</button></div>').join(''):'No held orders.',()=>{});setTimeout(()=>document.querySelectorAll('[data-recall]').forEach(b=>b.onclick=()=>{const a=JSON.parse(localStorage.getItem('dexters-pos-held')||'[]'),x=a.find(v=>String(v.id)===b.dataset.recall);if(x){Object.assign(S,{cart:x.cart,mode:x.mode,discount:x.discount,note:x.note,customer:x.customer,phone:x.phone});localStorage.setItem('dexters-pos-held',JSON.stringify(a.filter(v=>v!==x)));$('simpleModal').classList.add('hide');document.querySelectorAll('[data-mode]').forEach(z=>z.classList.toggle('on',z.dataset.mode===S.mode));renderCart()}}),0)}
-function pay(kind){if(!S.cart.length)return;const t=total();if(kind==='cash'){simple('Cash payment','<p>Total: <b>'+money(t)+'</b></p><input id="cashGiven" class="field" inputmode="decimal" placeholder="Cash received"><div id="changeDue"></div>',()=>{const g=Number(($('cashGiven').value||'0').replace(',','.'));if(g<t){$('status').textContent='Cash amount is less than total.';return}completeSale('Cash',g-t)})}else completeSale('Card',0)}
+let squareBusy=false;
+window.onDextersSquareResult=(result)=>{
+  squareBusy=false;
+  if(result&&result.ok){
+    const ref=result.transactionId?(' · Square '+result.transactionId):'';
+    completeSale('Card',0);
+    $('status').textContent=$('status').textContent+ref;
+  }else{
+    const msg=(result&&result.message)||'Payment cancelled or not approved';
+    $('status').textContent='Square payment not completed: '+msg;
+  }
+};
+function pay(kind){if(!S.cart.length)return;const t=total();if(kind==='cash'){simple('Cash payment','<p>Total: <b>'+money(t)+'</b></p><input id="cashGiven" class="field" inputmode="decimal" placeholder="Cash received"><div id="changeDue"></div>',()=>{const g=Number(($('cashGiven').value||'0').replace(',','.'));if(g<t){$('status').textContent='Cash amount is less than total.';return}completeSale('Cash',g-t)})}else{if(squareBusy){$('status').textContent='Square payment already in progress.';return}if(window.DextersSquare&&typeof window.DextersSquare.startPayment==='function'){squareBusy=true;$('status').textContent='Opening Square for '+money(t)+'…';try{window.DextersSquare.startPayment(Math.round(t*100))}catch(e){squareBusy=false;$('status').textContent='Could not open Square: '+e.message}}else{$('status').textContent='Square integration is unavailable on this device.'}}}
 function completeSale(method,change){const sale={id:'POS-'+Date.now(),orderNumber:nextOrderNumber(),createdAt:new Date().toISOString(),method,change,total:total(),mode:S.mode,note:S.note,customer:S.customer,phone:S.phone,items:JSON.parse(JSON.stringify(S.cart)),staff:S.staffEmail||'staff'};saveSale(sale);localStorage.setItem('dexters-pos-last-sale',JSON.stringify(sale));receiptFor(sale.id);$('status').textContent='#'+sale.orderNumber+' '+method+' sale completed'+(change?'. Change '+money(change):'')+'. Sale saved locally.';clearSale()}
 async function sendToKds(){
  if(!S.cart.length){$('status').textContent='Add items before sending to KDS.';return}
