@@ -61,7 +61,7 @@ if(catJs.includes('const CATEGORY_IMAGES=')){
   // New category cards use real category-specific food photos directly.
   // Keep the exact existing POS layout and do not run the legacy sprite crop rewrite.
   if(!catJs.includes('background-size:cover'))throw new Error('PC category photo cover CSS missing');
-  if(!catJs.includes('const catImage=name=>CATEGORY_IMAGES[name]'))throw new Error('PC category image helper missing');
+  if(!catJs.includes('const catImage=name=>CATEGORY_IMAGES[name]')&&!catJs.includes("const photo=name=>CATEGORY_IMAGES[name]||FALLBACK_IMAGE"))throw new Error('PC category image helper missing');
 }else{
   const spriteMatch=catJs.match(/const SPRITE='data:image\/jpeg;base64,([^']+)'/);
   if(!spriteMatch)throw new Error('PC category photo sprite data missing');
