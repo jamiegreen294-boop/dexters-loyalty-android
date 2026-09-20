@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
             @JavascriptInterface public void checkForUpdates() { runOnUiThread(() -> loadRemote(true)); }
         }, "DextersUpdater");
         webView.addJavascriptInterface(new Object() {
-            @JavascriptInterface public void startPayment(long amountPence) {
+            @JavascriptInterface public void startPayment(int amountPence) {
                 runOnUiThread(() -> startSquarePayment(amountPence));
             }
         }, "DextersSquare");
@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
     }
 
 
-    private void startSquarePayment(long amountPence) {
+    private void startSquarePayment(int amountPence) {
         if (squareInProgress) {
             sendSquareResult(false, "", "transaction_in_progress", "A Square payment is already in progress");
             return;
