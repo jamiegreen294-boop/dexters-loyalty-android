@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dexter's Loyalty Redesign - Current Theme</title>
+<style>
+:root{--bg:#060708;--bg2:#060708;--panel:#171211;--panel2:#20130d;--ink:#fff0e5;--muted:#d2c0b5;--accent:#ffd095;--accent2:#e76623;--good:#6ee7a8;--line:#ac683d55;--hero1:#332013;--hero2:#17100d}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#06070822,#060708b8 65%,#060708ef),url('https://app.dextersspot.co.uk/haunted-v4.webp') center top/cover fixed no-repeat;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;transition:.2s}
+button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-height:100vh;padding:0 14px 100px;position:relative;overflow:hidden}
+.fx{pointer-events:none;position:fixed;inset:0;z-index:0;overflow:hidden}.fx span{position:absolute;opacity:.22;font-size:34px;filter:drop-shadow(0 4px 8px #0008)}.fx span:nth-child(1){left:5%;top:12%}.fx span:nth-child(2){right:8%;top:24%}.fx span:nth-child(3){left:10%;bottom:18%}.fx span:nth-child(4){right:12%;bottom:28%}
+.top,.screen,.nav,.testbar{position:relative;z-index:2}.top{position:sticky;top:0;z-index:20;margin:0 -14px;padding:13px 14px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand{font-weight:1000;font-size:28px;letter-spacing:-1.2px}.open{font-size:12px;font-weight:900;padding:7px 10px;border-radius:999px;background:#123728;color:#9ff3c5;border:1px solid #42d39255}
+.testbar{margin:14px 0 10px;padding:9px 11px;border-radius:12px;background:#332608;border:1px solid #ffd43b55;color:#ffeaa0;font-size:12px;font-weight:800;text-align:center}
+.themebar{display:none}
+.order-hero{background:linear-gradient(120deg,#332013f8,#17100df8);border:1px solid #d8884880;border-radius:12px;padding:17px;margin-bottom:12px;box-shadow:0 14px 34px #0005}.order-btn{width:100%;border:0;border-radius:18px;padding:17px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#111;font-weight:1000;font-size:18px;box-shadow:0 8px 20px #0004}
+.current{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:900}.order-title{font-size:18px;font-weight:1000;margin:4px 0}.status-ready{color:#9ff3c5}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:11px}.step{height:8px;border-radius:999px;background:#26364e}.step.on{background:linear-gradient(90deg,var(--accent),var(--accent2))}.step.ready{background:var(--good)}.step-labels{display:grid;grid-template-columns:repeat(4,1fr);font-size:10px;color:var(--muted);text-align:center;margin-top:5px}
+.card{background:linear-gradient(145deg,#24170ff8,#100e0cf8);border:1px solid #ac683d66;border-radius:12px;padding:15px;margin:11px 0;box-shadow:inset 0 2px #b1703b33,0 10px 28px #0005}.loyalty-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.loyalty-box{background:var(--panel2);border-radius:16px;padding:14px;border:1px solid var(--line)}.loyalty-box b{display:block;font-size:22px;margin-top:5px}.progress{height:8px;background:#07101c;border-radius:999px;overflow:hidden;margin-top:10px}.progress i{display:block;height:100%;width:44%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tile{border:1px solid #ac683d66;background:linear-gradient(145deg,#24170ff8,#100e0cf8);color:#fff0e5;border-radius:12px;padding:15px;text-align:left;min-height:108px;box-shadow:inset 0 2px #b1703b33,0 10px 28px #0005}.tile .icon{font-size:25px}.tile b{display:block;margin-top:8px;font-size:15px}.tile span{display:block;color:var(--muted);font-size:12px;margin-top:4px;line-height:1.35}.section-title{font-size:18px;font-weight:1000;margin:18px 2px 9px}.deal{background:linear-gradient(145deg,color-mix(in srgb,var(--panel) 68%,var(--accent) 32%),var(--panel));border:1px solid color-mix(in srgb,var(--accent) 50%,transparent)}.deal-price{font-size:26px;color:#9ff3c5;font-weight:1000}.old{text-decoration:line-through;color:#8390a6;margin-right:8px}.usual{display:flex;justify-content:space-between;gap:12px;align-items:center}.usual .meta{color:var(--muted);font-size:12px;margin-top:4px}.smallbtn{border:0;border-radius:11px;background:var(--panel2);color:#fff;font-weight:900;padding:9px 10px;font-size:12px}
+.screen{display:none}.screen.active{display:block}.pagehead{display:flex;align-items:center;justify-content:space-between;margin:15px 0 10px}.pagehead h1{margin:0;font-size:25px}.back{border:0;background:var(--panel2);color:#fff;border-radius:12px;padding:9px 11px;font-weight:900}.menu-search{width:100%;border:1px solid #ffffff20;background:#0d1829;color:#fff;border-radius:14px;padding:13px 14px;font-size:15px}
+.category{margin:10px 0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel)}.cathead{padding:14px 15px;font-weight:1000;display:flex;justify-content:space-between}.item{padding:14px 15px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.item small{display:block;color:var(--muted);margin-top:4px}.price{font-weight:1000;color:color-mix(in srgb,var(--accent) 78%,white)}
+.sticky-basket{position:sticky;bottom:78px;z-index:15;margin:16px 0 0}.basketbtn{width:100%;border:0;border-radius:17px;padding:15px;background:linear-gradient(90deg,var(--accent),var(--accent2));font-weight:1000;color:#111;box-shadow:0 9px 26px #0007}.reward{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:13px;margin:9px 0}.reward strong{display:block}.reward small{display:block;color:var(--muted);margin-top:4px}.account-wrap{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:0 14px;overflow:hidden}.account-row{width:100%;display:flex;align-items:center;justify-content:space-between;border:0;background:var(--panel);color:#fff;border-bottom:1px solid var(--line);padding:16px 2px;text-align:left}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,480px);z-index:30;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 94%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(14px)}.nav button{border:0;background:transparent;color:#8998af;padding:5px 2px;font-size:10px;font-weight:900}.nav button b{display:block;font-size:19px;margin-bottom:2px}.nav button.active{color:var(--accent)}
+.modal{position:fixed;inset:0;z-index:100;background:#000b;display:none;align-items:flex-end;justify-content:center}.modal.open{display:flex}.sheet{width:min(100%,480px);background:var(--panel);border-radius:24px 24px 0 0;padding:18px 16px 28px;max-height:78vh;overflow:auto}.sheet h2{margin-top:0}.sheet .order{background:var(--panel2);border-radius:15px;padding:13px;margin:8px 0}
+.theme-halloween{--bg:#060708;--bg2:#060708;--panel:#171211;--panel2:#20130d;--accent:#ffd095;--accent2:#e76623;--hero1:#332013;--hero2:#17100d;--muted:#d2c0b5}
+@media(min-width:481px){body{padding:18px 0}.app{border:1px solid #ffffff12;border-radius:28px;overflow:hidden;min-height:calc(100vh - 36px)}.top{border-radius:28px 28px 0 0}.nav{bottom:18px;border-radius:0 0 28px 28px}}
+</style>
+</head>
+<body class="theme-halloween">
+<div class="fx" id="fx"><span>🎃</span><span>👻</span><span>🕸️</span><span>🦇</span></div>
+<div class="app">
+  <div class="top"><div class="brand">DEXTER'S</div><div class="open">Collection OPEN</div></div>
+  <div class="testbar">OTHER DESIGN • CURRENT LIVE LOYALTY THEME • TEST ONLY</div>
+  <section style="min-height:245px;margin:4px 0 14px;padding:142px 18px 18px;border:1px solid #ab704944;border-radius:18px;background:linear-gradient(180deg,#06070800 15%,#06070825 45%,#060708f0 100%),url('https://app.dextersspot.co.uk/haunted-v4.webp') center 25%/cover no-repeat;box-shadow:0 18px 40px #0005">
+    <div style="font:700 clamp(34px,9vw,48px)/1.02 Georgia,serif;color:#fff0e3;text-shadow:0 4px 15px #000">Good treats.<br>Dark nights.</div>
+  </section>
+
+  <main id="home" class="screen active">
+    <section class="order-hero">
+      <button class="order-btn" data-go="order">🍔 ORDER FOR COLLECTION</button>
+      <div class="current">
+        <div class="eyebrow">Current order</div>
+        <div class="order-title">Order #123 · <span id="statusText" class="status-ready">Cooking</span></div>
+        <div class="steps"><span class="step on"></span><span class="step on"></span><span class="step"></span><span class="step"></span></div>
+        <div class="step-labels"><span>Accepted</span><span>Cooking</span><span>Ready</span><span>Collected</span></div>
+        <button class="smallbtn" style="margin-top:11px" id="advanceStatus">Preview next status</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="eyebrow">Your loyalty</div>
+      <div class="loyalty-row" style="margin-top:10px">
+        <div class="loyalty-box"><span>☕ Coffee</span><b>4 / 9</b><div class="progress"><i></i></div></div>
+        <div class="loyalty-box"><span>⭐ Points</span><b>126</b><small style="color:var(--muted)">£1.26 value</small></div>
+      </div>
+    </section>
+
+    <section class="quick">
+      <button class="tile" data-go="rewards"><div class="icon">🎁</div><b>Rewards</b><span>Coffee, points, offers & prizes</span></button>
+      <button class="tile" id="orderAgain"><div class="icon">⭐</div><b>Order Again</b><span>Your usual, favourites & recent orders</span></button>
+      <button class="tile"><div class="icon">🎡</div><b>Spin to Win</b><span>Play your daily spin when active</span></button>
+      <button class="tile"><div class="icon">💬</div><b>Ask Dexter</b><span>Help, menu questions & cheeky banter</span></button>
+    </section>
+
+    <div class="section-title">Dexter's Deal</div>
+    <section class="card deal">
+      <div class="eyebrow">September offer</div>
+      <h3 style="margin:7px 0 6px">🔥 Back to Routine</h3>
+      <div style="color:var(--muted)">Chicken Mayo Melt + Chips + Can</div>
+      <div style="margin-top:10px"><span class="old">£11.50</span><span class="deal-price">£10.75</span></div>
+      <button class="smallbtn" style="margin-top:11px" data-go="order">Order this deal</button>
+    </section>
+
+    <div class="section-title">Your Usual</div>
+    <section class="card usual">
+      <div><b>Chicken Mayo Melt</b><div class="meta">Your most ordered item · review current options before checkout</div></div>
+      <button class="smallbtn" data-go="order">Review</button>
+    </section>
+  </main>
+
+  <main id="order" class="screen">
+    <div class="pagehead"><h1>Order</h1><button class="back" data-go="home">Home</button></div>
+    <input class="menu-search" placeholder="Search menu or ingredients">
+    <div class="category"><div class="cathead"><span>Street Subs</span><span>⌄</span></div>
+      <div class="item"><div><b>Chicken Mayo Melt</b><small>6” sub · salad & sauce options</small></div><div class="price">£6.50</div></div>
+      <div class="item"><div><b>Southern Fried Chicken</b><small>6” sub · salad & sauce options</small></div><div class="price">£7.00</div></div>
+    </div>
+    <div class="category"><div class="cathead"><span>Smash Burgers</span><span>⌄</span></div>
+      <div class="item"><div><b>Dexter Smash</b><small>Brioche bun · customise toppings</small></div><div class="price">£8.50</div></div>
+    </div>
+    <div class="category"><div class="cathead"><span>Chicken Tenders</span><span>⌄</span></div>
+      <div class="item"><div><b>4 Chicken Tenders</b><small>Choose sauce & extras</small></div><div class="price">£6.50</div></div>
+    </div>
+    <div class="sticky-basket"><button class="basketbtn">3 items • £20.50 • VIEW BASKET</button></div>
+  </main>
+
+  <main id="rewards" class="screen">
+    <div class="pagehead"><h1>Your Rewards</h1><button class="back" data-go="home">Home</button></div>
+    <section class="card"><div class="eyebrow">Available now</div>
+      <div class="reward"><strong>☕ Coffee reward</strong><small>4 of 9 coffees collected</small></div>
+      <div class="reward"><strong>⭐ 126 points</strong><small>Worth £1.26 towards eligible rewards</small></div>
+      <div class="reward"><strong>🔥 Back to Routine</strong><small>Chicken Mayo Melt + Chips + Can · £10.75</small></div>
+      <div class="reward"><strong>🎡 Spin to Win</strong><small>Daily spin available when promotion is active</small></div>
+    </section>
+    <section class="card"><div class="eyebrow">Challenges</div><h3>Order 3 times this month</h3><div class="progress"><i style="width:66%"></i></div><small style="color:var(--muted)">2 / 3 complete</small></section>
+  </main>
+
+  <main id="dexter" class="screen">
+    <div class="pagehead"><h1>Ask Dexter</h1><button class="back" data-go="home">Home</button></div>
+    <section class="card"><b>Dexter’s AI · Loyalty App</b><p style="color:var(--muted)">Awright 👻 What d’ye need help wi’?</p><div style="margin-top:14px;padding:13px;border-radius:14px;background:var(--panel2);color:var(--muted)">Message Dexter…</div></section>
+  </main>
+
+  <main id="account" class="screen">
+    <div class="pagehead"><h1>Account</h1><button class="back" data-go="home">Home</button></div>
+    <div class="account-wrap">
+      <button class="account-row"><span>👤 My Details</span><span>›</span></button>
+      <button class="account-row"><span>🔔 Notifications</span><span>Enabled ›</span></button>
+      <button class="account-row"><span>📣 Marketing Preferences</span><span>›</span></button>
+      <button class="account-row"><span>💳 Dexter’s Credit</span><span>›</span></button>
+      <button class="account-row"><span>⚖️ Privacy & Legal</span><span>›</span></button>
+      <button class="account-row" style="color:#ff9aa6"><span>🗑 Delete Account</span><span>›</span></button>
+    </div>
+  </main>
+</div>
+
+<nav class="nav">
+  <button data-go="home" class="active"><b>🏠</b>Home</button>
+  <button data-go="order"><b>🍔</b>Order</button>
+  <button data-go="rewards"><b>🎁</b>Rewards</button>
+  <button data-go="dexter"><b>💬</b>Dexter</button>
+  <button data-go="account"><b>👤</b>Account</button>
+</nav>
+
+<div class="modal" id="againModal"><div class="sheet"><button class="back" id="closeAgain" style="float:right">Close</button><h2>Order Again</h2><div class="order"><b>⭐ Your Usual</b><p>Chicken Mayo Melt · Chips · Can</p><button class="smallbtn" data-go="order">Review order</button></div><div class="order"><b>Favourite #1</b><p>Dexter Smash · Onion Rings</p><button class="smallbtn" data-go="order">Review order</button></div><div class="order"><b>Recent order #122</b><p>Southern Fried Chicken Sub</p><button class="smallbtn" data-go="order">Review order</button></div></div></div>
+
+<script>
+const screens=[...document.querySelectorAll('.screen')],nav=[...document.querySelectorAll('.nav button')];
+function go(id){screens.forEach(x=>x.classList.toggle('active',x.id===id));nav.forEach(x=>x.classList.toggle('active',x.dataset.go===id));window.scrollTo({top:0,behavior:'smooth'});document.getElementById('againModal').classList.remove('open')}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(b.dataset.go)});
+document.getElementById('orderAgain').onclick=()=>document.getElementById('againModal').classList.add('open');
+document.getElementById('closeAgain').onclick=()=>document.getElementById('againModal').classList.remove('open');
+const stages=['Accepted','Cooking','Ready','Collected'];let stage=1;
+document.getElementById('advanceStatus').onclick=()=>{stage=(stage+1)%4;document.getElementById('statusText').textContent=stages[stage];document.querySelectorAll('.step').forEach((x,i)=>x.classList.toggle('on',i<=stage))};
+
+</script>
+</body>
+</html>
