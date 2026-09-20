@@ -24,7 +24,34 @@ function priceNum(v){const m=String(v??'').replace(',','.').match(/-?\d+(?:\.\d{
 function receiptTotal(o){return (o.items||[]).reduce((sum,i)=>sum+(Math.max(1,Number(i.qty)||1)*priceNum(i.price)),0)}
 function receiptMoney(n){return '£'+Number(n||0).toFixed(2)}
 function receiptPad(left,right,width=32){left=String(left||'');right=String(right||'');if(left.length+right.length+1>width)left=left.slice(0,Math.max(1,width-right.length-1));return left+' '.repeat(Math.max(1,width-left.length-right.length))+right}
-function loyaltyOrderReceiptText(o,total,claim){
+async function loyaltyReceiptLogoEscPos(){
+  try{
+    const img=await new Promise((resolve,reject)=>{
+      const im=new Image();
+      im.onload=()=>resolve(im);
+      im.onerror=()=>reject(Error('Dexters receipt logo could not load'));
+      im.src='../sunday/dexters-thermal-logo.png?v=20260920-logo-v1';
+    });
+    const maxW=320,scale=Math.min(1,maxW/img.naturalWidth);
+    const w=Math.max(8,Math.floor((img.naturalWidth*scale)/8)*8);
+    const h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    const ctx=cv.getContext('2d',{willReadFrequently:true});
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+    const px=ctx.getImageData(0,0,w,h).data,rowBytes=w>>3,data=new Uint8Array(rowBytes*h);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      const i=(y*w+x)*4,lum=.299*px[i]+.587*px[i+1]+.114*px[i+2];
+      if(px[i+3]>32&&lum<190)data[y*rowBytes+(x>>3)]|=(0x80>>(x&7));
+    }
+    let raster='\x1dv0'+String.fromCharCode(0,rowBytes&255,(rowBytes>>8)&255,h&255,(h>>8)&255);
+    for(let i=0;i<data.length;i+=8192)raster+=String.fromCharCode(...data.subarray(i,i+8192));
+    return '\x1ba\x01'+raster+'\n';
+  }catch(e){
+    console.warn('Receipt logo fallback',e);
+    return '';
+  }
+}
+function loyaltyOrderReceiptText(o,total,claim,logoRaster=''){
   const ESC="\x1b",GS="\x1d";
   const itemLines=[];
   for(const i of (o.items||[])){
@@ -48,9 +75,8 @@ function loyaltyOrderReceiptText(o,total,claim){
   }
   return [
     ESC+"@",
+    logoRaster,
     ESC+"a"+String.fromCharCode(1),
-    GS+"!"+String.fromCharCode(0x11),ESC+"E"+String.fromCharCode(1),"Dexters\n",
-    GS+"!"+String.fromCharCode(0x00),ESC+"E"+String.fromCharCode(0),"Sit-in and Take Away\n",
     "Dexters\n10A Dundasvale Court\nGlasgow, G4 0JS\nScotland\nTel: 0141 473 5249\nEmail: hello@dextersspot.co.uk\nWeb: app.dextersspot.co.uk\n",
     "--------------------------------\n",
     ESC+"E"+String.fromCharCode(1),"LOYALTY APP ORDER\n",ESC+"E"+String.fromCharCode(0),
@@ -79,7 +105,8 @@ async function printLoyaltyOrderReceipt(o,{force=false}={}){
   if(typeof window.DextersHardwarePrintText!=='function'||typeof window.DextersIssueReceiptClaim!=='function')throw Error('Receipt printer bridge is still loading.');
   const total=receiptTotal(o);
   const claim=await window.DextersIssueReceiptClaim({id:'APP-'+String(o.id),total,created_at:o.created_at||new Date().toISOString()});
-  const text=loyaltyOrderReceiptText(o,total,claim);
+  const logoRaster=await loyaltyReceiptLogoEscPos();
+  const text=loyaltyOrderReceiptText(o,total,claim,logoRaster);
   const ok=window.DextersHardwarePrintText(text,{loyalty:true,claim,openDrawer:false});
   if(ok)markReceiptPrinted(o.id);
   return ok;
