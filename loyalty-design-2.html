@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dexter's Loyalty Design 2</title>
 <style>
-:root{--bg:#0c1526;--bg2:#08101d;--panel:#132038;--panel2:#15233a;--ink:#f7f8fb;--muted:#aab4c3;--accent:#ffd43b;--accent2:#ff8a00;--good:#6ee7a8;--line:#ffffff18;--hero1:#18243b;--hero2:#101a2d}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2) 58%,var(--bg));color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;transition:.2s}
+:root{--bg:#060708;--bg2:#060708;--panel:#171211;--panel2:#20130d;--ink:#fff0e5;--muted:#d2c0b5;--accent:#ffd095;--accent2:#e76623;--good:#6ee7a8;--line:#ac683d55;--hero1:#332013;--hero2:#17100d}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#06070822,#060708b8 65%,#060708ef),url('https://app.dextersspot.co.uk/haunted-v4.webp') center top/cover fixed no-repeat;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;transition:.2s}
 button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-height:100vh;padding:0 14px 100px;position:relative;overflow:hidden}
 .fx{pointer-events:none;position:fixed;inset:0;z-index:0;overflow:hidden}.fx span{position:absolute;opacity:.22;font-size:34px;filter:drop-shadow(0 4px 8px #0008)}.fx span:nth-child(1){left:5%;top:12%}.fx span:nth-child(2){right:8%;top:24%}.fx span:nth-child(3){left:10%;bottom:18%}.fx span:nth-child(4){right:12%;bottom:28%}
 .top,.screen,.nav,.testbar{position:relative;z-index:2}.top{position:sticky;top:0;z-index:20;margin:0 -14px;padding:13px 14px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
@@ -25,6 +25,28 @@ button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-he
 .modal{position:fixed;inset:0;z-index:100;background:#000b;display:none;align-items:flex-end;justify-content:center}.modal.open{display:flex}.sheet{width:min(100%,480px);background:var(--panel);border-radius:24px 24px 0 0;padding:18px 16px 28px;max-height:78vh;overflow:auto}.sheet h2{margin-top:0}.sheet .order{background:var(--panel2);border-radius:15px;padding:13px;margin:8px 0}
 
 @media(min-width:481px){body{padding:18px 0}.app{border:1px solid #ffffff12;border-radius:28px;overflow:hidden;min-height:calc(100vh - 36px)}.top{border-radius:28px 28px 0 0}.nav{bottom:18px;border-radius:0 0 28px 28px}}
+
+/* Exact current live Halloween loyalty theme treatment */
+body{--navy:#060708;--navy2:#20130d;--yellow:#ffd095;--orange:#e76623;--card:#171211}
+.top{background:color-mix(in srgb,#100c09 94%,transparent);border-bottom-color:#93582855}
+.open{background:#2b160c;color:#ffd095;border-color:#ab704966}
+.order-hero,.card,.tile,.category,.account-wrap,.sheet,.reward,.loyalty-box{
+ background:linear-gradient(145deg,#24170ff8,#100e0cf8)!important;
+ border:1px solid #ac683d66!important;
+ box-shadow:inset 0 2px #b1703b33,0 10px 28px #0005!important;
+ border-radius:12px!important;
+ color:#fff0e5!important
+}
+.order-hero{background:linear-gradient(120deg,#332013f8,#17100df8)!important;border-color:#d8884880!important}
+.order-btn,.basketbtn{background:linear-gradient(110deg,#ffd094,#e57934)!important;color:#111!important;box-shadow:0 4px 20px #de6e2518!important}
+.progress,.steps .step{background:#20130d!important}.progress i,.step.on{background:linear-gradient(110deg,#ffd094,#e57934)!important}
+.nav{background:#100c09f5!important;border-top-color:#93582855!important}.nav button.active{color:#ffc88c!important}
+.menu-search{background:#100e0c!important;border-color:#ac683d55!important}.smallbtn,.back{background:#20130d!important;color:#fff0e5!important}
+#liveThemeHero{width:100%;min-height:360px;margin:8px 0 14px;padding:205px 20px 22px;text-align:left;border:1px solid #ab704944;border-radius:18px;
+background:linear-gradient(180deg,#06070800 15%,#06070825 45%,#060708f0 100%),url('https://app.dextersspot.co.uk/haunted-v4.webp') center 25%/cover no-repeat;
+font:700 12px/1.5 system-ui,sans-serif;color:#ffcb9a;text-shadow:0 2px 8px #000;box-shadow:0 18px 40px #0005;overflow:hidden}
+#liveThemeHero::before{content:'Good treats.\A Dark nights.';display:block;white-space:pre-line;font:700 clamp(38px,10vw,54px)/1.04 Georgia,serif;letter-spacing:-.045em;color:#fff0e3;margin-bottom:15px;text-shadow:0 4px 15px #000}
+
 </style>
 </head>
 <body>
@@ -32,10 +54,7 @@ button,input,select{font:inherit}.app{width:min(100%,480px);margin:0 auto;min-he
 <div class="app">
   <div class="top"><div class="brand">DEXTER'S</div><div class="open">Collection OPEN</div></div>
   <div class="testbar">DESIGN 2 • CURRENT LOYALTY APP THEME • TEST ONLY</div>
-  <section style="margin:4px 0 14px;padding:14px 16px;border-radius:16px;background:linear-gradient(135deg,#132038,#15233a);border:1px solid rgba(255,255,255,.08)">
-    <strong style="display:block;font-size:18px">Design 2</strong>
-    <span style="display:block;margin-top:4px;color:#aab4c3;font-size:12px">The redesigned customer flow you liked, using the current loyalty app styling.</span>
-  </section>
+  <section id="liveThemeHero">Current live loyalty Halloween theme</section>
 
   <main id="home" class="screen active">
     <section class="order-hero">
