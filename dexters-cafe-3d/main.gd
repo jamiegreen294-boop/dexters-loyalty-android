@@ -28,6 +28,14 @@ var order_id := 0
 var counter_level := 1
 var kitchen_level := 1
 var staff_limit := 3
+var save_timer := 0.0
+var event_timer := 38.0
+var music_on := true
+var sfx_on := true
+var lifetime_cash := 0.0
+var achievements := {}
+var second_location_unlocked := false
+const SAVE_PATH := "user://dexters_cafe_save.cfg"
 
 var customers: Array = []
 var staff: Array = []
@@ -58,6 +66,7 @@ var recipes = [
 
 func _ready():
     randomize()
+    _load_game()
     _build_world()
     _build_ui()
     _build_people()
@@ -67,9 +76,20 @@ func _ready():
 func _process(delta):
     _update_player(delta)
     _animate_people(delta)
+    save_timer += delta
+    if save_timer >= 20.0:
+        save_timer = 0.0
+        _save_game()
     if not open:
         return
     game_time += delta * 0.055
+    event_timer -= delta
+    if event_timer <= 0.0:
+        event_timer = randf_range(32.0, 55.0)
+        _random_service_event()
+    if game_time >= 17.0:
+        _end_day()
+        return
     energy = max(0.0, energy - delta * 0.08)
     spawn_timer -= delta
     if spawn_timer <= 0.0 and customers.size() < 8:
@@ -328,10 +348,21 @@ func _cylinder_child(parent:Node3D,pos:Vector3,r:float,h:float,col:Color):
 func _spawn_customer():
     order_id += 1
     var recipe = recipes.pick_random().duplicate()
+    if day % 7 == 0 and randf() < 0.28:
+        recipe = {"name":"Sunday Roast","price":14.99,"station":"prep","emoji":"SR"}
     var sit_in = randf() < 0.62
+    var customer_types = [
+        {"name":"Regular","patience":1.0,"spend":1.0},
+        {"name":"Commuter","patience":1.35,"spend":0.95},
+        {"name":"Family","patience":0.8,"spend":1.18},
+        {"name":"Student","patience":1.05,"spend":0.9},
+        {"name":"Foodie","patience":0.9,"spend":1.3}
+    ]
+    var ctype = customer_types.pick_random()
     var colors=[Color("#66a765"),Color("#7d6bd2"),Color("#df7c61"),Color("#4fa6b4"),Color("#e5a23c"),Color("#db6b9e")]
     var p=_make_person(recipe["name"],door_pos,colors.pick_random(),false,false)
     p["state"]="queue"; p["recipe"]=recipe; p["patience"]=100.0; p["sit_in"]=sit_in
+    p["patience_rate"]=ctype["patience"]; p["spend_mult"]=ctype["spend"]; p["customer_type"]=ctype["name"]
     p["queue_index"]=min(customers.size(),queue_points.size()-1); p["order_started"]=false; p["served"]=false; p["table"]=-1; p["id"]=order_id
     customers.append(p)
     _order_bubble(p)
@@ -344,7 +375,7 @@ func _order_bubble(c):
 func _update_customers(delta):
     for i in range(customers.size()-1,-1,-1):
         var c=customers[i]
-        c["patience"] -= delta*(2.1 if rush else 1.15)
+        c["patience"] -= delta*(2.1 if rush else 1.15)*float(c.get("patience_rate",1.0))
         if c["patience"]<=0 and c["state"] not in ["exit","eating"]:
             rep=max(0.0,rep-2.0); c["state"]="exit"; _toast("Customer walked out -2 REP")
         match c["state"]:
@@ -455,10 +486,11 @@ func _animate_people(_delta):
 func _complete_sale(c):
     if c["served"]: return
     c["served"]=true
-    var base=float(c["recipe"]["price"])
+    var base=float(c["recipe"]["price"])*float(c.get("spend_mult",1.0))
     var tip=max(0.0,(float(c["patience"])-35.0)/100.0)*1.6
     if rush: tip+=0.6
-    cash+=base+tip; today+=base+tip; served+=1; xp+=9; rep=min(100.0,rep+0.22); energy=min(50.0,energy+0.9)
+    cash+=base+tip; today+=base+tip; lifetime_cash+=base+tip; served+=1; xp+=9; rep=min(100.0,rep+0.22); energy=min(50.0,energy+0.9)
+    _check_progression()
     _toast("+£%.2f  %s"%[base+tip,c["recipe"]["name"]])
 
 func _build_ui():
@@ -531,7 +563,10 @@ func _shop():
     else: _toast("Need £75 for décor")
 
 func _settings():
-    _toast("Settings coming in retail pass")
+    music_on = not music_on
+    sfx_on = music_on
+    _save_game()
+    _toast("Audio ON" if music_on else "Audio MUTED")
 
 func _tasks():
     if served>=5:
@@ -547,6 +582,92 @@ func _hire_runner():
     if staff.size()>2: _toast("Runner already hired"); return
     if cash<160: _toast("Need £160 to hire runner"); return
     cash-=160; staff.append(_make_person("Runner",Vector3(4.8,0,1.0),Color("#4e9b63"),true,false)); _toast("Runner hired")
+
+func _random_service_event():
+    if not open:
+        return
+    var roll=randf()
+    if roll < 0.34:
+        energy=min(50.0,energy+8.0)
+        _toast("Supplier dropped off fresh stock +8 energy")
+    elif roll < 0.67:
+        rep=max(0.0,rep-1.0)
+        _toast("Delivery delay: reputation -1")
+    else:
+        cash+=18.0
+        today+=18.0
+        lifetime_cash+=18.0
+        _toast("Catering add-on +£18")
+
+func _end_day():
+    open=false
+    day+=1
+    game_time=8.0
+    energy=50.0
+    rep=min(100.0,rep+0.5)
+    for c in customers:
+        if is_instance_valid(c["node"]):
+            c["node"].queue_free()
+    customers.clear()
+    orders.clear()
+    for t in tables:
+        t["busy"]=false
+    _save_game()
+    _toast("Day complete - next shift ready")
+
+func _check_progression():
+    var level=max(1,int(xp/120)+1)
+    if level>=2 and not achievements.has("level_2"):
+        achievements["level_2"]=true
+        recipes.append({"name":"Chicken Tenders","price":7.50,"station":"fryer","emoji":"CT"})
+        _toast("Level 2: Chicken Tenders unlocked")
+    if level>=3 and not achievements.has("level_3"):
+        achievements["level_3"]=true
+        staff_limit=4
+        _toast("Level 3: extra staff slot unlocked")
+    if level>=5 and not second_location_unlocked:
+        second_location_unlocked=true
+        achievements["second_location"]=true
+        _toast("Milestone: second Dexter's location unlocked")
+
+func _save_game():
+    var cfg=ConfigFile.new()
+    cfg.set_value("progress","cash",cash)
+    cfg.set_value("progress","premium",premium)
+    cfg.set_value("progress","rep",rep)
+    cfg.set_value("progress","xp",xp)
+    cfg.set_value("progress","day",day)
+    cfg.set_value("progress","lifetime_cash",lifetime_cash)
+    cfg.set_value("progress","kitchen_level",kitchen_level)
+    cfg.set_value("progress","counter_level",counter_level)
+    cfg.set_value("progress","staff_limit",staff_limit)
+    cfg.set_value("progress","second_location_unlocked",second_location_unlocked)
+    cfg.set_value("settings","music_on",music_on)
+    cfg.set_value("settings","sfx_on",sfx_on)
+    cfg.set_value("meta","achievements",achievements)
+    cfg.save(SAVE_PATH)
+
+func _load_game():
+    var cfg=ConfigFile.new()
+    if cfg.load(SAVE_PATH)!=OK:
+        return
+    cash=float(cfg.get_value("progress","cash",cash))
+    premium=int(cfg.get_value("progress","premium",premium))
+    rep=float(cfg.get_value("progress","rep",rep))
+    xp=int(cfg.get_value("progress","xp",xp))
+    day=int(cfg.get_value("progress","day",day))
+    lifetime_cash=float(cfg.get_value("progress","lifetime_cash",lifetime_cash))
+    kitchen_level=int(cfg.get_value("progress","kitchen_level",kitchen_level))
+    counter_level=int(cfg.get_value("progress","counter_level",counter_level))
+    staff_limit=int(cfg.get_value("progress","staff_limit",staff_limit))
+    second_location_unlocked=bool(cfg.get_value("progress","second_location_unlocked",false))
+    music_on=bool(cfg.get_value("settings","music_on",true))
+    sfx_on=bool(cfg.get_value("settings","sfx_on",true))
+    achievements=cfg.get_value("meta","achievements",{})
+
+func _notification(what):
+    if what==NOTIFICATION_APPLICATION_PAUSED or what==NOTIFICATION_WM_CLOSE_REQUEST:
+        _save_game()
 
 func _toast(text:String):
     if ui.has("toast"): ui["toast"].text=text
