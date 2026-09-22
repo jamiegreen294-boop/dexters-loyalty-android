@@ -157,7 +157,10 @@ function buildLoyaltyReceipt(sale,customer,claim){
 function launchHardwarePrint(text,opts={}){
   try{
     localStorage.setItem("dexters-pos-last-receipt",text);
-    const payload=btoa(unescape(encodeURIComponent(text)));
+    // The hardware-test drawer works by sending the ESC/POS kick bytes through
+    // the same raw print path. Use that exact working pulse on real CASH sales too.
+    const drawerPulse=opts.openDrawer?'\x1b\x70\x00\x3c\x78\x1b\x70\x01\x3c\x78':'';
+    const payload=btoa(unescape(encodeURIComponent(drawerPulse+text)));
     const q=new URLSearchParams({payload});
     if(opts.loyalty)q.set("loyalty","1");
     if(opts.claim)q.set("claim",opts.claim);
