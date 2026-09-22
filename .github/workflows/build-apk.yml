@@ -2,7 +2,7 @@ name: Build Dexters Loyalty APK
 
 on:
   push:
-    branches: [ main, fix-mobile-full-width-20260910, dexteros-meizu-test ]
+    branches: [ main, fix-mobile-full-width-20260910, dexteros-meizu-test, dexteros-travel-notifications-test ]
   workflow_dispatch:
 
 permissions:
