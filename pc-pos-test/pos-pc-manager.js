@@ -42,6 +42,7 @@ function cashUp(){const rows=salesRows();let cash=0,square=0,owed=0,refunds=0,vo
 function auditView(){const rows=read(AUDIT_KEY);modal('Audit Log',rows.length?rows.slice(0,200).map(r=>'<div class="held"><b>'+new Date(r.at).toLocaleString()+'</b> · '+String(r.action||'')+'<br><small>'+String(r.staff||'')+'</small></div>').join(''):'<p>No audit entries.</p>',true)}
 function addTop(id,label,fn){let b=$m(id);if(!b){b=document.createElement('button');b.id=id;b.textContent=label;const top=document.querySelector('.top');top?.insertBefore(b,$m('staffBtn')||null)}if(b)b.onclick=fn;return b}
 let squarePaymentActive=false;
+let squareActiveRequestId=null;
 async function squareBridge(body){
   if(!S?.session?.access_token)throw Error('Staff session required');
   const r=await fetch(U+'/functions/v1/pc-pos-square-bridge',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+S.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
@@ -49,23 +50,39 @@ async function squareBridge(body){
   if(!r.ok)throw Error(x.error||'Square bridge unavailable');
   return x;
 }
+window.DextersPcSquareCancel=async()=>{
+  const id=squareActiveRequestId;
+  if(!id)return false;
+  try{await squareBridge({action:'cancel',id})}catch{}
+  squareActiveRequestId=null;
+  return true;
+};
 window.DextersPcSquarePay=async(amount,reference='PC POS')=>{
   const pence=Math.round(Number(amount||0)*100);
   if(pence<1)throw Error('Invalid Square amount');
   const made=await squareBridge({action:'create',amount_pence:pence,reference});
   const id=made?.request?.id;
   if(!id)throw Error('Could not create Square payment request');
+  squareActiveRequestId=id;
   const started=Date.now();
-  while(Date.now()-started<190000){
-    const s=await squareBridge({action:'status',id});
-    const q=s?.request;
-    if(!q)throw Error('Square payment request disappeared');
-    if(q.status==='approved')return q;
-    if(['cancelled','failed','expired'].includes(q.status))throw Error(q.error_message||('Square payment '+q.status));
-    await new Promise(r=>setTimeout(r,900));
+  try{
+    while(Date.now()-started<190000){
+      const s=await squareBridge({action:'status',id});
+      const q=s?.request;
+      if(!q)throw Error('Square payment request disappeared');
+      if(q.status==='approved'){squareActiveRequestId=null;return q}
+      if(['cancelled','failed','expired'].includes(q.status))throw Error(q.error_message||('Square payment '+q.status));
+      if(q.status==='pending' && Date.now()-started>20000){
+        try{await squareBridge({action:'cancel',id})}catch{}
+        throw Error('Foodhub terminal did not pick up the payment. Basket kept — check the terminal and retry.');
+      }
+      await new Promise(r=>setTimeout(r,900));
+    }
+    try{await squareBridge({action:'cancel',id})}catch{}
+    throw Error('Square payment timed out. Basket kept — you can retry.');
+  }finally{
+    if(squareActiveRequestId===id)squareActiveRequestId=null;
   }
-  try{await squareBridge({action:'cancel',id})}catch{}
-  throw Error('Square payment timed out');
 };
 async function squareSale(){
   const total=Number(String($m('total')?.textContent||'0').replace(/[^0-9.]/g,''))||0;
