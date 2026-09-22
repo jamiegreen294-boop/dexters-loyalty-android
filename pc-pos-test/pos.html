@@ -27,7 +27,7 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 
 <script>try{if(!localStorage.getItem("dexters_pc_pin_device_id_v1")){localStorage.removeItem("dexters-pos-session");localStorage.removeItem("dexters_pc_force_pin_lock_v1")}}catch(e){}</script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<script>window.__DEXTERS_POS_BUILD="88da476c8aac"</script>
+<script>window.__DEXTERS_POS_BUILD="6f06b53c591e"</script>
 <link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#08182a"><meta name="robots" content="noindex,nofollow">
 </head>
 <body>
@@ -241,9 +241,24 @@ async function renderLogin(){const b=gateBox();if(!b)return;b.innerHTML=pinShell
 function renderSetup(){const b=gateBox();if(!b)return;b.innerHTML=pinShell('Set up PIN','One-time setup for this Windows till.','<input id="pcSetupCode" class="field" type="password" inputmode="numeric" maxlength="6" placeholder="6-digit setup code"><input id="pcNewPin" class="field" type="password" inputmode="numeric" maxlength="6" placeholder="Choose 4–6 digit PIN"><input id="pcNewPin2" class="field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm PIN"><button id="pcActivate">ACTIVATE PIN LOGIN</button><div id="pcSetupMsg" class="bad"></div>'+(storage.get(DEV_ID)?'<button id="pcBackPin">BACK TO PIN LOGIN</button>':''));const msg=b.querySelector('#pcSetupMsg'),btn=b.querySelector('#pcActivate');btn.onclick=async()=>{const code=String(b.querySelector('#pcSetupCode').value||'').replace(/\D/g,''),p1=String(b.querySelector('#pcNewPin').value||'').replace(/\D/g,''),p2=String(b.querySelector('#pcNewPin2').value||'').replace(/\D/g,'');if(code.length!==6){msg.textContent='Enter the 6-digit setup code.';return}if(p1.length<4||p1.length>6||p1!==p2){msg.textContent='Use the same 4–6 digit PIN in both PIN boxes.';return}btn.disabled=true;msg.textContent='Activating this POS…';try{const x=await call('activate',{code,pin:p1,device_name:'Dexters Windows POS'});saveSession(x);msg.className='ok';msg.textContent='PIN login activated ✓';setTimeout(()=>location.reload(),220)}catch(e){msg.className='bad';msg.textContent=e.message;btn.disabled=false}};const back=b.querySelector('#pcBackPin');if(back)back.onclick=renderLogin}
 async function sessionValid(){const s=S?.session;if(!s?.access_token)return false;const ctrl=new AbortController(),t=setTimeout(()=>ctrl.abort(),3000);try{const r=await fetch(U+'/auth/v1/user',{headers:{apikey:K,Authorization:'Bearer '+s.access_token},cache:'no-store',signal:ctrl.signal});return r.ok}catch{return false}finally{clearTimeout(t)}}
 let featuresPromise=null;function scriptUrl(name){return new URL(name,location.href).href}
-function appendScript(name){return new Promise((resolve,reject)=>{window.__dextersFeatureLoading=name;const s=document.createElement('script'),timer=setTimeout(()=>{s.remove();reject(Error('Timed out loading '+name))},8000);s.src=scriptUrl(name)+(scriptUrl(name).includes('?')?'&':'?')+'build='+encodeURIComponent('20260920-loyalty-logo-v17');s.async=false;s.dataset.dextersFeature=name;s.onload=()=>{clearTimeout(timer);resolve()};s.onerror=()=>{clearTimeout(timer);reject(Error('Could not load '+name))};document.body.appendChild(s)})}
+function appendScript(name){return new Promise((resolve,reject)=>{window.__dextersFeatureLoading=name;const s=document.createElement('script'),timer=setTimeout(()=>{s.remove();reject(Error('Timed out loading '+name))},8000);s.src=scriptUrl(name)+(scriptUrl(name).includes('?')?'&':'?')+'build='+encodeURIComponent('20260922-drawer-hotfix-v18');s.async=false;s.dataset.dextersFeature=name;s.onload=()=>{clearTimeout(timer);resolve()};s.onerror=()=>{clearTimeout(timer);reject(Error('Could not load '+name))};document.body.appendChild(s)})}
 async function loadFeatures(){if(featuresPromise)return featuresPromise;featuresPromise=(async()=>{window.__dextersFeatureLoadComplete=false;for(const name of FEATURE_SCRIPTS)await appendScript(name);window.__dextersFeatureLoading='';window.__dextersFeatureLoadComplete=true;window.dispatchEvent(new CustomEvent('dexters-pos-features-ready'));const q=document.createElement('script');q.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';q.async=true;q.dataset.dextersOptional='qrcode';document.head.appendChild(q);return true})();return featuresPromise}
-let initStarted=false;async function init(){if(initStarted)return;initStarted=true;const gate=$p('authGate');if(!gate){initStarted=false;return}const configured=!!(storage.get(DEV_ID)&&storage.get(DEV_SEC));if(!configured){storage.remove('dexters-pos-session');storage.remove('dexters_pc_force_pin_lock_v1');S.session=null;gate.classList.remove('hide');window.__dextersFeatureLoadComplete=false;window.__dextersFeatureLoading='PIN';renderSetup();return}storage.remove('dexters-pos-session');storage.remove('dexters_pc_force_pin_lock_v1');S.session=null;gate.classList.remove('hide');window.__dextersFeatureLoadComplete=false;window.__dextersFeatureLoading='PIN';renderLogin()}
+async function hydrateManagedDevice(){
+  try{
+    if(storage.get(DEV_ID)&&storage.get(DEV_SEC))return true;
+    const b=window.DexterManaged;
+    if(!b||typeof b.getPosCredentials!=='function')return false;
+    const raw=b.getPosCredentials();
+    const x=typeof raw==='string'?JSON.parse(raw||'{}'):(raw||{});
+    if(x.device_id&&x.device_secret){
+      storage.set(DEV_ID,x.device_id);
+      storage.set(DEV_SEC,x.device_secret);
+      return true;
+    }
+  }catch{}
+  return false;
+}
+let initStarted=false;async function init(){if(initStarted)return;initStarted=true;const gate=$p('authGate');if(!gate){initStarted=false;return}await hydrateManagedDevice();const configured=!!(storage.get(DEV_ID)&&storage.get(DEV_SEC));if(!configured){storage.remove('dexters-pos-session');storage.remove('dexters_pc_force_pin_lock_v1');S.session=null;gate.classList.remove('hide');window.__dextersFeatureLoadComplete=false;window.__dextersFeatureLoading='PIN';renderSetup();return}storage.remove('dexters-pos-session');storage.remove('dexters_pc_force_pin_lock_v1');S.session=null;gate.classList.remove('hide');window.__dextersFeatureLoadComplete=false;window.__dextersFeatureLoading='PIN';renderLogin()}
 window.DextersPinLogin={renderLogin,renderSetup,init,loadFeatures,FEATURE_SCRIPTS};init();
 })();
 </script>
