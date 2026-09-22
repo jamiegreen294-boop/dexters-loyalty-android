@@ -97,6 +97,21 @@ async function sessionValid(){const s=S?.session;if(!s?.access_token)return fals
 let featuresPromise=null;function scriptUrl(name){return new URL(name,location.href).href}
 function appendScript(name){return new Promise((resolve,reject)=>{window.__dextersFeatureLoading=name;const s=document.createElement('script'),timer=setTimeout(()=>{s.remove();reject(Error('Timed out loading '+name))},8000);s.src=scriptUrl(name)+(scriptUrl(name).includes('?')?'&':'?')+'build='+encodeURIComponent('20260922-drawer-hotfix-v18');s.async=false;s.dataset.dextersFeature=name;s.onload=()=>{clearTimeout(timer);resolve()};s.onerror=()=>{clearTimeout(timer);reject(Error('Could not load '+name))};document.body.appendChild(s)})}
 async function loadFeatures(){if(featuresPromise)return featuresPromise;featuresPromise=(async()=>{window.__dextersFeatureLoadComplete=false;for(const name of FEATURE_SCRIPTS)await appendScript(name);window.__dextersFeatureLoading='';window.__dextersFeatureLoadComplete=true;window.dispatchEvent(new CustomEvent('dexters-pos-features-ready'));const q=document.createElement('script');q.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';q.async=true;q.dataset.dextersOptional='qrcode';document.head.appendChild(q);return true})();return featuresPromise}
-let initStarted=false;async function init(){if(initStarted)return;initStarted=true;const gate=$p('authGate');if(!gate){initStarted=false;return}const configured=!!(storage.get(DEV_ID)&&storage.get(DEV_SEC));if(!configured){storage.remove('dexters-pos-session');storage.remove('dexters_pc_force_pin_lock_v1');S.session=null;gate.classList.remove('hide');window.__dextersFeatureLoadComplete=false;window.__dextersFeatureLoading='PIN';renderSetup();return}storage.remove('dexters-pos-session');storage.remove('dexters_pc_force_pin_lock_v1');S.session=null;gate.classList.remove('hide');window.__dextersFeatureLoadComplete=false;window.__dextersFeatureLoading='PIN';renderLogin()}
+async function hydrateManagedDevice(){
+  try{
+    if(storage.get(DEV_ID)&&storage.get(DEV_SEC))return true;
+    const b=window.DexterManaged;
+    if(!b||typeof b.getPosCredentials!=='function')return false;
+    const raw=b.getPosCredentials();
+    const x=typeof raw==='string'?JSON.parse(raw||'{}'):(raw||{});
+    if(x.device_id&&x.device_secret){
+      storage.set(DEV_ID,x.device_id);
+      storage.set(DEV_SEC,x.device_secret);
+      return true;
+    }
+  }catch{}
+  return false;
+}
+let initStarted=false;async function init(){if(initStarted)return;initStarted=true;const gate=$p('authGate');if(!gate){initStarted=false;return}await hydrateManagedDevice();const configured=!!(storage.get(DEV_ID)&&storage.get(DEV_SEC));if(!configured){storage.remove('dexters-pos-session');storage.remove('dexters_pc_force_pin_lock_v1');S.session=null;gate.classList.remove('hide');window.__dextersFeatureLoadComplete=false;window.__dextersFeatureLoading='PIN';renderSetup();return}storage.remove('dexters-pos-session');storage.remove('dexters_pc_force_pin_lock_v1');S.session=null;gate.classList.remove('hide');window.__dextersFeatureLoadComplete=false;window.__dextersFeatureLoading='PIN';renderLogin()}
 window.DextersPinLogin={renderLogin,renderSetup,init,loadFeatures,FEATURE_SCRIPTS};init();
 })();
