@@ -52,7 +52,7 @@
       if(p==='granted'){
         try{localStorage.setItem(PROMPT_KEY,'enabled')}catch{}
         closePrompt();
-        notify('Dexter’s notifications enabled','You’ll now get order updates for accepted, cooking, ready and collected.','dexters-notifications-enabled');
+        if(window.dextersEnablePush)await window.dextersEnablePush();notify('Dexter’s notifications enabled','You’ll now get order updates for accepted, cooking, ready and collected.','dexters-notifications-enabled');
       }else if(p==='denied'){
         try{localStorage.setItem(PROMPT_KEY,'denied')}catch{}
         closePrompt();
