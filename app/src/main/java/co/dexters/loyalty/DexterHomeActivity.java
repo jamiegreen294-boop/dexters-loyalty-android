@@ -45,6 +45,7 @@ public class DexterHomeActivity extends Activity {
         addButton(root, "💬 WhatsApp Business", v -> openWhatsAppBusiness());
         addButton(root, "★ Loyalty / Customers", v -> startActivity(new Intent(this, MainActivity.class)));
         addButton(root, "▣ Back Office", v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://backoffice.dextersspot.co.uk/"))));
+        addButton(root, "🚦 Travel Alerts", v -> startActivity(new Intent(this, TravelActivity.class)));
 
         TextView note = new TextView(this);
         note.setText("AI ordering foundation: call history is stored on-device. Live AI answering will connect here once the phone/VoIP audio route is configured.");
