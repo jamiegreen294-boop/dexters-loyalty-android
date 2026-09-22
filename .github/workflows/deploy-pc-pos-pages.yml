@@ -61,7 +61,7 @@ jobs:
           grep -q "pos-pc-offline.js" _site/pos-pc-pin-login.js
           grep -q "pos-pc-collection-orders.js" _site/pos-pc-pin-login.js
           grep -q "COLLECTION OPEN" _site/pos-pc-collection-orders.js
-          grep -q "FOODHUB 1008" _site/scanner/index.html
+          grep -q "BACKUP LOYALTY SCANNER" _site/scanner/index.html
           grep -q "pc-pos-scanner-bridge-test" _site/pos-pc-scanner.js
           grep -q "retrieveHeldBtn" _site/pos-order-management.js
           grep -q "id='payBtn'\|id=\"payBtn\"\|payBtn" _site/pos-pc-v3-addon.js
