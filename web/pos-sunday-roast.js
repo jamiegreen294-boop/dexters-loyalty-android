@@ -1,5 +1,5 @@
 (()=>{'use strict';
-function openSundayRoastTab(){location.href='./pos-sunday-roast-tab.html'}
+function openSundayRoastTab(){const w=window.open('./pos-sunday-roast-tab.html','dextersSundayRoast');if(!w)location.href='./pos-sunday-roast-tab.html'}
 function install(){
  let b=document.getElementById('pcSundayBtn');
  if(!b){
