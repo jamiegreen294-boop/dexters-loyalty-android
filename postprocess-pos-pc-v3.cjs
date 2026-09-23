@@ -21,7 +21,6 @@ html=html.replace("DEXTER'S · TABLE SERVICE","DEXTER'S POS · LIVE");
 fs.writeFileSync('dist/pos.html',html);
 fs.writeFileSync('dist/pos-test.html',html);
 for(const f of ['pos-pc-pin-login.js','pos-pc-offline.js','pos-pc-session-security.js','pos-pc-v3-addon.js','pos-pc-scanner.js','pos-pc-loyalty-test.js','pos-pc-category-home.js','pos-pc-collection-orders.js','pos-order-management.js','pos-pc-manager.js','pos-pc-table-payments.js','pos-sunday-roast.js','pos-pc-phone-orders.js','pos-pc-advanced.js','pos-pc-whatsapp.js','pos-pc-xepos-plus.js','pos-pc-promotions-auto.js','pos-pc-recipes.js','pos-pc-purchasing.js','pos-pc-expiry.js','pos-pc-account-statements.js','pos-pc-capacity.js','pos-pc-close-day.js','pos-pc-security-audit.js'])fs.copyFileSync('web/'+f,'dist/'+f);
-fs.copyFileSync('web/pos-sunday-roast-tab.html','dist/pos-sunday-roast-tab.html');
 
 const addonPath='dist/pos-pc-v3-addon.js';
 let addonJs=fs.readFileSync(addonPath,'utf8');
