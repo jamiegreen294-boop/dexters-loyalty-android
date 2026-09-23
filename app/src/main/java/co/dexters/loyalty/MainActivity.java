@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import net.nyx.printerservice.print.IPrinterService;
 import net.nyx.printerservice.print.PrintTextFormat;
 
@@ -125,6 +126,7 @@ public class MainActivity extends Activity {
         }
         ChargeRequest request = new ChargeRequest.Builder(amountPence, CurrencyCode.GBP)
             .note("Dexter's POS")
+            .autoReturn(4, TimeUnit.SECONDS)
             .build();
         try {
             squareInProgress = true;
