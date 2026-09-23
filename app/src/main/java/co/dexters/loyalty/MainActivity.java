@@ -2,8 +2,12 @@ package co.dexters.loyalty;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -19,6 +23,11 @@ import com.squareup.sdk.pos.PosSdk;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Locale;
+import net.nyx.printerservice.print.IPrinterService;
+import net.nyx.printerservice.print.PrintTextFormat;
 
 public class MainActivity extends Activity {
     private static final String REMOTE_HOME = "https://bpnkouymdvcogeaqjmxl.supabase.co/functions/v1/dexters-pos-live-ui";
@@ -29,11 +38,30 @@ public class MainActivity extends Activity {
     private boolean usingBackup = false;
     private PosClient squareClient;
     private boolean squareInProgress = false;
+    private int paymentAmountPence = 0;
+    private IPrinterService printer;
+    private boolean printerBound = false;
+    private String pendingReceipt;
+    private final ServiceConnection printerConnection = new ServiceConnection() {
+        @Override public void onServiceConnected(ComponentName name, IBinder binder) {
+            printer = IPrinterService.Stub.asInterface(binder);
+            if (pendingReceipt != null) {
+                String text = pendingReceipt;
+                pendingReceipt = null;
+                printReceipt(text);
+            }
+        }
+        @Override public void onServiceDisconnected(ComponentName name) {
+            printer = null;
+            printerBound = false;
+        }
+    };
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         enterKiosk();
         squareClient = PosSdk.createClient(this, SQUARE_APPLICATION_ID);
+        bindPrinter();
         webView = new WebView(this);
         setContentView(webView);
         WebSettings s = webView.getSettings();
@@ -73,6 +101,11 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> startSquarePayment(amountPence));
             }
         }, "DextersSquare");
+        webView.addJavascriptInterface(new Object() {
+            @JavascriptInterface public void testPrinter() {
+                runOnUiThread(() -> printReceipt("DEXTER'S\nFOODHUB PRINTER TEST\nNo payment taken\n\n\n"));
+            }
+        }, "DextersPrinter");
         if (savedInstanceState == null) loadRemote(false); else webView.restoreState(savedInstanceState);
     }
 
@@ -95,6 +128,7 @@ public class MainActivity extends Activity {
             .build();
         try {
             squareInProgress = true;
+            paymentAmountPence = amountPence;
             Intent intent = squareClient.createChargeIntent(request);
             startActivityForResult(intent, SQUARE_CHARGE_REQUEST);
         } catch (ActivityNotFoundException e) {
@@ -126,6 +160,13 @@ public class MainActivity extends Activity {
             }
             if (resultCode == Activity.RESULT_OK) {
                 ChargeRequest.Success success = squareClient.parseChargeSuccess(data);
+                String reference = success.clientTransactionId == null ? "" : success.clientTransactionId;
+                String receipt = "DEXTER'S\nCARD PAYMENT RECEIPT\n\n" +
+                    "Date: " + DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.UK).format(new Date()) + "\n" +
+                    "Amount paid: " + String.format(Locale.UK, "£%.2f", paymentAmountPence / 100.0) + "\n" +
+                    "Status: APPROVED\n" +
+                    "Square ref: " + reference + "\n\nThank you\n\n\n";
+                printReceipt(receipt);
                 sendSquareResult(true, success.clientTransactionId, "", "Approved");
             } else {
                 ChargeRequest.Error error = squareClient.parseChargeError(data);
@@ -134,6 +175,35 @@ public class MainActivity extends Activity {
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void bindPrinter() {
+        if (printerBound) return;
+        Intent intent = new Intent("com.incar.printerservice.IPrinterService");
+        intent.setPackage("com.incar.printerservice");
+        try { printerBound = bindService(intent, printerConnection, Context.BIND_AUTO_CREATE); }
+        catch (Exception e) { android.util.Log.e("DextersPrinter", "Printer bind failed", e); }
+    }
+
+    private void printReceipt(String receipt) {
+        if (printer == null) {
+            pendingReceipt = receipt;
+            bindPrinter();
+            return;
+        }
+        new Thread(() -> {
+            try {
+                PrintTextFormat format = new PrintTextFormat();
+                format.setTextSize(22);
+                int result = printer.printText(receipt, format);
+                if (result != 0) android.util.Log.e("DextersPrinter", "Print returned " + result);
+            } catch (Exception e) { android.util.Log.e("DextersPrinter", "Print failed", e); }
+        }, "DextersReceipt").start();
+    }
+
+    @Override protected void onDestroy() {
+        if (printerBound) { unbindService(printerConnection); printerBound = false; }
+        super.onDestroy();
     }
 
     private void loadRemote(boolean manual) {
