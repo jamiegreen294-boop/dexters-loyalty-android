@@ -42,7 +42,7 @@ jobs:
       - name: Verify registered Foodhub signing key
         run: |
           keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep -i SHA1
-          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep -iq 'C3:B4:F4:26:92:D4:2F:9B:1F:79:F5:30:4D:8A:EE:86:90:EA:C2:28'
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep -iq 'A8:F6:CB:77:05:1F:4E:43:1C:B6:1E:80:FA:FA:1E:5C:AB:2C:AB:80'
 
       - name: Validate POS JavaScript
         run: |
