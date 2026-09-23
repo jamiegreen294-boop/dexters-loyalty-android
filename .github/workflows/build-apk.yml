@@ -39,6 +39,11 @@ jobs:
             keytool -genkeypair -v               -keystore ~/.android/debug.keystore               -storepass android               -alias androiddebugkey               -keypass android               -keyalg RSA               -keysize 2048               -validity 10000               -dname "CN=Dexters POS,O=Dexters,C=GB"
           fi
 
+      - name: Verify registered Foodhub signing key
+        run: |
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep -i SHA1
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep -iq 'C3:B4:F4:26:92:D4:2F:9B:1F:79:F5:30:4D:8A:EE:86:90:EA:C2:28'
+
       - name: Validate POS JavaScript
         run: |
           python - <<'PY'
