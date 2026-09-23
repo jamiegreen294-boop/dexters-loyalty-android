@@ -1,6 +1,6 @@
 (()=>{'use strict';
 const STANDALONE=window.__DEXTERS_SUNDAY_STANDALONE===true;
-const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',API=U+'/functions/v1/sunday-roast-pc-pos-api';
+const U='https://bpnkouymdvcogeaqjmxl.supabase.co',K='sb_publishable_v6rJbF4IfGZTKtbuQtmsmQ_lS3sXWFa',API=U+'/functions/v1/sunday-roast-pc-pos-api',SQ=U+'/functions/v1/pc-pos-square-bridge';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),mp=p=>'£'+(Number(p||0)/100).toFixed(2);
 const meals={
  chicken:{name:'Roast Chicken Dinner',price:1499,photo:'https://www.nestleprofessional.co.uk/sites/default/files/styles/np_recipe_detail_2x/public/2022-04/roast-chicken.png?itok=QZPz3t1Q'},
@@ -22,7 +22,7 @@ const included=['Crispy roast potatoes','Creamy mashed potatoes','Mashed turnip'
 let cfg=null,orders=[],selectedCustomer=null,editing=null,walkIn=false,state=blank();
 function blank(){return{meals:Object.fromEntries(Object.keys(meals).map(k=>[k,0])),extras:Object.fromEntries(Object.keys(extras).map(k=>[k,0]))}}
 function auth(){return{apikey:K,Authorization:'Bearer '+(S?.session?.access_token||''),'Content-Type':'application/json'}}
-async function call(body){const r=await fetch(API,{method:'POST',headers:auth(),body:JSON.stringify(body)}),x=await r.json().catch(()=>({}));if(!r.ok)throw Error(x.error||'Sunday Roast request failed');return x}
+async function call(body){const r=await fetch(API,{method:'POST',headers:auth(),body:JSON.stringify(body)}),x=await r.json().catch(()=>({}));if(!r.ok)throw Error(x.error||'Sunday Roast request failed');return x}async function square(body){const r=await fetch(SQ,{method:'POST',headers:auth(),body:JSON.stringify(body)}),x=await r.json().catch(()=>({}));if(!r.ok)throw Error(x.error||'Square payment request failed');return x}
 function total(d=state){let n=0;for(const[k,q]of Object.entries(d.meals))n+=(meals[k]?.price||0)*Number(q||0);for(const[k,q]of Object.entries(d.extras))n+=(extras[k]?.price||0)*Number(q||0);return n}
 function countMeals(d=state){return Object.values(d.meals).reduce((a,b)=>a+Number(b||0),0)}
 function card(kind,key,item){const q=state[kind][key]||0;return kind==='meals'
@@ -86,8 +86,9 @@ async function save(){
   return;
  }catch(e){msg.textContent=e.message;msg.className='bad'}
 }
-async function takePayment(o){if(!o||Number(o.balance_pence||0)<=0)return;try{await call({action:'payment',id:o.id});await refresh()}catch(e){alert(e.message)}}
-async function changeStatus(o,status){if(!o)return;try{if(status==='collected'&&Number(o.balance_pence||0)>0)throw Error('Take the outstanding payment before marking this order collected.');await call({action:'status_change',id:o.id,status});await refresh()}catch(e){alert(e.message)}}
+function paymentPrompt(o,collectAfter=false){if(!o||Number(o.balance_pence||0)<=0)return;const amount=Number(o.balance_pence||0),ref='SR-'+String(o.order_number||'').padStart(3,'0');const d=document.createElement('div');d.className='modal';d.innerHTML='<div class="box pcPayBox"><h2>'+esc(ref)+' · Balance due</h2><div class="pcPaySummary"><div style="color:#9eb0c5">CUSTOMER</div><b>'+esc(o.customer_name||'Customer')+'</b><div style="color:#9eb0c5;margin-top:10px">OUTSTANDING</div><div class="pcPayTotal">'+mp(amount)+'</div><div class="pcMethodGrid"><button class="pcMethod cashM">CASH</button><button class="pcMethod cardM">SQUARE</button></div><div class="pcPayActions"><button class="pcPayCancel">CANCEL</button></div><p class="pcSquareWait" style="color:#9eb0c5"></p></div></div>';document.body.appendChild(d);const msg=d.querySelector('.pcSquareWait');d.querySelector('.pcPayCancel').onclick=()=>d.remove();const finish=async()=>{await call({action:'payment',id:o.id});if(collectAfter)await call({action:'status_change',id:o.id,status:'collected'});d.remove();await refresh()};d.querySelector('.cashM').onclick=async()=>{try{msg.textContent='Recording cash payment…';await finish()}catch(e){msg.textContent=e.message}};d.querySelector('.cardM').onclick=async()=>{try{msg.textContent='Sending '+mp(amount)+' to Square…';const x=await square({action:'create',amount_pence:amount,reference:'Sunday Roast '+ref+' · '+String(o.customer_name||'Customer')});const id=x.request?.id;if(!id)throw Error('Square payment request was not created.');const deadline=Date.now()+300000;while(Date.now()<deadline){await new Promise(r=>setTimeout(r,2000));const s=await square({action:'status',id}),st=String(s.request?.status||'');if(st==='approved'){msg.textContent='Square approved.';await finish();return}if(['failed','cancelled','expired'].includes(st))throw Error(s.request?.error_message||('Square payment '+st));msg.textContent='Waiting for Square approval…'}throw Error('Square payment timed out.')}catch(e){msg.textContent=e.message}}}
+async function takePayment(o){if(!o||Number(o.balance_pence||0)<=0)return;paymentPrompt(o,false)}
+async function changeStatus(o,status){if(!o)return;try{if(status==='collected'&&Number(o.balance_pence||0)>0){paymentPrompt(o,true);return}await call({action:'status_change',id:o.id,status});await refresh()}catch(e){alert(e.message)}}
 function open(){document.querySelectorAll('.pcToolGroup.open').forEach(x=>x.classList.remove('open'));$('srLiveModal').classList.remove('srHide');resetNew();refresh().catch(e=>{$('srMsg').textContent=e.message;$('srMsg').className='bad'})}
 function install(){
  if(!STANDALONE){
