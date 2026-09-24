@@ -668,7 +668,7 @@ body.pride-theme{background:#f7f3f8!important}
     <button class="tab" data-tab="maintenance" data-minrole="Team Leader">Maintenance & Equipment</button>
     <button class="tab" data-tab="payroll" data-minrole="Manager">Payroll</button>
     <button class="tab" data-tab="financeops" data-minrole="Manager">Sales & Cash-up</button>
-    <button class="tab" data-tab="menucal" data-minrole="Manager">MenuCal (FSA)</button>\n    <button class="tab" data-tab="allergens" data-minrole="Manager">Allergen & Recipe Master</button>
+    <button class="tab" data-tab="menucal" data-minrole="Manager">Dexter MenuCal</button>\n    <button class="tab" data-tab="allergens" data-minrole="Manager">Allergen & Recipe Master</button>
     <button class="tab" data-tab="controlcentre" data-minrole="Team Leader">Daily Control Centre</button>
     <button class="tab" data-tab="systemhealth" data-minrole="Manager">System Health</button>
     <button class="tab" data-tab="reports" data-minrole="Manager">Reports</button>
@@ -1863,26 +1863,81 @@ body.pride-theme{background:#f7f3f8!important}
 
 <section class="panel" id="menucal">
 <div class="card notice">
-  <b>MenuCal — Food Standards Agency</b>
-  <p class="muted">Official FSA calorie and allergen tool. Use MenuCal for standardised recipes, portion energy (kJ/kcal) and the 14 regulated allergens. Dexter's recipe master records below can be used as the source when entering or updating recipes in MenuCal.</p>
+  <div class="row" style="align-items:center;gap:14px">
+    <img src="data:image/png;base64,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" alt="Dexters" style="width:76px;height:76px;object-fit:contain;border-radius:14px">
+    <div><b style="font-size:22px">Dexter MenuCal</b><p class="muted" style="margin:5px 0 0">Dexter's own recipe, nutrition, allergen and food-label system.</p></div>
+  </div>
 </div>
+
 <div class="grid">
   <div class="card">
-    <h2>Open official MenuCal</h2>
-    <p class="muted">MenuCal is hosted by the Food Standards Agency. It opens securely in a separate tab so the official account and data remain on the FSA service.</p>
-    <p><a class="btn" href="https://www.menucalni.co.uk/" target="_blank" rel="noopener noreferrer">Open MenuCal (FSA)</a></p>
-    <p><a class="btn alt" href="https://www.food.gov.uk/business-guidance/menucal-calorie-and-allergen-tool" target="_blank" rel="noopener noreferrer">FSA MenuCal guidance</a></p>
-    <p><a class="btn alt" href="https://www.foodstandards.gov.scot/business-guidance/running-a-food-business/publications/cooksafe-guide/cooksafe-guide-web-version/cooksafe-guide-web-version-section-3" target="_blank" rel="noopener noreferrer">Food Standards Scotland — standard recipes</a></p>
+    <h2>Recipe details</h2>
+    <div class="field">Recipe / menu item<input id="dmRecipeName" placeholder="e.g. Bloodbath Soup"></div>
+    <div class="grid">
+      <div class="field">Servings per recipe<input id="dmServings" type="number" min="1" step="1" value="1"></div>
+      <div class="field">Selling price (£)<input id="dmSell" type="number" min="0" step="0.01"></div>
+    </div>
+    <div class="row">
+      <button class="btn alt" id="dmNewRecipe">New recipe</button>
+      <button class="btn alt" id="dmImportMaster">Import master recipes</button>
+      <button class="btn" id="dmSaveRecipe">Save recipe</button>
+    </div>
+    <div id="dmMessage" class="tiny"></div>
   </div>
+
   <div class="card">
-    <h2>Dexter's MenuCal preparation</h2>
-    <p class="muted">These are the recipe records currently held in Dexter's Back Office. Use the exact ingredient brands, weights and serving yield in MenuCal for accurate calorie/allergen calculations.</p>
-    <div id="menucalRecipeList"></div>
+    <h2>Per-portion result</h2>
+    <div class="bo-kpis">
+      <div class="bo-kpi"><span class="muted">Energy</span><b id="dmKcal">0 kcal</b></div>
+      <div class="bo-kpi"><span class="muted">Energy</span><b id="dmKj">0 kJ</b></div>
+      <div class="bo-kpi"><span class="muted">Batch weight</span><b id="dmWeight">0 g</b></div>
+      <div class="bo-kpi"><span class="muted">Allergens</span><b id="dmAllergenCount">0</b></div>
+    </div>
+    <div id="dmAllergenSummary" class="summarybox"><span class="muted">No allergens selected.</span></div>
   </div>
 </div>
-<div class="card" style="margin-top:14px">
-  <h2>Important</h2>
-  <p class="muted">MenuCal is an external FSA service, so Back Office does not copy credentials or automatically write into your MenuCal account. This link keeps the official tool separate while Dexter's keeps its own recipe/allergen master records here.</p>
+
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <div><h2>Ingredients</h2><p class="muted">Use the actual pack label for branded foods; use a verified generic source such as UK CoFID where appropriate.</p></div>
+    <button class="btn alt" id="dmAddIngredient">+ Add ingredient</button>
+  </div>
+  <div style="overflow:auto">
+    <table style="width:100%;border-collapse:collapse;min-width:980px">
+      <thead><tr>
+        <th style="text-align:left;padding:8px">Ingredient</th>
+        <th style="text-align:left;padding:8px">Brand</th>
+        <th style="text-align:left;padding:8px">Qty g/ml</th>
+        <th style="text-align:left;padding:8px">kcal / 100g</th>
+        <th style="text-align:left;padding:8px">Contains</th>
+        <th style="text-align:left;padding:8px">May contain</th>
+        <th style="padding:8px"></th>
+      </tr></thead>
+      <tbody id="dmIngredientRows"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2>Saved recipes</h2><button class="btn alt small" id="dmPrintAll">Print labels</button></div>
+    <div id="dmSavedRecipes"></div>
+  </div>
+  <div class="card">
+    <h2>Label preview</h2>
+    <div id="dmLabelPreview" style="max-width:340px;background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:14px;margin:auto"></div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="dmPrintLabel">Print current label</button></div>
+    <p class="tiny">Date/time is generated automatically in UK format using Europe/London (GMT/BST).</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Reference</h2>
+  <p class="muted">This is Dexter's own system, not a copy of FSA software. The official FSA MenuCal and UK CoFID remain available for verification/reference.</p>
+  <div class="row">
+    <a class="btn alt" href="https://www.menucalni.co.uk/" target="_blank" rel="noopener noreferrer">Official MenuCal</a>
+    <a class="btn alt" href="https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid" target="_blank" rel="noopener noreferrer">UK CoFID</a>
+  </div>
 </div>
 </section>
 
@@ -7520,5 +7575,126 @@ document.addEventListener('click',function(e){
    }
  },30000);
 })();
-</script><script src="/web/customer-credit-files.js"></script></body>
+</script><script src="/web/customer-credit-files.js"></script><script id="DEXTER_MENUCAL_ENGINE_V1">
+(function(){
+ const KEY='dexter_menucal_v1';
+ const LOGO='data:image/png;base64,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';
+ const ALLERGENS=['Celery','Cereals containing gluten','Crustaceans','Eggs','Fish','Lupin','Milk','Molluscs','Mustard','Peanuts','Sesame','Soya','Sulphur dioxide/sulphites','Tree nuts'];
+ let db={recipes:[]},current={id:null,name:'',servings:1,sell:0,ingredients:[]};
+ try{db=JSON.parse(localStorage.getItem(KEY)||'{"recipes":[]}');if(!Array.isArray(db.recipes))db.recipes=[]}catch(e){db={recipes:[]}}
+ const E=id=>document.getElementById(id);
+ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+ function ukStamp(d=new Date()){
+   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);
+   const m=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+   return m.day+'/'+m.month+'/'+m.year+' '+m.hour+':'+m.minute;
+ }
+ function persist(){localStorage.setItem(KEY,JSON.stringify(db))}
+ function rowTemplate(x={}){
+   const opts=ALLERGENS.map(a=>'<option value="'+esc(a)+'">'+esc(a)+'</option>').join('');
+   return '<tr class="dm-row">'+
+   '<td><input class="dm-name" value="'+esc(x.name||'')+'" placeholder="Ingredient"></td>'+
+   '<td><input class="dm-brand" value="'+esc(x.brand||'')+'" placeholder="Brand / generic"></td>'+
+   '<td><input class="dm-qty" type="number" min="0" step="0.1" value="'+(Number(x.qty)||0)+'"></td>'+
+   '<td><input class="dm-kcal" type="number" min="0" step="0.1" value="'+(Number(x.kcal100)||0)+'"></td>'+
+   '<td><select class="dm-contains" multiple size="4">'+opts+'</select></td>'+
+   '<td><select class="dm-may" multiple size="4">'+opts+'</select></td>'+
+   '<td><button type="button" class="btn alt small dm-remove">Remove</button></td></tr>';
+ }
+ function addRow(x={}){
+   const box=E('dmIngredientRows');if(!box)return;
+   const wrap=document.createElement('tbody');wrap.innerHTML=rowTemplate(x);
+   const tr=wrap.firstElementChild;box.appendChild(tr);
+   [...tr.querySelector('.dm-contains').options].forEach(o=>o.selected=(x.contains||[]).includes(o.value));
+   [...tr.querySelector('.dm-may').options].forEach(o=>o.selected=(x.mayContain||[]).includes(o.value));
+   tr.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',recalc));
+   tr.querySelector('.dm-remove').onclick=()=>{tr.remove();recalc()};
+ }
+ function readRows(){
+   return [...document.querySelectorAll('#dmIngredientRows .dm-row')].map(tr=>({
+     name:tr.querySelector('.dm-name').value.trim(),
+     brand:tr.querySelector('.dm-brand').value.trim(),
+     qty:Number(tr.querySelector('.dm-qty').value||0),
+     kcal100:Number(tr.querySelector('.dm-kcal').value||0),
+     contains:[...tr.querySelector('.dm-contains').selectedOptions].map(o=>o.value),
+     mayContain:[...tr.querySelector('.dm-may').selectedOptions].map(o=>o.value)
+   }));
+ }
+ function values(){
+   return {id:current.id||('dm-'+Date.now()),name:E('dmRecipeName')?.value.trim()||'',servings:Math.max(1,Number(E('dmServings')?.value||1)),sell:Number(E('dmSell')?.value||0),ingredients:readRows(),updatedAt:new Date().toISOString()};
+ }
+ function totals(r=values()){
+   const kcal=r.ingredients.reduce((n,x)=>n+(Number(x.qty)||0)*(Number(x.kcal100)||0)/100,0);
+   const weight=r.ingredients.reduce((n,x)=>n+(Number(x.qty)||0),0);
+   const allergens=[...new Set(r.ingredients.flatMap(x=>x.contains||[]))];
+   const may=[...new Set(r.ingredients.flatMap(x=>x.mayContain||[]).filter(a=>!allergens.includes(a)))];
+   return {batchKcal:kcal,portionKcal:kcal/Math.max(1,r.servings),portionKj:kcal*4.184/Math.max(1,r.servings),weight,allergens,may};
+ }
+ function recalc(){
+   const t=totals(); if(E('dmKcal'))E('dmKcal').textContent=Math.round(t.portionKcal)+' kcal';
+   if(E('dmKj'))E('dmKj').textContent=Math.round(t.portionKj)+' kJ';
+   if(E('dmWeight'))E('dmWeight').textContent=Math.round(t.weight)+' g';
+   if(E('dmAllergenCount'))E('dmAllergenCount').textContent=t.allergens.length;
+   if(E('dmAllergenSummary'))E('dmAllergenSummary').innerHTML=t.allergens.length?'<b>Contains:</b> '+t.allergens.map(esc).join(', ')+(t.may.length?'<br><b>May contain:</b> '+t.may.map(esc).join(', '):''):'<span class="muted">No allergens selected.</span>';
+   renderLabel();
+ }
+ function renderLabel(r=values()){
+   const t=totals(r),stamp=ukStamp();
+   const box=E('dmLabelPreview');if(!box)return;
+   box.innerHTML='<div style="text-align:center"><img src="'+LOGO+'" style="width:70px;height:70px;object-fit:contain"><div style="font-weight:900;font-size:18px">DEXTERS</div></div>'+
+   '<hr><div style="font-weight:900;font-size:20px">'+esc(r.name||'Recipe label')+'</div>'+
+   '<div><b>'+Math.round(t.portionKcal)+' kcal / '+Math.round(t.portionKj)+' kJ</b> per portion</div>'+
+   '<div style="margin-top:8px"><b>Contains:</b> '+(t.allergens.length?t.allergens.map(esc).join(', '):'None recorded')+'</div>'+
+   (t.may.length?'<div><b>May contain:</b> '+t.may.map(esc).join(', ')+'</div>':'')+
+   '<hr><div><b>Prepared:</b> '+stamp+'</div><div style="font-size:11px">Europe/London · DD/MM/YYYY HH:mm</div>';
+ }
+ function renderSaved(){
+   const box=E('dmSavedRecipes');if(!box)return;
+   box.innerHTML=db.recipes.map(r=>{const t=totals(r);return '<div class="summarybox"><b>'+esc(r.name)+'</b><br><span class="muted">'+Math.round(t.portionKcal)+' kcal · '+Math.round(t.portionKj)+' kJ · '+r.servings+' serving(s)</span><br><span class="tiny">'+(t.allergens.length?'Contains '+t.allergens.map(esc).join(', '):'No allergens recorded')+'</span><div class="row" style="margin-top:8px"><button class="btn alt small dm-open" data-id="'+esc(r.id)+'">Open</button><button class="btn alt small dm-print" data-id="'+esc(r.id)+'">Print label</button></div></div>'}).join('')||'<span class="muted">No Dexter MenuCal recipes saved yet.</span>';
+   box.querySelectorAll('.dm-open').forEach(b=>b.onclick=()=>openRecipe(b.dataset.id));
+   box.querySelectorAll('.dm-print').forEach(b=>b.onclick=()=>printLabel(db.recipes.find(r=>r.id===b.dataset.id)));
+ }
+ function openRecipe(id){
+   const r=db.recipes.find(x=>x.id===id);if(!r)return;current=JSON.parse(JSON.stringify(r));
+   E('dmRecipeName').value=r.name;E('dmServings').value=r.servings;E('dmSell').value=r.sell||0;E('dmIngredientRows').innerHTML='';(r.ingredients||[]).forEach(addRow);recalc();
+ }
+ function newRecipe(){
+   current={id:null,name:'',servings:1,sell:0,ingredients:[]};E('dmRecipeName').value='';E('dmServings').value=1;E('dmSell').value='';E('dmIngredientRows').innerHTML='';addRow();recalc();
+ }
+ function saveRecipe(){
+   const r=values();if(!r.name)return alert('Enter a recipe name.');
+   const i=db.recipes.findIndex(x=>x.id===r.id); if(i>=0)db.recipes[i]=r;else db.recipes.unshift(r);current=JSON.parse(JSON.stringify(r));persist();renderSaved();recalc();
+   if(E('dmMessage'))E('dmMessage').innerHTML='<span class="ok">Saved '+esc(r.name)+' at '+ukStamp()+'.</span>';
+ }
+ function importMaster(){
+   const masters=(window.dexManage?.recipes||[]);let added=0;
+   masters.forEach(m=>{if(db.recipes.some(x=>x.name.toLowerCase()===String(m.name||'').toLowerCase()))return;db.recipes.push({id:'master-'+Date.now()+'-'+added,name:m.name,servings:1,sell:Number(m.sell||0),ingredients:[{name:m.ingredients||'Enter ingredient breakdown',brand:'',qty:0,kcal100:0,contains:String(m.allergens||'').split(',').map(x=>x.trim()).filter(x=>ALLERGENS.includes(x)),mayContain:[]}],updatedAt:new Date().toISOString()});added++});
+   persist();renderSaved();if(E('dmMessage'))E('dmMessage').innerHTML='<span class="ok">Imported '+added+' recipe master record(s). Add exact weights and nutrition values before relying on calorie totals.</span>';
+ }
+ function labelHtml(r){
+   const t=totals(r),stamp=ukStamp();
+   return '<!doctype html><html><head><meta charset="utf-8"><title>'+esc(r.name)+' label</title><style>@page{size:62mm auto;margin:2mm}body{font-family:Arial,sans-serif;color:#000;margin:0;width:58mm}.label{border:1px solid #000;padding:3mm}.logo{text-align:center}.logo img{width:18mm;height:18mm;object-fit:contain}.brand{text-align:center;font-weight:900;font-size:14pt}.name{font-weight:900;font-size:15pt;margin:2mm 0}.small{font-size:8pt}.line{border-top:1px solid #000;margin:2mm 0}.all{font-size:9pt;font-weight:700}</style></head><body><div class="label"><div class="logo"><img src="'+LOGO+'"></div><div class="brand">DEXTERS</div><div class="line"></div><div class="name">'+esc(r.name)+'</div><div><b>'+Math.round(t.portionKcal)+' kcal / '+Math.round(t.portionKj)+' kJ</b> per portion</div><div class="line"></div><div class="all">CONTAINS: '+(t.allergens.length?t.allergens.map(esc).join(', '):'None recorded')+'</div>'+(t.may.length?'<div class="small"><b>MAY CONTAIN:</b> '+t.may.map(esc).join(', ')+'</div>':'')+'<div class="line"></div><div><b>Prepared:</b> '+stamp+'</div><div class="small">UK time · Europe/London · DD/MM/YYYY HH:mm</div></div><script>window.onload=function(){setTimeout(function(){window.print()},200)}<\/script></body></html>';
+ }
+ function printLabel(r=values()){if(!r?.name)return alert('Open or name a recipe first.');const w=window.open('','_blank','width=520,height=700');if(!w)return alert('Allow pop-ups to print labels.');w.document.open();w.document.write(labelHtml(r));w.document.close()}
+ function printAll(){db.recipes.forEach((r,i)=>setTimeout(()=>printLabel(r),i*350))}
+ function init(){
+   if(!E('dmIngredientRows'))return;
+   E('dmAddIngredient').onclick=()=>addRow();
+   E('dmNewRecipe').onclick=newRecipe;
+   E('dmSaveRecipe').onclick=saveRecipe;
+   E('dmImportMaster').onclick=importMaster;
+   E('dmPrintLabel').onclick=()=>printLabel(values());
+   E('dmPrintAll').onclick=printAll;
+   ['dmRecipeName','dmServings','dmSell'].forEach(id=>E(id)?.addEventListener('input',recalc));
+   if(!E('dmIngredientRows').children.length)addRow();
+   renderSaved();recalc();
+ }
+ const oldRender=window.renderMenuCal;
+ window.renderMenuCal=function(){if(typeof oldRender==='function')oldRender();setTimeout(init,0)};
+ document.addEventListener('click',e=>{if(e.target?.closest?.('[data-tab="menucal"]'))setTimeout(init,80)});
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
+ window.dexterMenuCal={ukStamp,totals,printLabel,openRecipe};
+})();
+</script>
+</body>
 </html>
