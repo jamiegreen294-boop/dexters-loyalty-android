@@ -2171,6 +2171,41 @@ let dexManage={
 };
 try{const saved=JSON.parse(localStorage.getItem(DEX_MANAGEMENT_KEY)||'null');if(saved)dexManage={...dexManage,...saved,tags:Array.isArray(saved.tags)&&saved.tags.length?saved.tags:dexManage.tags}}catch(e){}
 
+/* DEXTERS_HALLOWEEN_RECIPES_V1 — approved 2026-09-25 */
+(function(){
+ const approved=[
+  {
+   name:'Bloodbath Soup',
+   ingredients:'Approx. 10 portions: 2 tbsp olive oil; 2 large onions diced; 4 garlic cloves crushed; 4 red peppers roughly chopped; 2 x 400g chopped tomatoes; 700–800ml passata; 1 litre vegetable or chicken stock; 3 tbsp tomato puree; 100g cooked beetroot; 1 tsp smoked paprika; 1/2–1 tsp sweet paprika; 1/2 tsp chilli flakes; 1 tsp sugar; salt; black pepper; optional 100ml double cream. Sour-cream web: 200ml soured cream loosened with 2–4 tbsp milk/water. Halloween finish: garlic fang croutons, mozzarella-and-black-olive eyeballs, crispy bacon, crispy onions, pumpkin seeds and chilli-oil blood drops.',
+   allergens:'Milk, Wheat/Gluten, Celery (depending on stock); check bought-in toppings for Soya, Mustard, Sesame and Sulphites',
+   sell:5.95,
+   cost:1.05,
+   source:'Dexters approved Halloween recipe 25/09/2026. Cost is Tesco-based estimate; verify against actual supplier pack prices before margin reporting.',
+   version:1,
+   at:'2026-09-25T00:00:00.000Z'
+  },
+  {
+   name:"The Reaper's Cauldron",
+   ingredients:'Approx. 10 portions: 2 tbsp oil; 2 large onions diced; 4 garlic cloves crushed; 3 red peppers chopped; 1kg cooked chicken shredded; 2 x 400g chopped tomatoes; 700ml passata; 1 litre chicken stock; 3 tbsp tomato puree; 2 tsp smoked paprika; 1 tsp sweet paprika; 1–2 tsp chilli flakes; 1–2 chipotle peppers in adobo or 1–2 tsp chipotle paste; 1 tsp sugar; salt; black pepper; optional 150ml double cream. Finish with grated cheddar or mozzarella, crispy onions, chilli oil, jalapeno/red chilli, optional smoked bacon, Reaper sauce and fang-shaped garlic croutons.',
+   allergens:'Milk, Wheat/Gluten, Celery (depending on stock); check chipotle, sauces and crispy onions for Mustard, Soya and Sulphites',
+   sell:6.95,
+   cost:1.80,
+   source:'Dexters approved Halloween recipe 25/09/2026. Recipe cost is an initial working estimate and must be verified against actual supplier prices.',
+   version:1,
+   at:'2026-09-25T00:00:00.000Z'
+  }
+ ];
+ if(!Array.isArray(dexManage.recipes))dexManage.recipes=[];
+ let changed=false;
+ approved.forEach(r=>{
+   if(!dexManage.recipes.some(x=>String(x?.name||'').trim().toLowerCase()===r.name.toLowerCase())){
+     dexManage.recipes.unshift(r);changed=true;
+   }
+ });
+ if(changed)try{localStorage.setItem(DEX_MANAGEMENT_KEY,JSON.stringify(dexManage))}catch(e){}
+})();
+
+
 const STAFFDBKEY='dexters_growth_staff_database_test_v1';
 
 
