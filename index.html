@@ -668,7 +668,7 @@ body.pride-theme{background:#f7f3f8!important}
     <button class="tab" data-tab="maintenance" data-minrole="Team Leader">Maintenance & Equipment</button>
     <button class="tab" data-tab="payroll" data-minrole="Manager">Payroll</button>
     <button class="tab" data-tab="financeops" data-minrole="Manager">Sales & Cash-up</button>
-    <button class="tab" data-tab="allergens" data-minrole="Manager">Allergen & Recipe Master</button>
+    <button class="tab" data-tab="menucal" data-minrole="Manager">MenuCal (FSA)</button>\n    <button class="tab" data-tab="allergens" data-minrole="Manager">Allergen & Recipe Master</button>
     <button class="tab" data-tab="controlcentre" data-minrole="Team Leader">Daily Control Centre</button>
     <button class="tab" data-tab="systemhealth" data-minrole="Manager">System Health</button>
     <button class="tab" data-tab="reports" data-minrole="Manager">Reports</button>
@@ -1859,6 +1859,31 @@ body.pride-theme{background:#f7f3f8!important}
 <div class="card"><h2>Sales & labour dashboard</h2><div id="salesLabourDashboard"></div></div>
 </div>
 <div class="card" style="margin-top:14px"><h2>Cash-up history</h2><div id="cashList"></div></div>
+</section>
+
+<section class="panel" id="menucal">
+<div class="card notice">
+  <b>MenuCal — Food Standards Agency</b>
+  <p class="muted">Official FSA calorie and allergen tool. Use MenuCal for standardised recipes, portion energy (kJ/kcal) and the 14 regulated allergens. Dexter's recipe master records below can be used as the source when entering or updating recipes in MenuCal.</p>
+</div>
+<div class="grid">
+  <div class="card">
+    <h2>Open official MenuCal</h2>
+    <p class="muted">MenuCal is hosted by the Food Standards Agency. It opens securely in a separate tab so the official account and data remain on the FSA service.</p>
+    <p><a class="btn" href="https://www.menucalni.co.uk/" target="_blank" rel="noopener noreferrer">Open MenuCal (FSA)</a></p>
+    <p><a class="btn alt" href="https://www.food.gov.uk/business-guidance/menucal-calorie-and-allergen-tool" target="_blank" rel="noopener noreferrer">FSA MenuCal guidance</a></p>
+    <p><a class="btn alt" href="https://www.foodstandards.gov.scot/business-guidance/running-a-food-business/publications/cooksafe-guide/cooksafe-guide-web-version/cooksafe-guide-web-version-section-3" target="_blank" rel="noopener noreferrer">Food Standards Scotland — standard recipes</a></p>
+  </div>
+  <div class="card">
+    <h2>Dexter's MenuCal preparation</h2>
+    <p class="muted">These are the recipe records currently held in Dexter's Back Office. Use the exact ingredient brands, weights and serving yield in MenuCal for accurate calorie/allergen calculations.</p>
+    <div id="menucalRecipeList"></div>
+  </div>
+</div>
+<div class="card" style="margin-top:14px">
+  <h2>Important</h2>
+  <p class="muted">MenuCal is an external FSA service, so Back Office does not copy credentials or automatically write into your MenuCal account. This link keeps the official tool separate while Dexter's keeps its own recipe/allergen master records here.</p>
+</div>
 </section>
 
 <section class="panel" id="allergens">
@@ -3507,6 +3532,11 @@ function renderFinanceOps(){
  $('cashList').innerHTML=(dexManage.cashups||[]).map(x=>'<div class="summarybox"><b>'+x.date+'</b><br><span class="muted">Expected '+payMoney(x.expected)+' · Actual '+payMoney(x.actual)+' · Difference '+payMoney(x.actual-x.expected)+'</span><br><span class="tiny">Signed '+x.signature+' · '+x.note+'</span></div>').join('')||'<span class="muted">No cash-ups.</span>';
  $('adjustList').innerHTML=(dexManage.financialAdjustments||[]).map(x=>'<div class="summarybox"><b>'+x.type+' · '+payMoney(x.amount)+'</b><br><span class="muted">'+(x.ref||'No ref')+' · '+x.reason+'</span></div>').join('')||'<span class="muted">No refunds/voids/discounts.</span>';
 }
+function renderMenuCal(){
+ const box=$('menucalRecipeList');if(!box)return;
+ const rows=dexManage.recipes||[];
+ box.innerHTML=rows.map(r=>'<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+(r.allergens||'No allergens entered')+'</span><br><span class="tiny">'+r.ingredients+'</span><br><span class="muted">Sell '+payMoney(r.sell)+' · Working cost '+payMoney(r.cost)+'</span></div>').join('')||'<span class="muted">No recipe records yet.</span>';
+}
 function renderRecipes(){
  if(!$('recipeList'))return;
  $('recipeList').innerHTML=(dexManage.recipes||[]).map(r=>{const margin=Number(r.sell)-Number(r.cost),pct=Number(r.sell)?margin/Number(r.sell)*100:0;return '<div class="summarybox"><b>'+r.name+'</b><br><span class="badge">'+(r.allergens||'No allergens entered')+'</span><br><span class="muted">Sell '+payMoney(r.sell)+' · Cost '+payMoney(r.cost)+' · Margin '+pct.toFixed(1)+'%</span><br><span class="tiny">'+r.ingredients+'</span></div>'}).join('')||'<span class="muted">No recipe/allergen master records.</span>';
@@ -3608,7 +3638,7 @@ function renderReports(){
 }
 function renderDexManagement(){
  ['recTags','appTags','rotaTags','taskTags','eqTags','masterCompTags'].forEach(id=>tagPicker(id));
- staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderControlCentre();renderSystemHealth();renderPayroll();renderMenuAdmin();renderReports();
+ staffOptions('appStaff');staffOptions('rotaStaff');staffOptions('taskAssignee');staffOptions('eqAssignee');staffOptions('cuComplaintOwner');renderMyShiftStaff();renderRotaWeek();renderLiveWorkers();renderAutoAlerts();renderBusinessTimeline();renderRoleDashboard();renderTimeAlerts();renderTimesheets();renderLeave();renderInbox();renderFoodSafety();renderPolicies();renderArchive();renderEquipmentService();renderHolidayBalance();renderHolidayLedger();renderStock();renderSuppliers();renderFinanceOps();renderRecipes();renderMenuCal();renderControlCentre();renderSystemHealth();renderPayroll();renderMenuAdmin();renderReports();
  if($('tagLibrary'))$('tagLibrary').innerHTML=dexManage.tags.map((t,i)=>'<span class="tag-chip '+(t.system?'system':'')+'">'+t.name+(t.system?'':' <button onclick="removeDexTag('+i+')">×</button>')+'</span>').join('');
  if($('recruitList')){
  const filter=window.__DEXTERS_RECRUIT_FILTER||'all';
