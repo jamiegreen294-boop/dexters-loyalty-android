@@ -4021,9 +4021,10 @@ function mergeSecureCustomerRecord(cu,row){
  cu.secureRecord=true;cu.secureUpdatedAt=row.updated_at||null;
 }
 function custInitials(n){return String(n||'Customer').split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase()}
+function isDemoCustomer(x){return String(x.name||"").trim().toLowerCase()==="nero"||/\btest\b/i.test(String(x.name||""))||/\+dexters-e2e-/i.test(String(x.email||""))}
 function renderCustDirectory(){
  const q=($('custSearch')?.value||'').trim().toLowerCase();
- const items=customerDb.customers.filter(x=>!q||String(x.name).toLowerCase().includes(q)||String(x.phone||'').toLowerCase().includes(q));
+ const items=customerDb.customers.filter(x=>!isDemoCustomer(x)&&(!q||String(x.name).toLowerCase().includes(q)||String(x.phone||'').toLowerCase().includes(q)));
  $('custDirectory').innerHTML=items.map(x=>{
  const loyalty=x.loyalty||{points:0,stamps:0},complaints=(x.complaints||[]).filter(c=>c.status!=='Resolved'&&c.status!=='Closed').length,catering=(x.catering||[]).length;
  return '<button class="pass-customer-card" onclick="selectCustomerRecord(&quot;'+x.id+'&quot;)">'+
@@ -4111,13 +4112,13 @@ async function syncLiveCustomers(){
    }
    localStorage.setItem(CUSTOMERDBKEY,JSON.stringify(customerDb));
    renderCustomerDb();
-   if(status)status.innerHTML='<span class="ok">'+list.length+' live loyalty customer(s) synced'+(removed.length?' · '+removed.length+' deleted account(s) removed from Back Office':'')+' · '+new Date().toLocaleTimeString()+'</span>';
+   if(status)status.innerHTML='<span class="ok">'+list.filter(r=>!isDemoCustomer({name:r.full_name,email:r.email})).length+' live loyalty customer(s) shown'+(removed.length?' · '+removed.length+' deleted account(s) removed from Back Office':'')+' · '+new Date().toLocaleTimeString()+'</span>';
  }catch(e){if(status)status.innerHTML='<span class="bad">Live customer sync failed: '+escLive(e.message)+'</span>'}
 }
 window.syncLiveCustomers=syncLiveCustomers;
 function renderCustomerManagerOverview(){
  if(!$('custMgrTotal'))return;
- const list=customerDb.customers||[];
+ const list=(customerDb.customers||[]).filter(x=>!isDemoCustomer(x));
  const open=list.reduce((n,x)=>n+(x.complaints||[]).filter(c=>c.status!=='Resolved'&&c.status!=='Closed').length,0);
  const catering=list.reduce((n,x)=>n+(x.catering||[]).length,0);
  $('custMgrTotal').textContent=list.length;
