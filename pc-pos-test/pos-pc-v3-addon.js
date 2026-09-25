@@ -98,6 +98,7 @@ function receiptItems(sale){
   return out;
 }
 function buildStandardReceipt(sale){
+  const ref=String(sale.id||"").slice(-12);
   return [
     "            DEXTER'S",
     "      10A Dundasvale Court",
@@ -105,7 +106,7 @@ function buildStandardReceipt(sale){
     "        0141 473 5249",
     "     hello@dextersspot.co.uk",
     "--------------------------------",
-    "Receipt "+String(sale.id||"").slice(-12),
+    "Receipt "+ref,
     new Date(sale.created_at||Date.now()).toLocaleString("en-GB"),
     "--------------------------------",
     ...receiptItems(sale),
@@ -115,15 +116,18 @@ function buildStandardReceipt(sale){
     sale.method==="cash"&&Number(sale.tendered||0)>0?linePad("Cash",cashMoney(sale.tendered)):"",
     sale.method==="cash"&&Number(sale.change||0)>=0?linePad("Change",cashMoney(sale.change)):"",
     "--------------------------------",
+    "Transaction: "+ref,
+    "BARCODE:"+String(sale.id||""),
+    "--------------------------------",
     "       Thank you for visiting",
     "            Dexter's",
-    "",
     "        dextersspot.co.uk",
     "",
     ""
   ].filter(x=>x!==null&&x!==undefined).join("\n");
 }
 function buildLoyaltyReceipt(sale,customer,claim){
+  const points=Math.max(0,Math.floor(Number(sale.total||0)));
   return [
     "            DEXTER'S",
     "      10A Dundasvale Court",
@@ -131,25 +135,25 @@ function buildLoyaltyReceipt(sale,customer,claim){
     "        0141 473 5249",
     "     hello@dextersspot.co.uk",
     "--------------------------------",
-    "LOYALTY RECEIPT",
+    "        LOYALTY RECEIPT",
     customer?.full_name?("Customer: "+customer.full_name):"",
     customer?.loyalty_code?("Loyalty: "+customer.loyalty_code):"",
+    "Points earned: "+points,
     new Date(sale.created_at||Date.now()).toLocaleString("en-GB"),
     "--------------------------------",
     ...receiptItems(sale),
     "--------------------------------",
     linePad("TOTAL",cashMoney(sale.total||0)),
     "Payment: "+String(sale.method||"").toUpperCase(),
+    sale.method==="cash"&&Number(sale.tendered||0)>0?linePad("Cash",cashMoney(sale.tendered)):"",
+    sale.method==="cash"&&Number(sale.change||0)>=0?linePad("Change",cashMoney(sale.change)):"",
     "--------------------------------",
-    "        SCAN TO WIN",
-    "Scan this receipt in the Dexter's",
-    "Loyalty App to check your reward.",
-    claim?("QR:"+claim):"Open the Loyalty App > Rewards",
-    "",
-    claim?claim:"",
+    "          SCAN TO WIN",
+    "   WIN A FREE COFFEE OR CAKE",
+    claim?"QR:"+claim:"Open the Loyalty App > Rewards",
     "--------------------------------",
     "  One scan per eligible receipt.",
-    "  Rewards are redeemed in-app.",
+    "  Redeem rewards in the app.",
     "",
     ""
   ].filter(Boolean).join("\n");
