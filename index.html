@@ -1396,7 +1396,7 @@ body.pride-theme{background:#f7f3f8!important}
   <h3>Email preview</h3>
   <div class="field">Subject<input id="mkSubject" readonly></div>
   <div class="field">Body<textarea id="mkBody" rows="16" readonly></textarea></div>
-  <div class="notice"><b>SAFE MODE:</b> recipient filtering and campaign generation are active, but bulk email sending is disabled until the outgoing mail sender is fully approved.</div>
+  <div class="notice"><b>Sending paused:</b> customer address and consent records need verification before promotional mail can be sent.</div>
   <button class="btn" id="mkCopy">Copy preview</button>
  </div>
 </div>
@@ -1429,7 +1429,7 @@ body.pride-theme{background:#f7f3f8!important}
  <div class="notice" style="margin-top:12px"><b>Safety:</b> customers without valid email marketing permission can be viewed for consent status, but they cannot be selected for a promotional email.<br><b>Recipient privacy:</b> group campaigns must be delivered as individual messages (or equivalent hidden-recipient delivery). Customers must never be able to see the names or email addresses of anyone else in the group.</div>
  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
   <button class="btn alt" id="mkSendSelected">SEND EMAIL TO SELECTED</button>
-  <span id="mkSendStatus" class="muted">Bulk sending is currently locked until the offers@ sender is connected.</span>
+  <span id="mkSendStatus" class="muted">Marketing sending is paused pending customer address and consent verification.</span>
  </div>
 </div>
 <div class="card" style="margin-top:14px">
@@ -7380,7 +7380,7 @@ setTimeout(renderManagerLeaveApprovals,1200);
   if(e.target?.id==='mkSendSelected'){
     const s=document.getElementById('mkSendStatus');
     if(!MK_SELECTED.size){if(s)s.textContent='Select at least one eligible customer.';return}
-    if(s)s.textContent='Ready: '+MK_SELECTED.size+' eligible customer(s) selected. Real sending is still locked until offers@dextersspot.co.uk is connected for outgoing mail.';
+    if(s)s.textContent='Ready: '+MK_SELECTED.size+' eligible customer(s) selected. Marketing sending is paused pending customer address and consent verification.';
   }
   const tab=e.target?.closest?.('[data-tab="marketing"]');
   if(tab)setTimeout(loadMarketing,120);
