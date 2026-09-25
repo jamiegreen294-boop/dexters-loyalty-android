@@ -44,8 +44,8 @@ async function refresh(){
  const s=await call({action:'status'});cfg=s.settings;if(!cfg)throw Error('No Sunday Roast week is currently configured.');
  $('srDate').textContent='Sunday '+new Date(cfg.collection_date+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
  $('srSlot').innerHTML=(cfg.slots||[]).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');renderSlotButtons();
- const l=await call({action:'list',collection_date:cfg.collection_date});orders=l.orders||[];
- $('srOrders').innerHTML=orders.length?orders.map(orderCard).join(''):'<p>No Sunday Roast orders for this week yet.</p>';
+ const l=await call({action:'list',collection_date:cfg.collection_date});const allOrders=l.orders||[];orders=allOrders.filter(o=>{const ps=String(o.payment_status||'').toLowerCase(),st=String(o.status||'').toLowerCase();if(st==='awaiting_payment'||ps==='awaiting_payment'||ps==='unpaid')return false;return ps==='completed'||ps==='paid_full'||ps==='deposit_paid'||['pending','accepted','preparing','ready','collected'].includes(st)});
+ $('srOrders').innerHTML=orders.length?orders.map(orderCard).join(''):'<p>No paid Sunday Roast orders for this week yet.</p>';
  bindOrders();
 }
 function bindOrders(){
