@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dexters EPOS Back Office · Test</title>
+<style>
+:root{--bg:#08182a;--panel:#10213a;--panel2:#0b192b;--line:#294663;--text:#fff;--muted:#9eb0c5;--accent:#ffd43b;--ok:#22c55e;--bad:#ef4444}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
+header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:#0a1728;position:sticky;top:0;z-index:10}
+header h1{font-size:22px;margin:0}.badge{padding:5px 9px;border-radius:999px;background:#3a2f13;color:#ffe99a;font-weight:800}.spacer{flex:1}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:900;background:#162a45;color:#fff;cursor:pointer}.primary{background:var(--accent);color:#08101d}.danger{background:#5a1420}.ok{background:#123f2c}
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 66px)}aside{border-right:1px solid var(--line);padding:14px;background:#0b1727}
+nav button{display:block;width:100%;text-align:left;margin-bottom:8px;min-height:48px}.on{background:var(--accent)!important;color:#08101d!important}
+main{padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card h3{margin:0 0 8px}.muted{color:var(--muted)}.big{font-size:25px;font-weight:1000}.state{display:inline-flex;gap:7px;align-items:center;font-weight:900}.dot{width:10px;height:10px;border-radius:50%;background:#6b7280}.dot.good{background:var(--ok)}.dot.bad{background:var(--bad)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.section{margin-bottom:24px}.section h2{margin:0 0 12px}
+pre{white-space:pre-wrap;word-break:break-word;background:#050d18;padding:14px;border-radius:12px;max-height:320px;overflow:auto;color:#c7d5e5}
+table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid var(--line);text-align:left}
+@media(max-width:800px){.layout{grid-template-columns:1fr}aside{display:none}}
+</style></head><body>
+<header><h1>Dexters EPOS Back Office</h1><span class="badge">TEST ONLY</span><div class="spacer"></div><button id="refresh">Refresh status</button></header>
+<div class="layout"><aside><nav>
+<button class="on">Devices</button><button>Hardware</button><button>Integrations</button><button>Diagnostics</button><button>Updates</button>
+</nav><p class="muted">This test dashboard controls only the local Windows Hub on this PC. It does not change the live POS or Back Office.</p></aside>
+<main>
+<section class="section"><h2>Device</h2><div class="grid">
+<div class="card"><h3>Windows Hub</h3><div class="state"><span id="hubDot" class="dot"></span><span id="hubState">Checking…</span></div><div id="hubMeta" class="muted" style="margin-top:8px"></div></div>
+<div class="card"><h3>Offline queue</h3><div id="queueCount" class="big">—</div><div class="muted">transactions/events waiting locally</div></div>
+<div class="card"><h3>Receipt printer</h3><div id="printerState" class="big">Checking…</div><div id="printerName" class="muted"></div></div>
+</div></section>
+
+<section class="section"><h2>Integrations</h2><div class="grid">
+<div class="card"><h3>WhatsApp</h3><div id="waState" class="muted">Checking…</div><div class="actions"><button class="primary" data-launch="whatsapp">Open WhatsApp</button></div></div>
+<div class="card"><h3>bOnline</h3><div id="boState" class="muted">Checking…</div><div class="actions"><button class="primary" data-launch="bonline">Open bOnline</button></div></div>
+<div class="card"><h3>Square</h3><div id="sqState" class="muted">Checking…</div><div class="actions"><button class="primary" data-launch="square">Test Square handoff</button></div></div>
+</div></section>
+
+<section class="section"><h2>Hardware tests</h2><div class="card"><p class="muted">Hardware tests run only against equipment configured on this test PC. A shop till is required for a real drawer/printer acceptance test.</p>
+<div class="actions"><button id="testPrint">Test receipt printer</button><button id="testDrawer">Test cash drawer</button></div><div id="hardwareResult" class="muted" style="margin-top:10px"></div></div></section>
+
+<section class="section"><h2>Diagnostics</h2><div class="card"><div class="actions"><button id="loadDiag">Load diagnostics</button></div><pre id="diag">No diagnostics loaded.</pre></div></section>
+</main></div>
+<script>
+const API='http://127.0.0.1:17654';
+const $=id=>document.getElementById(id);
+async function jfetch(path,opt){const r=await fetch(API+path,{cache:'no-store',...opt});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||('HTTP '+r.status));return d}
+async function refresh(){
+ try{
+  const h=await jfetch('/health');
+  $('hubDot').className='dot good';$('hubState').textContent='Online · '+h.version;
+  $('hubMeta').textContent=(h.deviceName||h.deviceId||'Device')+' · '+(h.hostname||'Windows PC')+' · '+new Date(h.timestamp).toLocaleString();
+  $('queueCount').textContent=Number(h.offlineQueue||0);
+  $('printerState').textContent=h.printer?.connected?'Connected':'Not available on this PC';
+  $('printerName').textContent=h.printer?.configured||'No printer configured';
+  $('waState').textContent=h.integrations?.whatsapp?.enabled?'Enabled':'Disabled';
+  $('boState').textContent=h.integrations?.bonline?.enabled?'Enabled':'Disabled';
+  $('sqState').textContent=h.integrations?.square?.enabled?'Enabled · '+(h.integrations.square.mode||'configured'):'Disabled';
+ }catch(e){$('hubDot').className='dot bad';$('hubState').textContent='Offline';$('hubMeta').textContent=e.message}
+}
+async function launch(name){try{const d=await jfetch('/apps/launch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name})});alert(name==='square'?'Square handoff ready: '+(d.mode||'configured'):name+' launched')}catch(e){alert(e.message)}}
+document.querySelectorAll('[data-launch]').forEach(b=>b.onclick=()=>launch(b.dataset.launch));
+$('testPrint').onclick=async()=>{try{const d=await jfetch('/hardware/action',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'test-print'})});$('hardwareResult').textContent=d.ok?'Test print sent.':'Test print failed.'}catch(e){$('hardwareResult').textContent=e.message}};
+$('testDrawer').onclick=async()=>{try{const d=await jfetch('/hardware/action',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'open-drawer'})});$('hardwareResult').textContent=d.ok?'Drawer pulse sent.':'Drawer test failed.'}catch(e){$('hardwareResult').textContent=e.message}};
+$('loadDiag').onclick=async()=>{try{$('diag').textContent=JSON.stringify(await jfetch('/diagnostics'),null,2)}catch(e){$('diag').textContent=e.message}};
+$('refresh').onclick=refresh;refresh();setInterval(refresh,15000);
+</script></body></html>
