@@ -378,7 +378,7 @@ body.pride-theme{background:#f7f3f8!important}
 <main class="wrap" data-build="2026-09-08-website-pass-37-secure-customer-records">
 <a class="home" href="/">← Home</a>
 <header class="top pride-top">
-<div><p class="eyebrow">DEXTER'S BACK OFFICE</p><h1>Dexter's Back Office</h1><p class="sub">Dexter's central management system for staff, training, HR, compliance, catering, loyalty, orders and day-to-day business operations.</p></div>
+<div><img src="/assets/dexters-logo-20260925.png" alt="Dexter's" style="display:block;width:auto;height:auto;max-width:180px;max-height:155px;object-fit:contain;margin:0 0 8px"><p class="eyebrow">DEXTER'S BACK OFFICE</p><h1>Dexter's Back Office</h1><p class="sub">Dexter's central management system for staff, training, HR, compliance, catering, loyalty, orders and day-to-day business operations.</p></div>
 <span class="pill">LIVE BACK OFFICE</span>
 </header>
 
@@ -619,7 +619,7 @@ body.pride-theme{background:#f7f3f8!important}
 
 <div class="dex-backoffice-shell" id="secureBackOfficeShell" style="display:none">
 <aside class="dex-backoffice-nav pride-nav" style="background:linear-gradient(90deg,#e40303 0%,#ff8c00 18%,#ffed00 36%,#008026 54%,#004dff 72%,#750787 100%)!important">
-<div class="dex-backoffice-logo">DEXTER'S</div>
+<div class="dex-backoffice-logo"><img src="/assets/dexters-logo-20260925.png" alt="Dexter's" style="display:block;max-height:52px;max-width:145px;width:auto;height:auto;object-fit:contain"></div>
 <button type="button" class="pass-nav-toggle" aria-expanded="false" aria-label="Open Back Office menu">☰ Menu</button>
 <button class="tab active pass-nav-home" data-tab="dashboard" data-minrole="Staff">Dashboard</button>
 
@@ -1773,7 +1773,7 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="payroll">
-<div class="card notice"><b>Dexter's Weekly Payroll & HMRC</b><p class="muted">Weekly payroll from recorded clock-in/out times. Manager approval is required first, then Super User verification. Verified payroll moves to the HMRC submission queue. Test build only — no live HMRC submission is made here yet.</p></div>
+<div class="card notice"><b>Dexter's Weekly Payroll & HMRC</b><p class="muted">Weekly payroll from recorded clock-in/out times. Manager approval is required first, then Super User verification. Verified payroll moves to the HMRC submission queue. HMRC submission is not connected. Do not use this queue as proof of filing.</p></div>
 
 <div class="grid">
 <div class="card">
@@ -1942,7 +1942,7 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="allergens">
-<div class="card notice"><b>Allergen & Recipe Master</b><p class="muted">One controlled source for recipe, allergen and costing references. Test data only until supplier/allergen verification is completed.</p></div>
+<div class="card notice"><b>Allergen & Recipe Master</b><p class="muted">One controlled source for recipe, allergen and costing references. Recipe and allergen entries are reference data until supplier and allergen verification is completed. Do not use them as verified allergen advice.</p></div>
 <div class="grid">
 <div class="card"><h2>Recipe / menu item</h2><div class="field">Item name<input id="recipeName"></div><div class="field">Ingredients<textarea id="recipeIngredients" rows="5"></textarea></div><div class="field">Allergens<input id="recipeAllergens" placeholder="e.g. Gluten, Milk, Egg"></div><div class="grid"><div class="field">Selling price (£)<input id="recipeSell" type="number" step="0.01"></div><div class="field">Recipe cost (£)<input id="recipeCost" type="number" step="0.01"></div></div><div class="field">Source / verification note<input id="recipeSource"></div><button class="btn" id="recipeSave">Save master record</button></div>
 <div class="card"><h2>Cost & margin</h2><div id="recipeMargin"></div><p class="tiny">This test stores costing references here; it does not yet write into the separate live recipe-costing service.</p></div>
@@ -1960,7 +1960,7 @@ body.pride-theme{background:#f7f3f8!important}
 </section>
 
 <section class="panel" id="systemhealth">
-<div class="card notice"><b>System Health & Error Log</b><p class="muted">Operational status for Dexter's core apps and devices. Test status is manually/locally recorded until real health checks are connected.</p></div>
+<div class="card notice"><b>System Health & Error Log</b><p class="muted">Operational status for Dexter's core apps and devices. Service status is manually recorded until automated health checks are connected.</p></div>
 <div class="grid">
 <div class="card"><h2>Service status</h2><div class="field">Service<select id="healthService"><option>Loyalty App</option><option>Collection Ordering</option><option>KDS</option><option>Back Office</option><option>Staff Hub</option><option>Printer Bridge</option><option>Foodhub Scanner</option><option>Internet</option></select></div><div class="field">Status<select id="healthStatus"><option>Operational</option><option>Degraded</option><option>Offline</option><option>Maintenance</option></select></div><div class="field">Note<input id="healthNote"></div><button class="btn alt" id="healthSave">Update status</button><div id="healthList"></div></div>
 <div class="card"><h2>Error log</h2><div class="field">Area<input id="errorArea" placeholder="App / device / module"></div><div class="field">Error / symptom<textarea id="errorMessage" rows="3"></textarea></div><div class="field">Severity<select id="errorSeverity"><option>Info</option><option>Warning</option><option>Critical</option></select></div><button class="btn alt" id="errorAdd">Log error</button><div id="errorList"></div></div>
@@ -2757,7 +2757,7 @@ async function loadLiveOrders(){
  const box=document.getElementById('liveOrdersFeed');if(box)box.innerHTML='<span class="muted">Loading live order feed…</span>';
  try{
   const rows=await liveRpc('backoffice_live_order_feed',{p_limit:50});
-  const list=Array.isArray(rows)?rows:[];
+  const list=(Array.isArray(rows)?rows:[]).filter(r=>!/(?:TEST RECEIPT|DO NOT PREPARE|DEXTERS E2E TEST)/i.test(String(r.reference||'')+' '+String(r.customer_name||'')));
   const count=document.getElementById('liveOrdersCount');if(count)count.textContent=list.length;
   if(box)box.innerHTML=list.map(r=>'<div class="summarybox"><b>'+escLive(r.source)+' · '+escLive(r.reference||r.id)+'</b><br><span class="badge">'+escLive(r.status)+'</span>'+(r.customer_name?' <span class="muted">'+escLive(r.customer_name)+'</span>':'')+(r.total!=null?' <span class="muted">· £'+Number(r.total).toFixed(2)+'</span>':'')+'<br><span class="tiny">'+escLive(r.requested_for||'')+' · '+fmtLiveDate(r.created_at)+'</span></div>').join('')||'<span class="muted">No live orders returned.</span>';
  }catch(e){if(box)box.innerHTML='<span class="bad">'+escLive(e.message)+'</span>'}
