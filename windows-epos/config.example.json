@@ -1,0 +1,25 @@
+{
+  "siteId": "dexters-cowcaddens",
+  "deviceId": "till-01",
+  "deviceName": "Dexters Main Till",
+  "listenPort": 17654,
+  "printer": {
+    "name": "POS-80",
+    "paperWidth": 80,
+    "drawerPulsePin": 0
+  },
+  "apps": {
+    "whatsapp": {
+      "displayName": "WhatsApp",
+      "enabled": true,
+      "command": "explorer.exe",
+      "arguments": "shell:AppsFolder\\5319275A.WhatsAppDesktop_cv1g1gvanyjgm!App"
+    },
+    "bonline": {
+      "displayName": "bOnline",
+      "enabled": true,
+      "command": "msedge.exe",
+      "arguments": "--app=https://app.bonline.com/"
+    }
+  }
+}
