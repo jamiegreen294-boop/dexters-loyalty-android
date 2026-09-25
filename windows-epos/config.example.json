@@ -20,6 +20,13 @@
       "enabled": true,
       "command": "msedge.exe",
       "arguments": "--app=https://app.bonline.com/"
+    },
+    "square": {
+      "displayName": "Square",
+      "enabled": true,
+      "mode": "foodhub-android-bridge",
+      "bridgeUrl": "http://127.0.0.1:17655/square",
+      "returnTimeoutSeconds": 120
     }
   }
 }
