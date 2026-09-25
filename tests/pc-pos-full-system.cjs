@@ -45,7 +45,7 @@ async function installMocks(context){
    else x={ok:true,order:{id:'kds1'},orders:[QR_ORDER,STAFF_ORDER],bill_requests:[]};
   }
   else if(p.includes('collection-orders-test-api'))x=a==='kds_orders'?{orders:[COLLECTION],rejection_reasons:['Out of stock','Kitchen closed']}:a==='status'?{enabled:true}:{ok:true,enabled:b.enabled!==false,orders:[COLLECTION],rejection_reasons:['Out of stock','Kitchen closed']};
-  else if(p.includes('sunday-roast-pc-pos'))x=a==='outstanding'?{orders:[]}:a==='list'?{orders:[ROAST]}:a==='customer_search'?{customers:[CUSTOMER]}:{ok:true,order:{...ROAST,...b,id:b.id||'r2'},orders:[]};
+  else if(p.includes('sunday-roast-pc-pos'))x=a==='status'?{settings:{collection_date:'2026-09-27',slots:['12:30','13:30','14:30','14:45']}}:a==='outstanding'?{orders:[]}:a==='list'?{orders:[ROAST]}:a==='customer_search'?{customers:[CUSTOMER]}:{ok:true,order:{...ROAST,...b,id:b.id||'r2'},orders:[]};
   else if(p.includes('pc-pos-xepos-test-api')){
    if(a==='customer_search')x={customers:[CUSTOMER]};
    else if(a==='customer_detail')x={profile:CUSTOMER,credit:{balance_pence:2350},collection_orders:[],sunday_orders:[ROAST],notes:[{note_type:'allergy',note:'TEST ALLERGY WARNING',critical:true}],calls:[],whatsapp:[]};
