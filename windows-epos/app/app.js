@@ -3,18 +3,46 @@
 const API='http://127.0.0.1:17654';
 const HOLD_KEY='dexters_epos_test_holds_v1';
 const $=id=>document.getElementById(id);
-const state={mode:'counter',activeCall:null,phoneSession:null,customer:null,cart:[],orders:[],calls:[],connectors:[],lastCallId:null,note:'',discount:{type:'none',value:0,label:''},timedFor:null,deliveryFeePence:0,scannerBuffer:'',scannerLast:0};
+const state={mode:'counter',activeCall:null,phoneSession:null,customer:null,cart:[],orders:[],calls:[],connectors:[],lastCallId:null,note:'',discount:{type:'none',value:0,label:''},timedFor:null,deliveryFeePence:0,scannerBuffer:'',scannerLast:0,staffSession:sessionStorage.getItem('dexters_staff_session')||'',staff:null};
 
 const money=p=>'£'+(Number(p||0)/100).toFixed(2);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function api(path,opt={}){
-  const r=await fetch(API+path,{cache:'no-store',...opt});
+  const headers={...(opt.headers||{})};
+  if(state.staffSession)headers['x-staff-session']=state.staffSession;
+  const r=await fetch(API+path,{cache:'no-store',...opt,headers});
   const d=await r.json().catch(()=>({}));
   if(!r.ok)throw Error(d.error||('HTTP '+r.status));
   return d;
 }
 function post(path,data){return api(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data||{})})}
+async function ensureStaffLogin(){
+  if(state.staffSession){
+    try{const me=await api('/staff/me');state.staff=me.staff;return true}catch{state.staffSession='';sessionStorage.removeItem('dexters_staff_session')}
+  }
+  const st=await api('/staff/bootstrap-status').catch(()=>({required:false}));
+  return new Promise(resolve=>{
+    const o=document.createElement('div');o.className='overlay';o.style.display='flex';o.innerHTML='<div class="modal" style="max-width:480px"><h2>'+(st.required?'Create first manager':'Staff sign in')+'</h2><p>'+(st.required?'This only creates the first manager for this test installation.':'Enter your staff ID and PIN.')+'</p><input id="loginStaffId" placeholder="Staff ID" value="'+(st.required?'manager':'')+'" style="width:100%;padding:12px;margin:6px 0"><input id="loginName" placeholder="Display name" value="'+(st.required?'Manager':'')+'" style="width:100%;padding:12px;margin:6px 0;display:'+(st.required?'block':'none')+'"><input id="loginPin" type="password" inputmode="numeric" placeholder="PIN" style="width:100%;padding:12px;margin:6px 0"><button id="loginGo" style="width:100%;margin-top:10px">'+(st.required?'CREATE MANAGER':'SIGN IN')+'</button><p id="loginError" style="color:#ffd43b"></p></div>';
+    document.body.appendChild(o);
+    const go=async()=>{
+      const staffId=$('loginStaffId').value.trim(),pin=$('loginPin').value.trim();
+      try{
+        if(st.required){
+          await post('/staff/bootstrap',{staffId,displayName:$('loginName').value.trim()||'Manager',pin});
+        }
+        const x=await post('/staff/login',{staffId,pin});
+        state.staffSession=x.session;state.staff=x.staff;sessionStorage.setItem('dexters_staff_session',x.session);o.remove();resolve(true);
+      }catch(e){$('loginError').textContent=e.message}
+    };
+    $('loginGo').onclick=go;$('loginPin').onkeydown=e=>{if(e.key==='Enter')go()};
+  });
+}
+function staffCan(permission){return Array.isArray(state.staff?.permissions)&&state.staff.permissions.includes(permission)}
+async function requireUiPermission(permission){
+  if(staffCan(permission))return true;
+  toast('Manager permission required: '+permission);return false;
+}
 function toast(msg){let n=$('eposToast');if(!n){n=document.createElement('div');n.id='eposToast';n.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#020617;color:white;border:1px solid #475569;border-radius:10px;padding:12px 16px;z-index:99;font-weight:800';document.body.appendChild(n)}n.textContent=msg;n.style.display='block';clearTimeout(n._t);n._t=setTimeout(()=>n.style.display='none',2800)}
 
 function subtotalPence(){return state.cart.reduce((a,x)=>a+(Number(x.pricePence)||0)*(Number(x.qty)||1),0)}
@@ -244,6 +272,7 @@ async function showDeliveryJobs(){
   document.querySelectorAll('[data-delivery-done]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.deliveryDone);await post('/delivery/jobs',{job:{...rows[i],orderId:rows[i].order_id,status:'completed',completedAt:new Date().toISOString(),address:rows[i].address||{}}});toast('Delivery completed');showDeliveryJobs()});
 }
 async function showOrderAdjustment(){
+  if(!(await requireUiPermission('void')))return;
   await loadOrders();if(!state.orders.length)return toast('No local test orders');
   const body=state.orders.map((o,i)=>'<button data-adjust-order="'+i+'" style="display:block;width:100%;text-align:left;padding:12px;margin:6px 0;background:#172d49;color:white;border:0;border-radius:10px"><b>'+esc(o.id)+'</b> · '+esc(o.status)+'<br><small>'+esc(o.customer_name||'No customer')+' · '+money(o.total_pence)+'</small></button>').join('');
   showSheet('Refund / Void · Manager Test',body);
@@ -322,6 +351,7 @@ async function showChatGPTBuilder(){
   $('builderInput').onkeydown=e=>{if(e.key==='Enter')send()};
 }
 async function showSetupWizard(){
+  if(!(await requireUiPermission('integration_admin')))return;
   const x=await api('/setup/config'),c=x.config||{};
   const p=c.printer||{};
   const body='<div class="card"><h3>Windows EPOS Setup</h3><p>Changes here affect only this test installation.</p></div>'+
@@ -339,6 +369,7 @@ async function showSetupWizard(){
   $('openCustomerDisplay').onclick=()=>window.open(API+'/customer-display','_blank');
 }
 async function showReports(){
+  if(!(await requireUiPermission('reports')))return;
   const x=await api('/reports/summary?limit=1000');
   const sales=x.sales||{},stock=x.stock||{};
   const src=Object.entries(sales.bySource||{}).map(([k,v])=>'<div class="sum"><span>'+esc(k)+'</span><b>'+money(v)+'</b></div>').join('');
@@ -347,14 +378,17 @@ async function showReports(){
 async function showSystem(){
   const x=await api('/system/status'),h=x.health||{},r=x.release||{},cr=x.crash||{};
   const body='<div class="card"><h3>Stability</h3><p>Overall: <b>'+(h.ok?'HEALTHY':'CHECK REQUIRED')+'</b></p><p>Release channel: <b>'+esc(r.channel||'test')+'</b></p><p>Last stable: <b>'+esc(cr.lastStableAt||'Not marked yet')+'</b></p></div>'+
-  '<button id="markStableBtn">MARK THIS TEST BUILD STABLE</button><button id="backupBtn" style="margin-left:8px">CREATE BACKUP</button><button id="supportBtn" style="margin-left:8px">SUPPORT BUNDLE</button>'+
+  '<button id="selfTestBtn">RUN PILOT SELF-TEST</button><button id="markStableBtn" style="margin-left:8px">MARK THIS TEST BUILD STABLE</button><button id="backupBtn" style="margin-left:8px">CREATE BACKUP</button><button id="supportBtn" style="margin-left:8px">SUPPORT BUNDLE</button><button id="logoutBtn" style="margin-left:8px">SIGN OUT</button>'+
   '<div style="margin-top:12px"><b>Components:</b><pre>'+esc(JSON.stringify(h.components||{},null,2))+'</pre></div>';
   showSheet('System Health & Recovery',body);
+  $('selfTestBtn').onclick=async()=>{const t=await api('/system/self-test');const r=t.selfTest;showSheet('Pilot Self-Test','<h3>'+(r.ok?'PASS':'FAIL')+'</h3>'+r.checks.map(c=>'<div style="padding:7px;border-bottom:1px solid #294663"><b>'+(c.ok?'PASS':'FAIL')+'</b> · '+esc(c.name)+'<br><small>'+esc(c.detail||'')+'</small></div>').join(''))};
   $('markStableBtn').onclick=async()=>{await post('/system/mark-stable',{});toast('Test build marked stable');showSystem()};
   $('backupBtn').onclick=async()=>{const b=await post('/backup/create',{});toast('Backup created: '+(b.file||''))};
   $('supportBtn').onclick=async()=>{const b=await post('/support/bundle',{});toast('Support bundle created')};
+  $('logoutBtn').onclick=async()=>{await post('/staff/logout',{}).catch(()=>{});state.staffSession='';state.staff=null;sessionStorage.removeItem('dexters_staff_session');location.reload()};
 }
 async function showStock(){
+  if(!(await requireUiPermission('stock_adjust')))return;
   const x=await api('/stock?limit=500'),rows=x.stock||[];
   const body='<p>Local test inventory only. Live stock is untouched.</p>'+(rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:9px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.category)+' · '+esc(p.barcode||'')+'</small></div><button data-stock-i="'+i+'">'+Number(p.qty||0)+' '+esc(p.unit||'each')+'</button></div>').join(''):'<p>No local catalogue stock yet.</p>');
   showSheet('Stock Control',body);
@@ -385,6 +419,7 @@ async function showPurchasing(){
   };
 }
 async function showCashup(){
+  if(!(await requireUiPermission('cashup')))return;
   const x=await api('/cashups?limit=20'),rows=x.cashups||[];
   const body='<button id="newCashupBtn">START TEST CASH-UP</button><div style="margin-top:12px">'+(rows.length?rows.map(c=>'<div style="padding:9px;border-bottom:1px solid #294663"><b>'+esc(c.id)+'</b><br><small>Expected '+money(c.expected_cash_pence)+' · Counted '+money(c.counted_cash_pence)+' · Difference '+money(c.discrepancy_pence)+'</small></div>').join(''):'<p>No cash-ups yet.</p>')+'</div>';
   showSheet('Cash Up / End of Day',body);
@@ -397,7 +432,10 @@ async function showCashup(){
   };
 }
 async function showStaff(){
-  const body='<p>Test role setup. This will become the PIN/permission editor.</p><button id="staffRoleBtn">SET TEST STAFF ROLE</button>';
+  if(!(await requireUiPermission('staff_admin')))return;
+  const list=await api('/staff/list').catch(()=>({staff:[]}));
+  const rows=(list.staff||[]).map(x=>'<div style="padding:9px;border-bottom:1px solid #294663"><b>'+esc(x.display_name||x.staff_id)+'</b> · '+esc(x.role)+' · '+(x.active?'Active':'Disabled')+'</div>').join('');
+  const body='<p>Staff roles and PINs are enforced on sensitive actions.</p><button id="staffRoleBtn">ADD / UPDATE STAFF</button><button id="staffPinBtn" style="margin-left:8px">SET STAFF PIN</button><div style="margin-top:12px">'+(rows||'<p>No staff configured.</p>')+'</div>';
   showSheet('Staff & Permissions',body);
   $('staffRoleBtn').onclick=async()=>{
     const id=prompt('Staff ID','test-staff');if(!id)return;
@@ -405,7 +443,12 @@ async function showStaff(){
     const role=prompt('Role: staff / supervisor / manager','staff')||'staff';
     const perms=role==='manager'?['refund','void','discount','price_change','alcohol_setup','cashup','reports']:role==='supervisor'?['void','discount','cashup']:[];
     await post('/staff/role',{staffId:id,displayName:name,role,permissions:perms});
-    toast('Test role saved');
+    toast('Staff role saved');showStaff();
+  };
+  $('staffPinBtn').onclick=async()=>{
+    const id=prompt('Staff ID','');if(!id)return;
+    const pin=prompt('New PIN (4-8 digits)','');if(pin===null)return;
+    await post('/staff/pin',{staffId:id,pin});toast('PIN updated');
   };
 }
 async function showOperations(){
@@ -453,7 +496,8 @@ function clearSale(){
   setMode('counter');renderCaller();renderCart();document.querySelectorAll('.callerActions button').forEach(b=>b.classList.remove('chosen'));
 }
 function editOrderNote(){const v=prompt('Order note',state.note||'');if(v!==null){state.note=String(v);toast(state.note?'Order note saved':'Order note cleared')}}
-function editDiscount(){
+async function editDiscount(){
+  if(!(await requireUiPermission('discount')))return;
   const type=prompt('Discount type: enter P for percentage, F for fixed amount, or C to clear','P');if(type===null)return;
   const t=type.trim().toUpperCase();
   if(t==='C'){state.discount={type:'none',value:0,label:''};renderTotals();toast('Discount cleared');return}
@@ -573,5 +617,8 @@ function openPreviewFromQuery(){
     else if(p==='stock')showStock();
   },700);
 }
-bind();bindBarcodeScanner();renderCart();health();loadOrders();pollCalls();refreshCatalogProducts();openPreviewFromQuery();setInterval(health,15000);setInterval(pollCalls,3000);
+(async()=>{
+  await ensureStaffLogin();
+  bind();bindBarcodeScanner();renderCart();health();loadOrders();pollCalls();refreshCatalogProducts();openPreviewFromQuery();setInterval(health,15000);setInterval(pollCalls,3000);
+})();
 })();
