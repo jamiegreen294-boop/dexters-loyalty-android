@@ -1,0 +1,76 @@
+{
+  "safety": {
+    "test_only": true,
+    "allow_live_connectors": false
+  },
+  "connectors": {
+    "loyalty": {
+      "enabled": false,
+      "environment": "test",
+      "mode": "dexter-api"
+    },
+    "kds": {
+      "enabled": false,
+      "environment": "test",
+      "mode": "dexter-api"
+    },
+    "backoffice": {
+      "enabled": false,
+      "environment": "test",
+      "mode": "dexter-api"
+    },
+    "email": {
+      "enabled": false,
+      "environment": "test",
+      "mode": "gmail-oauth"
+    },
+    "telephone": {
+      "enabled": true,
+      "environment": "test",
+      "mode": "cti-webhook",
+      "provider": "bonline-or-compatible"
+    },
+    "caller_intelligence": {
+      "enabled": true,
+      "environment": "test",
+      "mode": "multi-source",
+      "local_phonebook": true,
+      "business_directory": true,
+      "spam_reputation": true,
+      "provider": "pluggable"
+    },
+    "just_eat": {
+      "enabled": false,
+      "environment": "sandbox",
+      "mode": "jet-pos",
+      "client_id": "",
+      "client_secret": "",
+      "restaurant_id": ""
+    },
+    "deliveroo": {
+      "enabled": false,
+      "environment": "sandbox",
+      "mode": "partner-platform",
+      "client_id": "",
+      "client_secret": "",
+      "site_id": ""
+    },
+    "google_maps": {
+      "enabled": false,
+      "environment": "test",
+      "mode": "places-address-validation",
+      "api_key": "",
+      "country": "GB"
+    },
+    "square": {
+      "enabled": false,
+      "environment": "sandbox",
+      "mode": "payment-bridge"
+    },
+    "whatsapp": {
+      "enabled": false,
+      "environment": "test",
+      "mode": "desktop-launch-readonly"
+    }
+  }
+}
