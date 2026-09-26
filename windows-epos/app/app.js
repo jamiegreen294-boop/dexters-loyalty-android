@@ -3,7 +3,7 @@
 const API='http://127.0.0.1:17654';
 const HOLD_KEY='dexters_epos_test_holds_v1';
 const $=id=>document.getElementById(id);
-const state={mode:'counter',activeCall:null,phoneSession:null,customer:null,cart:[],orders:[],calls:[],connectors:[],lastCallId:null,note:'',discount:{type:'none',value:0,label:''},timedFor:null,deliveryFeePence:0,scannerBuffer:'',scannerLast:0,staffSession:sessionStorage.getItem('dexters_staff_session')||'',staff:null};
+const state={activeCategory:'Breakfast',mode:'counter',activeCall:null,phoneSession:null,customer:null,cart:[],orders:[],calls:[],connectors:[],lastCallId:null,note:'',discount:{type:'none',value:0,label:''},timedFor:null,deliveryFeePence:0,scannerBuffer:'',scannerLast:0,staffSession:sessionStorage.getItem('dexters_staff_session')||'',staff:null};
 
 const money=p=>'£'+(Number(p||0)/100).toFixed(2);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -87,6 +87,32 @@ function renderCart(){
   renderTotals();
 }
 
+function normaliseCategory(v){
+  const x=String(v||'').trim().toLowerCase();
+  const map={'off sales':'off sales','drinks':'drinks','crisps & snacks':'drinks','hot rolls':'hot rolls','breakfast':'breakfast','wraps':'wraps','subs':'subs','street subs':'subs','burgers':'burgers','smash burgers':'burgers','chicken burgers':'burgers','chinese':'chinese','chinese style':'chinese','greek':'greek','greek style':'greek','pizza':'pizza','pizzas':'pizza','chippy':'chippy','chippy style':'chippy','kids':'kids','waffles':'waffles'};
+  return map[x]||x;
+}
+function showSellScreen(category){
+  $('eposSheet')?.remove();
+  $('aiPanel')?.classList.add('hide');
+  setMode('counter');
+  if(category)state.activeCategory=category;
+  const wanted=normaliseCategory(state.activeCategory);
+  let shown=0;
+  document.querySelectorAll('#products .product').forEach(b=>{
+    const cat=normaliseCategory(b.dataset.category||'');
+    const match=!wanted||cat===wanted;
+    b.style.display=match?'':'none';
+    if(match)shown++;
+  });
+  document.querySelectorAll('#categories button').forEach(b=>b.classList.toggle('on',normaliseCategory(b.textContent)===wanted));
+  if(!shown)toast('No products loaded in '+state.activeCategory+' yet');
+}
+function bindCategoryButtons(){
+  document.querySelectorAll('#categories button').forEach(b=>{
+    b.onclick=()=>{state.activeCategory=b.textContent.trim();showSellScreen(state.activeCategory)};
+  });
+}
 function addProduct(btn){
   const name=btn.dataset.name||btn.querySelector('strong')?.textContent||'Item';
   const pricePence=Number(btn.dataset.price||0);
@@ -162,7 +188,7 @@ async function refreshCatalogProducts(){
     host.querySelectorAll('[data-local-catalog="1"]').forEach(n=>n.remove());
     for(const p of rows){
       const b=document.createElement('button');
-      b.className='product';b.dataset.localCatalog='1';b.dataset.name=p.name;b.dataset.price=String(p.price_pence||0);b.dataset.barcode=p.barcode||'';
+      b.className='product';b.dataset.localCatalog='1';b.dataset.name=p.name;b.dataset.price=String(p.price_pence||0);b.dataset.barcode=p.barcode||'';b.dataset.category=p.category||'';
       b.innerHTML='<strong>'+esc(p.name)+'</strong><span class="price">'+money(p.price_pence)+'</span>';
       b.onclick=()=>addProduct(b);host.appendChild(b);
     }
@@ -643,6 +669,7 @@ async function health(){try{const h=await api('/health');$('hubStatus').textCont
 function bind(){
   document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
   document.querySelectorAll('.product').forEach(b=>b.onclick=()=>addProduct(b));
+  bindCategoryButtons();
   $('deliveryBtn').onclick=()=>$('fulfilmentModal').classList.remove('hide');$('collectionBtn').onclick=()=>$('fulfilmentModal').classList.remove('hide');
   $('closeFulfil').onclick=()=>$('fulfilmentModal').classList.add('hide');
   document.querySelectorAll('[data-fulfil]').forEach(b=>b.onclick=()=>chooseFulfilment(b.dataset.fulfil).catch(e=>toast(e.message)));
@@ -650,7 +677,7 @@ function bind(){
   $('ordersBtn').onclick=showOrders;$('backOfficeBtn').onclick=showOperations;
 
   const rail=[...document.querySelectorAll('.rail button')];
-  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='CHATGPT BUILDER')showChatGPTBuilder();else if(t==='MARKETPLACE')showMarketplaceSandbox();else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='REPORTS')showReports();else if(t==='STAFF')showStaff();else if(t==='SETUP')showSetupWizard();else if(t==='SYSTEM')showSystem()});
+  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='SELL')showSellScreen(state.activeCategory);else if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='CHATGPT BUILDER')showChatGPTBuilder();else if(t==='MARKETPLACE')showMarketplaceSandbox();else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='REPORTS')showReports();else if(t==='STAFF')showStaff();else if(t==='SETUP')showSetupWizard();else if(t==='SYSTEM')showSystem()});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
@@ -660,6 +687,17 @@ function bind(){
   action('HOLD').onclick=holdOrder;action('RECALL').onclick=recallOrder;action('NOTE').onclick=editOrderNote;action('DISCOUNT').onclick=editDiscount;action('TIMED ORDER').onclick=editTimedOrder;action('PAY').onclick=payOrder;
   action('LAST ORDER').onclick=()=>{const p=state.phoneSession?.customer?.previousOrder;if(!p)return toast('No previous order in this test session');showSheet('Last order','<pre>'+esc(JSON.stringify(p,null,2))+'</pre>')};
   const rv=document.createElement('button');rv.textContent='REFUND/VOID';rv.className='warn';rv.onclick=showOrderAdjustment;document.querySelector('.bottom').insertBefore(rv,document.querySelector('.bottom').lastElementChild);
+}
+function auditVisibleButtons(){
+  const missing=[];
+  document.querySelectorAll('button').forEach(b=>{
+    if(b.disabled)return;
+    const inline=typeof b.onclick==='function';
+    const mode=b.hasAttribute('data-mode')||b.hasAttribute('data-fulfil')||b.hasAttribute('data-cart-minus')||b.hasAttribute('data-cart-plus')||b.hasAttribute('data-cart-remove')||b.hasAttribute('data-cart-note');
+    if(!inline&&!mode&&b.offsetParent!==null)missing.push((b.textContent||b.id||'button').trim());
+  });
+  if(missing.length)console.warn('Dexters EPOS unbound visible buttons:',missing);
+  return missing;
 }
 function openPreviewFromQuery(){
   const p=new URLSearchParams(location.search).get('preview');
@@ -674,6 +712,6 @@ function openPreviewFromQuery(){
 }
 (async()=>{
   await ensureStaffLogin();
-  bind();bindBarcodeScanner();renderCart();health();loadOrders();pollCalls();refreshCatalogProducts();openPreviewFromQuery();setInterval(health,15000);setInterval(pollCalls,3000);
+  bind();bindBarcodeScanner();renderCart();showSellScreen(state.activeCategory);health();loadOrders();pollCalls();refreshCatalogProducts();openPreviewFromQuery();setTimeout(auditVisibleButtons,1200);setInterval(health,15000);setInterval(pollCalls,3000);
 })();
 })();
