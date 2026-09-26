@@ -56,6 +56,9 @@ function db(){
       attempts INTEGER NOT NULL DEFAULT 0,
       state TEXT NOT NULL DEFAULT 'queued',
       last_error TEXT,
+      error_kind TEXT,
+      result_json TEXT,
+      retry_at TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -91,6 +94,26 @@ function queueSummary(){
   const rows=d.prepare('SELECT state,COUNT(*) count FROM sync_queue GROUP BY state').all();
   d.close();return Object.fromEntries(rows.map(r=>[r.state,Number(r.count)]));
 }
+function nextQueued(limit=25){
+  const d=db(),t=now();
+  const rows=d.prepare("SELECT * FROM sync_queue WHERE state='queued' AND (retry_at IS NULL OR retry_at<=?) ORDER BY created_at ASC LIMIT ?").all(t,Number(limit));
+  d.close();return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
+}
+function markQueueDone(id,result){
+  const d=db(),t=now();
+  d.prepare("UPDATE sync_queue SET state='done',result_json=?,last_error=NULL,error_kind=NULL,retry_at=NULL,updated_at=? WHERE id=?").run(JSON.stringify(result||{}),t,Number(id));
+  d.close();return true;
+}
+function markQueueRetry(id,attempts,error,retryAt,kind){
+  const d=db(),t=now();
+  d.prepare("UPDATE sync_queue SET state='queued',attempts=?,last_error=?,error_kind=?,retry_at=?,updated_at=? WHERE id=?").run(Number(attempts),String(error||''),String(kind||''),String(retryAt||''),t,Number(id));
+  d.close();return true;
+}
+function markQueueFailed(id,attempts,error,kind){
+  const d=db(),t=now();
+  d.prepare("UPDATE sync_queue SET state='failed',attempts=?,last_error=?,error_kind=?,retry_at=NULL,updated_at=? WHERE id=?").run(Number(attempts),String(error||''),String(kind||''),t,Number(id));
+  d.close();return true;
+}
 function recentOrders(limit=50){
   const d=db();
   const rows=d.prepare('SELECT id,source,external_id,status,fulfilment,customer_name,customer_phone,total_pence,created_at,updated_at FROM orders ORDER BY created_at DESC LIMIT ?').all(Number(limit));
@@ -108,4 +131,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,queue,queueSummary,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
