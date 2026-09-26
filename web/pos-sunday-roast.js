@@ -93,7 +93,41 @@ async function save(){
   return;
  }catch(e){msg.textContent=e.message;msg.className='bad'}
 }
-async function takePayment(o){if(!o||Number(o.balance_pence||0)<=0)return;try{await call({action:'payment',id:o.id});await refresh()}catch(e){alert(e.message)}}
+async function takePayment(o){
+ if(!o||Number(o.balance_pence||0)<=0)return;
+ const due=Math.max(0,Number(o.balance_pence||0))/100;
+ const ref='SR-'+String(o.order_number||'').padStart(3,'0');
+ const title=ref+' · '+String(o.customer_name||'Customer');
+ const d=document.createElement('div');d.className='modal';
+ d.innerHTML='<div class="box" style="max-width:560px"><h2>Take Sunday Roast payment</h2><div style="font-size:13px;color:#9eb0c5">'+esc(title)+'</div><div style="font-size:42px;font-weight:1000;color:#ffd43b;margin:12px 0">£'+due.toFixed(2)+'</div><div id="srPayChoice" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><button id="srPayCash" class="srBtn" style="background:#22c55e;color:#04210d;min-height:64px;font-size:22px">CASH</button><button id="srPaySquare" class="srBtn" style="background:#4d7cff;color:#fff;min-height:64px;font-size:22px">SQUARE</button></div><div id="srPayWork"></div><div style="margin-top:12px"><button id="srPayCancel" class="srBtn srSecondary" style="width:100%">CANCEL / BACK</button></div></div>';
+ document.body.appendChild(d);
+ const work=d.querySelector('#srPayWork'),choice=d.querySelector('#srPayChoice'),cancel=d.querySelector('#srPayCancel');
+ let squareActive=false;
+ const finish=async(method,meta={})=>{
+   work.innerHTML='<p>Recording approved '+method+' payment…</p>';choice.style.display='none';cancel.disabled=true;
+   try{await call({action:'payment',id:o.id,payment_method:method,payment_meta:meta});if(document.body.contains(d))d.remove();await refresh()}
+   catch(e){work.innerHTML='<p class="bad">'+esc(e.message)+'</p>';choice.style.display='grid';cancel.disabled=false}
+ };
+ d.querySelector('#srPayCash').onclick=()=>{
+   choice.style.display='none';
+   work.innerHTML='<label>Cash received (£)<input id="srCashReceived" class="srField" inputmode="decimal" value="'+due.toFixed(2)+'"></label><div id="srCashChange" style="margin:10px 0;font-weight:900"></div><button id="srCashComplete" class="srBtn" style="width:100%;background:#22c55e;color:#04210d">COMPLETE CASH PAYMENT</button>';
+   const input=d.querySelector('#srCashReceived'),chg=d.querySelector('#srCashChange'),btn=d.querySelector('#srCashComplete');
+   const redraw=()=>{const got=Number(String(input.value||'0').replace(',','.'))||0;const change=Math.max(0,got-due);chg.textContent='Change due: £'+change.toFixed(2);btn.disabled=got<due};
+   input.oninput=redraw;redraw();
+   btn.onclick=()=>{const got=Number(String(input.value||'0').replace(',','.'))||0;if(got<due)return;finish('cash',{tendered:got,change:Math.max(0,got-due)})};
+ };
+ d.querySelector('#srPaySquare').onclick=async()=>{
+   choice.style.display='none';squareActive=true;work.innerHTML='<p>Waiting for Foodhub / Square approval…</p>';cancel.textContent='CANCEL SQUARE / BACK';
+   try{
+     if(typeof window.DextersPcSquarePay!=='function')throw Error('Square bridge is not loaded.');
+     const result=await window.DextersPcSquarePay(due,'Sunday Roast '+title);
+     squareActive=false;
+     if(!document.body.contains(d))return;
+     await finish('square',{transaction_id:result?.transaction_id||''});
+   }catch(e){squareActive=false;if(document.body.contains(d)){work.innerHTML='<p class="bad">Payment not completed: '+esc(e?.message||e)+'</p>';choice.style.display='grid';cancel.disabled=false;cancel.textContent='BACK TO ORDER'}}
+ };
+ cancel.onclick=async()=>{if(squareActive){cancel.disabled=true;try{if(typeof window.DextersPcSquareCancel==='function')await window.DextersPcSquareCancel()}catch{}}if(document.body.contains(d))d.remove()};
+}
 async function changeStatus(o,status){if(!o)return;try{if(status==='collected'&&Number(o.balance_pence||0)>0)throw Error('Take the outstanding payment before marking this order collected.');await call({action:'status_change',id:o.id,status});await refresh()}catch(e){alert(e.message)}}
 function collapseOrders(){if(!$('srOrdersToggle')||!$('srOrders'))return;$('srOrdersToggle').setAttribute('aria-expanded','false');$('srOrders').classList.add('srOrdersCollapsed');if($('srOrdersChevron'))$('srOrdersChevron').textContent='▾'}
 function open(){document.querySelectorAll('.pcToolGroup.open').forEach(x=>x.classList.remove('open'));$('srLiveModal').classList.remove('srHide');resetNew();collapseOrders();refresh().catch(e=>{$('srMsg').textContent=e.message;$('srMsg').className='bad'})}
