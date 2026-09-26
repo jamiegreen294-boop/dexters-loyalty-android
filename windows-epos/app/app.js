@@ -465,6 +465,39 @@ async function showSystem(){
   document.querySelectorAll('[data-channel]').forEach(b=>b.onclick=async()=>{await post('/release/channel',{channel:b.dataset.channel});toast('Release channel: '+b.dataset.channel);showSystem()});
   $('logoutBtn').onclick=async()=>{await post('/staff/logout',{}).catch(()=>{});state.staffSession='';state.staff=null;sessionStorage.removeItem('dexters_staff_session');location.reload()};
 }
+async function showModifierSetup(){
+  if(!(await requireUiPermission('price_change')))return;
+  const [g,p]=await Promise.all([api('/modifiers/groups'),api('/catalog/products?limit=500')]);
+  const groups=g.groups||[],products=p.products||[];
+  const body='<button id="newModifierGroup">NEW MODIFIER GROUP</button><button id="assignModifierGroup" style="margin-left:8px">ASSIGN TO PRODUCT</button><div style="margin-top:12px">'+
+    (groups.length?groups.map(x=>'<div style="padding:10px;border-bottom:1px solid #294663"><b>'+esc(x.name)+'</b> · '+Number(x.min_select||0)+'-'+Number(x.max_select||1)+(x.required?' · REQUIRED':'')+'<br><small>'+(x.options||[]).map(o=>esc(o.name)+(Number(o.priceDeltaPence||0)?' +'+money(o.priceDeltaPence):'')).join(' · ')+'</small></div>').join(''):'<p>No modifier groups yet.</p>')+'</div>';
+  showSheet('Modifier Setup',body);
+  $('newModifierGroup').onclick=async()=>{
+    const name=prompt('Modifier group name','Sauce');if(!name)return;
+    const required=confirm('Is at least one choice required?');
+    const min=required?1:Number(prompt('Minimum selections','0')||0);
+    const max=Number(prompt('Maximum selections','1')||1);
+    const options=[];
+    while(true){
+      const on=prompt('Option name (leave blank when finished)','');
+      if(!on)break;
+      const price=Number(prompt('Extra price for '+on+' (£)','0')||0);
+      options.push({name:on,priceDeltaPence:Math.round(price*100)});
+    }
+    await post('/modifiers/groups',{group:{name,required,minSelect:min,maxSelect:max,options}});
+    toast('Modifier group saved');showModifierSetup();
+  };
+  $('assignModifierGroup').onclick=async()=>{
+    if(!groups.length||!products.length)return toast('Create a modifier group and product first');
+    const productText=products.map((x,i)=>(i+1)+'. '+x.name+' ['+x.id+']').join('\n');
+    const pi=Number(prompt('Product number:\n'+productText.slice(0,3000),'1'))-1;
+    if(!products[pi])return toast('Invalid product');
+    const groupText=groups.map((x,i)=>(i+1)+'. '+x.name).join('\n');
+    const choices=String(prompt('Modifier group numbers, comma separated:\n'+groupText,'1')||'').split(',').map(x=>Number(x.trim())-1).filter(i=>groups[i]);
+    await post('/modifiers/assign',{productId:products[pi].id,groupIds:choices.map(i=>groups[i].id)});
+    toast('Modifiers assigned to '+products[pi].name);
+  };
+}
 async function showStock(){
   if(!(await requireUiPermission('stock_adjust')))return;
   const x=await api('/stock?limit=500'),rows=x.stock||[];
@@ -715,7 +748,7 @@ function bind(){
   $('navTab').onclick=()=>setNavOpen(!$('sideRail').classList.contains('open'));
   $('railClose').onclick=()=>setNavOpen(false);
   const rail=[...document.querySelectorAll('.rail button:not(.railClose)')];
-  rail.forEach(b=>b.onclick=()=>{setNavOpen(false);rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='SELL')showSellScreen(state.activeCategory);else if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='CHATGPT BUILDER')showChatGPTBuilder();else if(t==='MARKETPLACE')showMarketplaceSandbox();else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='REPORTS')showReports();else if(t==='STAFF')showStaff();else if(t==='SETUP')showSetupWizard();else if(t==='SYSTEM')showSystem()});
+  rail.forEach(b=>b.onclick=()=>{setNavOpen(false);rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='SELL')showSellScreen(state.activeCategory);else if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='CHATGPT BUILDER')showChatGPTBuilder();else if(t==='MARKETPLACE')showMarketplaceSandbox();else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='MODIFIERS')showModifierSetup();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='REPORTS')showReports();else if(t==='STAFF')showStaff();else if(t==='SETUP')showSetupWizard();else if(t==='SYSTEM')showSystem()});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
