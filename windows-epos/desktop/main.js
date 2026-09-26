@@ -1,6 +1,6 @@
 'use strict';
 
-const {app,BrowserWindow,dialog}=require('electron');
+const {app,BrowserWindow,dialog,screen}=require('electron');
 const {autoUpdater}=require('electron-updater');
 const path=require('path');
 const fs=require('fs');
@@ -11,6 +11,7 @@ const TEST_URL='http://127.0.0.1:17654/epos';
 const HUB_DIR=app.isPackaged?path.join(process.resourcesPath,'hub'):path.resolve(__dirname,'..');
 let hubProcess=null;
 let win=null;
+let customerWin=null;
 let restartAttempts=0;
 let hubMonitor=null;
 let quitting=false;
@@ -107,6 +108,23 @@ function startSupervisor(){
   setTimeout(()=>postJson('/system/mark-stable',{}).catch(()=>{}),60000);
 }
 
+function makeCustomerDisplay(){
+  const displays=screen.getAllDisplays();
+  if(displays.length<2)return null;
+  const primary=screen.getPrimaryDisplay();
+  const target=displays.find(d=>d.id!==primary.id)||displays[1];
+  const w=new BrowserWindow({
+    x:target.bounds.x,y:target.bounds.y,
+    width:target.bounds.width,height:target.bounds.height,
+    fullscreen:true,
+    frame:false,
+    show:true,
+    backgroundColor:'#07111f',
+    webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true}
+  });
+  w.loadURL('http://127.0.0.1:17654/customer-display');
+  return w;
+}
 function makeWindow(){
   win=new BrowserWindow({
     width:1440,
@@ -131,6 +149,7 @@ function makeWindow(){
     postJson('/system/record-crash',{component:'renderer',error:'unresponsive'}).catch(()=>{});
   });
   win.loadURL(TEST_URL);
+  customerWin=makeCustomerDisplay();
 }
 
 const gotLock=app.requestSingleInstanceLock();
@@ -165,5 +184,6 @@ app.on('window-all-closed',()=>{
 app.on('before-quit',()=>{
   quitting=true;
   clearInterval(hubMonitor);
+  try{if(customerWin&&!customerWin.isDestroyed())customerWin.close()}catch{}
   try{if(hubProcess&&!hubProcess.killed)hubProcess.kill()}catch{}
 });
