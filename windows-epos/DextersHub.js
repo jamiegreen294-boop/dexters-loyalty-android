@@ -6,6 +6,8 @@ const cp=require('child_process');
 const IntegrationGateway=require('./IntegrationGateway');
 const PhoneOrders=require('./PhoneOrders');
 const DexterAI=require('./DexterAI');
+const LocalStore=require('./LocalStore');
+const OperationsCentre=require('./OperationsCentre');
 
 const ROOT=path.resolve(__dirname);
 const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json');
@@ -28,6 +30,18 @@ async function handle(req,res){
   const url=new URL(req.url,'http://127.0.0.1');
   if(req.method==='GET'&&url.pathname==='/epos'){if(!fs.existsSync(EPOS_APP))return send(res,404,'EPOS app not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
+  if(req.method==='GET'&&url.pathname==='/operations'){
+    return send(res,200,{ok:true,...OperationsCentre.overview(LocalStore.stats())});
+  }
+  if(req.method==='GET'&&url.pathname==='/local/orders'){
+    return send(res,200,{ok:true,orders:LocalStore.recentOrders(Number(url.searchParams.get('limit')||50))});
+  }
+  if(req.method==='POST'&&url.pathname==='/local/order'){
+    const b=await body(req);const id=LocalStore.saveOrder(b.order||{});LocalStore.audit(b.staffId||null,'order.save','order',id,{source:'test-epos'});return send(res,200,{ok:true,id});
+  }
+  if(req.method==='POST'&&url.pathname==='/local/queue'){
+    const b=await body(req);const id=LocalStore.queue(b.connector,b.action,b.entityId,b.payload);return send(res,200,{ok:true,id,summary:LocalStore.queueSummary()});
+  }
   if(req.method==='GET'&&url.pathname==='/ai/state'){
     return send(res,200,{ok:true,assistant:DexterAI.state()});
   }
