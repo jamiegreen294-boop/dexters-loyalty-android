@@ -21,6 +21,7 @@ const EPOS_APP=path.join(ROOT,'app','index.html');
 const EPOS_APP_JS=path.join(ROOT,'app','app.js');
 const PRELOADED_DRINKS=path.join(ROOT,'preloaded-drinks.json');
 const PRELOADED_SNACKS=path.join(ROOT,'preloaded-snacks.json');
+const PRELOADED_ALCOHOL=path.join(ROOT,'preloaded-alcohol.json');
 function log(msg){fs.appendFileSync(LOG_PATH,new Date().toISOString()+' '+msg+'\n');}
 function seedPreloadedFile(file,label){
   try{
@@ -53,7 +54,18 @@ async function handle(req,res){
     const b=await body(req);const ids=LocalStore.importSupplierProducts(Array.isArray(b.products)?b.products:[]);return send(res,200,{ok:true,testOnly:true,imported:ids.length,ids});
   }
   if(req.method==='POST'&&url.pathname==='/supplier/add-to-catalog'){
-    const b=await body(req);const id=LocalStore.addSupplierProductToCatalog(b.productId,Number(b.pricePence||0),String(b.category||'Drinks'));LocalStore.audit(b.staffId||null,'catalog.add_supplier_product','catalog_product',id,{supplierProductId:b.productId});return send(res,200,{ok:true,testOnly:true,id});
+    const b=await body(req),p=LocalStore.supplierProductById(b.productId);
+    if(!p)return send(res,404,{ok:false,error:'Supplier product not found'});
+    const payload=p.payload||{},pricePence=Number(b.pricePence||0);
+    if(payload.alcohol===true){
+      const check=AlcoholCompliance.validateAlcoholProduct({
+        alcohol:true,abv:Number(payload.abv||0),volumeMl:Number(payload.volumeMl||0),pricePence
+      },{mupPencePerUnit:65});
+      if(!check.ok)return send(res,409,{ok:false,error:check.errors.join('; '),minimumPricePence:check.minimumPricePence,units:check.units});
+    }
+    const id=LocalStore.addSupplierProductToCatalog(b.productId,pricePence,String(b.category||'Drinks'));
+    LocalStore.audit(b.staffId||null,'catalog.add_supplier_product','catalog_product',id,{supplierProductId:b.productId,alcohol:payload.alcohol===true});
+    return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='GET'&&url.pathname==='/stock'){
     return send(res,200,{ok:true,testOnly:true,stock:LocalStore.stockSnapshot(Number(url.searchParams.get('limit')||500))});
@@ -186,7 +198,7 @@ async function handle(req,res){
   }
   return send(res,404,{ok:false,error:'Not found'});
 }
-const seededDrinks=seedPreloadedFile(PRELOADED_DRINKS,'drinks');const seededSnacks=seedPreloadedFile(PRELOADED_SNACKS,'snacks');const cfg=loadConfig();const port=Number(cfg.listenPort||17654);
+const seededDrinks=seedPreloadedFile(PRELOADED_DRINKS,'drinks');const seededSnacks=seedPreloadedFile(PRELOADED_SNACKS,'snacks');const seededAlcohol=seedPreloadedFile(PRELOADED_ALCOHOL,'alcohol');const cfg=loadConfig();const port=Number(cfg.listenPort||17654);
 const server=http.createServer((req,res)=>Promise.resolve(handle(req,res)).catch(e=>{log('ERROR '+(e.stack||e.message));send(res,500,{ok:false,error:e.message});}));
 server.listen(port,'127.0.0.1',()=>log('DextersHub Node started on 127.0.0.1:'+port));
 process.on('uncaughtException',e=>log('UNCAUGHT '+(e.stack||e.message)));
