@@ -25,7 +25,7 @@ const Barcode=require('./Barcode');
 const PaymentGateway=require('./PaymentGateway');
 
 const ROOT=path.resolve(__dirname);
-const BUILD_VERSION='0.4.0-pilot';
+const BUILD_VERSION='0.5.0-rc';
 let customerDisplayState={cart:[],subtotalPence:0,discountPence:0,deliveryFeePence:0,totalPence:0,customer:null,updatedAt:null};
 const staffSessions=new Map();
 function newSessionToken(){return require('crypto').randomBytes(24).toString('hex')}
@@ -64,7 +64,7 @@ function seedPreloadedFile(file,label){
   }catch(e){log('PRELOAD '+label+' ERROR '+e.message);return 0}
 }
 function loadConfig(){return JSON.parse(fs.readFileSync(CONFIG_PATH,'utf8'));}
-function send(res,status,body,type='application/json; charset=utf-8'){res.writeHead(status,{'content-type':type,'access-control-allow-origin':'*','access-control-allow-headers':'content-type,x-dexters-key','access-control-allow-methods':'GET,POST,OPTIONS','cache-control':'no-store'});res.end(type.startsWith('application/json')?JSON.stringify(body):String(body));}
+function send(res,status,body,type='application/json; charset=utf-8'){res.writeHead(status,{'content-type':type,'access-control-allow-origin':'*','access-control-allow-headers':'content-type,x-dexters-key,x-staff-session','access-control-allow-methods':'GET,POST,OPTIONS','cache-control':'no-store'});res.end(type.startsWith('application/json')?JSON.stringify(body):String(body));}
 function body(req){return new Promise((resolve,reject)=>{let s='';req.on('data',c=>{s+=c;if(s.length>1024*1024)reject(new Error('Request too large'));});req.on('end',()=>{try{resolve(s?JSON.parse(s):{});}catch(e){reject(e);}});req.on('error',reject);});}
 function launch(command,args){const parts=args?String(args).split(' ').filter(Boolean):[];const child=cp.spawn(command,parts,{detached:true,stdio:'ignore',windowsHide:false});child.unref();return true;}
 function queue(event){fs.appendFileSync(QUEUE_PATH,JSON.stringify({...event,queued_at:new Date().toISOString()})+'\n');}
