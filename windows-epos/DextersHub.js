@@ -169,6 +169,26 @@ async function handle(req,res){
   if(req.method==='POST'&&url.pathname==='/local/call'){
     const b=await body(req);const id=LocalStore.saveCall(b.call||{});LocalStore.audit(b.staffId||null,'call.save','call',id,{source:'test-epos'});return send(res,200,{ok:true,id});
   }
+  if(req.method==='GET'&&url.pathname==='/setup/config'){
+    const c=loadConfig();
+    return send(res,200,{ok:true,testOnly:true,config:{siteId:c.siteId||'',deviceId:c.deviceId||'',deviceName:c.deviceName||'',listenPort:c.listenPort||17654,printer:c.printer||{},apps:Object.fromEntries(Object.entries(c.apps||{}).map(([k,v])=>[k,{enabled:!!v.enabled,displayName:v.displayName||k,mode:v.mode||''}]))}});
+  }
+  if(req.method==='POST'&&url.pathname==='/setup/config'){
+    const b=await body(req),c=loadConfig();
+    const next={...c,
+      siteId:String(b.siteId||c.siteId||''),
+      deviceId:String(b.deviceId||c.deviceId||''),
+      deviceName:String(b.deviceName||c.deviceName||''),
+      printer:{...(c.printer||{}),name:String(b.printerName||c.printer?.name||''),paperWidth:Number(b.paperWidth||c.printer?.paperWidth||80),drawerPulsePin:Number(b.drawerPulsePin??c.printer?.drawerPulsePin??0)}
+    };
+    fs.writeFileSync(CONFIG_PATH,JSON.stringify(next,null,2),'utf8');
+    LocalStore.audit(b.staffId||null,'setup.config','device',next.deviceId,{siteId:next.siteId,deviceName:next.deviceName,printer:next.printer?.name||''});
+    return send(res,200,{ok:true,testOnly:true,restartRequired:false,config:{siteId:next.siteId,deviceId:next.deviceId,deviceName:next.deviceName,printer:next.printer}});
+  }
+  if(req.method==='POST'&&url.pathname==='/permissions/check'){
+    const b=await body(req);
+    return send(res,200,{ok:true,testOnly:true,allowed:Permissions.allowed(b.staff||{},String(b.permission||'')),permissions:Permissions.permissionsFor(b.staff?.role,b.staff?.permissions||[])});
+  }
   if(req.method==='GET'&&url.pathname==='/system/status'){
     const stock=LocalStore.stockSnapshot(1000),orders=LocalStore.recentOrders(1000);
     const report=await HealthSupervisor.checkAll({databaseOk:true,uiOk:true,printerOk:false,integrations:IntegrationGateway.allStates()});
