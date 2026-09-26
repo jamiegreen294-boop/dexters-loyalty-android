@@ -228,7 +228,7 @@ function bindBarcodeScanner(){
     if(e.key.length===1&&/\d/.test(e.key)&&!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))state.scannerBuffer+=e.key;
   });
 }
-async async function payOrder(){
+async function payOrder(){
   if(!state.cart.length)return toast('Add items first');
   if(!(await checkAlcoholBeforePayment()))return;
   const body=`<p>Total <b style="font-size:30px;color:#ffd43b">${money(totalPence())}</b></p><p>This is the isolated test EPOS. No real payment will be charged.</p><div class="choice"><button class="collection" id="testCash">CASH TEST</button><button class="delivery" id="testCard">CARD TEST</button></div>`;
