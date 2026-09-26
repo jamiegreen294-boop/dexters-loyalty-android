@@ -46,6 +46,7 @@ async function refresh(){
  $('srDate').textContent='Sunday '+new Date(cfg.collection_date+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
  $('srSlot').innerHTML=(cfg.slots||[]).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');renderSlotButtons();
  const l=await call({action:'list',collection_date:cfg.collection_date});const allOrders=l.orders||[];orders=allOrders.filter(o=>{const ps=String(o.payment_status||'').toLowerCase(),st=String(o.status||'').toLowerCase(),src=String(o.source||'app').toLowerCase();if(src==='app'&&(st==='awaiting_payment'||ps==='awaiting_payment'||ps==='unpaid'||st==='payment_failed'))return false;if(['pos','staff','backoffice'].includes(src))return !['rejected','no_show','payment_failed'].includes(st);return ps==='completed'||ps==='paid_full'||ps==='deposit_paid'||['pending','accepted','preparing','ready','collected'].includes(st)});
+ if($('srOrdersCount'))$('srOrdersCount').textContent='('+orders.length+')';
  $('srOrders').innerHTML=orders.length?orders.map(orderCard).join(''):'<p>No paid Sunday Roast orders for this week yet.</p>';
  bindOrders();
 }
