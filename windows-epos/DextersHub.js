@@ -4,6 +4,7 @@ const path=require('path');
 const os=require('os');
 const cp=require('child_process');
 const IntegrationGateway=require('./IntegrationGateway');
+const PhoneOrders=require('./PhoneOrders');
 
 const ROOT=path.resolve(__dirname);
 const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json');
@@ -26,6 +27,12 @@ async function handle(req,res){
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='GET'&&url.pathname==='/integrations'){
     return send(res,200,{ok:true,testOnly:true,connectors:IntegrationGateway.allStates(),config:IntegrationGateway.safeConfig()});
+  }
+  if(req.method==='POST'&&url.pathname==='/phone/session'){
+    const b=await body(req);const session=PhoneOrders.makePhoneOrderSession(b.call||{});return send(res,200,{ok:true,session,card:PhoneOrders.callerCard(session)});
+  }
+  if(req.method==='POST'&&url.pathname==='/phone/fulfilment'){
+    const b=await body(req);const session=PhoneOrders.chooseFulfilment(b.session||{},b.mode);return send(res,200,{ok:true,session,orderDraft:PhoneOrders.toOrderDraft(session)});
   }
   if(req.method==='POST'&&url.pathname==='/phone/lookup-plan'){
     const b=await body(req);return send(res,200,{ok:true,...IntegrationGateway.phoneLookupPlan(b.number)});
