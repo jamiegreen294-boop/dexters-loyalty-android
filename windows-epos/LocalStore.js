@@ -67,6 +67,26 @@ function db(){
       updated_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_sync_state ON sync_queue(state,created_at);
+    CREATE TABLE IF NOT EXISTS supplier_products (
+      id TEXT PRIMARY KEY,
+      supplier TEXT NOT NULL,
+      supplier_sku TEXT,
+      name TEXT NOT NULL,
+      brand TEXT,
+      category TEXT,
+      pack_size TEXT,
+      unit_size TEXT,
+      barcode TEXT,
+      case_barcode TEXT,
+      cost_pence INTEGER,
+      vat_rate REAL,
+      payload_json TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_supplier_products_name ON supplier_products(name);
+    CREATE INDEX IF NOT EXISTS idx_supplier_products_barcode ON supplier_products(barcode);
+    CREATE INDEX IF NOT EXISTS idx_supplier_products_supplier_sku ON supplier_products(supplier,supplier_sku);
     CREATE TABLE IF NOT EXISTS audit_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       staff_id TEXT,
@@ -90,6 +110,33 @@ function saveOrder(order){
     ON CONFLICT(id) DO UPDATE SET source=excluded.source,external_id=excluded.external_id,status=excluded.status,fulfilment=excluded.fulfilment,customer_name=excluded.customer_name,customer_phone=excluded.customer_phone,total_pence=excluded.total_pence,payload_json=excluded.payload_json,updated_at=excluded.updated_at`)
     .run(id,String(order.source||'pos'),String(order.externalId||''),String(order.status||'draft'),String(order.fulfilment||''),String(order.customer?.name||order.customerName||''),String(order.customer?.phone||order.customerPhone||''),Number(order.total_pence||order.totalPence||0),JSON.stringify(order),String(order.createdAt||t),t);
   d.close();return id;
+}
+function upsertSupplierProduct(product){
+  const d=db(),t=now();
+  const supplier=String(product.supplier||'unknown');
+  const sku=String(product.supplierSku||product.supplier_sku||'');
+  const barcode=String(product.barcode||product.ean||product.gtin||'');
+  const id=String(product.id||[supplier,sku||barcode||product.name||Date.now()].join(':'));
+  d.prepare(`INSERT INTO supplier_products(id,supplier,supplier_sku,name,brand,category,pack_size,unit_size,barcode,case_barcode,cost_pence,vat_rate,payload_json,active,updated_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET supplier=excluded.supplier,supplier_sku=excluded.supplier_sku,name=excluded.name,brand=excluded.brand,category=excluded.category,pack_size=excluded.pack_size,unit_size=excluded.unit_size,barcode=excluded.barcode,case_barcode=excluded.case_barcode,cost_pence=excluded.cost_pence,vat_rate=excluded.vat_rate,payload_json=excluded.payload_json,active=excluded.active,updated_at=excluded.updated_at`)
+    .run(id,supplier,sku,String(product.name||''),String(product.brand||''),String(product.category||''),String(product.packSize||product.pack_size||''),String(product.unitSize||product.unit_size||''),barcode,String(product.caseBarcode||product.case_barcode||''),product.costPence==null?null:Number(product.costPence),product.vatRate==null?null:Number(product.vatRate),JSON.stringify(product),product.active===false?0:1,t);
+  d.close();return id;
+}
+function importSupplierProducts(products=[]){
+  const ids=[];for(const p of products)ids.push(upsertSupplierProduct(p));return ids;
+}
+function searchSupplierProducts(query='',supplier='',limit=100){
+  const d=db(),q='%'+String(query||'').trim()+'%',sup=String(supplier||'').trim();
+  let rows;
+  if(sup)rows=d.prepare(`SELECT * FROM supplier_products WHERE active=1 AND supplier=? AND (name LIKE ? OR brand LIKE ? OR supplier_sku LIKE ? OR barcode LIKE ? OR case_barcode LIKE ?) ORDER BY brand,name LIMIT ?`).all(sup,q,q,q,q,q,Number(limit));
+  else rows=d.prepare(`SELECT * FROM supplier_products WHERE active=1 AND (name LIKE ? OR brand LIKE ? OR supplier_sku LIKE ? OR barcode LIKE ? OR case_barcode LIKE ?) ORDER BY supplier,brand,name LIMIT ?`).all(q,q,q,q,q,Number(limit));
+  d.close();return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
+}
+function supplierProductByBarcode(barcode){
+  const d=db(),code=String(barcode||'').trim();
+  const r=d.prepare('SELECT * FROM supplier_products WHERE active=1 AND (barcode=? OR case_barcode=?) LIMIT 1').get(code,code);
+  d.close();return r?{...r,payload:JSON.parse(r.payload_json||'{}')}:null;
 }
 function saveCall(call){
   const d=db(),t=now(),id=String(call.id||call.call_id||('call-'+Date.now()));
@@ -166,4 +213,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductByBarcode,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
