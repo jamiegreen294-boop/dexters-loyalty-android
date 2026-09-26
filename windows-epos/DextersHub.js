@@ -27,6 +27,7 @@ const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json')
 const LOG_PATH=path.join(ROOT,'hub-node.log');
 const QUEUE_PATH=path.join(ROOT,'offline-queue.jsonl');
 const DASHBOARD=path.join(ROOT,'dashboard','index.html');
+const CUSTOMER_DISPLAY=path.join(ROOT,'customer-display','index.html');
 const EPOS_APP=path.join(ROOT,'app','index.html');
 const EPOS_APP_JS=path.join(ROOT,'app','app.js');
 const PRELOADED_DRINKS=path.join(ROOT,'preloaded-drinks.json');
@@ -56,6 +57,7 @@ async function handle(req,res){
   const url=new URL(req.url,'http://127.0.0.1');
   if(req.method==='GET'&&url.pathname==='/epos/app.js'){if(!fs.existsSync(EPOS_APP_JS))return send(res,404,'EPOS app controller not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP_JS,'utf8'),'application/javascript; charset=utf-8');}
   if(req.method==='GET'&&url.pathname==='/epos'){if(!fs.existsSync(EPOS_APP))return send(res,404,'EPOS app not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP,'utf8'),'text/html; charset=utf-8');}
+  if(req.method==='GET'&&url.pathname==='/customer-display'){if(!fs.existsSync(CUSTOMER_DISPLAY))return send(res,404,'Customer display not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(CUSTOMER_DISPLAY,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='GET'&&url.pathname==='/supplier/products'){
     return send(res,200,{ok:true,testOnly:true,products:LocalStore.searchSupplierProducts(url.searchParams.get('q')||'',url.searchParams.get('supplier')||'',Number(url.searchParams.get('limit')||100))});
