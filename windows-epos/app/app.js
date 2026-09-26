@@ -169,6 +169,7 @@ async function refreshCatalogProducts(){
   }catch{}
 }
 async function showSupplierCatalogue(title,category,query=''){
+  if(!(await requireUiPermission('price_change')))return;
   const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=100');
   const rows=(x.products||[]).filter(p=>String(p.category||'')===category);
   const search='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="supplierProductSearch" placeholder="Search products..." value="'+esc(query)+'" style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="supplierProductSearchBtn">SEARCH</button></div>';
@@ -187,6 +188,7 @@ async function showSupplierCatalogue(title,category,query=''){
 }
 async function showSnacksCatalogue(query=''){return showSupplierCatalogue('Snacks Catalogue','Crisps & Snacks',query)}
 async function showDrinksCatalogue(query=''){
+  if(!(await requireUiPermission('price_change')))return;
   const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=100');
   const rows=x.products||[];
   const search='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="supplierDrinkSearch" placeholder="Search Coke, Irn-Bru, Sprite..." value="'+esc(query)+'" style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="supplierDrinkSearchBtn">SEARCH</button></div>';
@@ -204,6 +206,7 @@ async function showDrinksCatalogue(query=''){
   });
 }
 async function showProductCatalogue(query=''){
+  if(!(await requireUiPermission('price_change')))return;
   const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=200');
   const rows=x.products||[];
   const search='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="allProductSearch" placeholder="Search Coke, Walkers, Guinness, barcode or SKU..." value="'+esc(query)+'" style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="allProductSearchBtn">SEARCH</button></div>';
@@ -234,6 +237,7 @@ async function showProductCatalogue(query=''){
   });
 }
 async function showAlcoholCatalogue(query=''){
+  if(!(await requireUiPermission('price_change')))return;
   const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=100');
   const rows=(x.products||[]).filter(p=>p.payload?.alcohol===true||String(p.category||'').startsWith('Alcohol'));
   const search='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="alcoholSearch" placeholder="Search Tennent\'s, Stella, Guinness, gin..." value="'+esc(query)+'" style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="alcoholSearchBtn">SEARCH</button></div>';
@@ -254,6 +258,7 @@ async function showAlcoholCatalogue(query=''){
   });
 }
 async function showKDS(){
+  if(!(await requireUiPermission('kds_update')))return;
   const x=await api('/kds/orders?limit=100'),rows=x.orders||[];
   const body=rows.length?rows.map((o,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(o.id)+'</b> · '+esc(o.source)+' · '+esc(o.fulfilment||'')+'<br><small>'+esc(o.customer_name||'No customer')+' · '+money(o.total_pence)+' · '+esc(o.status)+'</small></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button data-kds-accept="'+i+'">ACCEPT</button><button data-kds-cook="'+i+'">COOKING</button><button data-kds-ready="'+i+'">READY</button><button data-kds-done="'+i+'">DONE</button></div></div>').join(''):'<p>No active local KDS orders.</p>';
   showSheet('KDS · Test Local Orders',body);
@@ -264,6 +269,7 @@ async function showKDS(){
   document.querySelectorAll('[data-kds-done]').forEach(b=>b.onclick=()=>set(Number(b.dataset.kdsDone),'completed'));
 }
 async function showDeliveryJobs(){
+  if(!(await requireUiPermission('sale')))return;
   const x=await api('/delivery/jobs?limit=100'),rows=x.jobs||[];
   const body='<button id="newDeliveryJobBtn">NEW TEST DELIVERY JOB</button><div style="margin-top:12px">'+(rows.length?rows.map((j,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(j.order_id)+'</b> · '+esc(j.status)+'<br><small>Driver: '+esc(j.driver||'Unassigned')+' · '+esc(j.notes||'')+'</small></div><div><button data-driver-i="'+i+'">ASSIGN DRIVER</button><button data-delivery-done="'+i+'">COMPLETE</button></div></div>').join(''):'<p>No delivery jobs yet.</p>')+'</div>';
   showSheet('Delivery & Drivers',body);const d=document.createElement('button');d.id='deliveryLookupBtn';d.textContent='POSTCODE / ADDRESS LOOKUP';d.style.marginTop='10px';$('eposSheetBody').prepend(d);d.onclick=showDeliveryLookup;
@@ -352,20 +358,36 @@ async function showChatGPTBuilder(){
 }
 async function showSetupWizard(){
   if(!(await requireUiPermission('integration_admin')))return;
-  const x=await api('/setup/config'),c=x.config||{};
-  const p=c.printer||{};
-  const body='<div class="card"><h3>Windows EPOS Setup</h3><p>Changes here affect only this test installation.</p></div>'+
+  const [x,printerResult,paymentResult]=await Promise.all([
+    api('/setup/config'),
+    api('/hardware/printers').catch(()=>({printers:[]})),
+    api('/payments/state').catch(()=>({payments:{}}))
+  ]);
+  const c=x.config||{},p=c.printer||{},printers=printerResult.printers||[],payments=paymentResult.payments||{};
+  const options=printers.map(v=>'<option value="'+esc(v.Name||'')+'" '+((v.Name||'')===p.name?'selected':'')+'>'+esc(v.Name||'Printer')+' · '+esc(v.PrinterStatus||'')+'</option>').join('');
+  const body='<div class="card"><h3>Windows EPOS Setup</h3><p>Site, hardware and compliance settings for this installation.</p></div>'+
+  '<label>Company ID</label><input id="setupCompany" value="'+esc(c.companyId||'dexters')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
   '<label>Site ID</label><input id="setupSite" value="'+esc(c.siteId||'')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
   '<label>Device ID</label><input id="setupDevice" value="'+esc(c.deviceId||'')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
   '<label>Device name</label><input id="setupName" value="'+esc(c.deviceName||'')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
-  '<label>Receipt printer</label><input id="setupPrinter" value="'+esc(p.name||'')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div><label>Timezone</label><input id="setupTimezone" value="'+esc(c.timezone||'Europe/London')+'" style="width:100%;padding:10px"></div><div><label>Currency</label><input id="setupCurrency" value="'+esc(c.currency||'GBP')+'" style="width:100%;padding:10px"></div><div><label>Jurisdiction</label><input id="setupJurisdiction" value="'+esc(c.jurisdiction||'Scotland')+'" style="width:100%;padding:10px"></div></div>'+
+  '<h3>Hardware</h3><label>Receipt printer</label><select id="setupPrinterSelect" style="width:100%;padding:10px;margin:5px 0 10px;background:#08182a;color:#fff"><option value="'+esc(p.name||'')+'">'+esc(p.name||'Choose printer')+'</option>'+options+'</select>'+
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label>Paper width</label><input id="setupPaper" value="'+esc(p.paperWidth||80)+'" style="width:100%;padding:10px"></div><div><label>Drawer pulse pin</label><input id="setupDrawer" value="'+esc(p.drawerPulsePin??0)+'" style="width:100%;padding:10px"></div></div>'+
-  '<button id="setupSave" style="margin-top:14px">SAVE TEST SETUP</button><button id="openCustomerDisplay" style="margin:14px 0 0 8px">OPEN CUSTOMER DISPLAY</button>';
+  '<button id="printerTestBtn" style="margin-top:10px">TEST PRINTER DETECTION</button><button id="openCustomerDisplay" style="margin:10px 0 0 8px">OPEN CUSTOMER DISPLAY</button>'+
+  '<h3>Scottish Off-Sales</h3><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"><input id="setupAlcoholStart" value="'+esc(c.alcohol?.offSalesStart||'10:00')+'" placeholder="Start"><input id="setupAlcoholEnd" value="'+esc(c.alcohol?.offSalesEnd||'22:00')+'" placeholder="End"><input id="setupMup" value="'+esc(c.alcohol?.mupPencePerUnit||65)+'" placeholder="MUP p/unit"><input id="setupChallenge" value="'+esc(c.alcohol?.challengeAge||25)+'" placeholder="Challenge age"></div>'+
+  '<h3>Payments</h3><p>Cash: <b>READY</b> · Square: <b>'+(payments.square?.enabled?(payments.square?.liveAllowed?'LIVE ENABLED':'CONFIGURED / LIVE LOCKED'):'OFF')+'</b></p>'+
+  '<button id="setupSave" style="margin-top:14px">SAVE SETUP</button>';
   showSheet('Setup Wizard',body);
   $('setupSave').onclick=async()=>{
-    await post('/setup/config',{siteId:$('setupSite').value,deviceId:$('setupDevice').value,deviceName:$('setupName').value,printerName:$('setupPrinter').value,paperWidth:Number($('setupPaper').value||80),drawerPulsePin:Number($('setupDrawer').value||0)});
-    toast('Test setup saved');
+    await post('/setup/config',{
+      companyId:$('setupCompany').value,siteId:$('setupSite').value,deviceId:$('setupDevice').value,deviceName:$('setupName').value,
+      timezone:$('setupTimezone').value,currency:$('setupCurrency').value,jurisdiction:$('setupJurisdiction').value,
+      printerName:$('setupPrinterSelect').value,paperWidth:Number($('setupPaper').value||80),drawerPulsePin:Number($('setupDrawer').value||0),
+      offSalesStart:$('setupAlcoholStart').value,offSalesEnd:$('setupAlcoholEnd').value,mupPencePerUnit:Number($('setupMup').value||65),challengeAge:Number($('setupChallenge').value||25)
+    });
+    toast('Setup saved');
   };
+  $('printerTestBtn').onclick=async()=>{try{const x=await post('/hardware/action',{action:'test-print'});toast(x.message||'Printer detected')}catch(e){toast(e.message)}};
   $('openCustomerDisplay').onclick=()=>window.open(API+'/customer-display','_blank');
 }
 async function showReports(){
@@ -378,13 +400,15 @@ async function showReports(){
 async function showSystem(){
   const x=await api('/system/status'),h=x.health||{},r=x.release||{},cr=x.crash||{};
   const body='<div class="card"><h3>Stability</h3><p>Overall: <b>'+(h.ok?'HEALTHY':'CHECK REQUIRED')+'</b></p><p>Release channel: <b>'+esc(r.channel||'test')+'</b></p><p>Last stable: <b>'+esc(cr.lastStableAt||'Not marked yet')+'</b></p></div>'+
-  '<button id="selfTestBtn">RUN PILOT SELF-TEST</button><button id="markStableBtn" style="margin-left:8px">MARK THIS TEST BUILD STABLE</button><button id="backupBtn" style="margin-left:8px">CREATE BACKUP</button><button id="supportBtn" style="margin-left:8px">SUPPORT BUNDLE</button><button id="logoutBtn" style="margin-left:8px">SIGN OUT</button>'+
+  '<button id="selfTestBtn">RUN FULL SELF-TEST</button><button id="markStableBtn" style="margin-left:8px">MARK BUILD STABLE</button><button id="backupBtn" style="margin-left:8px">CREATE BACKUP</button><button id="supportBtn" style="margin-left:8px">SUPPORT BUNDLE</button><button id="logoutBtn" style="margin-left:8px">SIGN OUT</button>'+
+  '<div style="margin-top:10px"><button data-channel="test">TEST</button><button data-channel="pilot" style="margin-left:6px">PILOT</button><button data-channel="stable" style="margin-left:6px">STABLE</button></div>'+
   '<div style="margin-top:12px"><b>Components:</b><pre>'+esc(JSON.stringify(h.components||{},null,2))+'</pre></div>';
   showSheet('System Health & Recovery',body);
-  $('selfTestBtn').onclick=async()=>{const t=await api('/system/self-test');const r=t.selfTest;showSheet('Pilot Self-Test','<h3>'+(r.ok?'PASS':'FAIL')+'</h3>'+r.checks.map(c=>'<div style="padding:7px;border-bottom:1px solid #294663"><b>'+(c.ok?'PASS':'FAIL')+'</b> · '+esc(c.name)+'<br><small>'+esc(c.detail||'')+'</small></div>').join(''))};
-  $('markStableBtn').onclick=async()=>{await post('/system/mark-stable',{});toast('Test build marked stable');showSystem()};
+  $('selfTestBtn').onclick=async()=>{const t=await api('/system/self-test');const z=t.selfTest;showSheet('Full Self-Test','<h3>'+(z.ok?'PASS':'FAIL')+'</h3>'+z.checks.map(c=>'<div style="padding:7px;border-bottom:1px solid #294663"><b>'+(c.ok?'PASS':'FAIL')+'</b> · '+esc(c.name)+'<br><small>'+esc(c.detail||'')+'</small></div>').join(''))};
+  $('markStableBtn').onclick=async()=>{await post('/system/mark-stable',{});toast('Build marked stable');showSystem()};
   $('backupBtn').onclick=async()=>{const b=await post('/backup/create',{});toast('Backup created: '+(b.file||''))};
-  $('supportBtn').onclick=async()=>{const b=await post('/support/bundle',{});toast('Support bundle created')};
+  $('supportBtn').onclick=async()=>{await post('/support/bundle',{});toast('Support bundle created')};
+  document.querySelectorAll('[data-channel]').forEach(b=>b.onclick=async()=>{await post('/release/channel',{channel:b.dataset.channel});toast('Release channel: '+b.dataset.channel);showSystem()});
   $('logoutBtn').onclick=async()=>{await post('/staff/logout',{}).catch(()=>{});state.staffSession='';state.staff=null;sessionStorage.removeItem('dexters_staff_session');location.reload()};
 }
 async function showStock(){
@@ -403,6 +427,7 @@ async function showStock(){
   });
 }
 async function showPurchasing(){
+  if(!(await requireUiPermission('stock_adjust')))return;
   const x=await api('/purchasing/orders?limit=100'),rows=x.orders||[];
   const body='<button id="newPOBtn">NEW PURCHASE ORDER</button><button id="receiveGoodsBtn" style="margin-left:8px">RECEIVE GOODS</button><div style="margin-top:12px">'+(rows.length?rows.map(p=>'<div style="padding:9px;border-bottom:1px solid #294663"><b>'+esc(p.id)+'</b> · '+esc(p.supplier)+' · '+esc(p.status)+'</div>').join(''):'<p>No purchase orders yet.</p>')+'</div>';
   showSheet('Purchasing',body);
@@ -568,11 +593,21 @@ function bindBarcodeScanner(){
 }
 async function payOrder(){
   if(!state.cart.length)return toast('Add items first');
+  if(!(await requireUiPermission('sale')))return;
   if(!(await checkAlcoholBeforePayment()))return;
-  const body=`<p>Total <b style="font-size:30px;color:#ffd43b">${money(totalPence())}</b></p><p>This is the isolated test EPOS. No real payment will be charged.</p><div class="choice"><button class="collection" id="testCash">CASH TEST</button><button class="delivery" id="testCard">CARD TEST</button></div>`;
-  showSheet('Test payment',body);
-  $('testCash').onclick=()=>{ $('eposSheet')?.remove();completeTestOrder('cash_test').catch(e=>toast(e.message)) };
-  $('testCard').onclick=()=>{ $('eposSheet')?.remove();completeTestOrder('card_test').catch(e=>toast(e.message)) };
+  const ps=await api('/payments/state').catch(()=>({payments:{}})),sq=ps.payments?.square||{};
+  const squareLabel=sq.enabled?(sq.liveAllowed?'SQUARE':'SQUARE LOCKED'):'CARD TEST';
+  const body=`<p>Total <b style="font-size:30px;color:#ffd43b">${money(totalPence())}</b></p><div class="choice"><button class="collection" id="payCash">CASH</button><button class="delivery" id="payCard">${squareLabel}</button></div><p style="color:#9fb1c7">${sq.liveAllowed?'Square is live-enabled on this installation.':'External card charging remains locked; safe test payment is used.'}</p>`;
+  showSheet('Payment',body);
+  $('payCash').onclick=()=>{ $('eposSheet')?.remove();completeTestOrder('cash').catch(e=>toast(e.message)) };
+  $('payCard').onclick=async()=>{
+    if(sq.enabled&&sq.liveAllowed){
+      const ref='epos-'+Date.now();
+      try{await post('/payments/square',{amountPence:totalPence(),reference:ref});$('eposSheet')?.remove();await completeTestOrder('square')}catch(e){toast(e.message)}
+    }else{
+      $('eposSheet')?.remove();completeTestOrder('card_test').catch(e=>toast(e.message));
+    }
+  };
 }
 async function askDexter(message){
   const body=$('aiPanel')?.querySelector('.aiBody');if(!message)return;
