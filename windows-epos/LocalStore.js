@@ -67,6 +67,19 @@ function db(){
       updated_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_sync_state ON sync_queue(state,created_at);
+    CREATE TABLE IF NOT EXISTS catalog_products (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'Drinks',
+      price_pence INTEGER NOT NULL DEFAULT 0,
+      barcode TEXT,
+      source_supplier TEXT,
+      source_supplier_sku TEXT,
+      active INTEGER NOT NULL DEFAULT 1,
+      payload_json TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_catalog_products_barcode ON catalog_products(barcode) WHERE barcode IS NOT NULL AND barcode<>'';
     CREATE TABLE IF NOT EXISTS supplier_products (
       id TEXT PRIMARY KEY,
       supplier TEXT NOT NULL,
@@ -136,6 +149,26 @@ function searchSupplierProducts(query='',supplier='',limit=100){
 function supplierProductByBarcode(barcode){
   const d=db(),code=String(barcode||'').trim();
   const r=d.prepare('SELECT * FROM supplier_products WHERE active=1 AND (barcode=? OR case_barcode=?) LIMIT 1').get(code,code);
+  d.close();return r?{...r,payload:JSON.parse(r.payload_json||'{}')}:null;
+}
+function addSupplierProductToCatalog(productId,pricePence,category='Drinks'){
+  const d=db(),t=now();
+  const p=d.prepare('SELECT * FROM supplier_products WHERE id=? AND active=1').get(String(productId));
+  if(!p){d.close();throw new Error('Supplier product not found')}
+  const id='supplier:'+p.id;
+  d.prepare(`INSERT INTO catalog_products(id,name,category,price_pence,barcode,source_supplier,source_supplier_sku,active,payload_json,updated_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET name=excluded.name,category=excluded.category,price_pence=excluded.price_pence,barcode=excluded.barcode,source_supplier=excluded.source_supplier,source_supplier_sku=excluded.source_supplier_sku,active=1,payload_json=excluded.payload_json,updated_at=excluded.updated_at`)
+    .run(id,p.name,String(category||'Drinks'),Number(pricePence||0),p.barcode||'',p.supplier,p.supplier_sku||'',1,p.payload_json,t);
+  d.close();return id;
+}
+function catalogProducts(query='',limit=200){
+  const d=db(),q='%'+String(query||'').trim()+'%';
+  const rows=d.prepare('SELECT * FROM catalog_products WHERE active=1 AND (name LIKE ? OR barcode LIKE ? OR source_supplier_sku LIKE ?) ORDER BY category,name LIMIT ?').all(q,q,q,Number(limit));
+  d.close();return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
+}
+function catalogProductByBarcode(barcode){
+  const d=db(),r=d.prepare('SELECT * FROM catalog_products WHERE active=1 AND barcode=? LIMIT 1').get(String(barcode||'').trim());
   d.close();return r?{...r,payload:JSON.parse(r.payload_json||'{}')}:null;
 }
 function saveCall(call){
@@ -213,4 +246,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductByBarcode,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
