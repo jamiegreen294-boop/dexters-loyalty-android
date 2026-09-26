@@ -24,6 +24,7 @@ const AlcoholCompliance=require('./AlcoholCompliance');
 const Barcode=require('./Barcode');
 
 const ROOT=path.resolve(__dirname);
+const BUILD_VERSION='0.4.0-pilot';
 let customerDisplayState={cart:[],subtotalPence:0,discountPence:0,deliveryFeePence:0,totalPence:0,customer:null,updatedAt:null};
 const staffSessions=new Map();
 function newSessionToken(){return require('crypto').randomBytes(24).toString('hex')}
@@ -261,7 +262,12 @@ async function handle(req,res){
     return send(res,200,{ok:true,testOnly:true,health:report,release:ReleaseManager.loadState(ROOT),crash:CrashGuard.load(ROOT),sales:Reports.salesSummary(orders),stock:Reports.stockValuation(stock)});
   }
   if(req.method==='POST'&&url.pathname==='/system/mark-stable'){
-    CrashGuard.markStable(ROOT);return send(res,200,{ok:true,testOnly:true});
+    const staff=requireStaffPermission(req,res,'integration_admin');if(!staff)return;
+    const test=PilotSelfTest.run(ROOT,LocalStore,IntegrationGateway);
+    if(!test.ok)return send(res,409,{ok:false,error:'Pilot self-test must pass before marking stable',selfTest:test});
+    CrashGuard.markStable(ROOT);ReleaseManager.markGood(ROOT,BUILD_VERSION);
+    LocalStore.audit(staff.staff_id,'release.mark_good','release',BUILD_VERSION,{channel:ReleaseManager.loadState(ROOT).channel});
+    return send(res,200,{ok:true,testOnly:true,version:BUILD_VERSION,selfTest:test});
   }
   if(req.method==='POST'&&url.pathname==='/system/record-crash'){
     const b=await body(req);const journal=CrashGuard.recordCrash(ROOT,b.component||'unknown',b.error||'');return send(res,200,{ok:true,testOnly:true,journal,rollback:CrashGuard.shouldRollback(ROOT)});
@@ -270,7 +276,10 @@ async function handle(req,res){
     return send(res,200,{ok:true,testOnly:true,state:ReleaseManager.loadState(ROOT),rollback:ReleaseManager.rollbackPlan(ROOT)});
   }
   if(req.method==='POST'&&url.pathname==='/release/channel'){
-    const b=await body(req);return send(res,200,{ok:true,testOnly:true,state:ReleaseManager.setChannel(ROOT,String(b.channel||'test'))});
+    const staff=requireStaffPermission(req,res,'integration_admin');if(!staff)return;
+    const b=await body(req),state=ReleaseManager.setChannel(ROOT,String(b.channel||'test'));
+    LocalStore.audit(staff.staff_id,'release.channel','release',String(state.channel),{});
+    return send(res,200,{ok:true,testOnly:true,state});
   }
   if(req.method==='POST'&&url.pathname==='/backup/create'){
     const staff=requireStaffPermission(req,res,'reports');if(!staff)return;
@@ -354,7 +363,7 @@ async function handle(req,res){
     const b=await body(req);return send(res,200,{ok:true,order:IntegrationGateway.normaliseOrder(b.source,b.payload||{})});
   }
   if(url.pathname==='/health'){
-    const p=await printerStatus(cfg.printer?.name);return send(res,200,{ok:true,service:'Dexters Windows Hub',runtime:'node',version:'0.3.0-test',siteId:cfg.siteId,deviceId:cfg.deviceId,deviceName:cfg.deviceName,hostname:os.hostname(),platform:process.platform,node:process.version,printer:{configured:cfg.printer?.name||null,connected:!!p,status:p},offlineQueue:queueCount(),integrations:{whatsapp:{enabled:!!cfg.apps?.whatsapp?.enabled},bonline:{enabled:!!cfg.apps?.bonline?.enabled},square:{enabled:!!cfg.apps?.square?.enabled,mode:cfg.apps?.square?.mode||null}},timestamp:new Date().toISOString()});
+    const p=await printerStatus(cfg.printer?.name);return send(res,200,{ok:true,service:'Dexters Windows Hub',runtime:'node',version:BUILD_VERSION,siteId:cfg.siteId,deviceId:cfg.deviceId,deviceName:cfg.deviceName,hostname:os.hostname(),platform:process.platform,node:process.version,printer:{configured:cfg.printer?.name||null,connected:!!p,status:p},offlineQueue:queueCount(),integrations:{whatsapp:{enabled:!!cfg.apps?.whatsapp?.enabled},bonline:{enabled:!!cfg.apps?.bonline?.enabled},square:{enabled:!!cfg.apps?.square?.enabled,mode:cfg.apps?.square?.mode||null}},timestamp:new Date().toISOString()});
   }
   if(req.method==='POST'&&url.pathname==='/apps/launch'){
     const b=await body(req),name=String(b.name||'');const app=cfg.apps?.[name];if(!app?.enabled)return send(res,409,{ok:false,error:'Integration disabled'});
