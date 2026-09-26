@@ -146,6 +146,11 @@ function searchSupplierProducts(query='',supplier='',limit=100){
   else rows=d.prepare(`SELECT * FROM supplier_products WHERE active=1 AND (name LIKE ? OR brand LIKE ? OR supplier_sku LIKE ? OR barcode LIKE ? OR case_barcode LIKE ?) ORDER BY supplier,brand,name LIMIT ?`).all(q,q,q,q,q,Number(limit));
   d.close();return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
 }
+function supplierProductById(id){
+  const d=db();
+  const r=d.prepare('SELECT * FROM supplier_products WHERE active=1 AND id=? LIMIT 1').get(String(id||''));
+  d.close();return r?{...r,payload:JSON.parse(r.payload_json||'{}')}:null;
+}
 function supplierProductByBarcode(barcode){
   const d=db(),code=String(barcode||'').trim();
   const r=d.prepare('SELECT * FROM supplier_products WHERE active=1 AND (barcode=? OR case_barcode=?) LIMIT 1').get(code,code);
@@ -246,4 +251,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
