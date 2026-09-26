@@ -206,6 +206,24 @@ async function handle(req,res){
     const staff=requireStaffPermission(req,res,'cashup');if(!staff)return;
     const b=await body(req);const id=LocalStore.saveCashup(b.cashup||{});LocalStore.audit(b.staffId||null,'cashup.save','cashup',id,{});return send(res,200,{ok:true,testOnly:true,id});
   }
+  if(req.method==='GET'&&url.pathname==='/modifiers/groups'){
+    return send(res,200,{ok:true,testOnly:true,groups:LocalStore.listModifierGroups()});
+  }
+  if(req.method==='POST'&&url.pathname==='/modifiers/groups'){
+    const staff=requireStaffPermission(req,res,'price_change');if(!staff)return;
+    const b=await body(req);const id=LocalStore.saveModifierGroup(b.group||{});
+    LocalStore.audit(staff.staff_id,'modifier_group.save','modifier_group',id,{name:b.group?.name||''});
+    return send(res,200,{ok:true,testOnly:true,id});
+  }
+  if(req.method==='POST'&&url.pathname==='/modifiers/assign'){
+    const staff=requireStaffPermission(req,res,'price_change');if(!staff)return;
+    const b=await body(req);LocalStore.assignModifierGroups(b.productId,Array.isArray(b.groupIds)?b.groupIds:[]);
+    LocalStore.audit(staff.staff_id,'modifier_group.assign','catalog_product',String(b.productId||''),{groupIds:b.groupIds||[]});
+    return send(res,200,{ok:true,testOnly:true});
+  }
+  if(req.method==='GET'&&url.pathname==='/modifiers/product'){
+    return send(res,200,{ok:true,testOnly:true,groups:LocalStore.productModifiers(url.searchParams.get('productId')||'')});
+  }
   if(req.method==='GET'&&url.pathname==='/catalog/products'){
     return send(res,200,{ok:true,testOnly:true,products:LocalStore.catalogProducts(url.searchParams.get('q')||'',Number(url.searchParams.get('limit')||200))});
   }
