@@ -164,6 +164,110 @@ async function showDrinksCatalogue(query=''){
     await refreshCatalogProducts();
   });
 }
+async function showProductCatalogue(query=''){
+  const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=200');
+  const rows=x.products||[];
+  const search='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="allProductSearch" placeholder="Search Coke, Walkers, Guinness, barcode or SKU..." value="'+esc(query)+'" style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="allProductSearchBtn">SEARCH</button></div>';
+  const filters='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><button data-cat="">ALL</button><button data-cat="Soft Drinks">DRINKS</button><button data-cat="Crisps & Snacks">SNACKS</button><button data-cat="Alcohol">ALCOHOL</button></div>';
+  const list=rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.category||'')+' · '+esc(p.unit_size||'')+' · '+esc(p.pack_size||'')+'<br>Barcode: '+esc(p.barcode||'Not available')+' · SKU: '+esc(p.supplier_sku||'')+'<br>Source: '+esc(p.payload?.source||p.supplier||'')+(p.payload?.alcohol?' · '+esc(p.payload?.abv)+'% ABV':'')+'</small></div><button data-add-all="'+i+'">ADD TO EPOS</button></div>').join(''):'<p>No matching products found.</p>';
+  showSheet('Product Catalogue',search+filters+list);
+  $('allProductSearchBtn').onclick=()=>showProductCatalogue($('allProductSearch').value.trim());
+  $('allProductSearch').onkeydown=e=>{if(e.key==='Enter')$('allProductSearchBtn').click()};
+  document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{
+    const c=b.dataset.cat;
+    if(!c)return showProductCatalogue($('allProductSearch').value.trim());
+    const q=$('allProductSearch').value.trim();
+    showProductCatalogue((q?q+' ':'')+c);
+  });
+  document.querySelectorAll('[data-add-all]').forEach(b=>b.onclick=async()=>{
+    const p=rows[Number(b.dataset.addAll)];
+    const suggested=p.payload?.alcohol?'2.50':'1.50';
+    const price=Number(prompt('Selling price for '+p.name+' (£)',suggested));
+    if(!Number.isFinite(price)||price<0)return toast('Invalid price');
+    try{
+      await post('/supplier/add-to-catalog',{productId:p.id,pricePence:Math.round(price*100),category:p.payload?.alcohol?'Off Sales':(p.category==='Soft Drinks'?'Drinks':p.category||'Products')});
+      toast(p.name+' added to EPOS');
+      await refreshCatalogProducts();
+    }catch(e){
+      if(/minimum|pricing/i.test(e.message))toast('Price too low for this alcohol product');
+      else toast(e.message);
+    }
+  });
+}
+async function showAlcoholCatalogue(query=''){
+  const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=100');
+  const rows=(x.products||[]).filter(p=>p.payload?.alcohol===true||String(p.category||'').startsWith('Alcohol'));
+  const search='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="alcoholSearch" placeholder="Search Tennent\'s, Stella, Guinness, gin..." value="'+esc(query)+'" style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="alcoholSearchBtn">SEARCH</button></div>';
+  const list=rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.unit_size||'')+' · '+esc(p.pack_size||'')+' · '+esc(p.payload?.abv||'')+'% ABV<br>Barcode: '+esc(p.barcode||'Not available')+' · SKU: '+esc(p.supplier_sku||'')+'</small></div><button data-add-alcohol="'+i+'">ADD TO EPOS</button></div>').join(''):'<p>No matching alcohol products found.</p>';
+  showSheet('Alcohol Catalogue',search+list);
+  $('alcoholSearchBtn').onclick=()=>showAlcoholCatalogue($('alcoholSearch').value.trim());
+  $('alcoholSearch').onkeydown=e=>{if(e.key==='Enter')$('alcoholSearchBtn').click()};
+  document.querySelectorAll('[data-add-alcohol]').forEach(b=>b.onclick=async()=>{
+    const p=rows[Number(b.dataset.addAlcohol)];
+    const abv=Number(p.payload?.abv||0),ml=Number(p.payload?.volumeMl||0),min=Math.ceil((abv*ml/1000)*65);
+    const price=Number(prompt('Selling price for '+p.name+' (£). Minimum legal test floor shown below: '+money(min),'3.00'));
+    if(!Number.isFinite(price)||price<0)return toast('Invalid price');
+    try{
+      await post('/supplier/add-to-catalog',{productId:p.id,pricePence:Math.round(price*100),category:'Off Sales'});
+      toast(p.name+' added to OFF SALES');
+      await refreshCatalogProducts();
+    }catch(e){toast(e.message)}
+  });
+}
+async function showStock(){
+  const x=await api('/stock?limit=500'),rows=x.stock||[];
+  const body='<p>Local test inventory only. Live stock is untouched.</p>'+(rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:9px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.category)+' · '+esc(p.barcode||'')+'</small></div><button data-stock-i="'+i+'">'+Number(p.qty||0)+' '+esc(p.unit||'each')+'</button></div>').join(''):'<p>No local catalogue stock yet.</p>');
+  showSheet('Stock Control',body);
+  document.querySelectorAll('[data-stock-i]').forEach(b=>b.onclick=async()=>{
+    const p=rows[Number(b.dataset.stockI)];
+    const qty=Number(prompt('Current stock for '+p.name,p.qty||0));
+    if(!Number.isFinite(qty))return;
+    const reorder=Number(prompt('Low-stock warning level',p.reorder_level||0));
+    if(!Number.isFinite(reorder))return;
+    await post('/stock/set',{productId:p.id,qty,reorderLevel:reorder,unit:p.unit||'each'});
+    toast('Stock updated locally');showStock();
+  });
+}
+async function showPurchasing(){
+  const x=await api('/purchasing/orders?limit=100'),rows=x.orders||[];
+  const body='<button id="newPOBtn">NEW PURCHASE ORDER</button><button id="receiveGoodsBtn" style="margin-left:8px">RECEIVE GOODS</button><div style="margin-top:12px">'+(rows.length?rows.map(p=>'<div style="padding:9px;border-bottom:1px solid #294663"><b>'+esc(p.id)+'</b> · '+esc(p.supplier)+' · '+esc(p.status)+'</div>').join(''):'<p>No purchase orders yet.</p>')+'</div>';
+  showSheet('Purchasing',body);
+  $('newPOBtn').onclick=async()=>{
+    const supplier=prompt('Supplier name','');if(!supplier)return;
+    const id=await post('/purchasing/order',{order:{supplier,status:'draft',items:[],createdAt:new Date().toISOString()}});
+    toast('Purchase order '+id.id+' created');showPurchasing();
+  };
+  $('receiveGoodsBtn').onclick=async()=>{
+    const po=prompt('Purchase order ID (optional)','');const productId=prompt('EPOS product ID','');if(!productId)return;
+    const qty=Number(prompt('Quantity received','1'));if(!Number.isFinite(qty)||!qty)return;
+    await post('/purchasing/receive',{receipt:{purchaseOrderId:po||'',supplier:'',items:[{productId,qty}]}});
+    toast('Goods received and stock increased');showPurchasing();
+  };
+}
+async function showCashup(){
+  const x=await api('/cashups?limit=20'),rows=x.cashups||[];
+  const body='<button id="newCashupBtn">START TEST CASH-UP</button><div style="margin-top:12px">'+(rows.length?rows.map(c=>'<div style="padding:9px;border-bottom:1px solid #294663"><b>'+esc(c.id)+'</b><br><small>Expected '+money(c.expected_cash_pence)+' · Counted '+money(c.counted_cash_pence)+' · Difference '+money(c.discrepancy_pence)+'</small></div>').join(''):'<p>No cash-ups yet.</p>')+'</div>';
+  showSheet('Cash Up / End of Day',body);
+  $('newCashupBtn').onclick=async()=>{
+    const expected=Number(prompt('Expected cash (£)','0'));if(!Number.isFinite(expected))return;
+    const counted=Number(prompt('Counted cash (£)','0'));if(!Number.isFinite(counted))return;
+    const card=Number(prompt('Card total (£)','0'));if(!Number.isFinite(card))return;
+    await post('/cashups',{cashup:{expectedCashPence:Math.round(expected*100),countedCashPence:Math.round(counted*100),cardPence:Math.round(card*100),otherPence:0}});
+    toast('Test cash-up saved');showCashup();
+  };
+}
+async function showStaff(){
+  const body='<p>Test role setup. This will become the PIN/permission editor.</p><button id="staffRoleBtn">SET TEST STAFF ROLE</button>';
+  showSheet('Staff & Permissions',body);
+  $('staffRoleBtn').onclick=async()=>{
+    const id=prompt('Staff ID','test-staff');if(!id)return;
+    const name=prompt('Display name','Test Staff')||'';
+    const role=prompt('Role: staff / supervisor / manager','staff')||'staff';
+    const perms=role==='manager'?['refund','void','discount','price_change','alcohol_setup','cashup','reports']:role==='supervisor'?['void','discount','cashup']:[];
+    await post('/staff/role',{staffId:id,displayName:name,role,permissions:perms});
+    toast('Test role saved');
+  };
+}
 async function showOperations(){
   const x=await api('/operations'),local=x.local||{};
   const body=`<div class="grid"><div class="card"><h3>Local database</h3><b>${local.orders||0}</b> orders · <b>${local.calls||0}</b> calls · <b>${local.queued||0}</b> queued</div><div class="card"><h3>Dexter AI</h3><b>${x.ai?.enabled?'Enabled':'Safe / disabled'}</b></div></div>`+
@@ -306,7 +410,7 @@ function bind(){
   $('ordersBtn').onclick=showOrders;$('backOfficeBtn').onclick=showOperations;
 
   const rail=[...document.querySelectorAll('.rail button')];
-  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')setDeliveryFee();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showSheet('KDS','<p>Test KDS connector is isolated. Orders can be queued locally, but no live KDS write is enabled.</p>');else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='STOCK')showSheet('Stock','<p>Local stock/86 controls are the next menu-data module. Live menu stock is not being changed.</p>')});
+  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')setDeliveryFee();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showSheet('KDS','<p>Test KDS connector is isolated. Orders can be queued locally, but no live KDS write is enabled.</p>');else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='STAFF')showStaff()});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
