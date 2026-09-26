@@ -29,6 +29,17 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <script>window.__DEXTERS_POS_BUILD="14ccd1b2b744"</script>
 <link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#08182a"><meta name="robots" content="noindex,nofollow">
+
+<style id="pcViewportFitFix">
+html,body{height:100%;min-height:0}
+.app{height:100dvh;max-height:100dvh;min-height:0;overflow:hidden}
+.main{min-height:0;height:100%;overflow:hidden}
+.cart{min-height:0;max-height:100%;overflow:hidden;grid-template-rows:auto auto auto minmax(0,1fr) auto!important}
+.cart>#pcLoyaltyPanel{min-height:0!important;max-height:92px;overflow:auto;margin:6px 10px!important;padding:8px 10px!important}
+.cart>.lines{min-height:0!important;overflow:auto!important}
+.total{position:relative;z-index:3}
+@supports not (height:100dvh){.app{height:100vh;max-height:100vh}}
+</style>
 </head>
 <body>
 <div class="app">
