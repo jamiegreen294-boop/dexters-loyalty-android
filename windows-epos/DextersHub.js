@@ -35,6 +35,21 @@ async function handle(req,res){
   if(req.method==='GET'&&url.pathname==='/epos/app.js'){if(!fs.existsSync(EPOS_APP_JS))return send(res,404,'EPOS app controller not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP_JS,'utf8'),'application/javascript; charset=utf-8');}
   if(req.method==='GET'&&url.pathname==='/epos'){if(!fs.existsSync(EPOS_APP))return send(res,404,'EPOS app not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
+  if(req.method==='GET'&&url.pathname==='/supplier/products'){
+    return send(res,200,{ok:true,testOnly:true,products:LocalStore.searchSupplierProducts(url.searchParams.get('q')||'',url.searchParams.get('supplier')||'',Number(url.searchParams.get('limit')||100))});
+  }
+  if(req.method==='POST'&&url.pathname==='/supplier/import'){
+    const b=await body(req);const ids=LocalStore.importSupplierProducts(Array.isArray(b.products)?b.products:[]);return send(res,200,{ok:true,testOnly:true,imported:ids.length,ids});
+  }
+  if(req.method==='POST'&&url.pathname==='/supplier/add-to-catalog'){
+    const b=await body(req);const id=LocalStore.addSupplierProductToCatalog(b.productId,Number(b.pricePence||0),String(b.category||'Drinks'));LocalStore.audit(b.staffId||null,'catalog.add_supplier_product','catalog_product',id,{supplierProductId:b.productId});return send(res,200,{ok:true,testOnly:true,id});
+  }
+  if(req.method==='GET'&&url.pathname==='/catalog/products'){
+    return send(res,200,{ok:true,testOnly:true,products:LocalStore.catalogProducts(url.searchParams.get('q')||'',Number(url.searchParams.get('limit')||200))});
+  }
+  if(req.method==='GET'&&url.pathname==='/catalog/barcode'){
+    return send(res,200,{ok:true,testOnly:true,product:LocalStore.catalogProductByBarcode(url.searchParams.get('code')||'')});
+  }
   if(req.method==='POST'&&url.pathname==='/alcohol/check'){
     const b=await body(req);
     const settings={offSalesStart:String(b.settings?.offSalesStart||'10:00'),offSalesEnd:String(b.settings?.offSalesEnd||'22:00'),mupPencePerUnit:Number(b.settings?.mupPencePerUnit||65),challengeAge:Number(b.settings?.challengeAge||25)};
