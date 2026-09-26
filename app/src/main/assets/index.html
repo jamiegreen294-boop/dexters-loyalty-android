@@ -25,6 +25,17 @@ button,input,select,textarea{font:inherit}.app{height:100vh;display:grid;grid-te
 @media(max-width:950px){.main{grid-template-columns:140px 1fr 310px}.grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
 </style>
 
+
+<style id="pcViewportFitFix">
+html,body{height:100%;min-height:0}
+.app{height:100dvh;max-height:100dvh;min-height:0;overflow:hidden}
+.main{min-height:0;height:100%;overflow:hidden}
+.cart{min-height:0;max-height:100%;overflow:hidden;grid-template-rows:auto auto auto minmax(0,1fr) auto!important}
+.cart>#pcLoyaltyPanel{min-height:0!important;max-height:92px;overflow:auto;margin:6px 10px!important;padding:8px 10px!important}
+.cart>.lines{min-height:0!important;overflow:auto!important}
+.total{position:relative;z-index:3}
+@supports not (height:100dvh){.app{height:100vh;max-height:100vh}}
+</style>
 </head>
 <body>
 <div class="app">
