@@ -275,6 +275,41 @@ async function showMarketplaceSandbox(){
   $('jeDry').onclick=async()=>{try{const x=await post('/marketplace/dry-run',{source:'just_eat',action:'status.update',payload:{status:'ready'}});toast(x.result.message)}catch(e){toast(e.message)}};
   $('drDry').onclick=async()=>{try{const x=await post('/marketplace/dry-run',{source:'deliveroo',action:'status.update',payload:{status:'ready'}});toast(x.result.message)}catch(e){toast(e.message)}};
 }
+async function showChatGPTBuilder(){
+  const st=await api('/builder/state').catch(()=>({builder:{enabled:false,apiKeyConfigured:false,model:'gpt-5.6-sol'}}));
+  const b=st.builder||{};
+  const body='<div class="card"><h3>ChatGPT Builder</h3><p>Model: <b>'+esc(b.model||'gpt-5.6-sol')+'</b></p><p>Status: <b>'+(b.enabled&&b.apiKeyConfigured?'READY':'SAFE / NOT CONNECTED')+'</b></p><p>Changes are test-first and require review before any patch is applied.</p></div>'+
+    '<div id="builderChat" style="max-height:360px;overflow:auto;padding:8px;border:1px solid #294663;border-radius:10px;margin:10px 0"></div>'+
+    '<div style="display:flex;gap:8px"><input id="builderInput" placeholder="Ask ChatGPT to diagnose or change the EPOS..." style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="builderSend">SEND</button></div>';
+  showSheet('ChatGPT Builder',body);
+  const send=async()=>{
+    const input=$('builderInput');const msg=String(input?.value||'').trim();if(!msg)return;
+    input.value='';$('builderChat').insertAdjacentHTML('beforeend','<p><b>You:</b> '+esc(msg)+'</p>');
+    try{
+      const [ops,low,kds]=await Promise.all([
+        api('/operations').catch(()=>({})),
+        api('/stock/low?limit=20').catch(()=>({stock:[]})),
+        api('/kds/orders?limit=20').catch(()=>({orders:[]}))
+      ]);
+      const x=await post('/builder/chat',{message:msg,context:{
+        screen:'windows-epos',
+        requestType:'build',
+        currentModule:'epos',
+        diagnostics:ops,
+        recentChanges:[],
+        ui:{mode:state.mode,cartLines:state.cart.length},
+        lowStock:low.stock||[],
+        kds:kds.orders||[]
+      }});
+      $('builderChat').insertAdjacentHTML('beforeend','<p><b>ChatGPT:</b><br>'+esc(x.result?.reply||'')+'</p>');
+    }catch(e){
+      $('builderChat').insertAdjacentHTML('beforeend','<p style="color:#ffd43b"><b>ChatGPT:</b> '+esc(e.message)+'</p>');
+    }
+    $('builderChat').scrollTop=$('builderChat').scrollHeight;
+  };
+  $('builderSend').onclick=send;
+  $('builderInput').onkeydown=e=>{if(e.key==='Enter')send()};
+}
 async function showStock(){
   const x=await api('/stock?limit=500'),rows=x.stock||[];
   const body='<p>Local test inventory only. Live stock is untouched.</p>'+(rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:9px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.category)+' · '+esc(p.barcode||'')+'</small></div><button data-stock-i="'+i+'">'+Number(p.qty||0)+' '+esc(p.unit||'each')+'</button></div>').join(''):'<p>No local catalogue stock yet.</p>');
@@ -472,7 +507,7 @@ function bind(){
   $('ordersBtn').onclick=showOrders;$('backOfficeBtn').onclick=showOperations;
 
   const rail=[...document.querySelectorAll('.rail button')];
-  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='MARKETPLACE')showMarketplaceSandbox();else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='STAFF')showStaff()});
+  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='CHATGPT BUILDER')showChatGPTBuilder();else if(t==='MARKETPLACE')showMarketplaceSandbox();else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='STAFF')showStaff()});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
