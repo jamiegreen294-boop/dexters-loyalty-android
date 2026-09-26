@@ -8,6 +8,7 @@ const PhoneOrders=require('./PhoneOrders');
 const DexterAI=require('./DexterAI');
 const LocalStore=require('./LocalStore');
 const OperationsCentre=require('./OperationsCentre');
+const SyncEngine=require('./SyncEngine');
 
 const ROOT=path.resolve(__dirname);
 const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json');
@@ -30,6 +31,9 @@ async function handle(req,res){
   const url=new URL(req.url,'http://127.0.0.1');
   if(req.method==='GET'&&url.pathname==='/epos'){if(!fs.existsSync(EPOS_APP))return send(res,404,'EPOS app not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
+  if(req.method==='POST'&&url.pathname==='/sync/run'){
+    const b=await body(req);return send(res,200,await SyncEngine.runBatch(Number(b.limit||25)));
+  }
   if(req.method==='GET'&&url.pathname==='/operations'){
     return send(res,200,{ok:true,...OperationsCentre.overview(LocalStore.stats())});
   }
