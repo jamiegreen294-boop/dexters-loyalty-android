@@ -5,6 +5,7 @@ const os=require('os');
 const cp=require('child_process');
 const IntegrationGateway=require('./IntegrationGateway');
 const PhoneOrders=require('./PhoneOrders');
+const DexterAI=require('./DexterAI');
 
 const ROOT=path.resolve(__dirname);
 const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json');
@@ -25,6 +26,12 @@ async function handle(req,res){
   if(req.method==='OPTIONS')return send(res,200,{ok:true});
   const url=new URL(req.url,'http://127.0.0.1');
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
+  if(req.method==='GET'&&url.pathname==='/ai/state'){
+    return send(res,200,{ok:true,assistant:DexterAI.state()});
+  }
+  if(req.method==='POST'&&url.pathname==='/ai/chat'){
+    const b=await body(req);try{return send(res,200,{ok:true,...await DexterAI.chat(b.message,b.context||{})})}catch(e){return send(res,409,{ok:false,error:e.message})}
+  }
   if(req.method==='GET'&&url.pathname==='/integrations'){
     return send(res,200,{ok:true,testOnly:true,connectors:IntegrationGateway.allStates(),config:IntegrationGateway.safeConfig()});
   }
