@@ -100,6 +100,67 @@ function db(){
     CREATE INDEX IF NOT EXISTS idx_supplier_products_name ON supplier_products(name);
     CREATE INDEX IF NOT EXISTS idx_supplier_products_barcode ON supplier_products(barcode);
     CREATE INDEX IF NOT EXISTS idx_supplier_products_supplier_sku ON supplier_products(supplier,supplier_sku);
+    CREATE TABLE IF NOT EXISTS stock_levels (
+      product_id TEXT PRIMARY KEY,
+      qty REAL NOT NULL DEFAULT 0,
+      reorder_level REAL NOT NULL DEFAULT 0,
+      unit TEXT NOT NULL DEFAULT 'each',
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS stock_movements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id TEXT NOT NULL,
+      qty_delta REAL NOT NULL,
+      reason TEXT NOT NULL,
+      reference TEXT,
+      staff_id TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON stock_movements(product_id,created_at DESC);
+    CREATE TABLE IF NOT EXISTS purchase_orders (
+      id TEXT PRIMARY KEY,
+      supplier TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      payload_json TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS goods_receipts (
+      id TEXT PRIMARY KEY,
+      purchase_order_id TEXT,
+      supplier TEXT,
+      payload_json TEXT NOT NULL,
+      received_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS staff_roles (
+      staff_id TEXT PRIMARY KEY,
+      display_name TEXT,
+      role TEXT NOT NULL DEFAULT 'staff',
+      permissions_json TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS promotions (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      value REAL NOT NULL DEFAULT 0,
+      scope_json TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1,
+      starts_at TEXT,
+      ends_at TEXT,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS cashups (
+      id TEXT PRIMARY KEY,
+      staff_id TEXT,
+      expected_cash_pence INTEGER NOT NULL DEFAULT 0,
+      counted_cash_pence INTEGER NOT NULL DEFAULT 0,
+      card_pence INTEGER NOT NULL DEFAULT 0,
+      other_pence INTEGER NOT NULL DEFAULT 0,
+      discrepancy_pence INTEGER NOT NULL DEFAULT 0,
+      payload_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS audit_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       staff_id TEXT,
@@ -176,6 +237,95 @@ function catalogProductByBarcode(barcode){
   const d=db(),r=d.prepare('SELECT * FROM catalog_products WHERE active=1 AND barcode=? LIMIT 1').get(String(barcode||'').trim());
   d.close();return r?{...r,payload:JSON.parse(r.payload_json||'{}')}:null;
 }
+function setStock(productId,qty,reorderLevel=0,unit='each'){
+  const d=db(),t=now();
+  d.prepare(`INSERT INTO stock_levels(product_id,qty,reorder_level,unit,updated_at) VALUES(?,?,?,?,?)
+    ON CONFLICT(product_id) DO UPDATE SET qty=excluded.qty,reorder_level=excluded.reorder_level,unit=excluded.unit,updated_at=excluded.updated_at`)
+    .run(String(productId),Number(qty||0),Number(reorderLevel||0),String(unit||'each'),t);
+  d.close();return true;
+}
+function adjustStock(productId,delta,reason='manual',reference='',staffId=null){
+  const d=db(),t=now(),id=String(productId);
+  d.prepare(`INSERT INTO stock_levels(product_id,qty,reorder_level,unit,updated_at) VALUES(?,?,0,'each',?)
+    ON CONFLICT(product_id) DO UPDATE SET qty=qty+excluded.qty,updated_at=excluded.updated_at`)
+    .run(id,Number(delta||0),t);
+  d.prepare('INSERT INTO stock_movements(product_id,qty_delta,reason,reference,staff_id,created_at) VALUES(?,?,?,?,?,?)')
+    .run(id,Number(delta||0),String(reason||'manual'),String(reference||''),staffId?String(staffId):null,t);
+  d.close();return true;
+}
+function stockSnapshot(limit=500){
+  const d=db();
+  const rows=d.prepare(`SELECT c.id,c.name,c.category,c.barcode,c.price_pence,
+    COALESCE(s.qty,0) qty,COALESCE(s.reorder_level,0) reorder_level,COALESCE(s.unit,'each') unit,s.updated_at
+    FROM catalog_products c LEFT JOIN stock_levels s ON s.product_id=c.id
+    WHERE c.active=1 ORDER BY c.category,c.name LIMIT ?`).all(Number(limit));
+  d.close();return rows;
+}
+function lowStock(limit=200){
+  const d=db();
+  const rows=d.prepare(`SELECT c.id,c.name,c.category,c.barcode,COALESCE(s.qty,0) qty,COALESCE(s.reorder_level,0) reorder_level
+    FROM catalog_products c JOIN stock_levels s ON s.product_id=c.id
+    WHERE c.active=1 AND s.qty<=s.reorder_level ORDER BY (s.reorder_level-s.qty) DESC LIMIT ?`).all(Number(limit));
+  d.close();return rows;
+}
+function savePurchaseOrder(po){
+  const d=db(),t=now(),id=String(po.id||('po-'+Date.now()));
+  d.prepare(`INSERT INTO purchase_orders(id,supplier,status,payload_json,created_at,updated_at) VALUES(?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET supplier=excluded.supplier,status=excluded.status,payload_json=excluded.payload_json,updated_at=excluded.updated_at`)
+    .run(id,String(po.supplier||''),String(po.status||'draft'),JSON.stringify(po),String(po.createdAt||t),t);
+  d.close();return id;
+}
+function listPurchaseOrders(limit=100){
+  const d=db();const rows=d.prepare('SELECT id,supplier,status,payload_json,created_at,updated_at FROM purchase_orders ORDER BY created_at DESC LIMIT ?').all(Number(limit));
+  d.close();return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
+}
+function receiveGoods(receipt){
+  const d=db(),t=now(),id=String(receipt.id||('grn-'+Date.now())),items=Array.isArray(receipt.items)?receipt.items:[];
+  d.prepare('INSERT INTO goods_receipts(id,purchase_order_id,supplier,payload_json,received_at) VALUES(?,?,?,?,?)')
+    .run(id,String(receipt.purchaseOrderId||''),String(receipt.supplier||''),JSON.stringify(receipt),t);
+  for(const item of items){
+    const pid=String(item.productId||''),qty=Number(item.qty||0);
+    if(!pid||!qty)continue;
+    d.prepare(`INSERT INTO stock_levels(product_id,qty,reorder_level,unit,updated_at) VALUES(?,?,0,'each',?)
+      ON CONFLICT(product_id) DO UPDATE SET qty=qty+excluded.qty,updated_at=excluded.updated_at`).run(pid,qty,t);
+    d.prepare('INSERT INTO stock_movements(product_id,qty_delta,reason,reference,staff_id,created_at) VALUES(?,?,?,?,?,?)')
+      .run(pid,qty,'goods_in',id,receipt.staffId?String(receipt.staffId):null,t);
+  }
+  d.close();return id;
+}
+function setStaffRole(staffId,displayName,role,permissions=[]){
+  const d=db(),t=now();
+  d.prepare(`INSERT INTO staff_roles(staff_id,display_name,role,permissions_json,updated_at) VALUES(?,?,?,?,?)
+    ON CONFLICT(staff_id) DO UPDATE SET display_name=excluded.display_name,role=excluded.role,permissions_json=excluded.permissions_json,updated_at=excluded.updated_at`)
+    .run(String(staffId),String(displayName||''),String(role||'staff'),JSON.stringify(permissions||[]),t);
+  d.close();return true;
+}
+function staffRole(staffId){
+  const d=db(),r=d.prepare('SELECT * FROM staff_roles WHERE staff_id=?').get(String(staffId||''));d.close();
+  return r?{...r,permissions:JSON.parse(r.permissions_json||'[]')}:null;
+}
+function savePromotion(promo){
+  const d=db(),t=now(),id=String(promo.id||('promo-'+Date.now()));
+  d.prepare(`INSERT INTO promotions(id,name,type,value,scope_json,active,starts_at,ends_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET name=excluded.name,type=excluded.type,value=excluded.value,scope_json=excluded.scope_json,active=excluded.active,starts_at=excluded.starts_at,ends_at=excluded.ends_at,updated_at=excluded.updated_at`)
+    .run(id,String(promo.name||''),String(promo.type||'percent'),Number(promo.value||0),JSON.stringify(promo.scope||{}),promo.active===false?0:1,promo.startsAt||null,promo.endsAt||null,t);
+  d.close();return id;
+}
+function activePromotions(){
+  const d=db(),t=now();
+  const rows=d.prepare(`SELECT * FROM promotions WHERE active=1 AND (starts_at IS NULL OR starts_at<=?) AND (ends_at IS NULL OR ends_at>=?) ORDER BY name`).all(t,t);
+  d.close();return rows.map(r=>({...r,scope:JSON.parse(r.scope_json||'{}')}));
+}
+function saveCashup(c){
+  const d=db(),t=now(),id=String(c.id||('cashup-'+Date.now()));
+  const expected=Number(c.expectedCashPence||0),counted=Number(c.countedCashPence||0);
+  d.prepare('INSERT INTO cashups(id,staff_id,expected_cash_pence,counted_cash_pence,card_pence,other_pence,discrepancy_pence,payload_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)')
+    .run(id,c.staffId?String(c.staffId):null,expected,counted,Number(c.cardPence||0),Number(c.otherPence||0),counted-expected,JSON.stringify(c),t);
+  d.close();return id;
+}
+function recentCashups(limit=50){
+  const d=db(),rows=d.prepare('SELECT * FROM cashups ORDER BY created_at DESC LIMIT ?').all(Number(limit));d.close();return rows;
+}
 function saveCall(call){
   const d=db(),t=now(),id=String(call.id||call.call_id||('call-'+Date.now()));
   const phone=String(call.phone||call.caller_number||call.normalized_phone||'');
@@ -251,4 +401,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,staffRole,savePromotion,activePromotions,saveCashup,recentCashups,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
