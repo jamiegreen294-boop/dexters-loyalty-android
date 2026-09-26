@@ -71,6 +71,13 @@
       "enabled": false,
       "environment": "test",
       "mode": "desktop-launch-readonly"
+    },
+    "dexter_ai": {
+      "enabled": false,
+      "environment": "test",
+      "mode": "command-centre",
+      "endpoint": "",
+      "token": ""
     }
   }
 }
