@@ -26,7 +26,7 @@ const PaymentGateway=require('./PaymentGateway');
 const HardwareService=require('./HardwareService');
 
 const ROOT=path.resolve(__dirname);
-const BUILD_VERSION='0.5.0-rc';
+const BUILD_VERSION='0.5.1-rc';
 let customerDisplayState={cart:[],subtotalPence:0,discountPence:0,deliveryFeePence:0,totalPence:0,customer:null,updatedAt:null};
 const staffSessions=new Map();
 function newSessionToken(){return require('crypto').randomBytes(24).toString('hex')}
