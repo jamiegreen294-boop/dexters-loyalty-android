@@ -9,6 +9,8 @@ const DexterAI=require('./DexterAI');
 const LocalStore=require('./LocalStore');
 const OperationsCentre=require('./OperationsCentre');
 const SyncEngine=require('./SyncEngine');
+const DeliveryLookup=require('./DeliveryLookup');
+const MarketplaceAdapters=require('./MarketplaceAdapters');
 const AlcoholCompliance=require('./AlcoholCompliance');
 const Barcode=require('./Barcode');
 
@@ -156,6 +158,22 @@ async function handle(req,res){
   }
   if(req.method==='POST'&&url.pathname==='/local/call'){
     const b=await body(req);const id=LocalStore.saveCall(b.call||{});LocalStore.audit(b.staffId||null,'call.save','call',id,{source:'test-epos'});return send(res,200,{ok:true,id});
+  }
+  if(req.method==='GET'&&url.pathname==='/customer/360'){
+    return send(res,200,{ok:true,testOnly:true,profile:LocalStore.customer360(url.searchParams.get('q')||'')});
+  }
+  if(req.method==='POST'&&url.pathname==='/delivery/lookup'){
+    const b=await body(req),address=DeliveryLookup.buildAddressPlan(b);
+    const zones=Array.isArray(b.zones)?b.zones:[
+      {name:'Local',postcodePrefixes:['G1','G2','G3','G4'],feePence:250,minimumOrderPence:1000,estimatedMinutes:35}
+    ];
+    return send(res,200,{ok:true,testOnly:true,address,quote:DeliveryLookup.localZoneQuote(address.postcode,zones),maps:IntegrationGateway.connectorState('google_maps')});
+  }
+  if(req.method==='POST'&&url.pathname==='/marketplace/normalise'){
+    const b=await body(req);return send(res,200,{ok:true,testOnly:true,order:MarketplaceAdapters.inbound(b.source,b.payload||{})});
+  }
+  if(req.method==='POST'&&url.pathname==='/marketplace/dry-run'){
+    const b=await body(req);return send(res,200,{ok:true,testOnly:true,result:MarketplaceAdapters.sandboxDispatch(b.source,b.action,b.payload||{})});
   }
   if(req.method==='GET'&&url.pathname==='/local/customers'){
     return send(res,200,{ok:true,customers:LocalStore.searchCustomers(url.searchParams.get('q')||'',Number(url.searchParams.get('limit')||50))});
