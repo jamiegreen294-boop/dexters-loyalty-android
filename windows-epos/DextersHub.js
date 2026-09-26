@@ -12,6 +12,13 @@ const SyncEngine=require('./SyncEngine');
 const DeliveryLookup=require('./DeliveryLookup');
 const MarketplaceAdapters=require('./MarketplaceAdapters');
 const OpenAIBuilder=require('./OpenAIBuilder');
+const Permissions=require('./Permissions');
+const Reports=require('./Reports');
+const SupportDiagnostics=require('./SupportDiagnostics');
+const BackupRestore=require('./BackupRestore');
+const ReleaseManager=require('./ReleaseManager');
+const HealthSupervisor=require('./HealthSupervisor');
+const CrashGuard=require('./CrashGuard');
 const AlcoholCompliance=require('./AlcoholCompliance');
 const Barcode=require('./Barcode');
 
@@ -159,6 +166,42 @@ async function handle(req,res){
   }
   if(req.method==='POST'&&url.pathname==='/local/call'){
     const b=await body(req);const id=LocalStore.saveCall(b.call||{});LocalStore.audit(b.staffId||null,'call.save','call',id,{source:'test-epos'});return send(res,200,{ok:true,id});
+  }
+  if(req.method==='GET'&&url.pathname==='/system/status'){
+    const stock=LocalStore.stockSnapshot(1000),orders=LocalStore.recentOrders(1000);
+    const report=await HealthSupervisor.checkAll({databaseOk:true,uiOk:true,printerOk:false,integrations:IntegrationGateway.allStates()});
+    return send(res,200,{ok:true,testOnly:true,health:report,release:ReleaseManager.loadState(ROOT),crash:CrashGuard.load(ROOT),sales:Reports.salesSummary(orders),stock:Reports.stockValuation(stock)});
+  }
+  if(req.method==='POST'&&url.pathname==='/system/mark-stable'){
+    CrashGuard.markStable(ROOT);return send(res,200,{ok:true,testOnly:true});
+  }
+  if(req.method==='POST'&&url.pathname==='/system/record-crash'){
+    const b=await body(req);const journal=CrashGuard.recordCrash(ROOT,b.component||'unknown',b.error||'');return send(res,200,{ok:true,testOnly:true,journal,rollback:CrashGuard.shouldRollback(ROOT)});
+  }
+  if(req.method==='GET'&&url.pathname==='/release/state'){
+    return send(res,200,{ok:true,testOnly:true,state:ReleaseManager.loadState(ROOT),rollback:ReleaseManager.rollbackPlan(ROOT)});
+  }
+  if(req.method==='POST'&&url.pathname==='/release/channel'){
+    const b=await body(req);return send(res,200,{ok:true,testOnly:true,state:ReleaseManager.setChannel(ROOT,String(b.channel||'test'))});
+  }
+  if(req.method==='POST'&&url.pathname==='/backup/create'){
+    const db=process.env.DEXTERS_EPOS_DB||LocalStore.DB_PATH;const target=path.join(ROOT,'backups');const file=BackupRestore.backupDatabase(db,target);return send(res,200,{ok:true,testOnly:true,file});
+  }
+  if(req.method==='GET'&&url.pathname==='/backups'){
+    return send(res,200,{ok:true,testOnly:true,files:BackupRestore.listBackups(path.join(ROOT,'backups'))});
+  }
+  if(req.method==='GET'&&url.pathname==='/reports/summary'){
+    const orders=LocalStore.recentOrders(Number(url.searchParams.get('limit')||1000)),stock=LocalStore.stockSnapshot(1000);
+    return send(res,200,{ok:true,testOnly:true,sales:Reports.salesSummary(orders),stock:Reports.stockValuation(stock)});
+  }
+  if(req.method==='POST'&&url.pathname==='/support/bundle'){
+    const data=SupportDiagnostics.snapshot(ROOT,{integrations:IntegrationGateway.allStates(),local:LocalStore.stats()});const file=SupportDiagnostics.writeBundle(ROOT,data);return send(res,200,{ok:true,testOnly:true,file});
+  }
+  if(req.method==='GET'&&url.pathname==='/customer-display/state'){
+    return send(res,200,{ok:true,testOnly:true,state:customerDisplayState});
+  }
+  if(req.method==='POST'&&url.pathname==='/customer-display/state'){
+    const b=await body(req);customerDisplayState={...customerDisplayState,...b,updatedAt:new Date().toISOString()};return send(res,200,{ok:true,testOnly:true});
   }
   if(req.method==='GET'&&url.pathname==='/builder/state'){
     return send(res,200,{ok:true,testOnly:true,builder:OpenAIBuilder.state()});
