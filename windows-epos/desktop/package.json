@@ -26,7 +26,9 @@
       "package.json"
     ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "artifactName": "Dexters-EPOS-Setup-${version}.${ext}"
     },
     "nsis": {
@@ -35,6 +37,31 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Dexters EPOS"
-    }
+    },
+    "extraResources": [
+      {
+        "from": "../",
+        "to": "hub",
+        "filter": [
+          "DextersHub.js",
+          "LocalStore.js",
+          "SyncEngine.js",
+          "IntegrationGateway.js",
+          "PhoneOrders.js",
+          "DexterAI.js",
+          "OperationsCentre.js",
+          "AlcoholCompliance.js",
+          "Barcode.js",
+          "DeliveryLookup.js",
+          "MarketplaceAdapters.js",
+          "integrations.example.json",
+          "preloaded-drinks.json",
+          "preloaded-snacks.json",
+          "preloaded-alcohol.json",
+          "app/**",
+          "dashboard/**"
+        ]
+      }
+    ]
   }
 }
