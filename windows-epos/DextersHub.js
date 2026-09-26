@@ -122,6 +122,9 @@ async function handle(req,res){
   if(req.method==='POST'&&url.pathname==='/purchasing/receive'){
     const b=await body(req);const id=LocalStore.receiveGoods({...b.receipt,staffId:b.staffId||b.receipt?.staffId||null});LocalStore.audit(b.staffId||null,'goods.receive','goods_receipt',id,{purchaseOrderId:b.receipt?.purchaseOrderId||''});return send(res,200,{ok:true,testOnly:true,id});
   }
+  if(req.method==='GET'&&url.pathname==='/staff/bootstrap-status'){
+    return send(res,200,{ok:true,testOnly:true,required:LocalStore.listStaff().length===0});
+  }
   if(req.method==='POST'&&url.pathname==='/staff/bootstrap'){
     const existing=LocalStore.listStaff();
     if(existing.length)return send(res,409,{ok:false,error:'Staff already configured'});
