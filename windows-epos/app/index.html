@@ -67,15 +67,4 @@ button,input{font:inherit}.app{height:100vh;display:grid;grid-template-rows:64px
 
 <aside class="aiPanel hide" id="aiPanel"><div class="aiHead">DEXTER AI · EPOS ASSISTANT <button style="float:right" id="closeAi">×</button></div><div class="aiBody"><p>Ask Dexter about this order, customer, integrations, hardware, stock, KDS or diagnostics.</p><p style="color:#9fb1c7">Test build: write actions remain permission-gated.</p></div><div class="aiComposer"><input placeholder="Ask Dexter…"><button>SEND</button></div></aside>
 
-<script>
-const API='http://127.0.0.1:17654';
-const $=id=>document.getElementById(id);
-document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));if(b.dataset.mode==='phone')$('fulfilmentModal').classList.remove('hide')});
-$('deliveryBtn').onclick=()=>$('fulfilmentModal').classList.remove('hide');
-$('collectionBtn').onclick=()=>$('fulfilmentModal').classList.remove('hide');
-$('closeFulfil').onclick=()=>$('fulfilmentModal').classList.add('hide');
-document.querySelectorAll('[data-fulfil]').forEach(b=>b.onclick=()=>{$('fulfilmentModal').classList.add('hide');document.querySelectorAll('.callerActions button').forEach(x=>x.classList.toggle('chosen',x.id.startsWith(b.dataset.fulfil)));});
-$('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
-async function health(){try{const r=await fetch(API+'/health',{cache:'no-store'}),h=await r.json();$('hubStatus').textContent=h.ok?'Hub online · '+h.version:'Hub problem'}catch{$('hubStatus').textContent='Hub offline'}}
-health();setInterval(health,15000);
-</script></body></html>
+<script src="/epos/app.js"></script></body></html>
