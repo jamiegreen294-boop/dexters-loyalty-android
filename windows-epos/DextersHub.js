@@ -24,6 +24,22 @@ const Barcode=require('./Barcode');
 
 const ROOT=path.resolve(__dirname);
 let customerDisplayState={cart:[],subtotalPence:0,discountPence:0,deliveryFeePence:0,totalPence:0,customer:null,updatedAt:null};
+const staffSessions=new Map();
+function newSessionToken(){return require('crypto').randomBytes(24).toString('hex')}
+function staffFromRequest(req){
+  const token=String(req.headers['x-staff-session']||'');
+  const session=staffSessions.get(token);
+  if(!session)return null;
+  if(Date.now()>session.expiresAt){staffSessions.delete(token);return null}
+  session.expiresAt=Date.now()+8*60*60*1000;
+  return session.staff;
+}
+function requireStaffPermission(req,res,permission){
+  const staff=staffFromRequest(req);
+  if(!staff){send(res,401,{ok:false,error:'Staff login required'});return null}
+  if(!Permissions.allowed(staff,permission)){send(res,403,{ok:false,error:'Permission required: '+permission});return null}
+  return staff;
+}
 const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json');
 const LOG_PATH=path.join(ROOT,'hub-node.log');
 const QUEUE_PATH=path.join(ROOT,'offline-queue.jsonl');
@@ -90,6 +106,7 @@ async function handle(req,res){
     return send(res,200,{ok:true,testOnly:true,stock:LocalStore.lowStock(Number(url.searchParams.get('limit')||200))});
   }
   if(req.method==='POST'&&url.pathname==='/stock/set'){
+    const staff=requireStaffPermission(req,res,'stock_adjust');if(!staff)return;
     const b=await body(req);LocalStore.setStock(b.productId,Number(b.qty||0),Number(b.reorderLevel||0),String(b.unit||'each'));LocalStore.audit(b.staffId||null,'stock.set','catalog_product',String(b.productId),{qty:b.qty,reorderLevel:b.reorderLevel});return send(res,200,{ok:true,testOnly:true});
   }
   if(req.method==='POST'&&url.pathname==='/stock/adjust'){
@@ -104,6 +121,29 @@ async function handle(req,res){
   if(req.method==='POST'&&url.pathname==='/purchasing/receive'){
     const b=await body(req);const id=LocalStore.receiveGoods({...b.receipt,staffId:b.staffId||b.receipt?.staffId||null});LocalStore.audit(b.staffId||null,'goods.receive','goods_receipt',id,{purchaseOrderId:b.receipt?.purchaseOrderId||''});return send(res,200,{ok:true,testOnly:true,id});
   }
+  if(req.method==='POST'&&url.pathname==='/staff/login'){
+    const b=await body(req),staff=LocalStore.verifyStaffPin(b.staffId,b.pin);
+    if(!staff)return send(res,401,{ok:false,error:'Invalid staff ID or PIN'});
+    const token=newSessionToken();
+    staffSessions.set(token,{staff,expiresAt:Date.now()+8*60*60*1000});
+    LocalStore.audit(staff.staff_id,'staff.login','staff',staff.staff_id,{role:staff.role});
+    return send(res,200,{ok:true,testOnly:true,session:token,staff:{staffId:staff.staff_id,displayName:staff.display_name,role:staff.role,permissions:Permissions.permissionsFor(staff.role,staff.permissions||[])}});
+  }
+  if(req.method==='POST'&&url.pathname==='/staff/logout'){
+    const token=String(req.headers['x-staff-session']||'');staffSessions.delete(token);return send(res,200,{ok:true});
+  }
+  if(req.method==='GET'&&url.pathname==='/staff/me'){
+    const staff=staffFromRequest(req);if(!staff)return send(res,401,{ok:false,error:'Not signed in'});
+    return send(res,200,{ok:true,testOnly:true,staff:{staffId:staff.staff_id,displayName:staff.display_name,role:staff.role,permissions:Permissions.permissionsFor(staff.role,staff.permissions||[])}});
+  }
+  if(req.method==='GET'&&url.pathname==='/staff/list'){
+    const staff=requireStaffPermission(req,res,'staff_admin');if(!staff)return;
+    return send(res,200,{ok:true,testOnly:true,staff:LocalStore.listStaff()});
+  }
+  if(req.method==='POST'&&url.pathname==='/staff/pin'){
+    const staff=requireStaffPermission(req,res,'staff_admin');if(!staff)return;
+    const b=await body(req);LocalStore.setStaffPin(b.staffId,b.pin);LocalStore.audit(staff.staff_id,'staff.pin_set','staff',String(b.staffId),{});return send(res,200,{ok:true,testOnly:true});
+  }
   if(req.method==='POST'&&url.pathname==='/staff/role'){
     const b=await body(req);LocalStore.setStaffRole(b.staffId,b.displayName,b.role,b.permissions||[]);return send(res,200,{ok:true,testOnly:true});
   }
@@ -114,6 +154,7 @@ async function handle(req,res){
     return send(res,200,{ok:true,testOnly:true,promotions:LocalStore.activePromotions()});
   }
   if(req.method==='POST'&&url.pathname==='/promotions'){
+    const staff=requireStaffPermission(req,res,'price_change');if(!staff)return;
     const b=await body(req);const id=LocalStore.savePromotion(b.promotion||{});LocalStore.audit(b.staffId||null,'promotion.save','promotion',id,{name:b.promotion?.name||''});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='GET'&&url.pathname==='/kds/orders'){
@@ -129,6 +170,7 @@ async function handle(req,res){
     const b=await body(req);const id=LocalStore.saveDeliveryJob(b.job||{});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='POST'&&url.pathname==='/orders/adjust'){
+    const staff=requireStaffPermission(req,res,'refund');if(!staff)return;
     const b=await body(req);const id=LocalStore.saveOrderAdjustment(b.adjustment||{});LocalStore.audit(b.staffId||null,'order.adjust','order',String(b.adjustment?.orderId||''),{type:b.adjustment?.type,amountPence:b.adjustment?.amountPence});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='GET'&&url.pathname==='/orders/adjustments'){
@@ -175,6 +217,7 @@ async function handle(req,res){
     return send(res,200,{ok:true,testOnly:true,config:{siteId:c.siteId||'',deviceId:c.deviceId||'',deviceName:c.deviceName||'',listenPort:c.listenPort||17654,printer:c.printer||{},apps:Object.fromEntries(Object.entries(c.apps||{}).map(([k,v])=>[k,{enabled:!!v.enabled,displayName:v.displayName||k,mode:v.mode||''}]))}});
   }
   if(req.method==='POST'&&url.pathname==='/setup/config'){
+    const staff=requireStaffPermission(req,res,'integration_admin');if(!staff)return;
     const b=await body(req),c=loadConfig();
     const next={...c,
       siteId:String(b.siteId||c.siteId||''),
@@ -208,6 +251,7 @@ async function handle(req,res){
     const b=await body(req);return send(res,200,{ok:true,testOnly:true,state:ReleaseManager.setChannel(ROOT,String(b.channel||'test'))});
   }
   if(req.method==='POST'&&url.pathname==='/backup/create'){
+    const staff=requireStaffPermission(req,res,'reports');if(!staff)return;
     const db=process.env.DEXTERS_EPOS_DB||LocalStore.DB_PATH;const target=path.join(ROOT,'backups');const file=BackupRestore.backupDatabase(db,target);return send(res,200,{ok:true,testOnly:true,file});
   }
   if(req.method==='GET'&&url.pathname==='/backups'){
