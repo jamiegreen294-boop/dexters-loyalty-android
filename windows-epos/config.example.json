@@ -28,5 +28,29 @@
       "bridgeUrl": "http://127.0.0.1:17655/square",
       "returnTimeoutSeconds": 120
     }
+  },
+  "companyId": "dexters",
+  "timezone": "Europe/London",
+  "currency": "GBP",
+  "jurisdiction": "Scotland",
+  "deliveryZones": [
+    {
+      "name": "Local",
+      "postcodePrefixes": [
+        "G1",
+        "G2",
+        "G3",
+        "G4"
+      ],
+      "feePence": 250,
+      "minimumOrderPence": 1000,
+      "estimatedMinutes": 35
+    }
+  ],
+  "alcohol": {
+    "offSalesStart": "10:00",
+    "offSalesEnd": "22:00",
+    "mupPencePerUnit": 65,
+    "challengeAge": 25
   }
 }
