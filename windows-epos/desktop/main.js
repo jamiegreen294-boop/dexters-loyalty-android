@@ -76,7 +76,7 @@ async function ensureHub(){
     stdio:'ignore',
     detached:false
   });
-  for(let i=0;i<20;i++){
+  for(let i=0;i<80;i++){
     await new Promise(r=>setTimeout(r,500));
     if(await health())return true;
   }
@@ -97,7 +97,7 @@ async function recoverHub(){
   if(restartAttempts>=3){
     dialog.showErrorBox(
       'Dexters EPOS Recovery',
-      'The local EPOS service could not recover after 3 attempts. The local database has not been deleted.'
+      'The local EPOS service is taking longer than expected to recover. The local database has not been deleted. Dexters EPOS will keep retrying automatically.'
     );
   }
 }
@@ -167,7 +167,14 @@ if(!gotLock){
 app.whenReady().then(async()=>{
   const ok=await ensureHub();
   if(!ok){
-    dialog.showErrorBox('Dexters EPOS Test','The local Windows Hub did not start. No live system was changed.');
+    // Do not abort the visible EPOS for a slow Hub start. The supervisor continues retrying.
+    dialog.showMessageBoxSync({
+      type:'warning',
+      title:'Dexters EPOS Starting',
+      message:'The local EPOS service is still starting.',
+      detail:'Dexters EPOS will stay open and keep retrying automatically. No live system was changed.',
+      buttons:['Continue']
+    });
   }
   makeWindow();
   startSupervisor();
