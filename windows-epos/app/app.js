@@ -550,7 +550,27 @@ async function completeTestOrder(paymentMethod){
   await post('/local/order',{order});
   await post('/local/queue',{connector:'kds',action:'order.upsert',entityId:id,payload:order});
   await post('/stock/deduct-order',{order});
-  toast('TEST order saved locally · no live KDS write');
+  const receiptLines=[
+    'DEXTERS',
+    'Order '+id,
+    new Date(order.createdAt).toLocaleString('en-GB'),
+    '',
+    ...order.items.map(x=>(x.qty||1)+' x '+x.name+'  '+money((x.pricePence||0)*(x.qty||1))),
+    '',
+    'Subtotal '+money(order.subtotalPence),
+    order.deliveryFeePence?'Delivery '+money(order.deliveryFeePence):'',
+    order.discountPence?'Discount -'+money(order.discountPence):'',
+    'TOTAL '+money(order.totalPence),
+    '',
+    'Payment: '+String(paymentMethod||'').toUpperCase(),
+    ''
+  ].filter(Boolean).join('\n');
+  try{
+    await post('/hardware/receipt',{orderId:id,text:receiptLines,openDrawer:paymentMethod==='cash'});
+    toast(paymentMethod==='cash'?'Order saved · receipt printed · drawer opened':'Order saved · receipt printed');
+  }catch(e){
+    toast('Order saved · hardware warning: '+e.message);
+  }
   clearSale();await loadOrders();
 }
 async function checkAlcoholBeforePayment(){
