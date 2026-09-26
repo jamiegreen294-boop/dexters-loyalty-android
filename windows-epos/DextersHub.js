@@ -3,6 +3,7 @@ const fs=require('fs');
 const path=require('path');
 const os=require('os');
 const cp=require('child_process');
+const IntegrationGateway=require('./IntegrationGateway');
 
 const ROOT=path.resolve(__dirname);
 const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json');
@@ -23,6 +24,15 @@ async function handle(req,res){
   if(req.method==='OPTIONS')return send(res,200,{ok:true});
   const url=new URL(req.url,'http://127.0.0.1');
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
+  if(req.method==='GET'&&url.pathname==='/integrations'){
+    return send(res,200,{ok:true,testOnly:true,connectors:IntegrationGateway.allStates(),config:IntegrationGateway.safeConfig()});
+  }
+  if(req.method==='POST'&&url.pathname==='/phone/lookup-plan'){
+    const b=await body(req);return send(res,200,{ok:true,...IntegrationGateway.phoneLookupPlan(b.number)});
+  }
+  if(req.method==='POST'&&url.pathname==='/orders/normalise'){
+    const b=await body(req);return send(res,200,{ok:true,order:IntegrationGateway.normaliseOrder(b.source,b.payload||{})});
+  }
   if(url.pathname==='/health'){
     const p=await printerStatus(cfg.printer?.name);return send(res,200,{ok:true,service:'Dexters Windows Hub',runtime:'node',version:'0.3.0-test',siteId:cfg.siteId,deviceId:cfg.deviceId,deviceName:cfg.deviceName,hostname:os.hostname(),platform:process.platform,node:process.version,printer:{configured:cfg.printer?.name||null,connected:!!p,status:p},offlineQueue:queueCount(),integrations:{whatsapp:{enabled:!!cfg.apps?.whatsapp?.enabled},bonline:{enabled:!!cfg.apps?.bonline?.enabled},square:{enabled:!!cfg.apps?.square?.enabled,mode:cfg.apps?.square?.mode||null}},timestamp:new Date().toISOString()});
   }
