@@ -129,6 +129,24 @@ async function refreshCatalogProducts(){
     }
   }catch{}
 }
+async function showSupplierCatalogue(title,category,query=''){
+  const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=100');
+  const rows=(x.products||[]).filter(p=>String(p.category||'')===category);
+  const search='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="supplierProductSearch" placeholder="Search products..." value="'+esc(query)+'" style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="supplierProductSearchBtn">SEARCH</button></div>';
+  const body=search+(rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.unit_size||'')+' · '+esc(p.pack_size||'')+' · '+esc(p.brand||'')+'<br>Barcode: '+esc(p.barcode||'Not available')+' · SKU: '+esc(p.supplier_sku||'')+'<br>Source: '+esc(p.payload?.source||p.supplier||'')+'</small></div><button data-add-supplier="'+i+'">ADD TO EPOS</button></div>').join(''):'<p>No matching products found.</p>');
+  showSheet(title,body);
+  $('supplierProductSearchBtn').onclick=()=>showSupplierCatalogue(title,category,$('supplierProductSearch').value.trim());
+  $('supplierProductSearch').onkeydown=e=>{if(e.key==='Enter')$('supplierProductSearchBtn').click()};
+  document.querySelectorAll('[data-add-supplier]').forEach(b=>b.onclick=async()=>{
+    const p=rows[Number(b.dataset.addSupplier)];
+    const price=Number(prompt('Selling price for '+p.name+' (£)','1.50'));
+    if(!Number.isFinite(price)||price<0)return toast('Invalid price');
+    await post('/supplier/add-to-catalog',{productId:p.id,pricePence:Math.round(price*100),category:category==='Soft Drinks'?'Drinks':'Crisps & Snacks'});
+    toast(p.name+' added to EPOS');
+    await refreshCatalogProducts();
+  });
+}
+async function showSnacksCatalogue(query=''){return showSupplierCatalogue('Snacks Catalogue','Crisps & Snacks',query)}
 async function showDrinksCatalogue(query=''){
   const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=100');
   const rows=x.products||[];
@@ -288,7 +306,7 @@ function bind(){
   $('ordersBtn').onclick=showOrders;$('backOfficeBtn').onclick=showOperations;
 
   const rail=[...document.querySelectorAll('.rail button')];
-  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')setDeliveryFee();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showSheet('KDS','<p>Test KDS connector is isolated. Orders can be queued locally, but no live KDS write is enabled.</p>');else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='STOCK')showSheet('Stock','<p>Local stock/86 controls are the next menu-data module. Live menu stock is not being changed.</p>')});
+  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')setDeliveryFee();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showSheet('KDS','<p>Test KDS connector is isolated. Orders can be queued locally, but no live KDS write is enabled.</p>');else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='STOCK')showSheet('Stock','<p>Local stock/86 controls are the next menu-data module. Live menu stock is not being changed.</p>')});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
