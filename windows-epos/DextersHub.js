@@ -9,6 +9,8 @@ const DexterAI=require('./DexterAI');
 const LocalStore=require('./LocalStore');
 const OperationsCentre=require('./OperationsCentre');
 const SyncEngine=require('./SyncEngine');
+const AlcoholCompliance=require('./AlcoholCompliance');
+const Barcode=require('./Barcode');
 
 const ROOT=path.resolve(__dirname);
 const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json');
@@ -33,6 +35,18 @@ async function handle(req,res){
   if(req.method==='GET'&&url.pathname==='/epos/app.js'){if(!fs.existsSync(EPOS_APP_JS))return send(res,404,'EPOS app controller not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP_JS,'utf8'),'application/javascript; charset=utf-8');}
   if(req.method==='GET'&&url.pathname==='/epos'){if(!fs.existsSync(EPOS_APP))return send(res,404,'EPOS app not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
+  if(req.method==='POST'&&url.pathname==='/alcohol/check'){
+    const b=await body(req);
+    const settings={offSalesStart:String(b.settings?.offSalesStart||'10:00'),offSalesEnd:String(b.settings?.offSalesEnd||'22:00'),mupPencePerUnit:Number(b.settings?.mupPencePerUnit||65),challengeAge:Number(b.settings?.challengeAge||25)};
+    return send(res,200,{ok:true,testOnly:true,gate:AlcoholCompliance.checkoutGate(b.cart||[],new Date(),settings)});
+  }
+  if(req.method==='POST'&&url.pathname==='/alcohol/verify-age'){
+    const b=await body(req);return send(res,200,{ok:true,testOnly:true,result:AlcoholCompliance.confirmAgeVerification(b)});
+  }
+  if(req.method==='POST'&&url.pathname==='/barcode/validate'){
+    const b=await body(req),barcode=Barcode.normaliseBarcode(b.barcode);
+    return send(res,200,{ok:true,testOnly:true,barcode,valid:Barcode.looksLikeBarcode(barcode)});
+  }
   if(req.method==='POST'&&url.pathname==='/sync/run'){
     const b=await body(req);return send(res,200,await SyncEngine.runBatch(Number(b.limit||25)));
   }
