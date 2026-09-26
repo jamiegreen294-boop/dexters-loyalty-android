@@ -23,6 +23,7 @@ const AlcoholCompliance=require('./AlcoholCompliance');
 const Barcode=require('./Barcode');
 
 const ROOT=path.resolve(__dirname);
+let customerDisplayState={cart:[],subtotalPence:0,discountPence:0,deliveryFeePence:0,totalPence:0,customer:null,updatedAt:null};
 const CONFIG_PATH=process.env.DEXTERS_EPOS_CONFIG||path.join(ROOT,'config.json');
 const LOG_PATH=path.join(ROOT,'hub-node.log');
 const QUEUE_PATH=path.join(ROOT,'offline-queue.jsonl');
