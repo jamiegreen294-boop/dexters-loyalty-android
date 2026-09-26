@@ -7,7 +7,7 @@ const cp=require('child_process');
 const http=require('http');
 
 const TEST_URL='http://127.0.0.1:17654/epos';
-const HUB_DIR=path.resolve(__dirname,'..');
+const HUB_DIR=app.isPackaged?path.join(process.resourcesPath,'hub'):path.resolve(__dirname,'..');
 let hubProcess=null;
 let win=null;
 
@@ -26,6 +26,8 @@ function health(){
 async function ensureHub(){
   if(await health())return true;
   const hub=path.join(HUB_DIR,'DextersHub.js');
+  const cfg=path.join(HUB_DIR,'config.json');
+  const example=path.join(HUB_DIR,'config.example.json');
   hubProcess=cp.spawn(process.execPath,[hub],{
     cwd:HUB_DIR,
     env:{...process.env,ELECTRON_RUN_AS_NODE:'1'},
