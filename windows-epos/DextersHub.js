@@ -11,6 +11,7 @@ const OperationsCentre=require('./OperationsCentre');
 const SyncEngine=require('./SyncEngine');
 const DeliveryLookup=require('./DeliveryLookup');
 const MarketplaceAdapters=require('./MarketplaceAdapters');
+const OpenAIBuilder=require('./OpenAIBuilder');
 const AlcoholCompliance=require('./AlcoholCompliance');
 const Barcode=require('./Barcode');
 
@@ -158,6 +159,12 @@ async function handle(req,res){
   }
   if(req.method==='POST'&&url.pathname==='/local/call'){
     const b=await body(req);const id=LocalStore.saveCall(b.call||{});LocalStore.audit(b.staffId||null,'call.save','call',id,{source:'test-epos'});return send(res,200,{ok:true,id});
+  }
+  if(req.method==='GET'&&url.pathname==='/builder/state'){
+    return send(res,200,{ok:true,testOnly:true,builder:OpenAIBuilder.state()});
+  }
+  if(req.method==='POST'&&url.pathname==='/builder/chat'){
+    const b=await body(req);const result=await OpenAIBuilder.ask(b.message,b.context||{});return send(res,200,{ok:true,testOnly:true,result});
   }
   if(req.method==='GET'&&url.pathname==='/customer/360'){
     return send(res,200,{ok:true,testOnly:true,profile:LocalStore.customer360(url.searchParams.get('q')||'')});
