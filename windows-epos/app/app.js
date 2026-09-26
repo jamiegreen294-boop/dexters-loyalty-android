@@ -321,6 +321,39 @@ async function showChatGPTBuilder(){
   $('builderSend').onclick=send;
   $('builderInput').onkeydown=e=>{if(e.key==='Enter')send()};
 }
+async function showSetupWizard(){
+  const x=await api('/setup/config'),c=x.config||{};
+  const p=c.printer||{};
+  const body='<div class="card"><h3>Windows EPOS Setup</h3><p>Changes here affect only this test installation.</p></div>'+
+  '<label>Site ID</label><input id="setupSite" value="'+esc(c.siteId||'')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
+  '<label>Device ID</label><input id="setupDevice" value="'+esc(c.deviceId||'')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
+  '<label>Device name</label><input id="setupName" value="'+esc(c.deviceName||'')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
+  '<label>Receipt printer</label><input id="setupPrinter" value="'+esc(p.name||'')+'" style="width:100%;padding:10px;margin:5px 0 10px">'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label>Paper width</label><input id="setupPaper" value="'+esc(p.paperWidth||80)+'" style="width:100%;padding:10px"></div><div><label>Drawer pulse pin</label><input id="setupDrawer" value="'+esc(p.drawerPulsePin??0)+'" style="width:100%;padding:10px"></div></div>'+
+  '<button id="setupSave" style="margin-top:14px">SAVE TEST SETUP</button><button id="openCustomerDisplay" style="margin:14px 0 0 8px">OPEN CUSTOMER DISPLAY</button>';
+  showSheet('Setup Wizard',body);
+  $('setupSave').onclick=async()=>{
+    await post('/setup/config',{siteId:$('setupSite').value,deviceId:$('setupDevice').value,deviceName:$('setupName').value,printerName:$('setupPrinter').value,paperWidth:Number($('setupPaper').value||80),drawerPulsePin:Number($('setupDrawer').value||0)});
+    toast('Test setup saved');
+  };
+  $('openCustomerDisplay').onclick=()=>window.open(API+'/customer-display','_blank');
+}
+async function showReports(){
+  const x=await api('/reports/summary?limit=1000');
+  const sales=x.sales||{},stock=x.stock||{};
+  const src=Object.entries(sales.bySource||{}).map(([k,v])=>'<div class="sum"><span>'+esc(k)+'</span><b>'+money(v)+'</b></div>').join('');
+  showSheet('Reports · Test Data','<div class="grid"><div class="card"><h3>Sales</h3><p><b>'+Number(sales.orderCount||0)+'</b> orders</p><p><b>'+money(sales.totalPence||0)+'</b> total</p><p>'+money(sales.averageOrderPence||0)+' average order</p></div><div class="card"><h3>Stock</h3><p><b>'+Number(stock.unitsOnHand||0)+'</b> units on hand</p><p><b>'+Number(stock.lowStock||0)+'</b> low-stock lines</p></div></div><h3>Sales by source</h3>'+ (src||'<p>No local test sales yet.</p>'));
+}
+async function showSystem(){
+  const x=await api('/system/status'),h=x.health||{},r=x.release||{},cr=x.crash||{};
+  const body='<div class="card"><h3>Stability</h3><p>Overall: <b>'+(h.ok?'HEALTHY':'CHECK REQUIRED')+'</b></p><p>Release channel: <b>'+esc(r.channel||'test')+'</b></p><p>Last stable: <b>'+esc(cr.lastStableAt||'Not marked yet')+'</b></p></div>'+
+  '<button id="markStableBtn">MARK THIS TEST BUILD STABLE</button><button id="backupBtn" style="margin-left:8px">CREATE BACKUP</button><button id="supportBtn" style="margin-left:8px">SUPPORT BUNDLE</button>'+
+  '<div style="margin-top:12px"><b>Components:</b><pre>'+esc(JSON.stringify(h.components||{},null,2))+'</pre></div>';
+  showSheet('System Health & Recovery',body);
+  $('markStableBtn').onclick=async()=>{await post('/system/mark-stable',{});toast('Test build marked stable');showSystem()};
+  $('backupBtn').onclick=async()=>{const b=await post('/backup/create',{});toast('Backup created: '+(b.file||''))};
+  $('supportBtn').onclick=async()=>{const b=await post('/support/bundle',{});toast('Support bundle created')};
+}
 async function showStock(){
   const x=await api('/stock?limit=500'),rows=x.stock||[];
   const body='<p>Local test inventory only. Live stock is untouched.</p>'+(rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:9px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.category)+' · '+esc(p.barcode||'')+'</small></div><button data-stock-i="'+i+'">'+Number(p.qty||0)+' '+esc(p.unit||'each')+'</button></div>').join(''):'<p>No local catalogue stock yet.</p>');
@@ -518,7 +551,7 @@ function bind(){
   $('ordersBtn').onclick=showOrders;$('backOfficeBtn').onclick=showOperations;
 
   const rail=[...document.querySelectorAll('.rail button')];
-  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='CHATGPT BUILDER')showChatGPTBuilder();else if(t==='MARKETPLACE')showMarketplaceSandbox();else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='STAFF')showStaff()});
+  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='CHATGPT BUILDER')showChatGPTBuilder();else if(t==='MARKETPLACE')showMarketplaceSandbox();else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='REPORTS')showReports();else if(t==='STAFF')showStaff();else if(t==='SETUP')showSetupWizard();else if(t==='SYSTEM')showSystem()});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
