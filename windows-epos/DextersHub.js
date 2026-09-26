@@ -23,6 +23,7 @@ const PilotSelfTest=require('./PilotSelfTest');
 const AlcoholCompliance=require('./AlcoholCompliance');
 const Barcode=require('./Barcode');
 const PaymentGateway=require('./PaymentGateway');
+const HardwareService=require('./HardwareService');
 
 const ROOT=path.resolve(__dirname);
 const BUILD_VERSION='0.5.0-rc';
@@ -405,10 +406,26 @@ async function handle(req,res){
     catch(e){return send(res,409,{ok:false,error:e.message})}
   }
   if(req.method==='POST'&&url.pathname==='/hardware/action'){
-    const b=await body(req),action=String(b.action||'');
-    if(action==='test-print'){const p=await printerStatus(cfg.printer?.name);if(!p)return send(res,409,{ok:false,error:'Configured receipt printer is not available on this test PC'});return send(res,200,{ok:true,action:'test-print',message:'Printer detected; raw print acceptance test must be run on a till with the configured printer'})}
-    if(action==='open-drawer')return send(res,409,{ok:false,error:'Drawer test is disabled on the home-PC test device because no till drawer is attached'});
-    return send(res,400,{ok:false,error:'Unknown hardware action'});
+    const staff=requireStaffPermission(req,res,'integration_admin');if(!staff)return;
+    const b=await body(req),action=String(b.action||''),printer=cfg.printer?.name||'';
+    const p=await printerStatus(printer);
+    if(!p)return send(res,409,{ok:false,error:'Configured receipt printer is not available on this device'});
+    try{
+      if(action==='test-print'){HardwareService.testReceipt(printer);LocalStore.audit(staff.staff_id,'hardware.test_print','printer',printer,{});return send(res,200,{ok:true,action,message:'Test receipt sent to '+printer})}
+      if(action==='open-drawer'){HardwareService.openDrawer(printer,Number(cfg.printer?.drawerPulsePin||0));LocalStore.audit(staff.staff_id,'hardware.open_drawer','printer',printer,{});return send(res,200,{ok:true,action,message:'Drawer pulse sent through '+printer})}
+      return send(res,400,{ok:false,error:'Unknown hardware action'});
+    }catch(e){return send(res,409,{ok:false,error:e.message})}
+  }
+  if(req.method==='POST'&&url.pathname==='/hardware/receipt'){
+    const staff=requireStaffPermission(req,res,'sale');if(!staff)return;
+    const b=await body(req),printer=cfg.printer?.name||'';
+    const p=await printerStatus(printer);
+    if(!p)return send(res,409,{ok:false,error:'Configured receipt printer is not available on this device'});
+    try{
+      HardwareService.printReceipt(printer,String(b.text||''),b.openDrawer===true,Number(cfg.printer?.drawerPulsePin||0));
+      LocalStore.audit(staff.staff_id,'hardware.receipt','printer',printer,{openDrawer:b.openDrawer===true,orderId:b.orderId||''});
+      return send(res,200,{ok:true,printed:true,drawerPulsed:b.openDrawer===true});
+    }catch(e){return send(res,409,{ok:false,error:e.message})}
   }
   if(req.method==='POST'&&url.pathname==='/queue'){
     const b=await body(req);queue(b);return send(res,200,{ok:true,queued:true,count:queueCount()});
