@@ -98,7 +98,7 @@ async function takePayment(o){
  const due=Math.max(0,Number(o.balance_pence||0))/100;
  const ref='SR-'+String(o.order_number||'').padStart(3,'0');
  const title=ref+' · '+String(o.customer_name||'Customer');
- const d=document.createElement('div');d.className='modal';
+ const d=document.createElement('div');d.className='modal';d.style.zIndex='20050';
  d.innerHTML='<div class="box" style="max-width:560px"><h2>Take Sunday Roast payment</h2><div style="font-size:13px;color:#9eb0c5">'+esc(title)+'</div><div style="font-size:42px;font-weight:1000;color:#ffd43b;margin:12px 0">£'+due.toFixed(2)+'</div><div id="srPayChoice" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><button id="srPayCash" class="srBtn" style="background:#22c55e;color:#04210d;min-height:64px;font-size:22px">CASH</button><button id="srPaySquare" class="srBtn" style="background:#4d7cff;color:#fff;min-height:64px;font-size:22px">SQUARE</button></div><div id="srPayWork"></div><div style="margin-top:12px"><button id="srPayCancel" class="srBtn srSecondary" style="width:100%">CANCEL / BACK</button></div></div>';
  document.body.appendChild(d);
  const work=d.querySelector('#srPayWork'),choice=d.querySelector('#srPayChoice'),cancel=d.querySelector('#srPayCancel');
