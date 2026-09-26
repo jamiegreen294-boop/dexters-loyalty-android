@@ -31,3 +31,26 @@ This branch must not be merged into the live/main branch until the shop hardware
 10. Windows restart/self-heal,
 11. offline queue/replay,
 12. rollback.
+
+
+## Pilot build 0.4.0-pilot
+Built and packaged on 2026-09-26 as an isolated Windows pilot.
+
+Validated:
+- Packaged Electron app launches from bundled resources
+- Local Hub reports version 0.4.0-pilot
+- SQLite integrity check passes
+- Product catalogue query passes
+- Scottish alcohol MUP rule self-test passes
+- Customer display assets present
+- Config and integrations config present
+- Runtime data directory writable
+- No live connectors enabled in pilot self-test
+- Staff PIN bootstrap and session permission enforcement added
+- Refund/void, stock, setup, reports, release and backup actions are permission-gated
+- Backup validation/restore and pilot self-test added
+
+Installer created:
+Dexters-EPOS-Setup-0.4.0-pilot.exe
+
+Production external integrations remain intentionally unconfigured until their credentials/partner access are supplied.
