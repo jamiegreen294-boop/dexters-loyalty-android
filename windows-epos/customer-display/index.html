@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dexters Customer Display</title>
+<style>
+body{margin:0;background:#07111f;color:#fff;font-family:Arial,sans-serif;height:100vh;display:grid;grid-template-columns:1.25fr .75fr}
+main{padding:34px}.brand{font-size:38px;font-weight:900}.tag{color:#ffd43b;font-weight:800;margin-top:4px}
+.lines{margin-top:32px}.line{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid #294663;font-size:24px}
+aside{background:#102844;padding:34px;display:flex;flex-direction:column;justify-content:space-between}
+.totalLabel{font-size:28px}.total{font-size:68px;font-weight:900;color:#ffd43b}
+.promo{background:#17395f;border-radius:18px;padding:24px}.promo h2{margin:0 0 8px}.small{color:#b9cbe0}
+</style></head>
+<body><main><div class="brand">DEXTERS</div><div class="tag">Your order</div><div id="lines" class="lines"></div></main>
+<aside><div class="promo"><h2>Dexters Loyalty</h2><div class="small">Collect points, coffee stamps and rewards with your account.</div></div>
+<div><div class="totalLabel">TOTAL</div><div id="total" class="total">£0.00</div><div id="customer" class="small"></div></div></aside>
+<script>
+const m=p=>'£'+(Number(p||0)/100).toFixed(2);
+async function tick(){
+ try{
+  const r=await fetch('/customer-display/state',{cache:'no-store'}),x=await r.json(),s=x.state||{},rows=s.cart||[];
+  document.getElementById('lines').innerHTML=rows.length?rows.map(i=>'<div class="line"><span>'+String(i.qty||1)+' × '+String(i.name||'Item')+'</span><b>'+m((i.pricePence||0)*(i.qty||1))+'</b></div>').join(''):'<div class="small">Your items will appear here.</div>';
+  document.getElementById('total').textContent=m(s.totalPence||0);
+  document.getElementById('customer').textContent=s.customer?.name?('Welcome, '+s.customer.name):'';
+ }catch{}
+}
+tick();setInterval(tick,800);
+</script></body></html>
