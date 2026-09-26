@@ -55,6 +55,45 @@ async function handle(req,res){
   if(req.method==='POST'&&url.pathname==='/supplier/add-to-catalog'){
     const b=await body(req);const id=LocalStore.addSupplierProductToCatalog(b.productId,Number(b.pricePence||0),String(b.category||'Drinks'));LocalStore.audit(b.staffId||null,'catalog.add_supplier_product','catalog_product',id,{supplierProductId:b.productId});return send(res,200,{ok:true,testOnly:true,id});
   }
+  if(req.method==='GET'&&url.pathname==='/stock'){
+    return send(res,200,{ok:true,testOnly:true,stock:LocalStore.stockSnapshot(Number(url.searchParams.get('limit')||500))});
+  }
+  if(req.method==='GET'&&url.pathname==='/stock/low'){
+    return send(res,200,{ok:true,testOnly:true,stock:LocalStore.lowStock(Number(url.searchParams.get('limit')||200))});
+  }
+  if(req.method==='POST'&&url.pathname==='/stock/set'){
+    const b=await body(req);LocalStore.setStock(b.productId,Number(b.qty||0),Number(b.reorderLevel||0),String(b.unit||'each'));LocalStore.audit(b.staffId||null,'stock.set','catalog_product',String(b.productId),{qty:b.qty,reorderLevel:b.reorderLevel});return send(res,200,{ok:true,testOnly:true});
+  }
+  if(req.method==='POST'&&url.pathname==='/stock/adjust'){
+    const b=await body(req);LocalStore.adjustStock(b.productId,Number(b.delta||0),String(b.reason||'manual'),String(b.reference||''),b.staffId||null);LocalStore.audit(b.staffId||null,'stock.adjust','catalog_product',String(b.productId),{delta:b.delta,reason:b.reason});return send(res,200,{ok:true,testOnly:true});
+  }
+  if(req.method==='GET'&&url.pathname==='/purchasing/orders'){
+    return send(res,200,{ok:true,testOnly:true,orders:LocalStore.listPurchaseOrders(Number(url.searchParams.get('limit')||100))});
+  }
+  if(req.method==='POST'&&url.pathname==='/purchasing/order'){
+    const b=await body(req);const id=LocalStore.savePurchaseOrder(b.order||{});LocalStore.audit(b.staffId||null,'purchase_order.save','purchase_order',id,{supplier:b.order?.supplier||''});return send(res,200,{ok:true,testOnly:true,id});
+  }
+  if(req.method==='POST'&&url.pathname==='/purchasing/receive'){
+    const b=await body(req);const id=LocalStore.receiveGoods({...b.receipt,staffId:b.staffId||b.receipt?.staffId||null});LocalStore.audit(b.staffId||null,'goods.receive','goods_receipt',id,{purchaseOrderId:b.receipt?.purchaseOrderId||''});return send(res,200,{ok:true,testOnly:true,id});
+  }
+  if(req.method==='POST'&&url.pathname==='/staff/role'){
+    const b=await body(req);LocalStore.setStaffRole(b.staffId,b.displayName,b.role,b.permissions||[]);return send(res,200,{ok:true,testOnly:true});
+  }
+  if(req.method==='GET'&&url.pathname==='/staff/role'){
+    return send(res,200,{ok:true,testOnly:true,staff:LocalStore.staffRole(url.searchParams.get('staffId')||'')});
+  }
+  if(req.method==='GET'&&url.pathname==='/promotions'){
+    return send(res,200,{ok:true,testOnly:true,promotions:LocalStore.activePromotions()});
+  }
+  if(req.method==='POST'&&url.pathname==='/promotions'){
+    const b=await body(req);const id=LocalStore.savePromotion(b.promotion||{});LocalStore.audit(b.staffId||null,'promotion.save','promotion',id,{name:b.promotion?.name||''});return send(res,200,{ok:true,testOnly:true,id});
+  }
+  if(req.method==='GET'&&url.pathname==='/cashups'){
+    return send(res,200,{ok:true,testOnly:true,cashups:LocalStore.recentCashups(Number(url.searchParams.get('limit')||50))});
+  }
+  if(req.method==='POST'&&url.pathname==='/cashups'){
+    const b=await body(req);const id=LocalStore.saveCashup(b.cashup||{});LocalStore.audit(b.staffId||null,'cashup.save','cashup',id,{});return send(res,200,{ok:true,testOnly:true,id});
+  }
   if(req.method==='GET'&&url.pathname==='/catalog/products'){
     return send(res,200,{ok:true,testOnly:true,products:LocalStore.catalogProducts(url.searchParams.get('q')||'',Number(url.searchParams.get('limit')||200))});
   }
