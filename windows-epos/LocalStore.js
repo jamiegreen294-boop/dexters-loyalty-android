@@ -352,6 +352,10 @@ function verifyStaffPin(staffId,pin){
   if(!ok)return null;
   return {...r,permissions:JSON.parse(r.permissions_json||'[]')};
 }
+function hasPinStaff(){
+  const d=db(),r=d.prepare("SELECT COUNT(*) n FROM staff_roles WHERE COALESCE(active,1)=1 AND pin_hash IS NOT NULL AND pin_hash<>''").get();d.close();
+  return Number(r?.n||0)>0;
+}
 function listStaff(){
   const d=db(),rows=d.prepare('SELECT staff_id,display_name,role,permissions_json,COALESCE(active,1) active,last_login_at,updated_at FROM staff_roles ORDER BY display_name,staff_id').all();d.close();
   return rows.map(r=>({...r,permissions:JSON.parse(r.permissions_json||'[]')}));
@@ -530,4 +534,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,setStaffPin,verifyStaffPin,listStaff,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,customer360,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,setStaffPin,verifyStaffPin,hasPinStaff,listStaff,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,customer360,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
