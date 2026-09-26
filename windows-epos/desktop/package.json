@@ -1,6 +1,6 @@
 {
   "name": "dexters-epos",
-  "version": "0.1.1-test",
+  "version": "0.4.0-pilot",
   "private": true,
   "description": "Dexters Windows EPOS test desktop application",
   "main": "main.js",
@@ -69,7 +69,8 @@
           "HealthSupervisor.js",
           "CrashGuard.js",
           "OpenAIBuilder.js",
-          "customer-display/**"
+          "customer-display/**",
+          "PilotSelfTest.js"
         ]
       }
     ]
