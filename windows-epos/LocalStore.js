@@ -2,6 +2,7 @@
 
 const path=require('path');
 const fs=require('fs');
+const crypto=require('crypto');
 const {DatabaseSync}=require('node:sqlite');
 
 const ROOT=__dirname;
@@ -196,6 +197,10 @@ function db(){
   ensureColumn(d,'sync_queue','error_kind','TEXT');
   ensureColumn(d,'sync_queue','result_json','TEXT');
   ensureColumn(d,'sync_queue','retry_at','TEXT');
+  ensureColumn(d,'staff_roles','pin_salt','TEXT');
+  ensureColumn(d,'staff_roles','pin_hash','TEXT');
+  ensureColumn(d,'staff_roles','active','INTEGER NOT NULL DEFAULT 1');
+  ensureColumn(d,'staff_roles','last_login_at','TEXT');
   return d;
 }
 function now(){return new Date().toISOString()}
@@ -321,6 +326,35 @@ function setStaffRole(staffId,displayName,role,permissions=[]){
     ON CONFLICT(staff_id) DO UPDATE SET display_name=excluded.display_name,role=excluded.role,permissions_json=excluded.permissions_json,updated_at=excluded.updated_at`)
     .run(String(staffId),String(displayName||''),String(role||'staff'),JSON.stringify(permissions||[]),t);
   d.close();return true;
+}
+function setStaffPin(staffId,pin){
+  const id=String(staffId||''),p=String(pin||'');
+  if(!id)throw new Error('Staff ID required');
+  if(!/^\d{4,8}$/.test(p))throw new Error('PIN must be 4 to 8 digits');
+  const d=db(),salt=crypto.randomBytes(16).toString('hex');
+  const hash=crypto.scryptSync(p,salt,32).toString('hex');
+  const exists=d.prepare('SELECT staff_id FROM staff_roles WHERE staff_id=?').get(id);
+  if(!exists)d.prepare("INSERT INTO staff_roles(staff_id,display_name,role,permissions_json,pin_salt,pin_hash,active,updated_at) VALUES(?,?,?, ?,?,?,1,?)")
+    .run(id,id,'staff','[]',salt,hash,now());
+  else d.prepare('UPDATE staff_roles SET pin_salt=?,pin_hash=?,active=1,updated_at=? WHERE staff_id=?').run(salt,hash,now(),id);
+  d.close();return true;
+}
+function verifyStaffPin(staffId,pin){
+  const d=db(),r=d.prepare('SELECT * FROM staff_roles WHERE staff_id=? AND COALESCE(active,1)=1').get(String(staffId||''));
+  if(!r||!r.pin_salt||!r.pin_hash){d.close();return null}
+  let ok=false;
+  try{
+    const calc=crypto.scryptSync(String(pin||''),r.pin_salt,32);
+    ok=crypto.timingSafeEqual(calc,Buffer.from(r.pin_hash,'hex'));
+  }catch{}
+  if(ok)d.prepare('UPDATE staff_roles SET last_login_at=? WHERE staff_id=?').run(now(),String(staffId));
+  d.close();
+  if(!ok)return null;
+  return {...r,permissions:JSON.parse(r.permissions_json||'[]')};
+}
+function listStaff(){
+  const d=db(),rows=d.prepare('SELECT staff_id,display_name,role,permissions_json,COALESCE(active,1) active,last_login_at,updated_at FROM staff_roles ORDER BY display_name,staff_id').all();d.close();
+  return rows.map(r=>({...r,permissions:JSON.parse(r.permissions_json||'[]')}));
 }
 function staffRole(staffId){
   const d=db(),r=d.prepare('SELECT * FROM staff_roles WHERE staff_id=?').get(String(staffId||''));d.close();
@@ -496,4 +530,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,customer360,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,setStaffPin,verifyStaffPin,listStaff,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,customer360,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
