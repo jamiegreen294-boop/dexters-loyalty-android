@@ -214,6 +214,40 @@ async function showAlcoholCatalogue(query=''){
     }catch(e){toast(e.message)}
   });
 }
+async function showKDS(){
+  const x=await api('/kds/orders?limit=100'),rows=x.orders||[];
+  const body=rows.length?rows.map((o,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(o.id)+'</b> · '+esc(o.source)+' · '+esc(o.fulfilment||'')+'<br><small>'+esc(o.customer_name||'No customer')+' · '+money(o.total_pence)+' · '+esc(o.status)+'</small></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button data-kds-accept="'+i+'">ACCEPT</button><button data-kds-cook="'+i+'">COOKING</button><button data-kds-ready="'+i+'">READY</button><button data-kds-done="'+i+'">DONE</button></div></div>').join(''):'<p>No active local KDS orders.</p>';
+  showSheet('KDS · Test Local Orders',body);
+  const set=async(i,status)=>{await post('/orders/status',{orderId:rows[i].id,status});toast('Order '+status);showKDS()};
+  document.querySelectorAll('[data-kds-accept]').forEach(b=>b.onclick=()=>set(Number(b.dataset.kdsAccept),'accepted'));
+  document.querySelectorAll('[data-kds-cook]').forEach(b=>b.onclick=()=>set(Number(b.dataset.kdsCook),'cooking'));
+  document.querySelectorAll('[data-kds-ready]').forEach(b=>b.onclick=()=>set(Number(b.dataset.kdsReady),'ready'));
+  document.querySelectorAll('[data-kds-done]').forEach(b=>b.onclick=()=>set(Number(b.dataset.kdsDone),'completed'));
+}
+async function showDeliveryJobs(){
+  const x=await api('/delivery/jobs?limit=100'),rows=x.jobs||[];
+  const body='<button id="newDeliveryJobBtn">NEW TEST DELIVERY JOB</button><div style="margin-top:12px">'+(rows.length?rows.map((j,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(j.order_id)+'</b> · '+esc(j.status)+'<br><small>Driver: '+esc(j.driver||'Unassigned')+' · '+esc(j.notes||'')+'</small></div><div><button data-driver-i="'+i+'">ASSIGN DRIVER</button><button data-delivery-done="'+i+'">COMPLETE</button></div></div>').join(''):'<p>No delivery jobs yet.</p>')+'</div>';
+  showSheet('Delivery & Drivers',body);
+  $('newDeliveryJobBtn').onclick=async()=>{const orderId=prompt('Order ID','');if(!orderId)return;const notes=prompt('Delivery notes','')||'';await post('/delivery/jobs',{job:{orderId,status:'waiting',notes,address:{}}});toast('Delivery job created');showDeliveryJobs()};
+  document.querySelectorAll('[data-driver-i]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.driverI),driver=prompt('Driver name',rows[i].driver||'');if(!driver)return;await post('/delivery/jobs',{job:{...rows[i],orderId:rows[i].order_id,driver,status:'assigned',assignedAt:new Date().toISOString(),address:rows[i].address||{}}});toast('Driver assigned');showDeliveryJobs()});
+  document.querySelectorAll('[data-delivery-done]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.deliveryDone);await post('/delivery/jobs',{job:{...rows[i],orderId:rows[i].order_id,status:'completed',completedAt:new Date().toISOString(),address:rows[i].address||{}}});toast('Delivery completed');showDeliveryJobs()});
+}
+async function showOrderAdjustment(){
+  await loadOrders();if(!state.orders.length)return toast('No local test orders');
+  const body=state.orders.map((o,i)=>'<button data-adjust-order="'+i+'" style="display:block;width:100%;text-align:left;padding:12px;margin:6px 0;background:#172d49;color:white;border:0;border-radius:10px"><b>'+esc(o.id)+'</b> · '+esc(o.status)+'<br><small>'+esc(o.customer_name||'No customer')+' · '+money(o.total_pence)+'</small></button>').join('');
+  showSheet('Refund / Void · Manager Test',body);
+  document.querySelectorAll('[data-adjust-order]').forEach(b=>b.onclick=async()=>{
+    const o=state.orders[Number(b.dataset.adjustOrder)];
+    const type=(prompt('Type: VOID / REFUND / PARTIAL_REFUND','VOID')||'').trim().toLowerCase();
+    if(!['void','refund','partial_refund'].includes(type))return toast('Invalid adjustment type');
+    const reason=prompt('Reason','')||'';
+    let amount=type==='partial_refund'?Number(prompt('Refund amount (£)','0')):Number(o.total_pence||0)/100;
+    if(!Number.isFinite(amount)||amount<0)return toast('Invalid amount');
+    await post('/orders/adjust',{adjustment:{orderId:o.id,type,amountPence:Math.round(amount*100),reason,staffId:'test-manager'}});
+    toast(type.replace('_',' ')+' saved in local audit');
+    $('eposSheet')?.remove();
+  });
+}
 async function showStock(){
   const x=await api('/stock?limit=500'),rows=x.stock||[];
   const body='<p>Local test inventory only. Live stock is untouched.</p>'+(rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:9px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.category)+' · '+esc(p.barcode||'')+'</small></div><button data-stock-i="'+i+'">'+Number(p.qty||0)+' '+esc(p.unit||'each')+'</button></div>').join(''):'<p>No local catalogue stock yet.</p>');
@@ -340,6 +374,7 @@ async function completeTestOrder(paymentMethod){
   const order={id,source:state.phoneSession?'telephone':'pos',status:'paid_test',fulfilment:state.phoneSession?.fulfilment||state.mode,customerName:state.customer?.name||state.phoneSession?.customer?.name||'',customerPhone:state.customer?.phone||state.phoneSession?.customer?.phone||'',totalPence:totalPence(),subtotalPence:subtotalPence(),deliveryFeePence:state.deliveryFeePence,discountPence:discountPence(),discount:state.discount,note:state.note,timedFor:state.timedFor,paymentMethod,items:state.cart,createdAt:new Date().toISOString()};
   await post('/local/order',{order});
   await post('/local/queue',{connector:'kds',action:'order.upsert',entityId:id,payload:order});
+  await post('/stock/deduct-order',{order});
   toast('TEST order saved locally · no live KDS write');
   clearSale();await loadOrders();
 }
@@ -410,7 +445,7 @@ function bind(){
   $('ordersBtn').onclick=showOrders;$('backOfficeBtn').onclick=showOperations;
 
   const rail=[...document.querySelectorAll('.rail button')];
-  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')setDeliveryFee();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showSheet('KDS','<p>Test KDS connector is isolated. Orders can be queued locally, but no live KDS write is enabled.</p>');else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='STAFF')showStaff()});
+  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='STAFF')showStaff()});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
@@ -419,6 +454,7 @@ function bind(){
   const action=name=>bottom.find(b=>b.textContent.trim()===name);
   action('HOLD').onclick=holdOrder;action('RECALL').onclick=recallOrder;action('NOTE').onclick=editOrderNote;action('DISCOUNT').onclick=editDiscount;action('TIMED ORDER').onclick=editTimedOrder;action('PAY').onclick=payOrder;
   action('LAST ORDER').onclick=()=>{const p=state.phoneSession?.customer?.previousOrder;if(!p)return toast('No previous order in this test session');showSheet('Last order','<pre>'+esc(JSON.stringify(p,null,2))+'</pre>')};
+  const rv=document.createElement('button');rv.textContent='REFUND/VOID';rv.className='warn';rv.onclick=showOrderAdjustment;document.querySelector('.bottom').insertBefore(rv,document.querySelector('.bottom').lastElementChild);
 }
 bind();bindBarcodeScanner();renderCart();health();loadOrders();pollCalls();setInterval(health,15000);setInterval(pollCalls,3000);
 })();
