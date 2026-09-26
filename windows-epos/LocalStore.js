@@ -184,6 +184,36 @@ function db(){
       payload_json TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS modifier_groups (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      min_select INTEGER NOT NULL DEFAULT 0,
+      max_select INTEGER NOT NULL DEFAULT 1,
+      required INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      active INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS modifier_options (
+      id TEXT PRIMARY KEY,
+      group_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      price_delta_pence INTEGER NOT NULL DEFAULT 0,
+      default_selected INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      active INTEGER NOT NULL DEFAULT 1,
+      payload_json TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(group_id) REFERENCES modifier_groups(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_modifier_options_group ON modifier_options(group_id,sort_order,name);
+    CREATE TABLE IF NOT EXISTS product_modifier_groups (
+      product_id TEXT NOT NULL,
+      group_id TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY(product_id,group_id),
+      FOREIGN KEY(group_id) REFERENCES modifier_groups(id) ON DELETE CASCADE
+    );
     CREATE TABLE IF NOT EXISTS audit_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       staff_id TEXT,
@@ -522,6 +552,43 @@ function recentOrders(limit=50){
   const rows=d.prepare('SELECT id,source,external_id,status,fulfilment,customer_name,customer_phone,total_pence,created_at,updated_at FROM orders ORDER BY created_at DESC LIMIT ?').all(Number(limit));
   d.close();return rows;
 }
+function saveModifierGroup(group){
+  const d=db(),t=now(),id=String(group.id||('modgrp-'+Date.now()));
+  d.prepare(`INSERT INTO modifier_groups(id,name,min_select,max_select,required,sort_order,active,updated_at)
+    VALUES(?,?,?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET name=excluded.name,min_select=excluded.min_select,max_select=excluded.max_select,required=excluded.required,sort_order=excluded.sort_order,active=excluded.active,updated_at=excluded.updated_at`)
+    .run(id,String(group.name||'Modifiers'),Number(group.minSelect||0),Number(group.maxSelect||1),group.required?1:0,Number(group.sortOrder||0),group.active===false?0:1,t);
+  if(Array.isArray(group.options)){
+    for(const o of group.options){
+      const oid=String(o.id||id+':'+String(o.name||Date.now()).toLowerCase().replace(/[^a-z0-9]+/g,'-'));
+      d.prepare(`INSERT INTO modifier_options(id,group_id,name,price_delta_pence,default_selected,sort_order,active,payload_json,updated_at)
+        VALUES(?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(id) DO UPDATE SET group_id=excluded.group_id,name=excluded.name,price_delta_pence=excluded.price_delta_pence,default_selected=excluded.default_selected,sort_order=excluded.sort_order,active=excluded.active,payload_json=excluded.payload_json,updated_at=excluded.updated_at`)
+        .run(oid,id,String(o.name||''),Number(o.priceDeltaPence||0),o.defaultSelected?1:0,Number(o.sortOrder||0),o.active===false?0:1,JSON.stringify(o),t);
+    }
+  }
+  d.close();return id;
+}
+function listModifierGroups(){
+  const d=db();
+  const groups=d.prepare('SELECT * FROM modifier_groups WHERE active=1 ORDER BY sort_order,name').all();
+  const opts=d.prepare('SELECT * FROM modifier_options WHERE active=1 ORDER BY group_id,sort_order,name').all();
+  d.close();
+  return groups.map(g=>({...g,required:!!g.required,options:opts.filter(o=>o.group_id===g.id).map(o=>({...o,defaultSelected:!!o.default_selected,payload:JSON.parse(o.payload_json||'{}')}))}));
+}
+function assignModifierGroups(productId,groupIds=[]){
+  const d=db(),pid=String(productId||'');
+  d.prepare('DELETE FROM product_modifier_groups WHERE product_id=?').run(pid);
+  groupIds.forEach((gid,i)=>d.prepare('INSERT OR REPLACE INTO product_modifier_groups(product_id,group_id,sort_order) VALUES(?,?,?)').run(pid,String(gid),i));
+  d.close();return true;
+}
+function productModifiers(productId){
+  const d=db(),pid=String(productId||'');
+  const groups=d.prepare(`SELECT g.* FROM modifier_groups g JOIN product_modifier_groups pg ON pg.group_id=g.id WHERE pg.product_id=? AND g.active=1 ORDER BY pg.sort_order,g.sort_order,g.name`).all(pid);
+  const opts=d.prepare('SELECT * FROM modifier_options WHERE active=1 ORDER BY group_id,sort_order,name').all();
+  d.close();
+  return groups.map(g=>({...g,required:!!g.required,options:opts.filter(o=>o.group_id===g.id).map(o=>({id:o.id,name:o.name,priceDeltaPence:o.price_delta_pence,defaultSelected:!!o.default_selected,payload:JSON.parse(o.payload_json||'{}')}))}));
+}
 function audit(staffId,action,entityType,entityId,detail){
   const d=db(),t=now();
   d.prepare('INSERT INTO audit_log(staff_id,action,entity_type,entity_id,detail_json,created_at) VALUES(?,?,?,?,?,?)').run(staffId?String(staffId):null,String(action),entityType?String(entityType):null,entityId?String(entityId):null,JSON.stringify(detail||{}),t);
@@ -534,4 +601,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,setStaffPin,verifyStaffPin,hasPinStaff,listStaff,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,customer360,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,setStaffPin,verifyStaffPin,hasPinStaff,listStaff,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,customer360,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,saveModifierGroup,listModifierGroups,assignModifierGroups,productModifiers,audit,stats};
