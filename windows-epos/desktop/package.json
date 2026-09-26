@@ -1,6 +1,6 @@
 {
   "name": "dexters-epos",
-  "version": "0.1.0-test",
+  "version": "0.1.1-test",
   "private": true,
   "description": "Dexters Windows EPOS test desktop application",
   "main": "main.js",
@@ -73,5 +73,6 @@
         ]
       }
     ]
-  }
+  },
+  "author": "Dexters"
 }
