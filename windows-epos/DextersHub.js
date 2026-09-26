@@ -100,6 +100,24 @@ async function handle(req,res){
   if(req.method==='POST'&&url.pathname==='/promotions'){
     const b=await body(req);const id=LocalStore.savePromotion(b.promotion||{});LocalStore.audit(b.staffId||null,'promotion.save','promotion',id,{name:b.promotion?.name||''});return send(res,200,{ok:true,testOnly:true,id});
   }
+  if(req.method==='GET'&&url.pathname==='/kds/orders'){
+    return send(res,200,{ok:true,testOnly:true,orders:LocalStore.kdsOrders(Number(url.searchParams.get('limit')||100))});
+  }
+  if(req.method==='POST'&&url.pathname==='/orders/status'){
+    const b=await body(req);LocalStore.updateOrderStatus(b.orderId,b.status,b.staffId||null);return send(res,200,{ok:true,testOnly:true});
+  }
+  if(req.method==='GET'&&url.pathname==='/delivery/jobs'){
+    return send(res,200,{ok:true,testOnly:true,jobs:LocalStore.deliveryJobs(Number(url.searchParams.get('limit')||100))});
+  }
+  if(req.method==='POST'&&url.pathname==='/delivery/jobs'){
+    const b=await body(req);const id=LocalStore.saveDeliveryJob(b.job||{});return send(res,200,{ok:true,testOnly:true,id});
+  }
+  if(req.method==='POST'&&url.pathname==='/orders/adjust'){
+    const b=await body(req);const id=LocalStore.saveOrderAdjustment(b.adjustment||{});LocalStore.audit(b.staffId||null,'order.adjust','order',String(b.adjustment?.orderId||''),{type:b.adjustment?.type,amountPence:b.adjustment?.amountPence});return send(res,200,{ok:true,testOnly:true,id});
+  }
+  if(req.method==='GET'&&url.pathname==='/orders/adjustments'){
+    return send(res,200,{ok:true,testOnly:true,adjustments:LocalStore.orderAdjustments(url.searchParams.get('orderId')||'')});
+  }
   if(req.method==='GET'&&url.pathname==='/cashups'){
     return send(res,200,{ok:true,testOnly:true,cashups:LocalStore.recentCashups(Number(url.searchParams.get('limit')||50))});
   }
