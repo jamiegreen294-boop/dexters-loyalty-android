@@ -8,8 +8,16 @@ button,input{font:inherit}.app{height:100vh;display:grid;grid-template-rows:64px
 .top{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0a1728;border-bottom:1px solid var(--line)}
 .brand{font-size:21px;font-weight:1000}.test{font-size:11px;background:#3a2f13;color:#ffe99a;border-radius:999px;padding:5px 8px;font-weight:900}
 .mode{display:flex;gap:7px;margin-left:10px}.mode button,.top button,.bottom button{border:0;border-radius:10px;padding:11px 14px;background:#18314f;color:white;font-weight:900;touch-action:manipulation}.mode button.on{background:var(--accent);color:#07111f}.grow{flex:1}.status{font-size:12px;color:var(--muted)}
-.main{min-height:0;display:grid;grid-template-columns:110px minmax(0,1fr) 370px}
-.rail{background:#0b1728;border-right:1px solid var(--line);padding:8px;overflow:auto}.rail button{width:100%;min-height:64px;border:0;border-radius:11px;margin-bottom:7px;background:#152a45;color:white;font-weight:900;font-size:13px}.rail button.on{background:var(--accent);color:#07111f}
+.main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 370px;position:relative}
+.navTab{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:36;width:36px;height:112px;border:1px solid #31506f;border-left:0;border-radius:0 12px 12px 0;background:#18314f;color:#fff;font-weight:1000;writing-mode:vertical-rl;transform-origin:center;letter-spacing:.5px;cursor:pointer}
+.navTab.open{left:268px;background:var(--accent);color:#07111f}
+.rail{position:fixed;left:0;top:64px;bottom:74px;width:268px;z-index:35;background:#0b1728;border-right:1px solid var(--line);padding:10px;overflow-y:auto;transform:translateX(-100%);transition:transform .16s ease;box-shadow:10px 0 28px #0008}
+.rail.open{transform:translateX(0)}
+.railHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;padding:4px 2px 8px;border-bottom:1px solid var(--line)}
+.railHead strong{font-size:15px}.railClose{border:0;border-radius:8px;background:#203d61;color:#fff;padding:8px 12px;font-weight:900}
+.rail button:not(.railClose){width:100%;min-height:52px;border:0;border-radius:10px;margin-bottom:6px;background:#152a45;color:white;font-weight:900;font-size:13px;text-align:left;padding:0 14px}
+.rail button.on:not(.railClose){background:var(--accent);color:#07111f}
+
 .catalog{padding:10px;display:grid;grid-template-rows:auto 1fr;min-width:0}.categories{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-bottom:9px}.categories button{min-height:58px;border:1px solid #31506f;border-radius:11px;background:#172d49;color:#fff;font-weight:900}.categories button.on{background:#f2c94c;color:#07111f}
 .products{overflow:auto;display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));grid-auto-rows:118px;gap:8px}.product{border:1px solid #31506f;border-radius:12px;background:#10233b;color:white;padding:10px;text-align:left;display:flex;flex-direction:column;justify-content:space-between}.product strong{font-size:16px}.price{color:var(--accent);font-size:19px;font-weight:1000}.oos{opacity:.45}
 .cart{background:#0a1728;border-left:1px solid var(--line);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}.caller{padding:10px;border-bottom:1px solid var(--line);background:#0d1d31}.callerHead{display:flex;gap:8px;align-items:center}.callerName{font-size:17px;font-weight:1000}.caller small{color:var(--muted)}.callerActions{display:flex;gap:6px;margin-top:8px}.callerActions button{flex:1;border:0;border-radius:9px;padding:10px;background:#18314f;color:#fff;font-weight:900}.callerActions .chosen{background:var(--accent);color:#07111f}
@@ -19,15 +27,18 @@ button,input{font:inherit}.app{height:100vh;display:grid;grid-template-rows:64px
 .bottom{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;padding:8px 10px;background:#091625;border-top:1px solid var(--line)}.bottom button{min-height:56px}.bottom .pay{background:var(--good);color:#04210d}.bottom .ai{background:#6d4aff}.bottom .warn{background:#8a5a00}
 .overlay{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:50}.hide{display:none!important}.modal{width:min(960px,95vw);max-height:90vh;overflow:auto;background:#10213a;border:1px solid #31506f;border-radius:18px;padding:16px;box-shadow:0 22px 80px #000b}.modal h2{margin-top:0}.choice{display:grid;grid-template-columns:1fr 1fr;gap:12px}.choice button{min-height:100px;border:0;border-radius:15px;font-size:24px;font-weight:1000}.delivery{background:#4d7cff;color:#fff}.collection{background:#ffd43b;color:#07111f}
 .aiPanel{position:fixed;right:0;top:64px;bottom:74px;width:min(430px,96vw);background:#0c1830;border-left:1px solid #405b7a;z-index:40;display:grid;grid-template-rows:auto 1fr auto}.aiHead{padding:14px;border-bottom:1px solid #405b7a;font-weight:1000}.aiBody{padding:12px;overflow:auto}.aiComposer{padding:10px;border-top:1px solid #405b7a;display:grid;grid-template-columns:1fr auto;gap:8px}.aiComposer input{background:#08182a;color:#fff;border:1px solid #405b7a;border-radius:10px;padding:12px}.aiComposer button{border:0;border-radius:10px;background:#6d4aff;color:#fff;font-weight:900;padding:0 16px}
-@media(max-width:1100px){.main{grid-template-columns:92px 1fr 330px}.categories{grid-template-columns:repeat(4,1fr)}.products{grid-template-columns:repeat(3,1fr)}.bottom{grid-template-columns:repeat(4,1fr)}}
+*{scrollbar-width:none}*::-webkit-scrollbar{width:0;height:0;display:none}
+@media(max-width:1100px){.main{grid-template-columns:minmax(0,1fr) 330px}.categories{grid-template-columns:repeat(4,1fr)}.products{grid-template-columns:repeat(3,1fr)}.bottom{grid-template-columns:repeat(4,1fr)}}
 </style></head><body>
 <div class="app">
 <header class="top"><div class="brand">DEXTERS EPOS</div><span class="test">TEST SOFTWARE</span>
 <div class="mode"><button class="on" data-mode="counter">COUNTER</button><button data-mode="phone">PHONE</button><button data-mode="collection">COLLECTION</button><button data-mode="delivery">DELIVERY</button></div>
 <div class="grow"></div><div class="status" id="barcodeStatus">Scanner ready</div><div class="status" id="hubStatus">Windows Hub checking…</div><button id="ordersBtn">ORDERS</button><button id="backOfficeBtn">BACK OFFICE</button></header>
 
+<button class="navTab" id="navTab" aria-label="Open menu" aria-expanded="false">MENU</button>
 <div class="main">
-<aside class="rail">
+<aside class="rail" id="sideRail">
+<div class="railHead"><strong>DEXTERS EPOS</strong><button class="railClose" id="railClose">CLOSE</button></div>
 <button class="on">SELL</button><button>PHONE</button><button>ORDERS</button><button>KDS</button><button>DELIVERY</button><button>CUSTOMERS</button><button>LOYALTY</button><button>PRODUCT CATALOGUE</button><button>STOCK</button><button>PURCHASING</button><button>CASH UP</button><button>REPORTS</button><button>STAFF</button><button>SETUP</button><button>SYSTEM</button><button>EMAIL</button><button>CHATGPT BUILDER</button><button>MARKETPLACE</button><button>DRINKS CATALOGUE</button><button>SNACKS CATALOGUE</button><button>ALCOHOL CATALOGUE</button><button>INTEGRATIONS</button>
 </aside>
 
