@@ -19,6 +19,7 @@ const BackupRestore=require('./BackupRestore');
 const ReleaseManager=require('./ReleaseManager');
 const HealthSupervisor=require('./HealthSupervisor');
 const CrashGuard=require('./CrashGuard');
+const PilotSelfTest=require('./PilotSelfTest');
 const AlcoholCompliance=require('./AlcoholCompliance');
 const Barcode=require('./Barcode');
 
@@ -121,6 +122,15 @@ async function handle(req,res){
   if(req.method==='POST'&&url.pathname==='/purchasing/receive'){
     const b=await body(req);const id=LocalStore.receiveGoods({...b.receipt,staffId:b.staffId||b.receipt?.staffId||null});LocalStore.audit(b.staffId||null,'goods.receive','goods_receipt',id,{purchaseOrderId:b.receipt?.purchaseOrderId||''});return send(res,200,{ok:true,testOnly:true,id});
   }
+  if(req.method==='POST'&&url.pathname==='/staff/bootstrap'){
+    const existing=LocalStore.listStaff();
+    if(existing.length)return send(res,409,{ok:false,error:'Staff already configured'});
+    const b=await body(req),staffId=String(b.staffId||'manager'),name=String(b.displayName||'Manager');
+    LocalStore.setStaffRole(staffId,name,'manager',[]);
+    LocalStore.setStaffPin(staffId,b.pin);
+    LocalStore.audit(staffId,'staff.bootstrap','staff',staffId,{role:'manager'});
+    return send(res,200,{ok:true,testOnly:true,staffId});
+  }
   if(req.method==='POST'&&url.pathname==='/staff/login'){
     const b=await body(req),staff=LocalStore.verifyStaffPin(b.staffId,b.pin);
     if(!staff)return send(res,401,{ok:false,error:'Invalid staff ID or PIN'});
@@ -170,8 +180,8 @@ async function handle(req,res){
     const b=await body(req);const id=LocalStore.saveDeliveryJob(b.job||{});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='POST'&&url.pathname==='/orders/adjust'){
-    const staff=requireStaffPermission(req,res,'refund');if(!staff)return;
-    const b=await body(req);const id=LocalStore.saveOrderAdjustment(b.adjustment||{});LocalStore.audit(b.staffId||null,'order.adjust','order',String(b.adjustment?.orderId||''),{type:b.adjustment?.type,amountPence:b.adjustment?.amountPence});return send(res,200,{ok:true,testOnly:true,id});
+    const b=await body(req);const type=String(b.adjustment?.type||'void');
+    const staff=requireStaffPermission(req,res,type==='void'?'void':type==='partial_refund'?'partial_refund':'refund');if(!staff)return;const id=LocalStore.saveOrderAdjustment(b.adjustment||{});LocalStore.audit(b.staffId||null,'order.adjust','order',String(b.adjustment?.orderId||''),{type:b.adjustment?.type,amountPence:b.adjustment?.amountPence});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='GET'&&url.pathname==='/orders/adjustments'){
     return send(res,200,{ok:true,testOnly:true,adjustments:LocalStore.orderAdjustments(url.searchParams.get('orderId')||'')});
@@ -232,6 +242,16 @@ async function handle(req,res){
   if(req.method==='POST'&&url.pathname==='/permissions/check'){
     const b=await body(req);
     return send(res,200,{ok:true,testOnly:true,allowed:Permissions.allowed(b.staff||{},String(b.permission||'')),permissions:Permissions.permissionsFor(b.staff?.role,b.staff?.permissions||[])});
+  }
+  if(req.method==='GET'&&url.pathname==='/system/self-test'){
+    return send(res,200,{ok:true,testOnly:true,selfTest:PilotSelfTest.run(ROOT,LocalStore,IntegrationGateway)});
+  }
+  if(req.method==='POST'&&url.pathname==='/backup/restore'){
+    const staff=requireStaffPermission(req,res,'integration_admin');if(!staff)return;
+    const b=await body(req),dir=path.join(ROOT,'backups');
+    BackupRestore.restoreDatabase(process.env.DEXTERS_EPOS_DB||LocalStore.DB_PATH,dir,b.file);
+    LocalStore.audit(staff.staff_id,'backup.restore','database',String(b.file||''),{});
+    return send(res,200,{ok:true,testOnly:true,restartRecommended:true});
   }
   if(req.method==='GET'&&url.pathname==='/system/status'){
     const stock=LocalStore.stockSnapshot(1000),orders=LocalStore.recentOrders(1000);
