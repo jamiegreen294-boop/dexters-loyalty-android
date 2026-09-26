@@ -115,6 +115,37 @@ async function showIntegrations(){
   const body=state.connectors.map(c=>`<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>${esc(c.name)}</b><br><small>${esc(c.environment)} · ${esc(c.mode)}</small></div><b style="color:${c.enabled?'#22c55e':'#9fb1c7'}">${c.enabled?'ENABLED':'SAFE / OFF'}</b></div>`).join('');
   showSheet('Integrations',body||'<p>No connectors configured.</p>');
 }
+async function refreshCatalogProducts(){
+  try{
+    const x=await api('/catalog/products?limit=200');
+    const rows=x.products||[];
+    const host=$('products');if(!host)return;
+    host.querySelectorAll('[data-local-catalog="1"]').forEach(n=>n.remove());
+    for(const p of rows){
+      const b=document.createElement('button');
+      b.className='product';b.dataset.localCatalog='1';b.dataset.name=p.name;b.dataset.price=String(p.price_pence||0);b.dataset.barcode=p.barcode||'';
+      b.innerHTML='<strong>'+esc(p.name)+'</strong><span class="price">'+money(p.price_pence)+'</span>';
+      b.onclick=()=>addProduct(b);host.appendChild(b);
+    }
+  }catch{}
+}
+async function showDrinksCatalogue(query=''){
+  const x=await api('/supplier/products?q='+encodeURIComponent(query)+'&limit=100');
+  const rows=x.products||[];
+  const search='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="supplierDrinkSearch" placeholder="Search Coke, Irn-Bru, Sprite..." value="'+esc(query)+'" style="flex:1;padding:12px;border-radius:9px;border:1px solid #31506f;background:#08182a;color:#fff"><button id="supplierDrinkSearchBtn">SEARCH</button></div>';
+  const body=search+(rows.length?rows.map((p,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(p.name)+'</b><br><small>'+esc(p.unit_size||'')+' · '+esc(p.pack_size||'')+' · '+esc(p.brand||'')+'<br>Barcode: '+esc(p.barcode||'Not available')+' · SKU: '+esc(p.supplier_sku||'')+'<br>Source: '+esc(p.payload?.source||p.supplier||'')+'</small></div><button data-add-supplier="'+i+'">ADD TO EPOS</button></div>').join(''):'<p>No matching drinks found.</p>');
+  showSheet('Supplier Drinks Catalogue',body);
+  $('supplierDrinkSearchBtn').onclick=()=>showDrinksCatalogue($('supplierDrinkSearch').value.trim());
+  $('supplierDrinkSearch').onkeydown=e=>{if(e.key==='Enter')$('supplierDrinkSearchBtn').click()};
+  document.querySelectorAll('[data-add-supplier]').forEach(b=>b.onclick=async()=>{
+    const p=rows[Number(b.dataset.addSupplier)];
+    const price=Number(prompt('Selling price for '+p.name+' (£)','1.50'));
+    if(!Number.isFinite(price)||price<0)return toast('Invalid price');
+    await post('/supplier/add-to-catalog',{productId:p.id,pricePence:Math.round(price*100),category:'Drinks'});
+    toast(p.name+' added to EPOS');
+    await refreshCatalogProducts();
+  });
+}
 async function showOperations(){
   const x=await api('/operations'),local=x.local||{};
   const body=`<div class="grid"><div class="card"><h3>Local database</h3><b>${local.orders||0}</b> orders · <b>${local.calls||0}</b> calls · <b>${local.queued||0}</b> queued</div><div class="card"><h3>Dexter AI</h3><b>${x.ai?.enabled?'Enabled':'Safe / disabled'}</b></div></div>`+
@@ -257,7 +288,7 @@ function bind(){
   $('ordersBtn').onclick=showOrders;$('backOfficeBtn').onclick=showOperations;
 
   const rail=[...document.querySelectorAll('.rail button')];
-  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')setDeliveryFee();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showSheet('KDS','<p>Test KDS connector is isolated. Orders can be queued locally, but no live KDS write is enabled.</p>');else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='STOCK')showSheet('Stock','<p>Local stock/86 controls are the next menu-data module. Live menu stock is not being changed.</p>')});
+  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')setDeliveryFee();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showSheet('KDS','<p>Test KDS connector is isolated. Orders can be queued locally, but no live KDS write is enabled.</p>');else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='STOCK')showSheet('Stock','<p>Local stock/86 controls are the next menu-data module. Live menu stock is not being changed.</p>')});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
