@@ -31,6 +31,20 @@ function safeContext(input={}){
       total:input.order.total||null,
       customerName:String(input.order.customerName||'')
     }:null,
+    customer:input.customer?{
+      id:input.customer.id||null,
+      name:String(input.customer.name||''),
+      phone:String(input.customer.phone||''),
+      loyaltyCode:String(input.customer.loyaltyCode||input.customer.loyalty_code||'')
+    }:null,
+    delivery:input.delivery?{
+      postcode:String(input.delivery.postcode||''),
+      zone:String(input.delivery.zone||''),
+      feePence:Number(input.delivery.feePence||0),
+      status:String(input.delivery.status||'')
+    }:null,
+    kds:Array.isArray(input.kds)?input.kds.slice(0,20):[],
+    lowStock:Array.isArray(input.lowStock)?input.lowStock.slice(0,20):[],
     integrationStatus:Array.isArray(input.integrationStatus)?input.integrationStatus:[],
     hardware:input.hardware||null,
     diagnostics:input.diagnostics||null
