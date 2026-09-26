@@ -67,6 +67,9 @@ async function handle(req,res){
     LocalStore.audit(b.staffId||null,'catalog.add_supplier_product','catalog_product',id,{supplierProductId:b.productId,alcohol:payload.alcohol===true});
     return send(res,200,{ok:true,testOnly:true,id});
   }
+  if(req.method==='POST'&&url.pathname==='/stock/deduct-order'){
+    const b=await body(req);LocalStore.deductStockForOrder(b.order||{});LocalStore.audit(b.staffId||null,'stock.sale_deduct','order',String(b.order?.id||''),{items:Array.isArray(b.order?.items)?b.order.items.length:0});return send(res,200,{ok:true,testOnly:true});
+  }
   if(req.method==='GET'&&url.pathname==='/stock'){
     return send(res,200,{ok:true,testOnly:true,stock:LocalStore.stockSnapshot(Number(url.searchParams.get('limit')||500))});
   }
