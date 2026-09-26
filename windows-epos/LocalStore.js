@@ -404,6 +404,23 @@ function saveCashup(c){
 function recentCashups(limit=50){
   const d=db(),rows=d.prepare('SELECT * FROM cashups ORDER BY created_at DESC LIMIT ?').all(Number(limit));d.close();return rows;
 }
+function customer360(customerIdOrPhone){
+  const d=db(),q=String(customerIdOrPhone||'');
+  const c=d.prepare('SELECT * FROM customers WHERE id=? OR phone=? LIMIT 1').get(q,q);
+  if(!c){d.close();return null}
+  const orders=d.prepare('SELECT id,source,status,fulfilment,total_pence,created_at,updated_at FROM orders WHERE customer_phone=? ORDER BY created_at DESC LIMIT 50').all(c.phone||'');
+  const calls=d.prepare('SELECT id,phone,caller_name,caller_type,event_type,received_at FROM calls WHERE phone=? ORDER BY received_at DESC LIMIT 50').all(c.phone||'');
+  d.close();
+  return {
+    customer:{...c,payload:JSON.parse(c.payload_json||'{}')},
+    orders,
+    calls,
+    totals:{
+      orderCount:orders.length,
+      lifetimeSpendPence:orders.reduce((a,o)=>a+Number(o.total_pence||0),0)
+    }
+  };
+}
 function saveCall(call){
   const d=db(),t=now(),id=String(call.id||call.call_id||('call-'+Date.now()));
   const phone=String(call.phone||call.caller_number||call.normalized_phone||'');
@@ -479,4 +496,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,customer360,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
