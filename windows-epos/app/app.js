@@ -3,7 +3,7 @@
 const API='http://127.0.0.1:17654';
 const HOLD_KEY='dexters_epos_test_holds_v1';
 const $=id=>document.getElementById(id);
-const state={mode:'counter',activeCall:null,phoneSession:null,customer:null,cart:[],orders:[],calls:[],connectors:[],lastCallId:null,note:'',discount:{type:'none',value:0,label:''},timedFor:null,deliveryFeePence:0};
+const state={mode:'counter',activeCall:null,phoneSession:null,customer:null,cart:[],orders:[],calls:[],connectors:[],lastCallId:null,note:'',discount:{type:'none',value:0,label:''},timedFor:null,deliveryFeePence:0,scannerBuffer:'',scannerLast:0};
 
 const money=p=>'£'+(Number(p||0)/100).toFixed(2);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -190,8 +190,47 @@ async function completeTestOrder(paymentMethod){
   toast('TEST order saved locally · no live KDS write');
   clearSale();await loadOrders();
 }
-function payOrder(){
+async function checkAlcoholBeforePayment(){
+  const alcohol=state.cart.filter(x=>x.alcohol);
+  if(!alcohol.length)return true;
+  const x=await post('/alcohol/check',{cart:state.cart,settings:{offSalesStart:'10:00',offSalesEnd:'22:00',mupPencePerUnit:65,challengeAge:25}});
+  const gate=x.gate||{};
+  if(!gate.ok){toast(gate.message||'Alcohol sale blocked');return false}
+  if(gate.requiresAgeCheck){
+    const challenged=confirm('Challenge 25: Does the customer appear under 25?');
+    if(challenged){
+      const checked=confirm('Has acceptable proof of age been checked and confirmed customer is 18 or over?');
+      const v=await post('/alcohol/verify-age',{appearsUnderChallengeAge:true,idChecked:checked,confirmedAge:checked?18:0});
+      if(!v.result?.ok){toast(v.result?.message||'Alcohol sale refused');return false}
+    }else{
+      const v=await post('/alcohol/verify-age',{appearsUnderChallengeAge:false});
+      if(!v.result?.ok)return false;
+    }
+  }
+  return true;
+}
+function handleBarcode(code){
+  const all=[...document.querySelectorAll('.product')];
+  const btn=all.find(b=>(b.dataset.barcode||'')===code);
+  if(btn){addProduct(btn);toast('Barcode added: '+(btn.dataset.name||code));return}
+  showSheet('Unknown barcode','<p><b>'+esc(code)+'</b> is not assigned to a product in this test catalogue.</p><p>Use product setup to assign this barcode before live use.</p>');
+}
+function bindBarcodeScanner(){
+  document.addEventListener('keydown',e=>{
+    const now=Date.now();
+    if(now-state.scannerLast>80)state.scannerBuffer='';
+    state.scannerLast=now;
+    if(e.key==='Enter'){
+      const code=state.scannerBuffer;state.scannerBuffer='';
+      if(/^\d{6,18}$/.test(code)){e.preventDefault();handleBarcode(code);if($('barcodeStatus'))$('barcodeStatus').textContent='Scanned '+code}
+      return;
+    }
+    if(e.key.length===1&&/\d/.test(e.key)&&!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))state.scannerBuffer+=e.key;
+  });
+}
+async async function payOrder(){
   if(!state.cart.length)return toast('Add items first');
+  if(!(await checkAlcoholBeforePayment()))return;
   const body=`<p>Total <b style="font-size:30px;color:#ffd43b">${money(totalPence())}</b></p><p>This is the isolated test EPOS. No real payment will be charged.</p><div class="choice"><button class="collection" id="testCash">CASH TEST</button><button class="delivery" id="testCard">CARD TEST</button></div>`;
   showSheet('Test payment',body);
   $('testCash').onclick=()=>{ $('eposSheet')?.remove();completeTestOrder('cash_test').catch(e=>toast(e.message)) };
@@ -228,5 +267,5 @@ function bind(){
   action('HOLD').onclick=holdOrder;action('RECALL').onclick=recallOrder;action('NOTE').onclick=editOrderNote;action('DISCOUNT').onclick=editDiscount;action('TIMED ORDER').onclick=editTimedOrder;action('PAY').onclick=payOrder;
   action('LAST ORDER').onclick=()=>{const p=state.phoneSession?.customer?.previousOrder;if(!p)return toast('No previous order in this test session');showSheet('Last order','<pre>'+esc(JSON.stringify(p,null,2))+'</pre>')};
 }
-bind();renderCart();health();loadOrders();pollCalls();setInterval(health,15000);setInterval(pollCalls,3000);
+bind();bindBarcodeScanner();renderCart();health();loadOrders();pollCalls();setInterval(health,15000);setInterval(pollCalls,3000);
 })();
