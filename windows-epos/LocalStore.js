@@ -150,6 +150,28 @@ function db(){
       ends_at TEXT,
       updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS delivery_jobs (
+      id TEXT PRIMARY KEY,
+      order_id TEXT NOT NULL,
+      driver TEXT,
+      status TEXT NOT NULL DEFAULT 'waiting',
+      address_json TEXT NOT NULL,
+      notes TEXT,
+      assigned_at TEXT,
+      completed_at TEXT,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_delivery_jobs_status ON delivery_jobs(status,updated_at);
+    CREATE TABLE IF NOT EXISTS order_adjustments (
+      id TEXT PRIMARY KEY,
+      order_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      amount_pence INTEGER NOT NULL DEFAULT 0,
+      reason TEXT,
+      staff_id TEXT,
+      payload_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS cashups (
       id TEXT PRIMARY KEY,
       staff_id TEXT,
@@ -316,6 +338,48 @@ function activePromotions(){
   const rows=d.prepare(`SELECT * FROM promotions WHERE active=1 AND (starts_at IS NULL OR starts_at<=?) AND (ends_at IS NULL OR ends_at>=?) ORDER BY name`).all(t,t);
   d.close();return rows.map(r=>({...r,scope:JSON.parse(r.scope_json||'{}')}));
 }
+function updateOrderStatus(orderId,status,staffId=null){
+  const d=db(),t=now();
+  const r=d.prepare('SELECT payload_json FROM orders WHERE id=?').get(String(orderId));
+  if(!r){d.close();throw new Error('Order not found')}
+  const payload=JSON.parse(r.payload_json||'{}');payload.status=String(status);payload.updatedAt=t;
+  d.prepare('UPDATE orders SET status=?,payload_json=?,updated_at=? WHERE id=?').run(String(status),JSON.stringify(payload),t,String(orderId));
+  d.prepare('INSERT INTO audit_log(staff_id,action,entity_type,entity_id,detail_json,created_at) VALUES(?,?,?,?,?,?)')
+    .run(staffId?String(staffId):null,'order.status','order',String(orderId),JSON.stringify({status}),t);
+  d.close();return true;
+}
+function kdsOrders(limit=100){
+  const d=db();
+  const rows=d.prepare(`SELECT id,source,status,fulfilment,customer_name,total_pence,payload_json,created_at,updated_at FROM orders
+    WHERE status NOT IN ('completed','collected','cancelled','refunded','voided')
+    ORDER BY created_at ASC LIMIT ?`).all(Number(limit));
+  d.close();return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
+}
+function saveDeliveryJob(job){
+  const d=db(),t=now(),id=String(job.id||('delivery-'+Date.now()));
+  d.prepare(`INSERT INTO delivery_jobs(id,order_id,driver,status,address_json,notes,assigned_at,completed_at,updated_at)
+    VALUES(?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET order_id=excluded.order_id,driver=excluded.driver,status=excluded.status,address_json=excluded.address_json,notes=excluded.notes,assigned_at=excluded.assigned_at,completed_at=excluded.completed_at,updated_at=excluded.updated_at`)
+    .run(id,String(job.orderId||''),job.driver?String(job.driver):null,String(job.status||'waiting'),JSON.stringify(job.address||{}),String(job.notes||''),job.assignedAt||null,job.completedAt||null,t);
+  d.close();return id;
+}
+function deliveryJobs(limit=100){
+  const d=db(),rows=d.prepare('SELECT * FROM delivery_jobs ORDER BY updated_at DESC LIMIT ?').all(Number(limit));d.close();
+  return rows.map(r=>({...r,address:JSON.parse(r.address_json||'{}')}));
+}
+function saveOrderAdjustment(adj){
+  const d=db(),t=now(),id=String(adj.id||('adjust-'+Date.now())),type=String(adj.type||'void');
+  if(!['void','refund','partial_refund'].includes(type)){d.close();throw new Error('Invalid adjustment type')}
+  d.prepare('INSERT INTO order_adjustments(id,order_id,type,amount_pence,reason,staff_id,payload_json,created_at) VALUES(?,?,?,?,?,?,?,?)')
+    .run(id,String(adj.orderId||''),type,Number(adj.amountPence||0),String(adj.reason||''),adj.staffId?String(adj.staffId):null,JSON.stringify(adj),t);
+  if(type==='void')d.prepare("UPDATE orders SET status='voided',updated_at=? WHERE id=?").run(t,String(adj.orderId||''));
+  if(type==='refund')d.prepare("UPDATE orders SET status='refunded',updated_at=? WHERE id=?").run(t,String(adj.orderId||''));
+  d.close();return id;
+}
+function orderAdjustments(orderId){
+  const d=db(),rows=d.prepare('SELECT * FROM order_adjustments WHERE order_id=? ORDER BY created_at DESC').all(String(orderId||''));d.close();
+  return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
+}
 function saveCashup(c){
   const d=db(),t=now(),id=String(c.id||('cashup-'+Date.now()));
   const expected=Number(c.expectedCashPence||0),counted=Number(c.countedCashPence||0);
@@ -401,4 +465,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,staffRole,savePromotion,activePromotions,saveCashup,recentCashups,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,staffRole,savePromotion,activePromotions,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
