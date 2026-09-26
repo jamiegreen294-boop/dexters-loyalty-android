@@ -19,7 +19,15 @@ const QUEUE_PATH=path.join(ROOT,'offline-queue.jsonl');
 const DASHBOARD=path.join(ROOT,'dashboard','index.html');
 const EPOS_APP=path.join(ROOT,'app','index.html');
 const EPOS_APP_JS=path.join(ROOT,'app','app.js');
+const PRELOADED_DRINKS=path.join(ROOT,'preloaded-drinks.json');
 function log(msg){fs.appendFileSync(LOG_PATH,new Date().toISOString()+' '+msg+'\n');}
+function seedPreloadedDrinks(){
+  try{
+    if(!fs.existsSync(PRELOADED_DRINKS))return 0;
+    const rows=JSON.parse(fs.readFileSync(PRELOADED_DRINKS,'utf8'));
+    return LocalStore.importSupplierProducts(Array.isArray(rows)?rows:[]).length;
+  }catch(e){log('PRELOAD ERROR '+e.message);return 0}
+}
 function loadConfig(){return JSON.parse(fs.readFileSync(CONFIG_PATH,'utf8'));}
 function send(res,status,body,type='application/json; charset=utf-8'){res.writeHead(status,{'content-type':type,'access-control-allow-origin':'*','access-control-allow-headers':'content-type,x-dexters-key','access-control-allow-methods':'GET,POST,OPTIONS','cache-control':'no-store'});res.end(type.startsWith('application/json')?JSON.stringify(body):String(body));}
 function body(req){return new Promise((resolve,reject)=>{let s='';req.on('data',c=>{s+=c;if(s.length>1024*1024)reject(new Error('Request too large'));});req.on('end',()=>{try{resolve(s?JSON.parse(s):{});}catch(e){reject(e);}});req.on('error',reject);});}
@@ -136,7 +144,7 @@ async function handle(req,res){
   }
   return send(res,404,{ok:false,error:'Not found'});
 }
-const cfg=loadConfig();const port=Number(cfg.listenPort||17654);
+const seededDrinks=seedPreloadedDrinks();log('Preloaded drinks '+seededDrinks);const cfg=loadConfig();const port=Number(cfg.listenPort||17654);
 const server=http.createServer((req,res)=>Promise.resolve(handle(req,res)).catch(e=>{log('ERROR '+(e.stack||e.message));send(res,500,{ok:false,error:e.message});}));
 server.listen(port,'127.0.0.1',()=>log('DextersHub Node started on 127.0.0.1:'+port));
 process.on('uncaughtException',e=>log('UNCAUGHT '+(e.stack||e.message)));
