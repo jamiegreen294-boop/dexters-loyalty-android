@@ -16,6 +16,7 @@ const LOG_PATH=path.join(ROOT,'hub-node.log');
 const QUEUE_PATH=path.join(ROOT,'offline-queue.jsonl');
 const DASHBOARD=path.join(ROOT,'dashboard','index.html');
 const EPOS_APP=path.join(ROOT,'app','index.html');
+const EPOS_APP_JS=path.join(ROOT,'app','app.js');
 function log(msg){fs.appendFileSync(LOG_PATH,new Date().toISOString()+' '+msg+'\n');}
 function loadConfig(){return JSON.parse(fs.readFileSync(CONFIG_PATH,'utf8'));}
 function send(res,status,body,type='application/json; charset=utf-8'){res.writeHead(status,{'content-type':type,'access-control-allow-origin':'*','access-control-allow-headers':'content-type,x-dexters-key','access-control-allow-methods':'GET,POST,OPTIONS','cache-control':'no-store'});res.end(type.startsWith('application/json')?JSON.stringify(body):String(body));}
@@ -29,6 +30,7 @@ async function handle(req,res){
   const cfg=loadConfig();
   if(req.method==='OPTIONS')return send(res,200,{ok:true});
   const url=new URL(req.url,'http://127.0.0.1');
+  if(req.method==='GET'&&url.pathname==='/epos/app.js'){if(!fs.existsSync(EPOS_APP_JS))return send(res,404,'EPOS app controller not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP_JS,'utf8'),'application/javascript; charset=utf-8');}
   if(req.method==='GET'&&url.pathname==='/epos'){if(!fs.existsSync(EPOS_APP))return send(res,404,'EPOS app not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(EPOS_APP,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/dashboard')){if(!fs.existsSync(DASHBOARD))return send(res,404,'Dashboard not installed','text/plain; charset=utf-8');return send(res,200,fs.readFileSync(DASHBOARD,'utf8'),'text/html; charset=utf-8');}
   if(req.method==='POST'&&url.pathname==='/sync/run'){
