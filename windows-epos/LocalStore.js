@@ -7,6 +7,10 @@ const {DatabaseSync}=require('node:sqlite');
 const ROOT=__dirname;
 const DB_PATH=process.env.DEXTERS_EPOS_DB||path.join(ROOT,'dexters-epos-test.sqlite');
 
+function ensureColumn(d,table,column,definition){
+  const cols=d.prepare('PRAGMA table_info('+table+')').all().map(x=>x.name);
+  if(!cols.includes(column))d.exec('ALTER TABLE '+table+' ADD COLUMN '+column+' '+definition);
+}
 function db(){
   const d=new DatabaseSync(DB_PATH);
   d.exec(`
@@ -73,6 +77,9 @@ function db(){
       created_at TEXT NOT NULL
     );
   `);
+  ensureColumn(d,'sync_queue','error_kind','TEXT');
+  ensureColumn(d,'sync_queue','result_json','TEXT');
+  ensureColumn(d,'sync_queue','retry_at','TEXT');
   return d;
 }
 function now(){return new Date().toISOString()}
@@ -83,6 +90,34 @@ function saveOrder(order){
     ON CONFLICT(id) DO UPDATE SET source=excluded.source,external_id=excluded.external_id,status=excluded.status,fulfilment=excluded.fulfilment,customer_name=excluded.customer_name,customer_phone=excluded.customer_phone,total_pence=excluded.total_pence,payload_json=excluded.payload_json,updated_at=excluded.updated_at`)
     .run(id,String(order.source||'pos'),String(order.externalId||''),String(order.status||'draft'),String(order.fulfilment||''),String(order.customer?.name||order.customerName||''),String(order.customer?.phone||order.customerPhone||''),Number(order.total_pence||order.totalPence||0),JSON.stringify(order),String(order.createdAt||t),t);
   d.close();return id;
+}
+function saveCall(call){
+  const d=db(),t=now(),id=String(call.id||call.call_id||('call-'+Date.now()));
+  const phone=String(call.phone||call.caller_number||call.normalized_phone||'');
+  const name=String(call.caller_name||call.customer_name||call.customer?.name||'');
+  const type=String(call.caller_type||'unknown'),event=String(call.event_type||'incoming');
+  d.prepare(`INSERT INTO calls(id,phone,caller_name,caller_type,event_type,payload_json,received_at)
+    VALUES(?,?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET phone=excluded.phone,caller_name=excluded.caller_name,caller_type=excluded.caller_type,event_type=excluded.event_type,payload_json=excluded.payload_json,received_at=excluded.received_at`)
+    .run(id,phone,name,type,event,JSON.stringify(call),String(call.received_at||t));
+  d.close();return id;
+}
+function recentCalls(limit=100){
+  const d=db();const rows=d.prepare('SELECT id,phone,caller_name,caller_type,event_type,payload_json,received_at FROM calls ORDER BY received_at DESC LIMIT ?').all(Number(limit));
+  d.close();return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
+}
+function saveCustomer(customer){
+  const d=db(),t=now(),id=String(customer.id||('customer-'+Date.now()));
+  d.prepare(`INSERT INTO customers(id,name,phone,loyalty_code,payload_json,updated_at)
+    VALUES(?,?,?,?,?,?)
+    ON CONFLICT(id) DO UPDATE SET name=excluded.name,phone=excluded.phone,loyalty_code=excluded.loyalty_code,payload_json=excluded.payload_json,updated_at=excluded.updated_at`)
+    .run(id,String(customer.name||customer.full_name||''),String(customer.phone||''),String(customer.loyalty_code||''),JSON.stringify(customer),t);
+  d.close();return id;
+}
+function searchCustomers(query='',limit=50){
+  const d=db(),q='%'+String(query||'').trim()+'%';
+  const rows=d.prepare('SELECT id,name,phone,loyalty_code,payload_json,updated_at FROM customers WHERE name LIKE ? OR phone LIKE ? OR loyalty_code LIKE ? ORDER BY name LIMIT ?').all(q,q,q,Number(limit));
+  d.close();return rows.map(r=>({...r,payload:JSON.parse(r.payload_json||'{}')}));
 }
 function queue(connector,action,entityId,payload){
   const d=db(),t=now();
@@ -131,4 +166,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
