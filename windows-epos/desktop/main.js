@@ -3,11 +3,22 @@
 const {app,BrowserWindow,dialog}=require('electron');
 const {autoUpdater}=require('electron-updater');
 const path=require('path');
+const fs=require('fs');
 const cp=require('child_process');
 const http=require('http');
 
 const TEST_URL='http://127.0.0.1:17654/epos';
 const HUB_DIR=app.isPackaged?path.join(process.resourcesPath,'hub'):path.resolve(__dirname,'..');
+function runtimePaths(){
+  const dir=path.join(app.getPath('userData'),'runtime');
+  fs.mkdirSync(dir,{recursive:true});
+  const config=path.join(dir,'config.json');
+  const integrations=path.join(dir,'integrations.json');
+  const db=path.join(dir,'dexters-epos.sqlite');
+  if(!fs.existsSync(config))fs.copyFileSync(path.join(HUB_DIR,'config.example.json'),config);
+  if(!fs.existsSync(integrations))fs.copyFileSync(path.join(HUB_DIR,'integrations.example.json'),integrations);
+  return {dir,config,integrations,db};
+}
 let hubProcess=null;
 let win=null;
 
@@ -26,11 +37,16 @@ function health(){
 async function ensureHub(){
   if(await health())return true;
   const hub=path.join(HUB_DIR,'DextersHub.js');
-  const cfg=path.join(HUB_DIR,'config.json');
-  const example=path.join(HUB_DIR,'config.example.json');
+  const runtime=runtimePaths();
   hubProcess=cp.spawn(process.execPath,[hub],{
     cwd:HUB_DIR,
-    env:{...process.env,ELECTRON_RUN_AS_NODE:'1'},
+    env:{
+      ...process.env,
+      ELECTRON_RUN_AS_NODE:'1',
+      DEXTERS_EPOS_CONFIG:runtime.config,
+      DEXTERS_INTEGRATIONS_CONFIG:runtime.integrations,
+      DEXTERS_EPOS_DB:runtime.db
+    },
     windowsHide:true,
     stdio:'ignore',
     detached:false
