@@ -59,7 +59,8 @@
           "preloaded-snacks.json",
           "preloaded-alcohol.json",
           "app/**",
-          "dashboard/**"
+          "dashboard/**",
+          "config.example.json"
         ]
       }
     ]
