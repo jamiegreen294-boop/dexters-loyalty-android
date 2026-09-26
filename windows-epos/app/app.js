@@ -227,7 +227,7 @@ async function showKDS(){
 async function showDeliveryJobs(){
   const x=await api('/delivery/jobs?limit=100'),rows=x.jobs||[];
   const body='<button id="newDeliveryJobBtn">NEW TEST DELIVERY JOB</button><div style="margin-top:12px">'+(rows.length?rows.map((j,i)=>'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #294663"><div><b>'+esc(j.order_id)+'</b> · '+esc(j.status)+'<br><small>Driver: '+esc(j.driver||'Unassigned')+' · '+esc(j.notes||'')+'</small></div><div><button data-driver-i="'+i+'">ASSIGN DRIVER</button><button data-delivery-done="'+i+'">COMPLETE</button></div></div>').join(''):'<p>No delivery jobs yet.</p>')+'</div>';
-  showSheet('Delivery & Drivers',body);
+  showSheet('Delivery & Drivers',body);const d=document.createElement('button');d.id='deliveryLookupBtn';d.textContent='POSTCODE / ADDRESS LOOKUP';d.style.marginTop='10px';$('eposSheetBody').prepend(d);d.onclick=showDeliveryLookup;
   $('newDeliveryJobBtn').onclick=async()=>{const orderId=prompt('Order ID','');if(!orderId)return;const notes=prompt('Delivery notes','')||'';await post('/delivery/jobs',{job:{orderId,status:'waiting',notes,address:{}}});toast('Delivery job created');showDeliveryJobs()};
   document.querySelectorAll('[data-driver-i]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.driverI),driver=prompt('Driver name',rows[i].driver||'');if(!driver)return;await post('/delivery/jobs',{job:{...rows[i],orderId:rows[i].order_id,driver,status:'assigned',assignedAt:new Date().toISOString(),address:rows[i].address||{}}});toast('Driver assigned');showDeliveryJobs()});
   document.querySelectorAll('[data-delivery-done]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.deliveryDone);await post('/delivery/jobs',{job:{...rows[i],orderId:rows[i].order_id,status:'completed',completedAt:new Date().toISOString(),address:rows[i].address||{}}});toast('Delivery completed');showDeliveryJobs()});
@@ -247,6 +247,33 @@ async function showOrderAdjustment(){
     toast(type.replace('_',' ')+' saved in local audit');
     $('eposSheet')?.remove();
   });
+}
+async function showCustomer360(){
+  const key=state.customer?.id||state.customer?.phone||state.phoneSession?.customer?.id||state.phoneSession?.customer?.phone||String($('customerSearch')?.value||'').trim();
+  if(!key)return toast('Attach or search a customer first');
+  const x=await api('/customer/360?q='+encodeURIComponent(key));
+  const p=x.profile;if(!p)return toast('No local customer profile found');
+  const c=p.customer||{};
+  const body='<div class="card"><h3>'+esc(c.name||'Customer')+'</h3><p>'+esc(c.phone||'')+(c.loyalty_code?' · Loyalty '+esc(c.loyalty_code):'')+'</p><p><b>'+p.totals.orderCount+'</b> orders · <b>'+money(p.totals.lifetimeSpendPence)+'</b> local test spend</p></div>'+
+    '<h3>Recent orders</h3>'+(p.orders.length?p.orders.map(o=>'<div style="padding:8px;border-bottom:1px solid #294663"><b>'+esc(o.id)+'</b> · '+esc(o.status)+' · '+money(o.total_pence)+'</div>').join(''):'<p>No local orders.</p>')+
+    '<h3>Recent calls</h3>'+(p.calls.length?p.calls.map(c=>'<div style="padding:8px;border-bottom:1px solid #294663">'+esc(c.received_at)+' · '+esc(c.event_type)+'</div>').join(''):'<p>No local calls.</p>');
+  showSheet('Customer 360',body);
+}
+async function showDeliveryLookup(){
+  const postcode=prompt('Delivery postcode','');if(!postcode)return;
+  const x=await post('/delivery/lookup',{postcode});
+  const a=x.address||{},q=x.quote||{};
+  const body='<p><b>'+esc(a.postcode||postcode)+'</b> · '+(a.validFormat?'Valid postcode format':'Check postcode format')+'</p>'+
+    '<p>Zone: <b>'+esc(q.zone||'Not matched')+'</b><br>Delivery fee: <b>'+money(q.feePence||0)+'</b><br>Minimum order: <b>'+money(q.minimumOrderPence||0)+'</b><br>Estimated delivery: <b>'+Number(q.estimatedMinutes||0)+' min</b></p>'+
+    '<p>Google Maps connector: <b>'+esc(x.maps?.enabled?'enabled':'safe/off')+'</b></p>';
+  showSheet('Delivery Lookup',body);
+  if(q.matched){state.deliveryFeePence=Number(q.feePence||0);renderTotals()}
+}
+async function showMarketplaceSandbox(){
+  const body='<p>Marketplace adapters are sandbox/test-only.</p><button id="jeDry">JUST EAT DRY RUN</button><button id="drDry" style="margin-left:8px">DELIVEROO DRY RUN</button>';
+  showSheet('Marketplace Sandbox',body);
+  $('jeDry').onclick=async()=>{try{const x=await post('/marketplace/dry-run',{source:'just_eat',action:'status.update',payload:{status:'ready'}});toast(x.result.message)}catch(e){toast(e.message)}};
+  $('drDry').onclick=async()=>{try{const x=await post('/marketplace/dry-run',{source:'deliveroo',action:'status.update',payload:{status:'ready'}});toast(x.result.message)}catch(e){toast(e.message)}};
 }
 async function showStock(){
   const x=await api('/stock?limit=500'),rows=x.stock||[];
@@ -445,7 +472,7 @@ function bind(){
   $('ordersBtn').onclick=showOrders;$('backOfficeBtn').onclick=showOperations;
 
   const rail=[...document.querySelectorAll('.rail button')];
-  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS')showIntegrations();else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')searchCustomer();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='STAFF')showStaff()});
+  rail.forEach(b=>b.onclick=()=>{rail.forEach(x=>x.classList.toggle('on',x===b));const t=b.textContent.trim();if(t==='ORDERS')showOrders();else if(t==='INTEGRATIONS'){showIntegrations();setTimeout(()=>{},0);}else if(t==='PHONE')setMode('phone');else if(t==='DELIVERY')showDeliveryJobs();else if(t==='CUSTOMERS')showCustomer360();else if(t==='KDS')showKDS();else if(t==='LOYALTY')showSheet('Loyalty','<p>Test Loyalty connector remains isolated from live customer data.</p>');else if(t==='EMAIL')showSheet('Email','<p>Gmail connector will use OAuth and remains disabled until test credentials are configured.</p>');else if(t==='PRODUCT CATALOGUE')showProductCatalogue();else if(t==='DRINKS CATALOGUE')showDrinksCatalogue();else if(t==='SNACKS CATALOGUE')showSnacksCatalogue();else if(t==='ALCOHOL CATALOGUE')showAlcoholCatalogue();else if(t==='STOCK')showStock();else if(t==='PURCHASING')showPurchasing();else if(t==='CASH UP')showCashup();else if(t==='STAFF')showStaff()});
 
   $('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
   const aiInput=$('aiPanel')?.querySelector('.aiComposer input'),aiSend=$('aiPanel')?.querySelector('.aiComposer button');if(aiSend)aiSend.onclick=()=>{const v=aiInput.value.trim();aiInput.value='';askDexter(v)};if(aiInput)aiInput.onkeydown=e=>{if(e.key==='Enter')aiSend.click()};
