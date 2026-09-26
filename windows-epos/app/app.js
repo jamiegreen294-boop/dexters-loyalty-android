@@ -518,5 +518,16 @@ function bind(){
   action('LAST ORDER').onclick=()=>{const p=state.phoneSession?.customer?.previousOrder;if(!p)return toast('No previous order in this test session');showSheet('Last order','<pre>'+esc(JSON.stringify(p,null,2))+'</pre>')};
   const rv=document.createElement('button');rv.textContent='REFUND/VOID';rv.className='warn';rv.onclick=showOrderAdjustment;document.querySelector('.bottom').insertBefore(rv,document.querySelector('.bottom').lastElementChild);
 }
-bind();bindBarcodeScanner();renderCart();health();loadOrders();pollCalls();setInterval(health,15000);setInterval(pollCalls,3000);
+function openPreviewFromQuery(){
+  const p=new URLSearchParams(location.search).get('preview');
+  if(!p)return;
+  setTimeout(()=>{
+    if(p==='catalogue')showProductCatalogue();
+    else if(p==='kds')showKDS();
+    else if(p==='builder')showChatGPTBuilder();
+    else if(p==='delivery')showDeliveryJobs();
+    else if(p==='stock')showStock();
+  },700);
+}
+bind();bindBarcodeScanner();renderCart();health();loadOrders();pollCalls();refreshCatalogProducts();openPreviewFromQuery();setInterval(health,15000);setInterval(pollCalls,3000);
 })();
