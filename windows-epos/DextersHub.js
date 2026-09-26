@@ -37,6 +37,21 @@ async function handle(req,res){
   if(req.method==='GET'&&url.pathname==='/operations'){
     return send(res,200,{ok:true,...OperationsCentre.overview(LocalStore.stats())});
   }
+  if(req.method==='GET'&&url.pathname==='/local/calls'){
+    return send(res,200,{ok:true,calls:LocalStore.recentCalls(Number(url.searchParams.get('limit')||100))});
+  }
+  if(req.method==='POST'&&url.pathname==='/local/call'){
+    const b=await body(req);const id=LocalStore.saveCall(b.call||{});LocalStore.audit(b.staffId||null,'call.save','call',id,{source:'test-epos'});return send(res,200,{ok:true,id});
+  }
+  if(req.method==='GET'&&url.pathname==='/local/customers'){
+    return send(res,200,{ok:true,customers:LocalStore.searchCustomers(url.searchParams.get('q')||'',Number(url.searchParams.get('limit')||50))});
+  }
+  if(req.method==='POST'&&url.pathname==='/local/customer'){
+    const b=await body(req);const id=LocalStore.saveCustomer(b.customer||{});LocalStore.audit(b.staffId||null,'customer.save','customer',id,{source:'test-epos'});return send(res,200,{ok:true,id});
+  }
+  if(req.method==='POST'&&url.pathname==='/test/incoming-call'){
+    const b=await body(req);const call={id:'test-call-'+Date.now(),call_id:'test-call-'+Date.now(),caller_number:String(b.number||''),customer_name:String(b.name||''),caller_type:String(b.callerType||'unknown'),event_type:'incoming',received_at:new Date().toISOString(),customer:b.customer||{name:String(b.name||''),phone:String(b.number||'')}};const id=LocalStore.saveCall(call);return send(res,200,{ok:true,testOnly:true,id,call});
+  }
   if(req.method==='GET'&&url.pathname==='/local/orders'){
     return send(res,200,{ok:true,orders:LocalStore.recentOrders(Number(url.searchParams.get('limit')||50))});
   }
