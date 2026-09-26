@@ -60,7 +60,16 @@
           "preloaded-alcohol.json",
           "app/**",
           "dashboard/**",
-          "config.example.json"
+          "config.example.json",
+          "Permissions.js",
+          "Reports.js",
+          "SupportDiagnostics.js",
+          "BackupRestore.js",
+          "ReleaseManager.js",
+          "HealthSupervisor.js",
+          "CrashGuard.js",
+          "OpenAIBuilder.js",
+          "customer-display/**"
         ]
       }
     ]
