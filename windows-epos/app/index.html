@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dexters EPOS · Test Software</title>
+<style>
+:root{--bg:#07111f;--nav:#0c1a2d;--panel:#10223a;--panel2:#132943;--line:#294663;--accent:#ffd43b;--good:#22c55e;--bad:#ef4444;--text:#f8fafc;--muted:#9fb1c7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,system-ui,sans-serif;overflow:hidden}
+button,input{font:inherit}.app{height:100vh;display:grid;grid-template-rows:64px 1fr 74px}
+.top{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0a1728;border-bottom:1px solid var(--line)}
+.brand{font-size:21px;font-weight:1000}.test{font-size:11px;background:#3a2f13;color:#ffe99a;border-radius:999px;padding:5px 8px;font-weight:900}
+.mode{display:flex;gap:7px;margin-left:10px}.mode button,.top button,.bottom button{border:0;border-radius:10px;padding:11px 14px;background:#18314f;color:white;font-weight:900;touch-action:manipulation}.mode button.on{background:var(--accent);color:#07111f}.grow{flex:1}.status{font-size:12px;color:var(--muted)}
+.main{min-height:0;display:grid;grid-template-columns:110px minmax(0,1fr) 370px}
+.rail{background:#0b1728;border-right:1px solid var(--line);padding:8px;overflow:auto}.rail button{width:100%;min-height:64px;border:0;border-radius:11px;margin-bottom:7px;background:#152a45;color:white;font-weight:900;font-size:13px}.rail button.on{background:var(--accent);color:#07111f}
+.catalog{padding:10px;display:grid;grid-template-rows:auto 1fr;min-width:0}.categories{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-bottom:9px}.categories button{min-height:58px;border:1px solid #31506f;border-radius:11px;background:#172d49;color:#fff;font-weight:900}.categories button.on{background:#f2c94c;color:#07111f}
+.products{overflow:auto;display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));grid-auto-rows:118px;gap:8px}.product{border:1px solid #31506f;border-radius:12px;background:#10233b;color:white;padding:10px;text-align:left;display:flex;flex-direction:column;justify-content:space-between}.product strong{font-size:16px}.price{color:var(--accent);font-size:19px;font-weight:1000}.oos{opacity:.45}
+.cart{background:#0a1728;border-left:1px solid var(--line);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}.caller{padding:10px;border-bottom:1px solid var(--line);background:#0d1d31}.callerHead{display:flex;gap:8px;align-items:center}.callerName{font-size:17px;font-weight:1000}.caller small{color:var(--muted)}.callerActions{display:flex;gap:6px;margin-top:8px}.callerActions button{flex:1;border:0;border-radius:9px;padding:10px;background:#18314f;color:#fff;font-weight:900}.callerActions .chosen{background:var(--accent);color:#07111f}
+.customer{padding:10px;border-bottom:1px solid var(--line)}.customer input{width:100%;border:1px solid #31506f;border-radius:9px;background:#08182a;color:#fff;padding:10px}.customerMeta{font-size:12px;color:var(--muted);margin-top:6px}
+.lines{overflow:auto;padding:8px}.line{background:#10233b;border:1px solid #294663;border-radius:11px;padding:9px;margin-bottom:7px}.lrow{display:flex;gap:8px}.lname{font-weight:900;flex:1}.mods{font-size:12px;color:#bdcada;margin-top:4px}.qty{display:flex;align-items:center;gap:6px;margin-top:8px}.qty button{border:0;border-radius:8px;background:#203d61;color:white;padding:5px 10px;font-weight:900}.qty .remove{margin-left:auto;background:#5a1420}
+.totals{padding:10px;border-top:1px solid var(--line);background:#0b192b}.sum{display:flex;justify-content:space-between;margin:5px 0}.grand{font-size:27px;font-weight:1000;color:var(--accent)}
+.bottom{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;padding:8px 10px;background:#091625;border-top:1px solid var(--line)}.bottom button{min-height:56px}.bottom .pay{background:var(--good);color:#04210d}.bottom .ai{background:#6d4aff}.bottom .warn{background:#8a5a00}
+.overlay{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:50}.hide{display:none!important}.modal{width:min(960px,95vw);max-height:90vh;overflow:auto;background:#10213a;border:1px solid #31506f;border-radius:18px;padding:16px;box-shadow:0 22px 80px #000b}.modal h2{margin-top:0}.choice{display:grid;grid-template-columns:1fr 1fr;gap:12px}.choice button{min-height:100px;border:0;border-radius:15px;font-size:24px;font-weight:1000}.delivery{background:#4d7cff;color:#fff}.collection{background:#ffd43b;color:#07111f}
+.aiPanel{position:fixed;right:0;top:64px;bottom:74px;width:min(430px,96vw);background:#0c1830;border-left:1px solid #405b7a;z-index:40;display:grid;grid-template-rows:auto 1fr auto}.aiHead{padding:14px;border-bottom:1px solid #405b7a;font-weight:1000}.aiBody{padding:12px;overflow:auto}.aiComposer{padding:10px;border-top:1px solid #405b7a;display:grid;grid-template-columns:1fr auto;gap:8px}.aiComposer input{background:#08182a;color:#fff;border:1px solid #405b7a;border-radius:10px;padding:12px}.aiComposer button{border:0;border-radius:10px;background:#6d4aff;color:#fff;font-weight:900;padding:0 16px}
+@media(max-width:1100px){.main{grid-template-columns:92px 1fr 330px}.categories{grid-template-columns:repeat(4,1fr)}.products{grid-template-columns:repeat(3,1fr)}.bottom{grid-template-columns:repeat(4,1fr)}}
+</style></head><body>
+<div class="app">
+<header class="top"><div class="brand">DEXTERS EPOS</div><span class="test">TEST SOFTWARE</span>
+<div class="mode"><button class="on" data-mode="counter">COUNTER</button><button data-mode="phone">PHONE</button><button data-mode="collection">COLLECTION</button><button data-mode="delivery">DELIVERY</button></div>
+<div class="grow"></div><div class="status" id="hubStatus">Windows Hub checking…</div><button id="ordersBtn">ORDERS</button><button id="backOfficeBtn">BACK OFFICE</button></header>
+
+<div class="main">
+<aside class="rail">
+<button class="on">SELL</button><button>PHONE</button><button>ORDERS</button><button>KDS</button><button>DELIVERY</button><button>CUSTOMERS</button><button>LOYALTY</button><button>STOCK</button><button>EMAIL</button><button>INTEGRATIONS</button>
+</aside>
+
+<section class="catalog">
+<div class="categories" id="categories">
+<button class="on">BREAKFAST</button><button>HOT ROLLS</button><button>WRAPS</button><button>SUBS</button><button>BURGERS</button><button>CHINESE</button><button>GREEK</button><button>PIZZA</button><button>CHIPPY</button><button>KIDS</button><button>WAFFLES</button><button>DRINKS</button>
+</div>
+<div class="products" id="products">
+<button class="product"><strong>Full Scottish Breakfast</strong><span class="price">£8.50</span></button>
+<button class="product"><strong>Bacon Roll</strong><span class="price">£3.50</span></button>
+<button class="product"><strong>Square Sausage Roll</strong><span class="price">£3.50</span></button>
+<button class="product"><strong>Chicken Tikka Wrap</strong><span class="price">£7.00</span></button>
+<button class="product"><strong>Philly Steak Sub</strong><span class="price">£7.50</span></button>
+<button class="product"><strong>Smash Burger</strong><span class="price">£8.50</span></button>
+<button class="product"><strong>Salt & Chilli Chicken</strong><span class="price">£9.50</span></button>
+<button class="product"><strong>Rice Bowl</strong><span class="price">£9.50</span></button>
+</div>
+</section>
+
+<aside class="cart">
+<div class="caller" id="callerCard">
+<div class="callerHead"><div><div class="callerName">No active caller</div><small>Incoming calls will appear here automatically</small></div></div>
+<div class="callerActions"><button id="deliveryBtn">DELIVERY</button><button id="collectionBtn">COLLECTION</button></div>
+</div>
+<div class="customer"><input id="customerSearch" placeholder="Customer / phone / loyalty / postcode"><div class="customerMeta">Customer notes, loyalty, previous orders and credit warnings appear here.</div></div>
+<div class="lines" id="lines"><div style="padding:20px;text-align:center;color:#9fb1c7">Add items to start an order.</div></div>
+<div class="totals"><div class="sum"><span>Subtotal</span><b>£0.00</b></div><div class="sum"><span>Delivery</span><b>£0.00</b></div><div class="sum grand"><span>TOTAL</span><span>£0.00</span></div></div>
+</aside>
+</div>
+
+<footer class="bottom">
+<button>HOLD</button><button>RECALL</button><button>LAST ORDER</button><button>NOTE</button><button>DISCOUNT</button><button class="warn">TIMED ORDER</button><button class="ai" id="aiBtn">DEXTER AI</button><button class="pay">PAY</button>
+</footer>
+</div>
+
+<div class="overlay hide" id="fulfilmentModal"><div class="modal"><h2>Telephone order</h2><p>Choose how the customer wants this order.</p><div class="choice"><button class="delivery" data-fulfil="delivery">DELIVERY<br><small>Postcode · address · map · charge</small></button><button class="collection" data-fulfil="collection">COLLECTION<br><small>Collection time · customer details</small></button></div><button style="margin-top:12px" id="closeFulfil">Cancel</button></div></div>
+
+<aside class="aiPanel hide" id="aiPanel"><div class="aiHead">DEXTER AI · EPOS ASSISTANT <button style="float:right" id="closeAi">×</button></div><div class="aiBody"><p>Ask Dexter about this order, customer, integrations, hardware, stock, KDS or diagnostics.</p><p style="color:#9fb1c7">Test build: write actions remain permission-gated.</p></div><div class="aiComposer"><input placeholder="Ask Dexter…"><button>SEND</button></div></aside>
+
+<script>
+const API='http://127.0.0.1:17654';
+const $=id=>document.getElementById(id);
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));if(b.dataset.mode==='phone')$('fulfilmentModal').classList.remove('hide')});
+$('deliveryBtn').onclick=()=>$('fulfilmentModal').classList.remove('hide');
+$('collectionBtn').onclick=()=>$('fulfilmentModal').classList.remove('hide');
+$('closeFulfil').onclick=()=>$('fulfilmentModal').classList.add('hide');
+document.querySelectorAll('[data-fulfil]').forEach(b=>b.onclick=()=>{$('fulfilmentModal').classList.add('hide');document.querySelectorAll('.callerActions button').forEach(x=>x.classList.toggle('chosen',x.id.startsWith(b.dataset.fulfil)));});
+$('aiBtn').onclick=()=>$('aiPanel').classList.remove('hide');$('closeAi').onclick=()=>$('aiPanel').classList.add('hide');
+async function health(){try{const r=await fetch(API+'/health',{cache:'no-store'}),h=await r.json();$('hubStatus').textContent=h.ok?'Hub online · '+h.version:'Hub problem'}catch{$('hubStatus').textContent='Hub offline'}}
+health();setInterval(health,15000);
+</script></body></html>
