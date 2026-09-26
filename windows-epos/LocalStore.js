@@ -338,6 +338,20 @@ function activePromotions(){
   const rows=d.prepare(`SELECT * FROM promotions WHERE active=1 AND (starts_at IS NULL OR starts_at<=?) AND (ends_at IS NULL OR ends_at>=?) ORDER BY name`).all(t,t);
   d.close();return rows.map(r=>({...r,scope:JSON.parse(r.scope_json||'{}')}));
 }
+function deductStockForOrder(order){
+  const d=db(),t=now(),items=Array.isArray(order?.items)?order.items:[];
+  for(const item of items){
+    const pid=String(item.productId||item.id||'');
+    const qty=Number(item.qty||1);
+    if(!pid||!qty)continue;
+    const exists=d.prepare('SELECT product_id FROM stock_levels WHERE product_id=?').get(pid);
+    if(!exists)continue;
+    d.prepare('UPDATE stock_levels SET qty=qty-?,updated_at=? WHERE product_id=?').run(qty,t,pid);
+    d.prepare('INSERT INTO stock_movements(product_id,qty_delta,reason,reference,staff_id,created_at) VALUES(?,?,?,?,?,?)')
+      .run(pid,-qty,'sale',String(order.id||''),order.staffId?String(order.staffId):null,t);
+  }
+  d.close();return true;
+}
 function updateOrderStatus(orderId,status,staffId=null){
   const d=db(),t=now();
   const r=d.prepare('SELECT payload_json FROM orders WHERE id=?').get(String(orderId));
@@ -465,4 +479,4 @@ function stats(){
   const queued=Number(d.prepare("SELECT COUNT(*) c FROM sync_queue WHERE state='queued'").get().c);
   d.close();return {dbPath:DB_PATH,orders,calls,queued};
 }
-module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,staffRole,savePromotion,activePromotions,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
+module.exports={DB_PATH,saveOrder,upsertSupplierProduct,importSupplierProducts,searchSupplierProducts,supplierProductById,supplierProductByBarcode,addSupplierProductToCatalog,catalogProducts,catalogProductByBarcode,setStock,adjustStock,stockSnapshot,lowStock,savePurchaseOrder,listPurchaseOrders,receiveGoods,setStaffRole,staffRole,savePromotion,activePromotions,deductStockForOrder,updateOrderStatus,kdsOrders,saveDeliveryJob,deliveryJobs,saveOrderAdjustment,orderAdjustments,saveCashup,recentCashups,saveCall,recentCalls,saveCustomer,searchCustomers,queue,queueSummary,nextQueued,markQueueDone,markQueueRetry,markQueueFailed,recentOrders,audit,stats};
