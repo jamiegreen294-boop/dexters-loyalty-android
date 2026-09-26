@@ -78,6 +78,13 @@
       "mode": "command-centre",
       "endpoint": "",
       "token": ""
+    },
+    "chatgpt_builder": {
+      "enabled": false,
+      "environment": "test",
+      "mode": "builder-review",
+      "model": "gpt-5.6-sol",
+      "api_key": ""
     }
   }
 }
