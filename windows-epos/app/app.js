@@ -26,11 +26,22 @@ function discountPence(){
 }
 function totalPence(){return Math.max(0,subtotalPence()+Number(state.deliveryFeePence||0)-discountPence())}
 
+function syncCustomerDisplay(){
+  post('/customer-display/state',{
+    cart:state.cart,
+    subtotalPence:subtotalPence(),
+    discountPence:discountPence(),
+    deliveryFeePence:Number(state.deliveryFeePence||0),
+    totalPence:totalPence(),
+    customer:state.customer?{name:state.customer.name||'',loyaltyCode:state.customer.loyalty_code||state.customer.loyaltyCode||''}:null
+  }).catch(()=>{});
+}
 function renderTotals(){
   if($('subtotalValue'))$('subtotalValue').textContent=money(subtotalPence());
   if($('deliveryValue'))$('deliveryValue').textContent=money(state.deliveryFeePence);
   if($('discountValue'))$('discountValue').textContent='-'+money(discountPence());
   if($('totalValue'))$('totalValue').textContent=money(totalPence());
+  syncCustomerDisplay();
 }
 
 function renderCart(){
