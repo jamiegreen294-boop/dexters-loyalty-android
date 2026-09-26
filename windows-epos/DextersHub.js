@@ -22,6 +22,7 @@ const CrashGuard=require('./CrashGuard');
 const PilotSelfTest=require('./PilotSelfTest');
 const AlcoholCompliance=require('./AlcoholCompliance');
 const Barcode=require('./Barcode');
+const PaymentGateway=require('./PaymentGateway');
 
 const ROOT=path.resolve(__dirname);
 const BUILD_VERSION='0.4.0-pilot';
@@ -85,6 +86,7 @@ async function handle(req,res){
     const b=await body(req);const ids=LocalStore.importSupplierProducts(Array.isArray(b.products)?b.products:[]);return send(res,200,{ok:true,testOnly:true,imported:ids.length,ids});
   }
   if(req.method==='POST'&&url.pathname==='/supplier/add-to-catalog'){
+    const staff=requireStaffPermission(req,res,'price_change');if(!staff)return;
     const b=await body(req),p=LocalStore.supplierProductById(b.productId);
     if(!p)return send(res,404,{ok:false,error:'Supplier product not found'});
     const payload=p.payload||{},pricePence=Number(b.pricePence||0);
@@ -99,6 +101,7 @@ async function handle(req,res){
     return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='POST'&&url.pathname==='/stock/deduct-order'){
+    const staff=requireStaffPermission(req,res,'sale');if(!staff)return;
     const b=await body(req);LocalStore.deductStockForOrder(b.order||{});LocalStore.audit(b.staffId||null,'stock.sale_deduct','order',String(b.order?.id||''),{items:Array.isArray(b.order?.items)?b.order.items.length:0});return send(res,200,{ok:true,testOnly:true});
   }
   if(req.method==='GET'&&url.pathname==='/stock'){
@@ -112,15 +115,18 @@ async function handle(req,res){
     const b=await body(req);LocalStore.setStock(b.productId,Number(b.qty||0),Number(b.reorderLevel||0),String(b.unit||'each'));LocalStore.audit(b.staffId||null,'stock.set','catalog_product',String(b.productId),{qty:b.qty,reorderLevel:b.reorderLevel});return send(res,200,{ok:true,testOnly:true});
   }
   if(req.method==='POST'&&url.pathname==='/stock/adjust'){
+    const staff=requireStaffPermission(req,res,'stock_adjust');if(!staff)return;
     const b=await body(req);LocalStore.adjustStock(b.productId,Number(b.delta||0),String(b.reason||'manual'),String(b.reference||''),b.staffId||null);LocalStore.audit(b.staffId||null,'stock.adjust','catalog_product',String(b.productId),{delta:b.delta,reason:b.reason});return send(res,200,{ok:true,testOnly:true});
   }
   if(req.method==='GET'&&url.pathname==='/purchasing/orders'){
     return send(res,200,{ok:true,testOnly:true,orders:LocalStore.listPurchaseOrders(Number(url.searchParams.get('limit')||100))});
   }
   if(req.method==='POST'&&url.pathname==='/purchasing/order'){
+    const staff=requireStaffPermission(req,res,'stock_adjust');if(!staff)return;
     const b=await body(req);const id=LocalStore.savePurchaseOrder(b.order||{});LocalStore.audit(b.staffId||null,'purchase_order.save','purchase_order',id,{supplier:b.order?.supplier||''});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='POST'&&url.pathname==='/purchasing/receive'){
+    const staff=requireStaffPermission(req,res,'stock_adjust');if(!staff)return;
     const b=await body(req);const id=LocalStore.receiveGoods({...b.receipt,staffId:b.staffId||b.receipt?.staffId||null});LocalStore.audit(b.staffId||null,'goods.receive','goods_receipt',id,{purchaseOrderId:b.receipt?.purchaseOrderId||''});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='GET'&&url.pathname==='/staff/bootstrap-status'){
@@ -158,6 +164,7 @@ async function handle(req,res){
     const b=await body(req);LocalStore.setStaffPin(b.staffId,b.pin);LocalStore.audit(staff.staff_id,'staff.pin_set','staff',String(b.staffId),{});return send(res,200,{ok:true,testOnly:true});
   }
   if(req.method==='POST'&&url.pathname==='/staff/role'){
+    const staff=requireStaffPermission(req,res,'staff_admin');if(!staff)return;
     const b=await body(req);LocalStore.setStaffRole(b.staffId,b.displayName,b.role,b.permissions||[]);return send(res,200,{ok:true,testOnly:true});
   }
   if(req.method==='GET'&&url.pathname==='/staff/role'){
@@ -174,12 +181,14 @@ async function handle(req,res){
     return send(res,200,{ok:true,testOnly:true,orders:LocalStore.kdsOrders(Number(url.searchParams.get('limit')||100))});
   }
   if(req.method==='POST'&&url.pathname==='/orders/status'){
+    const staff=requireStaffPermission(req,res,'kds_update');if(!staff)return;
     const b=await body(req);LocalStore.updateOrderStatus(b.orderId,b.status,b.staffId||null);return send(res,200,{ok:true,testOnly:true});
   }
   if(req.method==='GET'&&url.pathname==='/delivery/jobs'){
     return send(res,200,{ok:true,testOnly:true,jobs:LocalStore.deliveryJobs(Number(url.searchParams.get('limit')||100))});
   }
   if(req.method==='POST'&&url.pathname==='/delivery/jobs'){
+    const staff=requireStaffPermission(req,res,'sale');if(!staff)return;
     const b=await body(req);const id=LocalStore.saveDeliveryJob(b.job||{});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='POST'&&url.pathname==='/orders/adjust'){
@@ -193,6 +202,7 @@ async function handle(req,res){
     return send(res,200,{ok:true,testOnly:true,cashups:LocalStore.recentCashups(Number(url.searchParams.get('limit')||50))});
   }
   if(req.method==='POST'&&url.pathname==='/cashups'){
+    const staff=requireStaffPermission(req,res,'cashup');if(!staff)return;
     const b=await body(req);const id=LocalStore.saveCashup(b.cashup||{});LocalStore.audit(b.staffId||null,'cashup.save','cashup',id,{});return send(res,200,{ok:true,testOnly:true,id});
   }
   if(req.method==='GET'&&url.pathname==='/catalog/products'){
@@ -227,15 +237,21 @@ async function handle(req,res){
   }
   if(req.method==='GET'&&url.pathname==='/setup/config'){
     const c=loadConfig();
-    return send(res,200,{ok:true,testOnly:true,config:{siteId:c.siteId||'',deviceId:c.deviceId||'',deviceName:c.deviceName||'',listenPort:c.listenPort||17654,printer:c.printer||{},apps:Object.fromEntries(Object.entries(c.apps||{}).map(([k,v])=>[k,{enabled:!!v.enabled,displayName:v.displayName||k,mode:v.mode||''}]))}});
+    return send(res,200,{ok:true,testOnly:true,config:{companyId:c.companyId||'dexters',siteId:c.siteId||'',deviceId:c.deviceId||'',deviceName:c.deviceName||'',timezone:c.timezone||'Europe/London',currency:c.currency||'GBP',jurisdiction:c.jurisdiction||'Scotland',alcohol:c.alcohol||{},deliveryZones:c.deliveryZones||[],listenPort:c.listenPort||17654,printer:c.printer||{},apps:Object.fromEntries(Object.entries(c.apps||{}).map(([k,v])=>[k,{enabled:!!v.enabled,displayName:v.displayName||k,mode:v.mode||''}]))}});
   }
   if(req.method==='POST'&&url.pathname==='/setup/config'){
     const staff=requireStaffPermission(req,res,'integration_admin');if(!staff)return;
     const b=await body(req),c=loadConfig();
     const next={...c,
+      companyId:String(b.companyId||c.companyId||'dexters'),
       siteId:String(b.siteId||c.siteId||''),
       deviceId:String(b.deviceId||c.deviceId||''),
       deviceName:String(b.deviceName||c.deviceName||''),
+      timezone:String(b.timezone||c.timezone||'Europe/London'),
+      currency:String(b.currency||c.currency||'GBP'),
+      jurisdiction:String(b.jurisdiction||c.jurisdiction||'Scotland'),
+      deliveryZones:Array.isArray(b.deliveryZones)?b.deliveryZones:(c.deliveryZones||[]),
+      alcohol:{...(c.alcohol||{}),offSalesStart:String(b.offSalesStart||c.alcohol?.offSalesStart||'10:00'),offSalesEnd:String(b.offSalesEnd||c.alcohol?.offSalesEnd||'22:00'),mupPencePerUnit:Number(b.mupPencePerUnit||c.alcohol?.mupPencePerUnit||65),challengeAge:Number(b.challengeAge||c.alcohol?.challengeAge||25)},
       printer:{...(c.printer||{}),name:String(b.printerName||c.printer?.name||''),paperWidth:Number(b.paperWidth||c.printer?.paperWidth||80),drawerPulsePin:Number(b.drawerPulsePin??c.printer?.drawerPulsePin??0)}
     };
     fs.writeFileSync(CONFIG_PATH,JSON.stringify(next,null,2),'utf8');
@@ -336,6 +352,7 @@ async function handle(req,res){
     return send(res,200,{ok:true,orders:LocalStore.recentOrders(Number(url.searchParams.get('limit')||50))});
   }
   if(req.method==='POST'&&url.pathname==='/local/order'){
+    const staff=requireStaffPermission(req,res,'sale');if(!staff)return;
     const b=await body(req);const id=LocalStore.saveOrder(b.order||{});LocalStore.audit(b.staffId||null,'order.save','order',id,{source:'test-epos'});return send(res,200,{ok:true,id});
   }
   if(req.method==='POST'&&url.pathname==='/local/queue'){
@@ -369,6 +386,23 @@ async function handle(req,res){
     const b=await body(req),name=String(b.name||'');const app=cfg.apps?.[name];if(!app?.enabled)return send(res,409,{ok:false,error:'Integration disabled'});
     if(name==='square')return send(res,200,{ok:true,launched:'square',mode:app.mode||'bridge',bridgeUrl:app.bridgeUrl||null});
     launch(app.command,app.arguments||'');log('app-launch '+name);return send(res,200,{ok:true,launched:name});
+  }
+  if(req.method==='GET'&&url.pathname==='/hardware/printers'){
+    const staff=requireStaffPermission(req,res,'integration_admin');if(!staff)return;
+    try{
+      const out=await runPS("Get-Printer | Select-Object Name,PrinterStatus,DriverName,PortName,WorkOffline | ConvertTo-Json -Compress");
+      let printers=JSON.parse(out||'[]');if(!Array.isArray(printers))printers=[printers];
+      return send(res,200,{ok:true,testOnly:true,printers});
+    }catch(e){return send(res,409,{ok:false,error:e.message})}
+  }
+  if(req.method==='GET'&&url.pathname==='/payments/state'){
+    return send(res,200,{ok:true,testOnly:true,payments:PaymentGateway.state()});
+  }
+  if(req.method==='POST'&&url.pathname==='/payments/square'){
+    const staff=requireStaffPermission(req,res,'sale');if(!staff)return;
+    const b=await body(req);
+    try{return send(res,200,{ok:true,result:await PaymentGateway.squareCharge(Number(b.amountPence||0),b.reference||'')})}
+    catch(e){return send(res,409,{ok:false,error:e.message})}
   }
   if(req.method==='POST'&&url.pathname==='/hardware/action'){
     const b=await body(req),action=String(b.action||'');
