@@ -4,6 +4,8 @@ const fs=require('fs');
 const path=require('path');
 const BackupRestore=require('./BackupRestore');
 const AlcoholCompliance=require('./AlcoholCompliance');
+const PaymentGateway=require('./PaymentGateway');
+const Permissions=require('./Permissions');
 
 function writableDir(dir){
   try{
@@ -35,6 +37,14 @@ function run(root,localStore,integrationGateway){
   add('config',fs.existsSync(process.env.DEXTERS_EPOS_CONFIG||path.join(root,'config.json')));
   add('integrations-config',fs.existsSync(process.env.DEXTERS_INTEGRATIONS_CONFIG||path.join(root,'integrations.json')));
   add('data-dir-writeable',writableDir(path.dirname(localStore.DB_PATH)));
+  try{
+    const p=PaymentGateway.state();
+    add('payment-live-lock',p.square?.liveAllowed!==true,'Square live allowed='+String(p.square?.liveAllowed===true));
+  }catch(e){add('payment-live-lock',false,e.message)}
+  try{
+    const manager=Permissions.permissionsFor('manager',[]);
+    add('manager-permissions',manager.includes('refund')&&manager.includes('stock_adjust')&&manager.includes('integration_admin'),'count '+manager.length);
+  }catch(e){add('manager-permissions',false,e.message)}
   try{
     const states=integrationGateway.allStates();
     const liveEnabled=states.filter(x=>x.enabled&&x.environment==='live');
