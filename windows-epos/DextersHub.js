@@ -350,7 +350,8 @@ async function handle(req,res){
     const zones=Array.isArray(b.zones)?b.zones:[
       {name:'Local',postcodePrefixes:['G1','G2','G3','G4'],feePence:250,minimumOrderPence:1000,estimatedMinutes:35}
     ];
-    return send(res,200,{ok:true,testOnly:true,address,quote:DeliveryLookup.localZoneQuote(address.postcode,zones),maps:IntegrationGateway.connectorState('google_maps')});
+    const lookup=await DeliveryLookup.lookupAddresses(address.postcode);
+    return send(res,200,{ok:true,testOnly:true,address,addresses:lookup.addresses||[],addressLookup:{source:lookup.source,cached:!!lookup.cached,stale:!!lookup.stale,error:lookup.error||null},quote:DeliveryLookup.localZoneQuote(address.postcode,zones),maps:IntegrationGateway.connectorState('google_maps')});
   }
   if(req.method==='POST'&&url.pathname==='/marketplace/normalise'){
     const b=await body(req);return send(res,200,{ok:true,testOnly:true,order:MarketplaceAdapters.inbound(b.source,b.payload||{})});
