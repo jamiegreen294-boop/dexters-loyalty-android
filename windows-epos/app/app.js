@@ -360,14 +360,35 @@ async function showCustomer360(){
   showSheet('Customer 360',body);
 }
 async function showDeliveryLookup(){
-  const postcode=prompt('Delivery postcode','');if(!postcode)return;
+  const postcode=prompt('Delivery postcode',state.phoneSession?.delivery?.postcode||'');if(!postcode)return;
   const x=await post('/delivery/lookup',{postcode});
-  const a=x.address||{},q=x.quote||{};
+  const a=x.address||{},q=x.quote||{},rows=Array.isArray(x.addresses)?x.addresses:[];
+  const list=rows.length?rows.map((r,i)=>'<button data-address-i="'+i+'" style="display:block;width:100%;text-align:left;margin:7px 0;padding:11px"><b>'+esc(r.address1||'')+'</b>'+(r.address2?'<br>'+esc(r.address2):'')+'<br><small>'+esc(r.town||'')+' '+esc(r.postcode||a.postcode||postcode)+'</small></button>').join(''):'<p><b>No mapped property list was found for this postcode.</b><br>You can still enter the address manually.</p>';
   const body='<p><b>'+esc(a.postcode||postcode)+'</b> · '+(a.validFormat?'Valid postcode format':'Check postcode format')+'</p>'+
     '<p>Zone: <b>'+esc(q.zone||'Not matched')+'</b><br>Delivery fee: <b>'+money(q.feePence||0)+'</b><br>Minimum order: <b>'+money(q.minimumOrderPence||0)+'</b><br>Estimated delivery: <b>'+Number(q.estimatedMinutes||0)+' min</b></p>'+
-    '<p>Google Maps connector: <b>'+esc(x.maps?.enabled?'enabled':'safe/off')+'</b></p>';
+    '<h3>Select address</h3>'+list+
+    '<button id="manualAddressBtn" style="margin-top:8px">ENTER ADDRESS MANUALLY</button>'+
+    '<p><small>Address data: OpenStreetMap contributors · cached locally</small></p>';
   showSheet('Delivery Lookup',body);
   if(q.matched){state.deliveryFeePence=Number(q.feePence||0);renderTotals()}
+  document.querySelectorAll('[data-address-i]').forEach(b=>b.onclick=()=>{
+    const r=rows[Number(b.dataset.addressI)];if(!r)return;
+    if(!state.phoneSession)state.phoneSession={fulfilment:'delivery',customer:{},delivery:{}};
+    state.phoneSession.fulfilment='delivery';
+    state.phoneSession.delivery={postcode:r.postcode||a.postcode||postcode,address1:r.address1||'',address2:r.address2||'',town:r.town||'Glasgow',instructions:state.phoneSession.delivery?.instructions||'',validated:true,zone:q.zone||null,distanceMiles:null,deliveryFeePence:Number(q.feePence||0),source:r.source||'openstreetmap'};
+    toast('Address selected: '+(r.address1||r.postcode||postcode));
+    $('eposSheet')?.remove();
+  });
+  $('manualAddressBtn').onclick=()=>{
+    const address1=prompt('House / flat number and street','');if(!address1)return;
+    const address2=prompt('Address line 2 (optional)','')||'';
+    const town=prompt('Town / city','Glasgow')||'Glasgow';
+    if(!state.phoneSession)state.phoneSession={fulfilment:'delivery',customer:{},delivery:{}};
+    state.phoneSession.fulfilment='delivery';
+    state.phoneSession.delivery={postcode:a.postcode||postcode,address1,address2,town,instructions:state.phoneSession.delivery?.instructions||'',validated:false,zone:q.zone||null,distanceMiles:null,deliveryFeePence:Number(q.feePence||0),source:'manual'};
+    toast('Manual delivery address saved');
+    $('eposSheet')?.remove();
+  };
 }
 async function showMarketplaceSandbox(){
   const body='<p>Marketplace adapters are sandbox/test-only.</p><button id="jeDry">JUST EAT DRY RUN</button><button id="drDry" style="margin-left:8px">DELIVEROO DRY RUN</button>';
@@ -633,7 +654,7 @@ function setDeliveryFee(){
 async function completeTestOrder(paymentMethod){
   if(!state.cart.length)throw Error('Add items before payment');
   const id='local-'+Date.now();
-  const order={id,source:state.phoneSession?'telephone':'pos',status:'paid_test',fulfilment:state.phoneSession?.fulfilment||state.mode,customerName:state.customer?.name||state.phoneSession?.customer?.name||'',customerPhone:state.customer?.phone||state.phoneSession?.customer?.phone||'',totalPence:totalPence(),subtotalPence:subtotalPence(),deliveryFeePence:state.deliveryFeePence,discountPence:discountPence(),discount:state.discount,note:state.note,timedFor:state.timedFor,paymentMethod,items:state.cart,createdAt:new Date().toISOString()};
+  const order={id,source:state.phoneSession?'telephone':'pos',status:'paid_test',fulfilment:state.phoneSession?.fulfilment||state.mode,customerName:state.customer?.name||state.phoneSession?.customer?.name||'',customerPhone:state.customer?.phone||state.phoneSession?.customer?.phone||'',delivery:state.phoneSession?.delivery||null,totalPence:totalPence(),subtotalPence:subtotalPence(),deliveryFeePence:state.deliveryFeePence,discountPence:discountPence(),discount:state.discount,note:state.note,timedFor:state.timedFor,paymentMethod,items:state.cart,createdAt:new Date().toISOString()};
   await post('/local/order',{order});
   await post('/local/queue',{connector:'kds',action:'order.upsert',entityId:id,payload:order});
   await post('/stock/deduct-order',{order});
