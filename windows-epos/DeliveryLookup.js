@@ -2,8 +2,11 @@
 
 const fs=require('fs');
 const path=require('path');
+const {DatabaseSync}=require('node:sqlite');
+const LOCAL_DB=process.env.DEXTERS_ADDRESS_DB||(process.env.APPDATA?path.join(process.env.APPDATA,'dexters-epos','address-data','addresses.sqlite'):path.join(__dirname,'data','addresses.sqlite'));
+let addressDb=null;
 
-const CACHE_FILE=process.env.DEXTERS_ADDRESS_CACHE||path.join(__dirname,'data','address-cache.json');
+const CACHE_FILE=process.env.DEXTERS_ADDRESS_CACHE||(process.env.APPDATA?path.join(process.env.APPDATA,'dexters-epos','runtime','address-cache.json'):path.join(__dirname,'data','address-cache.json'));
 const CACHE_MAX_AGE_MS=30*24*60*60*1000;
 const OVERPASS_URL=process.env.DEXTERS_OVERPASS_URL||'https://overpass.private.coffee/api/interpreter';
 let memoryCache=null;
@@ -77,9 +80,18 @@ function uniqueAddresses(rows){
   }
   return out.sort((a,b)=>a.address1.localeCompare(b.address1,undefined,{numeric:true,sensitivity:'base'}));
 }
+function lookupLocal(postcode){
+  if(!fs.existsSync(LOCAL_DB))return [];
+  try{
+    if(!addressDb)addressDb=new DatabaseSync(LOCAL_DB,{readOnly:true});
+    return addressDb.prepare('SELECT source_id AS id,address1,address2,town,postcode FROM addresses WHERE postcode=? ORDER BY address1 COLLATE NOCASE LIMIT 250').all(postcode).map(r=>({...r,label:[r.address1,r.address2,r.town,r.postcode].filter(Boolean).join(', '),source:'openstreetmap-local'}));
+  }catch(_){return []}
+}
 async function lookupAddresses(postcode){
   const p=normalisePostcode(postcode);
   if(!validatePostcode(p))return {postcode:p,validFormat:false,addresses:[],source:'invalid',cached:false};
+  const local=lookupLocal(p);
+  if(local.length)return {postcode:p,validFormat:true,addresses:uniqueAddresses(local),source:'openstreetmap-local',cached:true,local:true};
   const cache=readCache(),cached=cache[p];
   if(cached&&Array.isArray(cached.addresses)&&Date.now()-Number(cached.savedAt||0)<CACHE_MAX_AGE_MS){
     return {postcode:p,validFormat:true,addresses:cached.addresses,source:cached.source||'openstreetmap-cache',cached:true};
