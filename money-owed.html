@@ -385,7 +385,7 @@ async function loadAccount(accountId){
               <td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td>
               <td>${escapeHtml(x.transaction_type)}</td>
               <td>${escapeHtml(x.description || '')}</td>
-              <td>${escapeHtml(x.source || 'Unknown')}${x.metadata?.payment_method ? ' · '+escapeHtml(x.metadata.payment_method.replaceAll('_',' ')) : ''}${x.order_ref ? ' · '+escapeHtml(x.order_ref) : ''}${Number(x.metadata?.manual_cash_pence||0)>0 ? ' · '+moneyPence(x.metadata.manual_cash_pence)+' cash received separately' : ''}</td>
+              <td>${escapeHtml(x.source || 'Unknown')}${x.metadata?.payment_method ? ' · '+escapeHtml(x.metadata.payment_method.replaceAll('_',' ')) : ''}${x.order_ref ? ' · '+escapeHtml(x.order_ref) : ''}${Number(x.metadata?.manual_payment_pence||0)>0 ? ' · '+moneyPence(x.metadata.manual_payment_pence)+' manual payment ('+escapeHtml(x.metadata?.manual_payment_method||'method unverified')+')' : ''}</td>
               <td>${moneyPence(x.amount_pence)}</td>
               <td>${
                 x.remaining_pence===null ||
