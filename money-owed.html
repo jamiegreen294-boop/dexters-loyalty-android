@@ -373,6 +373,7 @@ async function loadAccount(accountId){
           <th>Date</th>
           <th>Type</th>
           <th>Description</th>
+          <th>Source / method</th>
           <th>Amount</th>
           <th>Outstanding</th>
         </tr>
@@ -384,6 +385,7 @@ async function loadAccount(accountId){
               <td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td>
               <td>${escapeHtml(x.transaction_type)}</td>
               <td>${escapeHtml(x.description || '')}</td>
+              <td>${escapeHtml(x.source || 'Unknown')}${x.metadata?.payment_method ? ' · '+escapeHtml(x.metadata.payment_method.replaceAll('_',' ')) : ''}${x.order_ref ? ' · '+escapeHtml(x.order_ref) : ''}${Number(x.metadata?.manual_cash_pence||0)>0 ? ' · '+moneyPence(x.metadata.manual_cash_pence)+' cash received separately' : ''}</td>
               <td>${moneyPence(x.amount_pence)}</td>
               <td>${
                 x.remaining_pence===null ||
@@ -393,7 +395,7 @@ async function loadAccount(accountId){
               }</td>
             </tr>
           `).join('') ||
-          '<tr><td colspan="5">No transactions yet.</td></tr>'
+          '<tr><td colspan="6">No transactions yet.</td></tr>'
         }
       </tbody>
     </table>
