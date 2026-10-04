@@ -51,7 +51,7 @@ window.dextersPushStatus=serverStatus;
 function promptSnoozed(){try{return Number(localStorage.getItem(SNOOZE)||0)>Date.now()}catch{return false}}
 function closePrompt(){document.getElementById('dextersNotificationPrompt')?.remove()}
 function ensurePrompt(){
- if(!token()||!supported()||Notification.permission!=='default'||promptSnoozed()||document.getElementById('dextersNotificationPrompt'))return;
+ if(!token()||!supported()||Notification.permission!=='default'||promptSnoozed()||document.getElementById('dextersNotificationPrompt')||document.getElementById('dxMarketingGate'))return;
  const wrap=document.createElement('div');wrap.id='dextersNotificationPrompt';wrap.setAttribute('role','dialog');wrap.setAttribute('aria-label','Enable Dexter’s notifications');
  wrap.style.cssText='position:fixed;left:14px;right:14px;bottom:86px;z-index:99998;max-width:480px;margin:auto;background:#132038;color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:16px;box-shadow:0 14px 38px rgba(0,0,0,.38);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
  wrap.innerHTML='<div style="font-weight:900;font-size:17px;margin-bottom:6px">Enable Dexter’s notifications</div><div style="font-size:13px;line-height:1.45;color:#c4cfdf">Get phone alerts for order accepted, cooking, ready to collect and important account updates. Marketing choices stay separate.</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px"><button id="dextersNotifyLater" type="button" style="border:0;border-radius:12px;padding:12px;font-weight:800;background:#223454;color:#fff">Not now</button><button id="dextersNotifyEnable" type="button" style="border:0;border-radius:12px;padding:12px;font-weight:900;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#111">Enable notifications</button></div>';
@@ -94,6 +94,7 @@ function boot(){
  setInterval(()=>{load(false);repairPush(false)},30000);
  window.addEventListener('focus',()=>{load(false);repairPush(false);renderPreference();ensurePrompt()});
  window.addEventListener('dexters:startup-complete',()=>{renderPreference();repairPush(false);ensurePrompt()});
+ window.addEventListener('dextersMarketingChoiceChanged',()=>setTimeout(()=>{renderPreference();ensurePrompt()},250));
  const av=document.getElementById('appView');if(av)new MutationObserver(()=>setTimeout(()=>{renderPreference();ensurePrompt()},50)).observe(av,{attributes:true,attributeFilter:['class']});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
