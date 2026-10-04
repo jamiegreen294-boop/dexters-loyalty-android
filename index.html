@@ -359,7 +359,7 @@ body.pride-theme{background:#f7f3f8!important}
 </style><style id="dextersMarketingRecipientsStyle">
 #marketing .mk-recipient-controls{grid-template-columns:1fr 1fr 1.2fr!important;gap:12px!important}
 #marketing .mk-recipient-list{margin-top:12px;border:1px solid #ded4e4;border-radius:12px;overflow:hidden;background:#fff}
-#marketing .mk-recipient-row{display:grid;grid-template-columns:42px minmax(150px,1.4fr) minmax(190px,1.6fr) 130px 110px 110px;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px solid #eee6f2;color:#342e39}
+#marketing .mk-recipient-row{display:grid;grid-template-columns:42px minmax(150px,1.4fr) minmax(190px,1.6fr) 130px 120px 90px 110px;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px solid #eee6f2;color:#342e39}
 #marketing .mk-recipient-row:last-child{border-bottom:0}
 #marketing .mk-recipient-row.head{background:#f7f2fa;font-weight:900;color:#514657}
 #marketing .mk-recipient-row input[type=checkbox]{width:20px!important;height:20px!important;margin:0!important}
@@ -371,7 +371,7 @@ body.pride-theme{background:#f7f3f8!important}
 @media(max-width:900px){
  #marketing .mk-recipient-controls{grid-template-columns:1fr!important}
  #marketing .mk-recipient-list{overflow-x:auto}
- #marketing .mk-recipient-row{min-width:760px}
+ #marketing .mk-recipient-row{min-width:880px}
 }
 </style></head>
 <body class="pride-theme">
@@ -7334,11 +7334,11 @@ setTimeout(renderManagerLeaveApprovals,1200);
    const g=document.getElementById('mkGroup')?.value||'all';
    const q=(document.getElementById('mkSearch')?.value||'').trim().toLowerCase();
    const rows=(MK_DATA.customers||[]).filter(x=>groupMatch(x,g)&&(!q||String(x.name||'').toLowerCase().includes(q)||String(x.email||'').toLowerCase().includes(q)));
-   const head='<div class="mk-recipient-row head"><div></div><div>Customer</div><div>Email</div><div>Permission</div><div>Points</div><div>Rewards</div></div>';
+   const head='<div class="mk-recipient-row head"><div></div><div>Customer</div><div>Email</div><div>Permission</div><div>Notifications</div><div>Points</div><div>Rewards</div></div>';
    const body=rows.map(x=>{
      const status=x.eligible?'<span class="mk-status mk-ok">Eligible</span>':(x.no_choice?'<span class="mk-status mk-wait">No choice</span>':'<span class="mk-status mk-no">Opted out</span>');
      const rewards=(x.reward_ready?'Coffee reward ':'')+(x.active_challenge_rewards?x.active_challenge_rewards+' challenge':'');
-     return '<div class="mk-recipient-row"><div><input class="mkPick" type="checkbox" data-id="'+esc(x.id)+'" '+(MK_SELECTED.has(x.id)?'checked ':'')+(x.eligible&&x.email?'':'disabled')+'></div><div><b>'+esc(x.name)+'</b></div><div>'+esc(x.email||'No email found')+'</div><div>'+status+'</div><div>'+Number(x.points||0)+'</div><div>'+esc(rewards||'—')+'</div></div>';
+     return '<div class="mk-recipient-row"><div><input class="mkPick" type="checkbox" data-id="'+esc(x.id)+'" '+(MK_SELECTED.has(x.id)?'checked ':'')+(x.eligible&&x.email?'':'disabled')+'></div><div><b>'+esc(x.name)+'</b></div><div>'+esc(x.email||'No email found')+'</div><div>'+status+'</div><div>'+(x.push_enabled?'<span class="mk-status mk-ok">Push ON ('+Number(x.push_device_count||1)+')</span>':'<span class="mk-status mk-wait">Push OFF</span>')+'</div><div>'+Number(x.points||0)+'</div><div>'+esc(rewards||'—')+'</div></div>';
    }).join('');
    box.innerHTML=head+(body||'<div style="padding:14px" class="muted">No customers match this group/search.</div>');
    const count=document.getElementById('mkSelectedCount');if(count)count.textContent=String(MK_SELECTED.size);
