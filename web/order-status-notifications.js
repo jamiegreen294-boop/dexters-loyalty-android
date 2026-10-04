@@ -61,24 +61,7 @@
   }
 
   function showPrompt(){
-    if(!authToken()||!('Notification'in window)||Notification.permission!=='default')return;
-    if(document.getElementById('dextersNotificationPrompt'))return;
-    try{
-      if(localStorage.getItem(PROMPT_KEY)==='later')return;
-    }catch{}
-
-    const wrap=document.createElement('div');
-    wrap.id='dextersNotificationPrompt';
-    wrap.setAttribute('role','dialog');
-    wrap.setAttribute('aria-label','Enable order notifications');
-    wrap.style.cssText='position:fixed;left:14px;right:14px;bottom:86px;z-index:99998;max-width:480px;margin:auto;background:#132038;color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:16px;box-shadow:0 14px 38px rgba(0,0,0,.38);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
-    wrap.innerHTML='<div style="display:flex;gap:12px;align-items:flex-start"><img src="'+ICON+'" alt="" style="width:46px;height:46px;object-fit:contain;border-radius:10px;background:#fff"><div style="flex:1"><div style="font-weight:900;font-size:17px;margin-bottom:5px">Enable Dexter’s order updates</div><div style="font-size:13px;line-height:1.4;color:#c4cfdf">Get a phone notification when your order is accepted, cooking, ready and collected.</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px"><button id="dextersNotifyLater" type="button" style="border:0;border-radius:12px;padding:12px;font-weight:800;background:#223454;color:#fff">Not now</button><button id="dextersNotifyEnable" type="button" style="border:0;border-radius:12px;padding:12px;font-weight:900;background:linear-gradient(90deg,#ffd43b,#ff8a00);color:#111">Enable notifications</button></div>';
-    document.body.appendChild(wrap);
-    document.getElementById('dextersNotifyEnable').onclick=requestNotifications;
-    document.getElementById('dextersNotifyLater').onclick=()=>{
-      try{localStorage.setItem(PROMPT_KEY,'later')}catch{}
-      closePrompt();
-    };
+    if(window.dextersEnsurePushPrompt)window.dextersEnsurePushPrompt();
   }
 
   async function poll(){
