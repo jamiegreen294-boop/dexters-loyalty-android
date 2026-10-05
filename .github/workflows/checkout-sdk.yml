@@ -25,6 +25,17 @@ jobs:
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - name: Verify payment result checks
         run: node --experimental-strip-types --test tests/checkout-sdk/*.test.mjs
+      - name: Restore checkout signing certificate
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: dexters-checkout-sdk-signing-v1
+      - name: Ensure checkout signing certificate exists
+        run: |
+          mkdir -p ~/.android
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool -genkeypair -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Dexter Checkout,O=Dexters,C=GB'
+          fi
       - name: Build SDK checkout
         run: gradle -p checkout-sdk --no-daemon assembleDebug
       - name: Verify certificate
