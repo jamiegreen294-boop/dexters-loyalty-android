@@ -57,13 +57,13 @@ async function storeResult(request:any,body:any,config:any){
   const {data,error}=await db.from('pc_pos_square_requests').update({status,transaction_id:approved?paymentId:null,error_code:approved?null:String(body.error_code||'failed').slice(0,120),error_message:approved?null:String(body.error_message||'Payment not completed').slice(0,500),completed_at:new Date().toISOString()}).eq('id',request.id).eq('claimed_by',request.claimed_by).in('status',approved?['processing','expired']:['processing']).select('id,status,transaction_id').maybeSingle();
   if(error)throw error;if(!data)throw new HttpError(409,'Payment state changed; review the result');return data;
 }
-Deno.serve(async(req:Request)=>{
+export async function handleSdkCheckout(req:Request){
   if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
   if(req.method!=='POST')return J({error:'POST required'},405);
   try {
     const user=await staff(req);
     const body=await req.json();
-    const action=String(body.action||'');
+    const action=String(body.action||'').replace(/^sdk_/, '');
     const config=await configuration();
     if(action==='configure')return J({ok:true,application_id:APP_ID,location_id:config.location,access_token:config.token});
     if(action==='next'){
@@ -92,4 +92,5 @@ Deno.serve(async(req:Request)=>{
     }
     throw new HttpError(400,'Unknown action');
   } catch(e){return J({error:e instanceof HttpError?e.message:'Checkout connection unavailable. Retry or review the payment.'},e instanceof HttpError?e.status:500)}
-});
+}
+

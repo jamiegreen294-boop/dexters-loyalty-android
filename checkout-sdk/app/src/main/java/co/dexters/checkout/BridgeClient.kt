@@ -31,12 +31,13 @@ class BridgeClient(private val store: CredentialStore) {
     }
     @Synchronized fun action(body: JSONObject): JSONObject {
         if (session == null) throw ApiFailure(401, "Staff sign-in required")
+        if (!body.getString("action").startsWith("sdk_")) body.put("action", "sdk_" + body.getString("action"))
         if (session!!.optLong("expires_at_ms") < System.currentTimeMillis() + 120000) refresh()
-        try { return call("/functions/v1/dexters-checkout-sdk", body, session!!.getString("access_token")) }
+        try { return call("/functions/v1/pc-pos-square-bridge", body, session!!.getString("access_token")) }
         catch (e: ApiFailure) {
             if (e.status != 401) throw e
             refresh()
-            return call("/functions/v1/dexters-checkout-sdk", body, session!!.getString("access_token"))
+            return call("/functions/v1/pc-pos-square-bridge", body, session!!.getString("access_token"))
         }
     }
     private fun call(path: String, body: JSONObject, token: String = ""): JSONObject {

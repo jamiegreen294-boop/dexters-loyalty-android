@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { matchesRequest, finalStatus } from '../../supabase/functions/dexters-checkout-sdk/validation.ts';
+import { matchesRequest, finalStatus } from '../../supabase/functions/pc-pos-square-bridge/validation.ts';
 const request = { id: 'request-123', amount_pence: 1499 };
 const payment = { status: 'COMPLETED', amount_money: { amount: 1499, currency: 'GBP' }, reference_id: request.id, location_id: 'location-1' };
 test('approve only a completed Square payment matching the exact request', () => {

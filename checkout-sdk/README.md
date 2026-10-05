@@ -10,7 +10,7 @@ Requires Java 17, Gradle 8.13, Android SDK platform/build-tools 36:
 
 `gradle -p checkout-sdk assembleDebug`
 
-No access token is embedded in the Android package. Deploy `supabase/functions/dexters-checkout-sdk` with JWT verification enabled. Configure **OAuth** credentials `SQUARE_MOBILE_OAUTH_TOKEN` and `SQUARE_MOBILE_LOCATION_ID` for the existing Square application. Do not copy the existing personal Square access token into this endpoint. Square credentials are sent directly to the signed-in native app over HTTPS, never to a webpage. Tokens need server-managed OAuth refresh before enabling production; this source currently reports configuration failure when an OAuth token expires.
+No access token is embedded in the Android package. The SDK-only `sdk_*` actions are added to `supabase/functions/pc-pos-square-bridge` with JWT verification enabled; original receiver actions are preserved. Configure **OAuth** credentials `SQUARE_MOBILE_OAUTH_TOKEN` and `SQUARE_MOBILE_LOCATION_ID` for the existing Square application. Do not copy the existing personal Square access token into this endpoint. Square credentials are sent directly to the signed-in native app over HTTPS, never to a webpage. Tokens need server-managed OAuth refresh before enabling production; this source currently reports configuration failure when an OAuth token expires.
 
 Square must register the package name and the actual SHA-256 signing-certificate fingerprint before production payments. Developer options must be disabled, runtime permissions granted, and this Model 1008 must pass Square's own compatibility/attestation checks. A prior successful payment in the separate Square app does not establish SDK compatibility.
 

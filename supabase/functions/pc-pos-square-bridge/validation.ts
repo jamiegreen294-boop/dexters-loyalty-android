@@ -7,3 +7,4 @@ export function finalStatus(body: any): string {
   if (body.approved === true) return 'approved';
   return /CANCEL/i.test(String(body.error_code || '')) ? 'cancelled' : 'failed';
 }
+
