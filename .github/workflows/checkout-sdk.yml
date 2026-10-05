@@ -22,7 +22,10 @@ jobs:
         with:
           gradle-version: '8.13'
       - name: Install Android SDK 36
-        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+        run: |
+          sdk_manager="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit)"
+          test -n "$sdk_manager"
+          "$sdk_manager" 'platforms;android-36' 'build-tools;36.0.0'
       - name: Verify payment result checks
         run: node --experimental-strip-types --test tests/checkout-sdk/*.test.mjs
       - name: Restore checkout signing certificate
