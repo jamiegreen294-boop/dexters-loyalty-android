@@ -56,6 +56,16 @@ class CheckoutActivity : AppCompatActivity() {
         catch (e: Exception) { fatal("Secure storage could not be opened. Keep any payment record for review."); return }
         printerBound = try { bindService(Intent("com.incar.printerservice.IPrinterService").setPackage("com.incar.printerservice"), connection, BIND_AUTO_CREATE) } catch (e: Exception) { false }
         screen()
+        if (!bridge.provisioned()) {
+            worker.execute {
+                try {
+                    bridge.claimFoodhub()
+                    runOnUiThread { screen(); tick() }
+                } catch (e: Exception) {
+                    runOnUiThread { status.text = "Managed checkout setup failed: " + (e.message ?: "retry") }
+                }
+            }
+        }
         handler.post(poll)
     }
     private fun fatal(message: String) { setContentView(TextView(this).apply { text = message; setPadding(24,24,24,24) }) }
