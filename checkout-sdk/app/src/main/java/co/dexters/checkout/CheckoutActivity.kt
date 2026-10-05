@@ -44,7 +44,7 @@ class CheckoutActivity : AppCompatActivity() {
     }
     private val poll = object : Runnable {
         override fun run() {
-            if (foreground && !busy && !authorizing && bridge.signedIn()) tick()
+            if (foreground && !busy && !authorizing && bridge.provisioned()) tick()
             handler.postDelayed(this, 2500)
         }
     }
@@ -52,7 +52,7 @@ class CheckoutActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         store = CredentialStore(this)
-        try { bridge = BridgeClient(store); journal = store.read("payment") }
+        try { bridge = BridgeClient(store); val did = intent.getStringExtra("device_id"); val dsec = intent.getStringExtra("device_secret"); if (!did.isNullOrBlank() && !dsec.isNullOrBlank()) bridge.provision(did, dsec); journal = store.read("payment") }
         catch (e: Exception) { fatal("Secure storage could not be opened. Keep any payment record for review."); return }
         printerBound = try { bindService(Intent("com.incar.printerservice.IPrinterService").setPackage("com.incar.printerservice"), connection, BIND_AUTO_CREATE) } catch (e: Exception) { false }
         screen()
@@ -68,37 +68,20 @@ class CheckoutActivity : AppCompatActivity() {
         setContentView(ScrollView(this).apply { addView(layout) })
         layout.addView(label("DEXTER’S", 32f).apply { setTextColor(Color.rgb(213,175,87)) })
         layout.addView(label("CHECKOUT", 22f))
-        status = label(if (bridge.signedIn()) "Connecting…" else "Sign in to connect to the till")
+        status = label(if (bridge.provisioned()) "Connecting…" else "Managed checkout setup required")
         amount = label("", 38f).apply { setTextColor(Color.rgb(213,175,87)) }
         scan = label("Scanner ready")
         layout.addView(status); layout.addView(amount); layout.addView(scan)
-        if (!bridge.signedIn()) {
-            val email = EditText(this).apply { hint = "Staff email"; inputType = 33; setTextColor(Color.WHITE) }
-            val password = EditText(this).apply { hint = "Password"; inputType = 129; setTextColor(Color.WHITE) }
-            layout.addView(email); layout.addView(password)
-            button("SIGN IN") {
-                if (busy) return@button
-                busy = true; status.text = "Signing in…"
-                val address = email.text.toString().trim(); val secret = password.text.toString(); password.text.clear()
-                worker.execute {
-                    try { bridge.login(address, secret); runOnUiThread { busy = false; screen(); tick() } }
-                    catch (e: Exception) { runOnUiThread { busy = false; status.text = e.message ?: "Sign-in failed" } }
-                }
-            }
-        } else {
+        if (bridge.provisioned()) {
             button("CHECK CONNECTION") { if (!busy) tick() }
             button("SQUARE PAYMENT SETTINGS") {
                 if (!sdkReady) { status.text = "Connect Square before opening payment settings"; return@button }
                 MobilePaymentsSdk.settingsManager().showSettings { result -> if (result is Failure) status.text = result.errorMessage }
             }
-            button("SIGN OUT") {
-                if (journal != null || busy) { status.text = "Resolve the current payment before signing out"; return@button }
-                sdkReady = false; MobilePaymentsSdk.authorizationManager().deauthorize(); bridge.signOut(); screen()
-            }
         }
     }
     private fun tick() {
-        if (busy || authorizing || !bridge.signedIn()) return
+        if (busy || authorizing || !bridge.provisioned()) return
         busy = true
         worker.execute {
             try {
