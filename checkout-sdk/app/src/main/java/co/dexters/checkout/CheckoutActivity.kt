@@ -74,6 +74,16 @@ class CheckoutActivity : AppCompatActivity() {
         layout.addView(status); layout.addView(amount); layout.addView(scan)
         if (bridge.provisioned()) {
             button("CHECK CONNECTION") { if (!busy) tick() }
+            button("SCAN BARCODE") {
+                try {
+                    startActivityForResult(
+                        Intent().setClassName("com.incar.scanner", "net.nyx.scanner.ScannerActivity"),
+                        7001
+                    )
+                } catch (e: Exception) {
+                    status.text = "Scanner unavailable: " + (e.message ?: "unable to open scanner")
+                }
+            }
             button("SQUARE PAYMENT SETTINGS") {
                 if (!sdkReady) { status.text = "Connect Square before opening payment settings"; return@button }
                 MobilePaymentsSdk.settingsManager().showSettings { result -> if (result is Failure) status.text = result.errorMessage }
@@ -189,6 +199,21 @@ class CheckoutActivity : AppCompatActivity() {
         try { printer?.printText(text, PrintTextFormat().apply { setTextSize(22) }) }
         catch (e: Exception) { runOnUiThread { status.text = "Payment recorded. Printer unavailable." } }
     }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 7001) {
+            val value = data?.getStringExtra("SCAN_RESULT")
+                ?: data?.getStringExtra("scan_result")
+                ?: data?.dataString
+                ?: ""
+            if (value.isNotBlank()) {
+                scan.text = "Scanned: $value"
+            } else {
+                scan.text = "Scanner closed"
+            }
+        }
+    }
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.deviceId != -1 && currentFocus !is EditText) {
             if (event.keyCode == KeyEvent.KEYCODE_ENTER && scannerText.isNotEmpty()) {
