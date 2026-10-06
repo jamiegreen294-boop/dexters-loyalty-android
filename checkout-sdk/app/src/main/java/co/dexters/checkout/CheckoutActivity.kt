@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.*
 import android.provider.Settings
 import android.view.*
@@ -99,27 +101,119 @@ class CheckoutActivity : AppCompatActivity() {
         handler.post(poll)
     }
     private fun fatal(message: String) { setContentView(TextView(this).apply { text = message; setPadding(24,24,24,24) }) }
-    private fun label(text: String, size: Float = 18f): TextView = TextView(this).apply {
-        this.text = text; textSize = size; setTextColor(Color.rgb(235,235,235)); setPadding(0,12,0,12)
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private fun rounded(fill: Int, stroke: Int? = null, radius: Int = 18): GradientDrawable =
+        GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(fill)
+            cornerRadius = dp(radius).toFloat()
+            if (stroke != null) setStroke(dp(1), stroke)
+        }
+
+    private fun textView(textValue: String, size: Float, colour: Int, bold: Boolean = false): TextView =
+        TextView(this).apply {
+            text = textValue
+            textSize = size
+            setTextColor(colour)
+            if (bold) setTypeface(typeface, Typeface.BOLD)
+        }
+
+    private fun addAction(textValue: String, primary: Boolean = false, click: () -> Unit) {
+        val gold = Color.rgb(213,175,87)
+        val button = Button(this).apply {
+            text = textValue
+            textSize = 16f
+            isAllCaps = false
+            setTypeface(typeface, Typeface.BOLD)
+            setTextColor(if (primary) Color.rgb(18,18,18) else Color.WHITE)
+            background = rounded(if (primary) gold else Color.rgb(30,32,34), if (primary) null else Color.rgb(64,66,68), 16)
+            minHeight = dp(58)
+            setPadding(dp(18), 0, dp(18), 0)
+            setOnClickListener { click() }
+        }
+        layout.addView(button, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(58)).apply {
+            topMargin = dp(10)
+        })
     }
-    private fun button(text: String, click: () -> Unit) { layout.addView(Button(this).apply { this.text = text; setOnClickListener { click() } }) }
+
     private fun screen() {
-        layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(26,26,26,26); setBackgroundColor(Color.rgb(16,16,16)) }
-        setContentView(ScrollView(this).apply { addView(layout) })
-        layout.addView(label("DEXTER’S", 32f).apply { setTextColor(Color.rgb(213,175,87)) })
-        layout.addView(label("CHECKOUT", 22f))
-        status = label(if (bridge.provisioned()) "Connecting…" else "Managed checkout setup required")
-        amount = label("", 38f).apply { setTextColor(Color.rgb(213,175,87)) }
-        scan = label("Scanner ready")
-        layout.addView(status); layout.addView(amount); layout.addView(scan)
+        val gold = Color.rgb(213,175,87)
+        val bg = Color.rgb(13,15,16)
+        val panel = Color.rgb(24,26,28)
+        val muted = Color.rgb(176,180,184)
+
+        layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(28), dp(24), dp(30))
+            setBackgroundColor(bg)
+        }
+        setContentView(ScrollView(this).apply {
+            isFillViewport = true
+            setBackgroundColor(bg)
+            addView(layout)
+        })
+
+        val brand = textView("DEXTER’S", 34f, gold, true).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.08f
+        }
+        layout.addView(brand, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+
+        layout.addView(textView("CHECKOUT", 15f, muted, true).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.22f
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            topMargin = dp(2)
+            bottomMargin = dp(24)
+        })
+
+        val statusCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(16), dp(18), dp(16))
+            background = rounded(panel, Color.rgb(52,54,56), 18)
+        }
+        statusCard.addView(textView("TERMINAL STATUS", 12f, gold, true))
+        status = textView(if (bridge.provisioned()) "Connecting…" else "Managed checkout setup required", 18f, Color.WHITE, true).apply {
+            setPadding(0, dp(6), 0, 0)
+        }
+        statusCard.addView(status)
+        layout.addView(statusCard, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+
+        amount = textView("", 42f, gold, true).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(18), 0, dp(8))
+        }
+        layout.addView(amount, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+
+        val scannerCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(14), dp(18), dp(14))
+            background = rounded(Color.rgb(20,22,24), Color.rgb(50,52,54), 16)
+        }
+        scannerCard.addView(textView("SCANNER", 12f, gold, true))
+        scan = textView("Scanner ready", 17f, Color.WHITE, false).apply { setPadding(0, dp(5), 0, 0) }
+        scannerCard.addView(scan)
+        layout.addView(scannerCard, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            topMargin = dp(6)
+            bottomMargin = dp(10)
+        })
+
+        addAction("Scan barcode", primary = true) { triggerInfrared() }
+
         if (bridge.provisioned()) {
-            button("CHECK CONNECTION") { if (!busy) tick() }
-            button("SCAN BARCODE") { triggerInfrared() }
-            button("SQUARE PAYMENT SETTINGS") {
-                if (!sdkReady) { status.text = "Connect Square before opening payment settings"; return@button }
+            addAction("Check connection") { if (!busy) tick() }
+            addAction("Square payment settings") {
+                if (!sdkReady) { status.text = "Connect Square before opening payment settings"; return@addAction }
                 MobilePaymentsSdk.settingsManager().showSettings { result -> if (result is Failure) status.text = result.errorMessage }
             }
         }
+
+        layout.addView(textView("DEXTER’S • SECURE CHECKOUT", 11f, Color.rgb(112,116,120), true).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(26), 0, dp(8))
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
     }
     private fun triggerInfrared() {
         val incar = printer
