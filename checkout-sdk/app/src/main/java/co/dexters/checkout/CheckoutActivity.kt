@@ -10,6 +10,7 @@ import android.os.*
 import android.provider.Settings
 import android.view.*
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.squareup.sdk.mobilepayments.MobilePaymentsSdk
 import com.squareup.sdk.mobilepayments.core.Result.Success
@@ -28,6 +29,12 @@ class CheckoutActivity : AppCompatActivity() {
     private lateinit var status: TextView
     private lateinit var amount: TextView
     private lateinit var scan: TextView
+    private lateinit var basketContainer: LinearLayout
+    private lateinit var subtotalView: TextView
+    private lateinit var discountView: TextView
+    private lateinit var deliveryView: TextView
+    private lateinit var totalView: TextView
+    private lateinit var idleView: TextView
     private val worker = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
     private var authorizing = false
@@ -139,14 +146,14 @@ class CheckoutActivity : AppCompatActivity() {
     }
 
     private fun screen() {
-        val gold = Color.rgb(213,175,87)
-        val bg = Color.rgb(13,15,16)
-        val panel = Color.rgb(24,26,28)
-        val muted = Color.rgb(176,180,184)
+        val gold = Color.rgb(228,190,76)
+        val bg = Color.rgb(7,8,9)
+        val panel = Color.rgb(18,18,18)
+        val muted = Color.rgb(174,174,174)
 
         layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(28), dp(24), dp(30))
+            setPadding(dp(18), dp(18), dp(18), dp(24))
             setBackgroundColor(bg)
         }
         setContentView(ScrollView(this).apply {
@@ -155,65 +162,206 @@ class CheckoutActivity : AppCompatActivity() {
             addView(layout)
         })
 
-        val brand = textView("DEXTER’S", 34f, gold, true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.08f
-        }
-        layout.addView(brand, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        status = textView(if (bridge.provisioned()) "Connecting…" else "Managed checkout setup required", 1f, Color.TRANSPARENT)
+        amount = textView("", 1f, Color.TRANSPARENT)
+        scan = textView("", 1f, Color.TRANSPARENT)
 
-        layout.addView(textView("CHECKOUT", 15f, muted, true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.22f
-        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-            topMargin = dp(2)
-            bottomMargin = dp(24)
+        val logo = ImageView(this).apply {
+            setImageResource(R.drawable.dexters_logo_straight)
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            contentDescription = "Dexter's"
+            setOnLongClickListener {
+                showMaintenance()
+                true
+            }
+        }
+        layout.addView(logo, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(150)).apply {
+            bottomMargin = dp(12)
         })
 
-        val statusCard = LinearLayout(this).apply {
+        val orderCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(16), dp(18), dp(16))
-            background = rounded(panel, Color.rgb(52,54,56), 18)
+            setPadding(dp(16), dp(16), dp(16), dp(18))
+            background = rounded(panel, Color.rgb(92,75,28), 20)
         }
-        statusCard.addView(textView("TERMINAL STATUS", 12f, gold, true))
-        status = textView(if (bridge.provisioned()) "Connecting…" else "Managed checkout setup required", 18f, Color.WHITE, true).apply {
-            setPadding(0, dp(6), 0, 0)
-        }
-        statusCard.addView(status)
-        layout.addView(statusCard, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
 
-        amount = textView("", 42f, gold, true).apply {
+        orderCard.addView(textView("Your Order", 26f, Color.rgb(242,213,103), true).apply {
+            setPadding(0, 0, 0, dp(12))
+        })
+
+        idleView = textView("Waiting for your order…", 17f, muted).apply {
             gravity = Gravity.CENTER
-            setPadding(0, dp(18), 0, dp(8))
+            setPadding(0, dp(22), 0, dp(22))
         }
-        layout.addView(amount, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        orderCard.addView(idleView)
 
-        val scannerCard = LinearLayout(this).apply {
+        basketContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(14), dp(18), dp(14))
-            background = rounded(Color.rgb(20,22,24), Color.rgb(50,52,54), 16)
+            visibility = View.GONE
         }
-        scannerCard.addView(textView("SCANNER", 12f, gold, true))
-        scan = textView("Scanner ready", 17f, Color.WHITE, false).apply { setPadding(0, dp(5), 0, 0) }
-        scannerCard.addView(scan)
-        layout.addView(scannerCard, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-            topMargin = dp(6)
+        orderCard.addView(basketContainer)
+
+        val divider = View(this).apply { setBackgroundColor(Color.rgb(193,156,46)) }
+        orderCard.addView(divider, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1)).apply {
+            topMargin = dp(12)
             bottomMargin = dp(10)
         })
 
-        addAction("Scan barcode", primary = true) { triggerInfrared() }
+        fun totalRow(label: String, bold: Boolean = false): Pair<LinearLayout, TextView> {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            val left = textView(label, if (bold) 28f else 17f, if (bold) Color.rgb(242,213,103) else Color.WHITE, bold)
+            val right = textView("£0.00", if (bold) 31f else 17f, if (bold) Color.rgb(242,213,103) else Color.WHITE, bold).apply {
+                gravity = Gravity.END
+            }
+            row.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(right, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+            return row to right
+        }
 
-        if (bridge.provisioned()) {
-            addAction("Check connection") { if (!busy) tick() }
-            addAction("Square payment settings") {
-                if (!sdkReady) { status.text = "Connect Square before opening payment settings"; return@addAction }
-                MobilePaymentsSdk.settingsManager().showSettings { result -> if (result is Failure) status.text = result.errorMessage }
+        val (subtotalRow, subtotalText) = totalRow("Subtotal")
+        subtotalView = subtotalText
+        orderCard.addView(subtotalRow)
+
+        val (discountRow, discountText) = totalRow("Discount")
+        discountView = discountText
+        discountRow.visibility = View.GONE
+        discountView.tag = discountRow
+        orderCard.addView(discountRow)
+
+        val (deliveryRow, deliveryText) = totalRow("Delivery")
+        deliveryView = deliveryText
+        deliveryRow.visibility = View.GONE
+        deliveryView.tag = deliveryRow
+        orderCard.addView(deliveryRow)
+
+        val totalDivider = View(this).apply { setBackgroundColor(Color.rgb(193,156,46)) }
+        orderCard.addView(totalDivider, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(2)).apply {
+            topMargin = dp(10)
+            bottomMargin = dp(10)
+        })
+
+        val (totalRow, totalText) = totalRow("Total", true)
+        totalView = totalText
+        orderCard.addView(totalRow)
+
+        layout.addView(orderCard, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+
+        layout.addView(textView("Secure payment powered by Square", 11f, Color.rgb(115,115,115)).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(18), 0, 0)
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+
+        showIdle()
+    }
+
+    private fun money(pence: Long): String =
+        String.format(java.util.Locale.UK, "£%.2f", pence / 100.0)
+
+    private fun showIdle() {
+        if (!::basketContainer.isInitialized) return
+        basketContainer.removeAllViews()
+        basketContainer.visibility = View.GONE
+        idleView.visibility = View.VISIBLE
+        idleView.text = "Waiting for your order…"
+        subtotalView.text = "£0.00"
+        totalView.text = "£0.00"
+        (discountView.tag as? View)?.visibility = View.GONE
+        (deliveryView.tag as? View)?.visibility = View.GONE
+    }
+
+    private fun renderBasket(request: JSONObject) {
+        val gold = Color.rgb(228,190,76)
+        val muted = Color.rgb(174,174,174)
+        val data = request.optJSONObject("checkout_data") ?: JSONObject()
+        val items = data.optJSONArray("items")
+        basketContainer.removeAllViews()
+
+        if (items == null || items.length() == 0) {
+            basketContainer.visibility = View.GONE
+            idleView.visibility = View.VISIBLE
+            idleView.text = "Card payment"
+        } else {
+            idleView.visibility = View.GONE
+            basketContainer.visibility = View.VISIBLE
+            for (i in 0 until items.length()) {
+                val item = items.optJSONObject(i) ?: continue
+                val qty = item.optInt("qty", 1).coerceAtLeast(1)
+                val name = item.optString("name", "Item")
+                val linePence = item.optLong("line_pence", item.optLong("unit_pence", 0L) * qty)
+                val mods = item.optJSONArray("mods")
+
+                val row = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.TOP
+                    setPadding(0, dp(10), 0, dp(10))
+                }
+                val left = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+                left.addView(textView(if (qty > 1) "$qty × $name" else name, 17f, Color.WHITE, true))
+                if (mods != null && mods.length() > 0) {
+                    val values = mutableListOf<String>()
+                    for (m in 0 until mods.length()) {
+                        val value = mods.optString(m).trim()
+                        if (value.isNotEmpty()) values.add(value)
+                    }
+                    if (values.isNotEmpty()) {
+                        left.addView(textView(values.joinToString(" · "), 13f, muted).apply { setPadding(0, dp(3), dp(8), 0) })
+                    }
+                }
+                val price = textView(money(linePence), 17f, gold, true).apply {
+                    gravity = Gravity.END
+                    setPadding(dp(8), 0, 0, 0)
+                }
+                row.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                row.addView(price, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+                basketContainer.addView(row)
+
+                if (i < items.length() - 1) {
+                    basketContainer.addView(View(this).apply { setBackgroundColor(Color.rgb(48,48,48)) },
+                        LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1)))
+                }
             }
         }
 
-        layout.addView(textView("DEXTER’S • SECURE CHECKOUT", 11f, Color.rgb(112,116,120), true).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(26), 0, dp(8))
-        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        val total = request.optLong("amount_pence", 0L)
+        val subtotal = data.optLong("subtotal_pence", total)
+        val discount = data.optLong("discount_pence", 0L)
+        val delivery = data.optLong("delivery_fee_pence", 0L)
+        subtotalView.text = money(subtotal)
+        totalView.text = money(total)
+
+        val discountRow = discountView.tag as? View
+        discountRow?.visibility = if (discount > 0) View.VISIBLE else View.GONE
+        discountView.text = "-${money(discount)}"
+
+        val deliveryRow = deliveryView.tag as? View
+        deliveryRow?.visibility = if (delivery > 0) View.VISIBLE else View.GONE
+        deliveryView.text = money(delivery)
+    }
+
+    private fun showMaintenance() {
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(22), dp(12), dp(22), 0)
+        }
+        val current = textView(status.text?.toString().orEmpty().ifBlank { "Checkout maintenance" }, 15f, Color.DKGRAY)
+        box.addView(current)
+        AlertDialog.Builder(this)
+            .setTitle("Staff checkout controls")
+            .setView(box)
+            .setPositiveButton("Square settings") { _, _ ->
+                if (sdkReady) {
+                    MobilePaymentsSdk.settingsManager().showSettings { result ->
+                        if (result is Failure) status.text = result.errorMessage
+                    }
+                }
+            }
+            .setNeutralButton("Check connection") { _, _ -> if (!busy) tick() }
+            .setNegativeButton("Close", null)
+            .show()
     }
     private fun triggerInfrared() {
         val incar = printer
@@ -260,6 +408,7 @@ class CheckoutActivity : AppCompatActivity() {
             try {
                 val current = journal
                 if (current != null) {
+                    runOnUiThread { renderBasket(current.getJSONObject("request")) }
                     if (current.has("result")) deliver(current)
                     else recover(current)
                 } else if (!sdkReady) {
@@ -269,11 +418,18 @@ class CheckoutActivity : AppCompatActivity() {
                 } else {
                     val response = bridge.action(JSONObject().put("action", "next"))
                     val request = response.optJSONObject("request")
-                    if (request == null) runOnUiThread { status.text = "Ready for till payments"; amount.text = "" }
-                    else {
+                    if (request == null) runOnUiThread {
+                        status.text = "Ready for till payments"
+                        amount.text = ""
+                        showIdle()
+                    } else {
                         val pending = JSONObject().put("request", request).put("attempt_id", UUID.randomUUID().toString())
                         store.write("payment", pending); journal = pending
-                        runOnUiThread { busy = false; startPayment(pending) }
+                        runOnUiThread {
+                            renderBasket(request)
+                            busy = false
+                            startPayment(pending)
+                        }
                         return@execute
                     }
                 }
@@ -350,7 +506,11 @@ class CheckoutActivity : AppCompatActivity() {
         // Clear only after the server acknowledges. Scanner/printing errors cannot trigger another charge.
         store.write("payment", null); journal = null
         if (receipt != null) { store.write("last_receipt", JSONObject().put("text", receipt)); printReceipt(receipt) }
-        runOnUiThread { status.text = if (approved) "Payment approved — till updated" else "Payment not completed"; amount.text = "" }
+        runOnUiThread {
+            status.text = if (approved) "Payment approved — till updated" else "Payment not completed"
+            amount.text = ""
+            showIdle()
+        }
     }
     private fun recover(pending: JSONObject) {
         val response = bridge.action(JSONObject().put("action", "recover").put("id", pending.getJSONObject("request").getString("id")))
