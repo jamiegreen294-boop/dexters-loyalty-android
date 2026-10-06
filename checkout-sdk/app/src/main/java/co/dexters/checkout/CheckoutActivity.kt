@@ -49,8 +49,6 @@ class CheckoutActivity : AppCompatActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) { printer = IPrinterService.Stub.asInterface(service) }
         override fun onServiceDisconnected(name: ComponentName?) { printer = null }
     }
-        }
-    }
     private val poll = object : Runnable {
         override fun run() {
             if (foreground && !busy && !authorizing && bridge.provisioned()) tick()
