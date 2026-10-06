@@ -28,7 +28,6 @@ class CheckoutActivity : AppCompatActivity() {
     private lateinit var layout: LinearLayout
     private lateinit var status: TextView
     private lateinit var amount: TextView
-    private lateinit var scan: TextView
     private lateinit var basketContainer: LinearLayout
     private lateinit var subtotalView: TextView
     private lateinit var discountView: TextView
@@ -46,30 +45,10 @@ class CheckoutActivity : AppCompatActivity() {
     private var paymentCallback: Any? = null
     private var printer: IPrinterService? = null
     private var printerBound = false
-    private var infraredService: IPrinterService? = null
-    private var infraredBound = false
-    private var qscReceiverRegistered = false
-    private var scannerText = StringBuilder()
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) { printer = IPrinterService.Stub.asInterface(service) }
         override fun onServiceDisconnected(name: ComponentName?) { printer = null }
     }
-    private val infraredConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            infraredService = IPrinterService.Stub.asInterface(service)
-            runOnUiThread { if (::scan.isInitialized) scan.text = "Infrared scanner ready" }
-        }
-        override fun onServiceDisconnected(name: ComponentName?) {
-            infraredService = null
-            runOnUiThread { if (::scan.isInitialized) scan.text = "Infrared scanner disconnected" }
-        }
-    }
-    private val qscReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.android.NYX_QSC_DATA") {
-                val value = intent.getStringExtra("qsc").orEmpty()
-                if (value.isNotBlank()) scan.text = "Scanned: $value"
-            }
         }
     }
     private val poll = object : Runnable {
@@ -86,15 +65,6 @@ class CheckoutActivity : AppCompatActivity() {
         catch (e: Exception) { fatal("Secure storage could not be opened. Keep any payment record for review."); return }
         printerBound = try { bindService(Intent("com.incar.printerservice.IPrinterService").setPackage("com.incar.printerservice"), connection, BIND_AUTO_CREATE) } catch (e: Exception) { false }
         screen()
-        qscReceiverRegistered = try {
-            val filter = IntentFilter("com.android.NYX_QSC_DATA")
-            if (Build.VERSION.SDK_INT >= 33) registerReceiver(qscReceiver, filter, Context.RECEIVER_EXPORTED)
-            else @Suppress("DEPRECATION") registerReceiver(qscReceiver, filter)
-            true
-        } catch (e: Exception) { false }
-        infraredBound = try {
-            bindService(Intent("net.nyx.printerservice.IPrinterService").setPackage("net.nyx.printerservice"), infraredConnection, BIND_AUTO_CREATE)
-        } catch (e: Exception) { false }
         if (!bridge.provisioned()) {
             worker.execute {
                 try {
@@ -164,7 +134,6 @@ class CheckoutActivity : AppCompatActivity() {
 
         status = textView(if (bridge.provisioned()) "Connecting…" else "Managed checkout setup required", 1f, Color.TRANSPARENT)
         amount = textView("", 1f, Color.TRANSPARENT)
-        scan = textView("", 1f, Color.TRANSPARENT)
 
         val logo = ImageView(this).apply {
             setImageResource(R.drawable.dexters_logo_straight)
@@ -363,44 +332,6 @@ class CheckoutActivity : AppCompatActivity() {
             .setNegativeButton("Close", null)
             .show()
     }
-    private fun triggerInfrared() {
-        val incar = printer
-        val nyx = infraredService
-        if (incar == null && nyx == null) {
-            scan.text = "Infrared scanner service is connecting"
-            return
-        }
-        scan.text = "Starting infrared scanner…"
-        worker.execute {
-            var incarError: String? = null
-            try {
-                if (incar != null) {
-                    val ret = incar.triggerQscScan(0)
-                    if (ret == 0) {
-                        runOnUiThread { scan.text = "Infrared scanner active — scan item" }
-                        return@execute
-                    }
-                    incarError = "Incar $ret"
-                }
-            } catch (e: Exception) {
-                incarError = "Incar ${e.message ?: "unsupported"}"
-            }
-            try {
-                if (nyx != null) {
-                    val ret = nyx.triggerQscScan(0)
-                    runOnUiThread {
-                        scan.text = if (ret == 0) "Infrared scanner active — scan item"
-                        else "Infrared scanner unavailable: ${incarError ?: "Incar unsupported"} / Nyx $ret"
-                    }
-                } else {
-                    runOnUiThread { scan.text = "Infrared scanner unavailable: ${incarError ?: "unsupported"}" }
-                }
-            } catch (e: Exception) {
-                runOnUiThread { scan.text = "Infrared scanner unavailable: ${incarError ?: "Incar unsupported"} / Nyx ${e.message ?: "error"}" }
-            }
-        }
-    }
-
     private fun tick() {
         if (busy || authorizing || !bridge.provisioned()) return
         busy = true
@@ -522,38 +453,11 @@ class CheckoutActivity : AppCompatActivity() {
         try { printer?.printText(text, PrintTextFormat().apply { setTextSize(22) }) }
         catch (e: Exception) { runOnUiThread { status.text = "Payment recorded. Printer unavailable." } }
     }
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 7001) {
-            val value = data?.getStringExtra("SCAN_RESULT")
-                ?: data?.getStringExtra("scan_result")
-                ?: data?.dataString
-                ?: ""
-            if (value.isNotBlank()) {
-                scan.text = "Scanned: $value"
-            } else {
-                scan.text = "Scanner closed"
-            }
-        }
-    }
-
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && event.deviceId != -1 && currentFocus !is EditText) {
-            if (event.keyCode == KeyEvent.KEYCODE_ENTER && scannerText.isNotEmpty()) {
-                scan.text = "Scanned: $scannerText"; scannerText.clear(); return true
-            }
-            val character = event.unicodeChar
-            if (character > 31) { if (scannerText.length < 2048) scannerText.append(character.toChar()) }
-        }
-        return super.dispatchKeyEvent(event)
-    }
     override fun onResume() { super.onResume(); foreground = true }
     override fun onPause() { foreground = false; super.onPause() }
     override fun onDestroy() {
         handler.removeCallbacks(poll)
         if (printerBound) unbindService(connection)
-        if (infraredBound) unbindService(infraredConnection)
-        if (qscReceiverRegistered) unregisterReceiver(qscReceiver)
         worker.shutdown()
         super.onDestroy()
     }
