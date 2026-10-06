@@ -122,20 +122,39 @@ class CheckoutActivity : AppCompatActivity() {
         }
     }
     private fun triggerInfrared() {
-        val service = infraredService
-        if (service == null) {
+        val incar = printer
+        val nyx = infraredService
+        if (incar == null && nyx == null) {
             scan.text = "Infrared scanner service is connecting"
             return
         }
         scan.text = "Starting infrared scanner…"
         worker.execute {
+            var incarError: String? = null
             try {
-                val ret = service.triggerQscScan(0)
-                runOnUiThread {
-                    scan.text = if (ret == 0) "Infrared scanner active — scan item" else "Infrared scanner error ($ret)"
+                if (incar != null) {
+                    val ret = incar.triggerQscScan(0)
+                    if (ret == 0) {
+                        runOnUiThread { scan.text = "Infrared scanner active — scan item" }
+                        return@execute
+                    }
+                    incarError = "Incar $ret"
                 }
             } catch (e: Exception) {
-                runOnUiThread { scan.text = "Infrared scanner unavailable: ${e.message ?: "unknown error"}" }
+                incarError = "Incar ${e.message ?: "unsupported"}"
+            }
+            try {
+                if (nyx != null) {
+                    val ret = nyx.triggerQscScan(0)
+                    runOnUiThread {
+                        scan.text = if (ret == 0) "Infrared scanner active — scan item"
+                        else "Infrared scanner unavailable: ${incarError ?: "Incar unsupported"} / Nyx $ret"
+                    }
+                } else {
+                    runOnUiThread { scan.text = "Infrared scanner unavailable: ${incarError ?: "unsupported"}" }
+                }
+            } catch (e: Exception) {
+                runOnUiThread { scan.text = "Infrared scanner unavailable: ${incarError ?: "Incar unsupported"} / Nyx ${e.message ?: "error"}" }
             }
         }
     }
