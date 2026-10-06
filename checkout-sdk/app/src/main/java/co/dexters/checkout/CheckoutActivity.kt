@@ -37,10 +37,31 @@ class CheckoutActivity : AppCompatActivity() {
     private var paymentCallback: Any? = null
     private var printer: IPrinterService? = null
     private var printerBound = false
+    private var infraredService: IPrinterService? = null
+    private var infraredBound = false
+    private var qscReceiverRegistered = false
     private var scannerText = StringBuilder()
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) { printer = IPrinterService.Stub.asInterface(service) }
         override fun onServiceDisconnected(name: ComponentName?) { printer = null }
+    }
+    private val infraredConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            infraredService = IPrinterService.Stub.asInterface(service)
+            runOnUiThread { if (::scan.isInitialized) scan.text = "Infrared scanner ready" }
+        }
+        override fun onServiceDisconnected(name: ComponentName?) {
+            infraredService = null
+            runOnUiThread { if (::scan.isInitialized) scan.text = "Infrared scanner disconnected" }
+        }
+    }
+    private val qscReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.android.NYX_QSC_DATA") {
+                val value = intent.getStringExtra("qsc").orEmpty()
+                if (value.isNotBlank()) scan.text = "Scanned: $value"
+            }
+        }
     }
     private val poll = object : Runnable {
         override fun run() {
@@ -56,6 +77,15 @@ class CheckoutActivity : AppCompatActivity() {
         catch (e: Exception) { fatal("Secure storage could not be opened. Keep any payment record for review."); return }
         printerBound = try { bindService(Intent("com.incar.printerservice.IPrinterService").setPackage("com.incar.printerservice"), connection, BIND_AUTO_CREATE) } catch (e: Exception) { false }
         screen()
+        qscReceiverRegistered = try {
+            val filter = IntentFilter("com.android.NYX_QSC_DATA")
+            if (Build.VERSION.SDK_INT >= 33) registerReceiver(qscReceiver, filter, Context.RECEIVER_EXPORTED)
+            else @Suppress("DEPRECATION") registerReceiver(qscReceiver, filter)
+            true
+        } catch (e: Exception) { false }
+        infraredBound = try {
+            bindService(Intent("net.nyx.printerservice.IPrinterService").setPackage("net.nyx.printerservice"), infraredConnection, BIND_AUTO_CREATE)
+        } catch (e: Exception) { false }
         if (!bridge.provisioned()) {
             worker.execute {
                 try {
@@ -84,22 +114,32 @@ class CheckoutActivity : AppCompatActivity() {
         layout.addView(status); layout.addView(amount); layout.addView(scan)
         if (bridge.provisioned()) {
             button("CHECK CONNECTION") { if (!busy) tick() }
-            button("SCAN BARCODE") {
-                try {
-                    startActivityForResult(
-                        Intent().setClassName("com.incar.scanner", "net.nyx.scanner.ScannerActivity"),
-                        7001
-                    )
-                } catch (e: Exception) {
-                    status.text = "Scanner unavailable: " + (e.message ?: "unable to open scanner")
-                }
-            }
+            button("SCAN BARCODE") { triggerInfrared() }
             button("SQUARE PAYMENT SETTINGS") {
                 if (!sdkReady) { status.text = "Connect Square before opening payment settings"; return@button }
                 MobilePaymentsSdk.settingsManager().showSettings { result -> if (result is Failure) status.text = result.errorMessage }
             }
         }
     }
+    private fun triggerInfrared() {
+        val service = infraredService
+        if (service == null) {
+            scan.text = "Infrared scanner service is connecting"
+            return
+        }
+        scan.text = "Starting infrared scanner…"
+        worker.execute {
+            try {
+                val ret = service.triggerQscScan(0)
+                runOnUiThread {
+                    scan.text = if (ret == 0) "Infrared scanner active — scan item" else "Infrared scanner error ($ret)"
+                }
+            } catch (e: Exception) {
+                runOnUiThread { scan.text = "Infrared scanner unavailable: ${e.message ?: "unknown error"}" }
+            }
+        }
+    }
+
     private fun tick() {
         if (busy || authorizing || !bridge.provisioned()) return
         busy = true
@@ -239,6 +279,8 @@ class CheckoutActivity : AppCompatActivity() {
     override fun onDestroy() {
         handler.removeCallbacks(poll)
         if (printerBound) unbindService(connection)
+        if (infraredBound) unbindService(infraredConnection)
+        if (qscReceiverRegistered) unregisterReceiver(qscReceiver)
         worker.shutdown()
         super.onDestroy()
     }
