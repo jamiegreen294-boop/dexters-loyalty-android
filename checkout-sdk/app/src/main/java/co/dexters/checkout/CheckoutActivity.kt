@@ -114,14 +114,15 @@ class CheckoutActivity : AppCompatActivity() {
     }
 
     private fun screen() {
-        val gold = Color.rgb(228,190,76)
-        val bg = Color.rgb(7,8,9)
-        val panel = Color.rgb(18,18,18)
-        val muted = Color.rgb(174,174,174)
+        val gold = Color.rgb(230, 190, 71)
+        val goldSoft = Color.rgb(196, 156, 48)
+        val bg = Color.rgb(5, 6, 7)
+        val panel = Color.rgb(13, 14, 15)
+        val muted = Color.rgb(165, 168, 171)
 
         layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(18), dp(18), dp(24))
+            setPadding(dp(22), dp(18), dp(22), dp(24))
             setBackgroundColor(bg)
         }
         setContentView(ScrollView(this).apply {
@@ -138,28 +139,37 @@ class CheckoutActivity : AppCompatActivity() {
             adjustViewBounds = true
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = "Dexter's"
+            setPadding(dp(22), 0, dp(22), 0)
             setOnLongClickListener {
                 showMaintenance()
                 true
             }
         }
-        layout.addView(logo, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(150)).apply {
-            bottomMargin = dp(12)
+        layout.addView(logo, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(190)
+        ).apply {
+            bottomMargin = dp(4)
+        })
+
+        layout.addView(textView("YOUR ORDER", 24f, gold, true).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.16f
+        }, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            bottomMargin = dp(16)
         })
 
         val orderCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(16), dp(16), dp(18))
-            background = rounded(panel, Color.rgb(92,75,28), 20)
+            setPadding(dp(18), dp(16), dp(18), dp(18))
+            background = rounded(panel, goldSoft, 20)
         }
-
-        orderCard.addView(textView("Your Order", 26f, Color.rgb(242,213,103), true).apply {
-            setPadding(0, 0, 0, dp(12))
-        })
 
         idleView = textView("Waiting for your order…", 17f, muted).apply {
             gravity = Gravity.CENTER
-            setPadding(0, dp(22), 0, dp(22))
+            setPadding(0, dp(32), 0, dp(32))
         }
         orderCard.addView(idleView)
 
@@ -169,23 +179,40 @@ class CheckoutActivity : AppCompatActivity() {
         }
         orderCard.addView(basketContainer)
 
-        val divider = View(this).apply { setBackgroundColor(Color.rgb(193,156,46)) }
-        orderCard.addView(divider, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1)).apply {
-            topMargin = dp(12)
-            bottomMargin = dp(10)
+        val divider = View(this).apply { setBackgroundColor(goldSoft) }
+        orderCard.addView(divider, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(1)
+        ).apply {
+            topMargin = dp(14)
+            bottomMargin = dp(12)
         })
 
         fun totalRow(label: String, bold: Boolean = false): Pair<LinearLayout, TextView> {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(if (bold) 7 else 5), 0, dp(if (bold) 7 else 5))
             }
-            val left = textView(label, if (bold) 28f else 17f, if (bold) Color.rgb(242,213,103) else Color.WHITE, bold)
-            val right = textView("£0.00", if (bold) 31f else 17f, if (bold) Color.rgb(242,213,103) else Color.WHITE, bold).apply {
-                gravity = Gravity.END
-            }
-            row.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(right, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+            val left = textView(
+                label,
+                if (bold) 27f else 17f,
+                if (bold) gold else Color.rgb(222, 224, 226),
+                bold
+            )
+            val right = textView(
+                "£0.00",
+                if (bold) 31f else 17f,
+                if (bold) gold else Color.WHITE,
+                bold
+            ).apply { gravity = Gravity.END }
+
+            row.addView(left, LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+            ))
+            row.addView(right, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ))
             return row to right
         }
 
@@ -205,22 +232,30 @@ class CheckoutActivity : AppCompatActivity() {
         deliveryView.tag = deliveryRow
         orderCard.addView(deliveryRow)
 
-        val totalDivider = View(this).apply { setBackgroundColor(Color.rgb(193,156,46)) }
-        orderCard.addView(totalDivider, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(2)).apply {
+        val totalDivider = View(this).apply { setBackgroundColor(gold) }
+        orderCard.addView(totalDivider, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(2)
+        ).apply {
             topMargin = dp(10)
             bottomMargin = dp(10)
         })
 
-        val (totalRow, totalText) = totalRow("Total", true)
+        val (totalRow, totalText) = totalRow("TOTAL", true)
         totalView = totalText
         orderCard.addView(totalRow)
 
-        layout.addView(orderCard, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        layout.addView(orderCard, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
 
-        layout.addView(textView("Secure payment powered by Square", 11f, Color.rgb(115,115,115)).apply {
+        layout.addView(textView("Thank you for choosing Dexter’s", 12f, Color.rgb(110, 113, 116)).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(18), 0, 0)
-        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        }, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
 
         showIdle()
     }
@@ -263,11 +298,11 @@ class CheckoutActivity : AppCompatActivity() {
 
                 val row = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.TOP
-                    setPadding(0, dp(10), 0, dp(10))
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(0, dp(13), 0, dp(13))
                 }
                 val left = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-                left.addView(textView(if (qty > 1) "$qty × $name" else name, 17f, Color.WHITE, true))
+                left.addView(textView(if (qty > 1) "$qty × $name" else name, 18f, Color.WHITE, true))
                 if (mods != null && mods.length() > 0) {
                     val values = mutableListOf<String>()
                     for (m in 0 until mods.length()) {
@@ -278,7 +313,7 @@ class CheckoutActivity : AppCompatActivity() {
                         left.addView(textView(values.joinToString(" · "), 13f, muted).apply { setPadding(0, dp(3), dp(8), 0) })
                     }
                 }
-                val price = textView(money(linePence), 17f, gold, true).apply {
+                val price = textView(money(linePence), 18f, gold, true).apply {
                     gravity = Gravity.END
                     setPadding(dp(8), 0, 0, 0)
                 }
@@ -287,7 +322,7 @@ class CheckoutActivity : AppCompatActivity() {
                 basketContainer.addView(row)
 
                 if (i < items.length() - 1) {
-                    basketContainer.addView(View(this).apply { setBackgroundColor(Color.rgb(48,48,48)) },
+                    basketContainer.addView(View(this).apply { setBackgroundColor(Color.rgb(68,59,31)) },
                         LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1)))
                 }
             }
